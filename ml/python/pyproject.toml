@@ -12,7 +12,7 @@ dependencies = [
   "pettingzoo==1.27.0",
   "sb3-contrib==2.9.0",
   "stable-baselines3==2.9.0",
-  "torch==2.13.0",
+  "torch==2.14.1",
 ]
 
 [project.optional-dependencies]
