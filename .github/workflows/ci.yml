@@ -101,7 +101,7 @@ jobs:
         working-directory: ml/python
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       # Lint only, so the job does not pull ~1 GB of torch wheels: the mypy
       # config falls back to `Any` for the RL stack when it is absent, which is
       # what it does with the untyped stack installed anyway.
