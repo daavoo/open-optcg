@@ -1,0 +1,543 @@
+/* ============================================================================
+   MATCHUP ANALYTICS
+   The lobby's page, read rather than filled in: the same wash from your
+   leader's colour to theirs, the same light menu card sitting on it, the same
+   two deck columns at the top. Only what is below them changes, so arriving
+   here from the lobby feels like scrolling, not like leaving.
+
+   Two colour jobs live here and they must not be confused with each other.
+   Who won is a *deck's* colour — the head-to-head bar is your leader's hue
+   against theirs, because that is what the split is. How much is a *quantity*,
+   and quantity gets its own diverging ramp rather than borrowing a flag
+   colour: brass ahead, sea blue behind, six bands because that is what a
+   reader can separate. The ramp is held to pale tints here, since it now backs
+   dark ink on paper rather than light ink on a hull, and every band still
+   states its number so colour is never the only channel.
+   ========================================================================= */
+.matchup-shell {
+  --band-cold-3: #b6ccd6;
+  --band-cold-2: #cbdde4;
+  --band-cold-1: #e0eaee;
+  --band-warm-1: #f5e8db;
+  --band-warm-2: #eed6bb;
+  --band-warm-3: #e0b78d;
+  --band-empty: #eae6dc;
+
+  /* Height-capped like the lobby's, not min-height: the shell is the scroll
+     container, which is what lets the shared footer stay pinned to the foot of
+     the window on a page this long. */
+  position: relative;
+  height: 100dvh;
+  display: grid;
+  /* An explicit column, unlike the lobby's: this page holds paragraphs whose
+     max-content width would otherwise decide how wide it is. */
+  --shell-col: 56rem;
+  --shell-pad-x: clamp(1.5rem, 4vw, 3rem);
+  --shell-pad-y: clamp(1.5rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-content: start;
+  gap: clamp(1.5rem, 4vw, 2.75rem);
+  padding: var(--shell-pad-y) var(--shell-pad-x);
+  overflow: auto;
+  background:
+    /* Scrim first, so it sits over the drawing: the shipped art is bright ink
+       and everything above it -- chrome, cards, type -- is dark. */
+    var(--shell-scrim),
+    var(--art-home) center / cover no-repeat,
+    var(--art-lobby) center / cover no-repeat,
+    radial-gradient(52% 60% at 14% 20%, var(--mat-self-glow), transparent 65%),
+    radial-gradient(52% 60% at 86% 80%, var(--mat-opp-glow), transparent 65%),
+    linear-gradient(
+      120deg,
+      var(--mat-self-deep) 0%,
+      var(--mat-self-tint) 26%,
+      #26262b 48%,
+      #26262b 52%,
+      var(--mat-opp-tint) 74%,
+      var(--mat-opp-deep) 100%
+    );
+  /* Fixed for the same reason as the lobby's, and restated because the
+     `background` shorthand above resets the attachment. */
+  background-attachment: fixed;
+}
+
+[data-band="cold-3"] {
+  --band: var(--band-cold-3);
+}
+[data-band="cold-2"] {
+  --band: var(--band-cold-2);
+}
+[data-band="cold-1"] {
+  --band: var(--band-cold-1);
+}
+[data-band="warm-1"] {
+  --band: var(--band-warm-1);
+}
+[data-band="warm-2"] {
+  --band: var(--band-warm-2);
+}
+[data-band="warm-3"] {
+  --band: var(--band-warm-3);
+}
+[data-band="empty"] {
+  --band: var(--band-empty);
+}
+
+.matchup-card {
+  min-width: 0;
+  gap: 1.4rem;
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+}
+.matchup-topline {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--menu-border);
+}
+.matchup-topline .text-button {
+  justify-self: start;
+  padding-left: 0;
+}
+.matchup-title {
+  text-align: right;
+}
+.matchup-title .eyebrow {
+  color: var(--menu-muted);
+}
+.matchup-title h1 {
+  margin: 0;
+  color: var(--menu-ink);
+  font: 700 1.5rem var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* The two deck columns are the lobby's, with the leader they resolve to spelled
+   out underneath — on a page about one pairing, "ST34" is not enough to know
+   what you are reading. */
+.matchup-versus {
+  align-self: center;
+  padding: 0.3rem 0.5rem;
+  color: var(--menu-muted);
+  font: 600 0.72rem var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.deck-leader {
+  display: grid;
+  gap: 0.05rem;
+  margin: 0;
+  padding-left: 0.55rem;
+  border-left: 3px solid var(--deck-color, var(--ember));
+}
+.deck-leader b {
+  color: var(--menu-ink);
+  font: 700 0.95rem var(--font-display);
+}
+.deck-leader small {
+  color: var(--menu-muted);
+  font: 0.68rem var(--font-mono);
+}
+.deck-leader[data-deck-color="red"] {
+  --deck-color: var(--red);
+}
+.deck-leader[data-deck-color="green"] {
+  --deck-color: var(--green);
+}
+.deck-leader[data-deck-color="blue"] {
+  --deck-color: var(--blue);
+}
+.deck-leader[data-deck-color="purple"] {
+  --deck-color: var(--purple);
+}
+.deck-leader[data-deck-color="yellow"] {
+  --deck-color: var(--yellow);
+}
+.deck-leader[data-deck-color="black"] {
+  --deck-color: var(--black);
+}
+
+/* The answer, stated once and large. The band tints the card; the split bar
+   below it is the only place two leader colours meet on this page. */
+.matchup-verdict {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+  padding: 1.1rem 1.2rem 1.2rem;
+  border: 1px solid var(--menu-border);
+  border-radius: 14px;
+  background: var(--band, var(--menu-field));
+}
+.matchup-verdict .eyebrow {
+  color: #5a4a38;
+}
+.matchup-verdict > b {
+  color: var(--menu-ink);
+  font: 700 3rem/1 var(--font-mono);
+  letter-spacing: -0.03em;
+}
+.verdict-chip {
+  margin-top: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid rgba(34, 29, 22, 0.22);
+  border-radius: 999px;
+  color: var(--menu-ink);
+  font: 600 0.66rem var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.verdict-record {
+  margin: 0.55rem 0 0;
+  color: #4a4034;
+  font: 0.74rem var(--font-mono);
+}
+.split-bar {
+  width: 100%;
+  height: 0.6rem;
+  display: flex;
+  margin-top: 0.9rem;
+  border-radius: 999px;
+  background: rgba(34, 29, 22, 0.12);
+  overflow: hidden;
+}
+.split-bar i {
+  display: block;
+  height: 100%;
+  background: var(--deck-color, var(--ember));
+}
+/* When both sides resolve to the same hue — a mirror, or two decks of one
+   colour — the fill alone cannot separate them, so their half is hatched.
+   Specific enough to survive the `background` shorthand set just above. */
+.split-bar i.split-opponent {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.42) 0 3px,
+    transparent 3px 7px
+  );
+}
+.split-bar i[data-deck-color="red"] {
+  --deck-color: var(--red);
+}
+.split-bar i[data-deck-color="green"] {
+  --deck-color: var(--green);
+}
+.split-bar i[data-deck-color="blue"] {
+  --deck-color: var(--blue);
+}
+.split-bar i[data-deck-color="purple"] {
+  --deck-color: var(--purple);
+}
+.split-bar i[data-deck-color="yellow"] {
+  --deck-color: var(--yellow);
+}
+.split-bar i[data-deck-color="black"] {
+  --deck-color: var(--black);
+}
+.split-legend {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.45rem;
+}
+.split-legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #4a4034;
+  font: 600 0.72rem var(--font-mono);
+}
+
+/* The lobby's decks, read rather than picked: the Leader card and the list's
+   name beside it. */
+.matchup-side {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.matchup-side .deck-select-preview {
+  flex: none;
+}
+/* One button, centred between the decks and the results it will produce. */
+.run-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+/* How many games the run plays: three sizes in one pill beside the button, so
+   the page still reads as one button with its setting next to it rather than a
+   form. */
+.run-size {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--menu-border);
+  border-radius: 999px;
+  background: var(--menu-field);
+}
+.run-size-option {
+  min-width: 3rem;
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--menu-muted);
+  font: 700 0.72rem var(--font-display);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.run-size-option.picked {
+  background: var(--menu-ink);
+  color: var(--menu-card);
+}
+/* A run with no decided game has nothing to sample; the button stays so the
+   control row keeps its shape, and its tooltip says why it is empty. */
+#sim-sample:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.run-size-option:not(.picked):hover,
+.run-size-option:focus-visible {
+  color: var(--menu-ink);
+}
+.analytics-message {
+  margin: 0;
+  color: var(--ember-deep);
+  font-size: 0.75rem;
+}
+
+.run-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.7rem;
+}
+.run-progress-bar {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: rgba(34, 29, 22, 0.12);
+  overflow: hidden;
+}
+.run-progress-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ember-deep), var(--ember));
+  transition: width 0.15s linear;
+}
+.run-progress b {
+  color: var(--menu-ink);
+  font: 600 0.78rem var(--font-mono);
+}
+.run-progress small {
+  color: var(--menu-muted);
+  font: 0.68rem var(--font-mono);
+}
+
+/* Turn order, given its own row: the combined rate above averages the two
+   seats together, which is exactly what hides a matchup that is really two. */
+.turn-order {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.turn-figure {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--menu-border);
+  border-radius: 12px;
+  background: var(--menu-field);
+}
+.turn-figure .eyebrow {
+  color: var(--menu-muted);
+}
+.turn-figure b {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--menu-ink);
+  font: 600 1.5rem var(--font-mono);
+}
+.turn-figure small {
+  display: block;
+  color: var(--menu-muted);
+  font: 0.66rem var(--font-mono);
+}
+
+/* Card impact, one column per deck, so the two lists read against each other.
+   Each column is a heading row and a list row of one shared grid, so a deck
+   name that wraps onto a second line pushes both lists down together rather
+   than knocking its own list out of line with the other. */
+.impact-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+}
+/* Four rows -- heading, most used, stuck in hand, every card -- so each list
+   starts level with its neighbour's whichever deck name wraps. */
+.card-impact {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  align-content: start;
+}
+.card-impact h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  color: var(--menu-ink);
+  font: 700 0.95rem var(--font-display);
+}
+.card-impact h3 small {
+  color: var(--menu-muted);
+  font: 0.65rem var(--font-mono);
+}
+.card-impact h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0.9rem 0 0.5rem;
+  color: var(--menu-ink);
+  font: 700 0.8rem var(--font-display);
+}
+.card-impact h4 small {
+  color: var(--menu-muted);
+  font: 0.62rem var(--font-mono);
+}
+.card-impact ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card-impact li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.15rem 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--menu-border);
+  border-radius: 10px;
+  background: var(--menu-field);
+}
+.impact-all {
+  margin-top: 0.9rem;
+}
+.impact-all summary {
+  margin-bottom: 0.5rem;
+  color: var(--menu-ink);
+  font: 700 0.8rem var(--font-display);
+  cursor: pointer;
+}
+.impact-all summary small {
+  margin-left: 0.4rem;
+  color: var(--menu-muted);
+  font: 0.62rem var(--font-mono);
+}
+.impact-all summary:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+.card-impact .muted {
+  margin: 0;
+  color: var(--menu-muted);
+  font-size: 0.75rem;
+}
+.impact-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.impact-card:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+.impact-card i {
+  flex: 0 0 auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+.impact-card i.impact-card-art {
+  width: 2.35rem;
+  height: 3.3rem;
+  border: 1px solid color-mix(in srgb, var(--impact-color) 55%, #d8d1c5);
+  border-radius: 4px;
+  background:
+    var(--impact-art, none) center / cover no-repeat,
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--impact-color) 42%, white),
+      color-mix(in srgb, var(--impact-color) 18%, #ddd6ca)
+    );
+  box-shadow: 0 2px 6px rgba(34, 29, 22, 0.14);
+}
+.impact-card > span {
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+.impact-card b {
+  overflow: hidden;
+  color: var(--menu-ink);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.impact-card small,
+.impact-detail {
+  color: var(--menu-muted);
+  font: 0.62rem var(--font-mono);
+}
+.impact-delta {
+  color: var(--menu-ink);
+  font: 600 0.85rem var(--font-mono);
+}
+.impact-detail {
+  grid-column: 1 / -1;
+}
+
+.deck-chip {
+  display: inline-block;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 0.2rem 0.45rem;
+  border-left: 3px solid var(--deck-color, var(--ember));
+  background: rgba(34, 29, 22, 0.06);
+  color: var(--menu-ink, var(--ink-white));
+  font: 600 0.7rem var(--font-mono);
+  letter-spacing: 0.06em;
+}
+.deck-chip[data-deck-color="red"] {
+  --deck-color: var(--red);
+}
+.deck-chip[data-deck-color="green"] {
+  --deck-color: var(--green);
+}
+.deck-chip[data-deck-color="blue"] {
+  --deck-color: var(--blue);
+}
+.deck-chip[data-deck-color="purple"] {
+  --deck-color: var(--purple);
+}
+.deck-chip[data-deck-color="yellow"] {
+  --deck-color: var(--yellow);
+}
+.deck-chip[data-deck-color="black"] {
+  --deck-color: var(--black);
+}

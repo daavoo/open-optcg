@@ -1,0 +1,735 @@
+/* ============================================================================
+   TABLE & MAT
+   Two halves of one sea. Each half washes from deep at the outer edge to the
+   player's tint at the seam; a chart grid, three landmass blooms and a horizon
+   glow sit on top. `--art-mat-*` replaces the whole recipe with a painting.
+   ========================================================================= */
+.table {
+  position: relative;
+  isolation: isolate;
+  grid-row: 1;
+  min-height: 0;
+  display: grid;
+  /* Two equal halves and nothing between them. The near half used to take the
+     larger share because its hand stood in a row of its own under the mat; the
+     hand is beside the mat now, so an even split gives both seats the same mat
+     -- which is what makes a Character across the seam the same size as the one
+     facing it. The white band that used to hold the two apart is gone with the
+     chrome it carried: one chart is drawn across both halves, and a rule
+     through the middle of it read as a cut rather than a horizon. */
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  overflow: hidden;
+  background:
+    var(--art-table) center / cover no-repeat,
+    var(--abyss);
+}
+
+/* The chart across the sea: one drawing over both mats rather than one per half,
+   centred on the table so its middle -- the Grand Line, on the chart that ships
+   -- lies along the seam the two halves meet at. `cover` and the centre are what
+   hold that: a wide window crops the far north and south off the chart and keeps
+   the line in the lane.
+
+   `center` also puts Reverse Mountain, where the four seas meet, on the point
+   the turn readout's dot sits at -- but only because the image is cut for it.
+   On the printed chart the mountain is left of centre and the far east runs on
+   past it, so the shipped file is trimmed on the right until the mountain *is*
+   the middle of the image. `cover` maps an image's centre to its box's centre,
+   so nothing here has to know where the mountain is; the file does.
+
+   The file is a threshold of the printed chart, not a photograph of it: every
+   pixel is either ink or nothing, so what lands on the mat is line work in the
+   mat's own black -- like the ruling under it -- and never a grey wash or the
+   paint the sprites are printed in. The cut is at 140 of 255, which is the
+   step that keeps a coastline continuous; lower breaks the thin lines into
+   dots, higher fills the ships and sea kings in until they are the loudest
+   thing on the table.
+
+   Under everything the game draws: the two halves are what a player reads, and a
+   chart they cannot see through would be a picture of a sea rather than the sea
+   itself. It used to be held at a fifth, which on the darker mats left it
+   barely there at all; a little under half is where the drawing reads as a
+   chart on both a deep blue half and a light yellow one. Nothing at all until
+   `--art-chart` names an image. */
+.table::before {
+  content: "";
+  position: absolute;
+  /* Between the mat wash (-3) and the deck's corner art (-1): the chart is
+     printed on the sea, and a Leader's own sprites are laid on top of it, the
+     way they are on a real mat. All three stay under every piece. */
+  z-index: -2;
+  inset: 0;
+  opacity: 0.45;
+  background: var(--art-chart) center / cover no-repeat;
+  pointer-events: none;
+}
+
+/* The seam, above the mats and below the pieces.
+
+   The seam is a crease rather than a line: the two colours run into a band of
+   shadow and out the other side, the way two sheets of a folded mat meet. A 1px
+   white rule used to sit here, and against a chart that now crosses both halves
+   it read as a cut through the middle of the drawing.
+
+   A vignette used to sit in this same layer -- a black radial gradient closing
+   in on every edge, heaviest along the top and bottom. It was doing the job
+   twice: each half's own wash already runs from `deep` at its outer edge to
+   `tint` at the seam, in the deck's colour, and a black gradient over that only
+   greyed the corners of a mat that was already darkening on its own. Gone, so
+   the edges are the mat's colour rather than a shadow of it. The one shadow
+   left on the table is the crease.
+
+   The band is wide and dark enough to be a ground of its own, because the turn
+   reads along it: light type on a mat that is olive on one side and red on the
+   other needs the shadow under it to be the same either way. Its middle is
+   nearly flat -- a strip rather than a hairline of shadow -- so it reads as the
+   divider the two halves used to be given, without a rule's hard edges. */
+.table::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent calc(50% - 6rem),
+    rgba(0, 0, 0, 0.16) calc(50% - 3.4rem),
+    rgba(0, 0, 0, 0.56) calc(50% - 1.15rem),
+    rgba(0, 0, 0, 0.76) 50%,
+    rgba(0, 0, 0, 0.56) calc(50% + 1.15rem),
+    rgba(0, 0, 0, 0.16) calc(50% + 3.4rem),
+    transparent calc(50% + 6rem)
+  );
+  pointer-events: none;
+}
+
+/* A half is the printed mat, plus the hand held beside it.
+
+   Each half used to be three rows spanning the whole width, which is not how
+   the mat is printed: on cardboard every zone lives inside one rectangle of a
+   fixed shape, and the hand is not on the mat at all. So the mat is one
+   aspect-locked rectangle here too, and the hand stands in its own column at
+   the inner end of the half -- which is also what leaves the outer end of each
+   half free for the deck's own art. */
+.player-board {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  /* One explicit row, so the half's own height is what the mat is a percentage
+     of. An implicit row is sized by its content, which made the tallest thing
+     in the half -- a hand stacked into two rows -- decide how tall the mat was,
+     and on a short window that pushed both off the bottom of the board. */
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  justify-items: end;
+  gap: clamp(0.4rem, 1.6vw, 1.6rem);
+  padding: 0.7rem clamp(1rem, 4vw, 3.5rem);
+}
+/* The sprite scatter: a deck's motifs strewn over its colour mat, instead of
+   one painting stretched across it. Every placement is written out in
+   mat-skins.css -- there is no randomness here, so two players looking at the
+   same mat see the same mat -- and the whole layer is dimmed as one, which is
+   what keeps a silhouette from competing with the card on top of it.
+
+   Only a half whose deck names a scatter gets the pseudo-element at all: an
+   empty list would otherwise paint nothing but still cost a layer.
+
+   Above the chart (-2) and the mat wash (-3): a deck's own art is the one thing
+   on the sea that is its and not the table's, so nothing the table draws goes
+   over it. */
+html[data-self-mat] .self-board::after,
+html[data-opp-mat] .opponent-board::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--mat-sprite-opacity);
+}
+html[data-self-mat] .self-board::after {
+  background: var(--mat-self-sprites);
+}
+html[data-opp-mat] .opponent-board::after {
+  background: var(--mat-opp-sprites);
+  /* Their art is placed from the same corner as yours and flipped top to
+     bottom, so it hangs from the top-left of their half the way yours sits in
+     the bottom-left of yours -- the pair reading as one mat folded along the
+     lane, rather than one list of positions written out twice. */
+  transform: scaleY(-1);
+}
+
+/* A half carrying deck art drops the landmass blooms and the horizon glow: they
+   were the texture of a mat with nothing on it, and under art they are clutter
+   behind clutter. What is left is the ruling, the deep-to-tint wash, and the
+   seam split a two-colour Leader gets.
+
+   The ruling stays on both halves, art or no art: it is the chart's own grid
+   rather than decoration, and a half that lost it read as a different material
+   from the half across the seam. */
+html[data-self-mat] .self-board::before {
+  background:
+    var(--mat-rule-horizontal), var(--mat-rule-vertical),
+    var(--mat-self-secondary-layer),
+    linear-gradient(
+      0deg,
+      var(--mat-self-deep) 0%,
+      var(--mat-self-tint) 74%,
+      var(--mat-self-tint) 100%
+    );
+}
+html[data-opp-mat] .opponent-board::before {
+  background:
+    var(--mat-rule-horizontal), var(--mat-rule-vertical),
+    var(--mat-opp-secondary-layer),
+    linear-gradient(
+      180deg,
+      var(--mat-opp-deep) 0%,
+      var(--mat-opp-tint) 74%,
+      var(--mat-opp-tint) 100%
+    );
+}
+
+/* The mat, as the printed rectangle: aspect-locked, as tall as the half allows
+   and no wider than what the hand leaves it. Height drives the shape until the
+   width runs out, and `max-width` is what stops it there -- with the ratio
+   holding, a mat that cannot be as wide as it wants gets shorter instead of
+   spilling into the hand.
+
+   Every piece on it is sized from the rectangle rather than from the viewport:
+   the board's own tokens are redeclared here in container units, so the whole
+   mat -- cards, life pile, DON!! -- scales with the box it is drawn in. Only
+   the hand keeps the viewport measure, because the hand is not on the mat.
+
+   The two halves are the same grid, vertically mirrored: the character area is
+   nearest the seam on both sides and the cost area is at each player's own
+   near edge, so a Character faces a Character and life sits above life. */
+/* The box the mat is fitted into: a size container, so the mat can be the
+   largest rectangle of its own shape that fits -- `min()` of what the box
+   allows in each direction. `aspect-ratio` cannot do this on its own: against a
+   definite height and a `max-width` it keeps the height and squares the mat off
+   instead of shrinking it, which is what a phone's half did to it. */
+.mat-frame {
+  container-type: size;
+  grid-area: 1 / 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-items: center;
+  justify-items: end;
+}
+.player-mat {
+  container-type: size;
+  width: min(100cqw, calc(100cqh * 1.85));
+  height: min(100cqh, calc(100cqw / 1.85));
+  /* One card size for the whole mat. Every card on it -- a Character, the
+     Leader, the deck, a Life card, a DON!! -- is this tall, face up or face
+     down, because on cardboard they are all the same card. The two terms are
+     the two ways the rectangle can run out: a third of its height is a row, and
+     the width term is what keeps a card inside the single-card columns. */
+  --card-h: min(calc(100cqh * 0.3), calc(100cqw * 0.162));
+  --leader-h: var(--card-h);
+  --slot-h: var(--card-h);
+  display: grid;
+  /* Six columns, each exactly one card wide, spread evenly across the mat: the
+     life strip and then the five Character slots. Every zone below is placed
+     against those same columns, so the deck lands under the rightmost slot, the
+     stage under the fourth, and the cost area runs from the first to the fourth
+     -- a mat reads as columns, and a zone that lines up with nothing above it
+     reads as a zone that was put wherever it fitted.
+
+     Fixed tracks with `space-between` rather than six `1fr`s: a card cannot
+     grow to fill a track (its height is capped by the row), so `1fr` tracks
+     would leave each card floating in the middle of a wider box and every zone
+     edge would sit a dozen pixels off the card it is meant to align with. */
+  grid-template-columns: repeat(6, calc(var(--card-h) * 0.71));
+  justify-content: space-between;
+  /* Three rows a card tall, near enough: every row has to hold a full card, and
+     the near row has to hold one plus the cost area's own padding. */
+  grid-template-rows: minmax(0, 1.02fr) minmax(0, 0.98fr) minmax(0, 1fr);
+  /* Every zone is stretched to the box the mat printed for it, and centres its
+     own contents. Centring the zones themselves instead left each one sized by
+     what was inside it, so nothing in the mat could be measured as a share of
+     its own zone -- which is how the deck pile ended up with no card in it and
+     the Leader at two-thirds the size of the slots beside it. */
+  align-items: stretch;
+  justify-items: stretch;
+  /* Shares of the mat, not of the viewport or of the box the mat is fitted
+     into: `cq` units here would read the frame, which on a phone is much taller
+     than the mat inside it. The column gap is what `space-between` distributes,
+     so only the row gap is set. */
+  row-gap: 0.7%;
+  padding: 0.8% 1%;
+}
+
+/* Which column each zone stands in. The rows differ between the seats and are
+   set per seat below; the columns are the same for both, because a mat mirrored
+   top to bottom keeps life above life and the deck above the deck. */
+.life-zone,
+.don-deck-zone {
+  grid-column: 1;
+}
+.character-row {
+  grid-column: 2 / -1;
+}
+/* The Leader spans the two middle Character columns and centres in them, which
+   -- with six even columns -- puts it on the mat's exact vertical centre line,
+   between the second and third slots. */
+.mat-leader {
+  grid-column: 3 / 5;
+}
+.mat-stage {
+  grid-column: 5;
+}
+.deck-pile,
+.trash-zone-button {
+  grid-column: 6;
+}
+.cost-area {
+  grid-column: 2 / 6;
+}
+.self-board .player-mat > .character-row {
+  grid-row: 1;
+}
+.self-board .player-mat > .life-zone {
+  grid-row: 1 / 3;
+}
+.self-board .player-mat > .mat-leader,
+.self-board .player-mat > .mat-stage,
+.self-board .player-mat > .deck-pile {
+  grid-row: 2;
+}
+.self-board .player-mat > .don-deck-zone,
+.self-board .player-mat > .cost-area,
+.self-board .player-mat > .trash-zone-button {
+  grid-row: 3;
+}
+.opponent-board .player-mat > .character-row {
+  grid-row: 3;
+}
+.opponent-board .player-mat > .life-zone {
+  grid-row: 2 / 4;
+}
+.opponent-board .player-mat > .mat-leader,
+.opponent-board .player-mat > .mat-stage,
+.opponent-board .player-mat > .deck-pile {
+  grid-row: 2;
+}
+.opponent-board .player-mat > .don-deck-zone,
+.opponent-board .player-mat > .cost-area,
+.opponent-board .player-mat > .trash-zone-button {
+  grid-row: 1;
+}
+.mat-leader,
+.mat-stage {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* The mat halves: the bottom layer of the board, under the chart drawn across
+   both of them and under the corner art a deck lays on its own half. */
+.player-board::before {
+  content: "";
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  pointer-events: none;
+}
+.opponent-board::before {
+  background:
+    var(--mat-opp-art-scrim),
+    var(--mat-opp-art) center / var(--mat-art-tile) repeat,
+    var(--art-mat-opponent) center / cover no-repeat,
+    linear-gradient(0deg, rgba(255, 255, 255, 0.13), transparent 46px),
+    radial-gradient(120% 70% at 50% 100%, var(--mat-opp-glow), transparent 55%),
+    var(--mat-rule-horizontal),
+    var(--mat-rule-vertical),
+    radial-gradient(
+      70% 90% at 18% 18%,
+      rgba(255, 255, 255, 0.055),
+      transparent 60%
+    ),
+    radial-gradient(60% 80% at 84% 30%, rgba(0, 0, 0, 0.16), transparent 62%),
+    radial-gradient(
+      50% 70% at 50% 92%,
+      rgba(255, 255, 255, 0.035),
+      transparent 66%
+    ),
+    var(--mat-opp-secondary-layer),
+    linear-gradient(
+      180deg,
+      var(--mat-opp-deep) 0%,
+      var(--mat-opp-tint) 74%,
+      var(--mat-opp-tint) 100%
+    );
+}
+.self-board::before {
+  background:
+    var(--mat-self-art-scrim),
+    var(--mat-self-art) center / var(--mat-art-tile) repeat,
+    var(--art-mat-self) center / cover no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), transparent 46px),
+    radial-gradient(120% 70% at 50% 0%, var(--mat-self-glow), transparent 55%),
+    var(--mat-rule-horizontal),
+    var(--mat-rule-vertical),
+    radial-gradient(
+      70% 90% at 18% 82%,
+      rgba(255, 255, 255, 0.055),
+      transparent 60%
+    ),
+    radial-gradient(60% 80% at 84% 70%, rgba(0, 0, 0, 0.16), transparent 62%),
+    radial-gradient(
+      50% 70% at 50% 8%,
+      rgba(255, 255, 255, 0.035),
+      transparent 66%
+    ),
+    var(--mat-self-secondary-layer),
+    linear-gradient(
+      0deg,
+      var(--mat-self-deep) 0%,
+      var(--mat-self-tint) 74%,
+      var(--mat-self-tint) 100%
+    );
+}
+/* The Sealed Leader answers to every colour: its half of the table sweeps
+   through all six instead of fading into the two colours a normal Leader's
+   mat borrows from `leaderColors`. Same texture layers, a six-colour base. */
+html[data-opp-rainbow] .opponent-board::before {
+  background:
+    var(--mat-opp-art-scrim),
+    var(--mat-opp-art) center / var(--mat-art-tile) repeat,
+    var(--art-mat-opponent) center / cover no-repeat,
+    linear-gradient(0deg, rgba(255, 255, 255, 0.13), transparent 46px),
+    radial-gradient(
+      120% 70% at 50% 100%,
+      rgba(255, 255, 255, 0.22),
+      transparent 55%
+    ),
+    var(--mat-rule-horizontal),
+    var(--mat-rule-vertical),
+    radial-gradient(60% 80% at 84% 30%, rgba(0, 0, 0, 0.2), transparent 62%),
+    linear-gradient(
+      100deg,
+      var(--red),
+      var(--yellow),
+      var(--black),
+      var(--purple),
+      var(--blue),
+      var(--green)
+    );
+}
+html[data-self-rainbow] .self-board::before {
+  background:
+    var(--mat-self-art-scrim),
+    var(--mat-self-art) center / var(--mat-art-tile) repeat,
+    var(--art-mat-self) center / cover no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), transparent 46px),
+    radial-gradient(
+      120% 70% at 50% 0%,
+      rgba(255, 255, 255, 0.22),
+      transparent 55%
+    ),
+    var(--mat-rule-horizontal),
+    var(--mat-rule-vertical),
+    radial-gradient(60% 80% at 84% 70%, rgba(0, 0, 0, 0.2), transparent 62%),
+    linear-gradient(
+      100deg,
+      var(--red),
+      var(--yellow),
+      var(--black),
+      var(--purple),
+      var(--blue),
+      var(--green)
+    );
+}
+
+.active-side {
+  box-shadow: inset 0 0 90px rgba(255, 255, 255, 0.05);
+}
+
+/* The kicker over a hand's count -- "You", "Opponent" -- the last survivor of
+   the nameplate chips this board used to wear in both top corners. The Leader
+   card names the seat better than a chip repeating its name did. */
+.side-kicker {
+  color: rgba(255, 255, 255, 0.55);
+  font: 0.46rem var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+/* Sized and labelled like the Deck pile it sits next to — a "Trash" caption
+   under the pile — rather than a small icon-plus-count pill. */
+.trash-zone-button {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.trash-zone-button:hover,
+.trash-zone-button:focus-visible {
+  color: #fff;
+}
+.trash-zone-button:hover .trash-top-face,
+.trash-zone-button:focus-visible .trash-top-face {
+  transform: translateY(-0.1rem);
+}
+/* The trash is a public zone, so its top card is shown face up — a stack of
+   cards on the mat, not a counter in a pill. */
+.trash-pile {
+  position: relative;
+  height: var(--slot-h);
+  /* Capped at the zone, so the pile cannot grow into the deck above it and
+     close the gap the two are meant to keep. */
+  max-height: 100%;
+  width: auto;
+  aspect-ratio: 0.71;
+}
+.trash-card-back {
+  position: absolute;
+  inset: 0.2rem 0 0 0.2rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: linear-gradient(180deg, #3a3a42, #1c1c20);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.trash-top-face {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease;
+}
+.trash-top-face .game-card.mini {
+  width: 100%;
+  height: 100%;
+}
+.trash-empty-slot {
+  position: absolute;
+  inset: 0;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+/* Every pile's name, set on its right-hand edge and read upward: under the pile
+   it cost the zone a line of height, and the mat has exactly one card's worth
+   of height per row to give. */
+.deck-pile small,
+.trash-zone-button small,
+.don-deck-zone small {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(calc(var(--card-h) * 0.4), -50%);
+  writing-mode: vertical-rl;
+  color: rgba(255, 255, 255, 0.45);
+  font: 700 clamp(0.3rem, calc(var(--card-h) * 0.075), 0.5rem) / 1
+    var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.trash-inspector-dialog {
+  --editor-paper: #fbf9f5;
+  --editor-field: #f3f0e9;
+  --editor-border: #d8d1c5;
+  --editor-ink: #221f1a;
+  --editor-muted: #6b6257;
+  position: relative;
+  width: min(48rem, 100%);
+  max-height: min(42rem, calc(100dvh - 2.5rem));
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-top: 4px solid var(--flag);
+  border-radius: 8px;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  box-shadow: var(--lift-sealed);
+}
+.trash-inspector-dialog > header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.trash-inspector-dialog > header .eyebrow {
+  margin-right: auto;
+}
+.trash-inspector-dialog > header h2,
+.trash-inspector-dialog > header p {
+  margin-block: 0;
+}
+.trash-inspector-dialog > header span,
+.trash-empty {
+  color: var(--editor-muted);
+}
+.trash-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+.trash-card {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.trash-card:hover,
+.trash-card:focus-visible {
+  border-color: var(--flag);
+}
+.trash-card .game-card {
+  width: 3.5rem;
+  height: 4.9rem;
+}
+.trash-card > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+.trash-card > span b {
+  overflow-wrap: anywhere;
+}
+.trash-card > span small {
+  color: var(--editor-muted);
+  font-family: var(--font-mono);
+}
+
+/* Their hand: the same rows as yours, hung from the top edge instead of
+   standing on the bottom one. */
+.opponent-hand-fan {
+  z-index: 8;
+  min-width: 0;
+  height: 100%;
+  /* Clear of the toolbar: it is fixed over this corner of the board, and the
+     far hand is the one piece that would otherwise be drawn under it. */
+  padding: 3.4rem 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  justify-content: start;
+  gap: 0.1rem;
+  pointer-events: none;
+}
+.opponent-hand-fan .hand-row {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: start;
+}
+.opponent-hand-fan.hand-two-rows {
+  height: auto;
+  align-self: start;
+}
+.opponent-hand-fan.hand-two-rows .hand-row {
+  flex: 0 0 auto;
+}
+.opponent-hand-fan .physical-card-back {
+  height: calc(var(--hand-h) * 0.86);
+  width: auto;
+  flex: 0 0 auto;
+  aspect-ratio: 0.71;
+  margin-left: calc(var(--hand-h) * -0.16);
+}
+.opponent-hand-fan .physical-card-back:first-child {
+  margin-left: 0;
+}
+
+/* Card back — the game's own back, and a drawing under it for when there is no
+   image: a flat cover in the owning deck's mat colour, framed in white so it
+   reads as a deck rather than a table surface.
+ *
+ * The art is the top layer and takes the whole card, frame included, because a
+ * printed back carries its own border; the drawing's white frame is a layer
+ * beneath it rather than a border around it, so filling the anchor does not
+ * mean turning the drawing off first. */
+.physical-card-back {
+  --back-tint: var(--mat-self-tint);
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background:
+    var(--art-card-back) center / cover no-repeat border-box,
+    linear-gradient(var(--back-tint) 0 0) padding-box,
+    linear-gradient(#fff 0 0) border-box;
+  box-shadow: var(--lift-raised);
+}
+.opponent-board .physical-card-back {
+  --back-tint: var(--mat-opp-tint);
+}
+/* The Sealed Leader answers to every colour, so the drawing under the art is
+   the six leader colours swept across the card rather than a single tint. */
+html[data-self-rainbow] .self-board .physical-card-back,
+html[data-opp-rainbow] .opponent-board .physical-card-back {
+  --back-tint: transparent;
+  background:
+    var(--art-card-back) center / cover no-repeat border-box,
+    linear-gradient(
+        120deg,
+        var(--red),
+        var(--yellow),
+        var(--black),
+        var(--purple),
+        var(--blue),
+        var(--green)
+      )
+      padding-box,
+    linear-gradient(#fff 0 0) border-box;
+}
+
+/* Character area — the mat's five slots, filling the width the mat gives them.
+   `--card-h` is already a measure of the rectangle, so the row needs no cap of
+   its own: what fits the mat fits this row. */
+/* Character area — the mat's five slots, in the mat's own five columns.
+   `subgrid` is the alignment: the row takes the parent's tracks and their
+   spacing rather than declaring five of its own, so a Character and the zone
+   below it cannot drift apart when the mat resizes. */
+.character-row {
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  align-self: center;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  justify-items: center;
+}
+.character-row > .game-card,
+.character-row > .empty-slot {
+  height: min(var(--card-h), 100%);
+}
+/* No panel of its own: the five dashed slots are the character area's only
+   outline. The layer survives solely to carry a custom CHARACTER-AREA image
+   when one is loaded, and paints nothing at all when `--art-character-area`
+   is its default `none`. */
+.character-row::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0 -4%;
+  border-radius: 10px;
+  background: var(--art-character-area) center / cover no-repeat;
+}

@@ -1,0 +1,732 @@
+/* ============================================================================
+   RESPONSIVE
+   ========================================================================= */
+@media (max-width: 1180px) {
+  .player-board {
+    padding-inline: 1rem;
+  }
+  .impact-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card-impact + .card-impact {
+    margin-top: 1rem;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 700px) {
+  .game-shell {
+    --card-h: clamp(2.6rem, 9vh, 5.4rem);
+  }
+}
+
+/* The lobby is one card and should fit the window without scrolling. Shorter
+   windows pull the shell padding, card padding and row gaps in together, so
+   the card never needs the page (or even the shell) to scroll. */
+@media (max-height: 940px) and (min-width: 761px) {
+  .setup-shell {
+    gap: 1.5rem;
+    --shell-pad-x: clamp(1rem, 4vw, 3rem);
+    --shell-pad-y: 1.5rem;
+  }
+  .setup-form {
+    gap: 0.95rem;
+    padding: 1.4rem clamp(1.25rem, 3vw, 2.2rem);
+  }
+  .setup-form .primary {
+    padding-block: 0.7rem;
+  }
+}
+@media (max-height: 820px) and (min-width: 761px) {
+  .setup-shell {
+    gap: 0.9rem;
+    --shell-pad-x: clamp(1rem, 4vw, 3rem);
+    --shell-pad-y: 0.9rem;
+  }
+  .setup-form {
+    gap: 0.8rem;
+    padding: 1.1rem clamp(1.25rem, 3vw, 2.2rem);
+  }
+}
+/* Narrow-but-not-phone windows keep the deck columns and config rows side by
+   side; only below 560px do they stack, so a ~30px width difference no longer
+   nearly triples the card's height. */
+@media (max-width: 760px) and (min-width: 561px) and (max-height: 800px) {
+  .setup-form {
+    gap: 0.8rem;
+  }
+  .setup-form .primary {
+    padding-block: 0.7rem;
+  }
+}
+@media (max-width: 560px) {
+  .deck-columns {
+    grid-template-columns: 1fr;
+  }
+  /* The three shelf tabs share the row rather than scrolling it: a tab that
+     starts off-screen is a shelf the player never learns is there. The counts
+     go, since they are what does not fit. */
+  .deck-picker-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    padding-inline: 0.3rem;
+  }
+  .deck-picker-tab-count {
+    display: none;
+  }
+  .deck-columns-divider {
+    width: auto;
+    height: 1px;
+  }
+  /* The lobby keeps its two Leaders side by side -- two cards a phone wide
+     still read -- with the versus mark in the seam between them. */
+  .lobby-columns {
+    /* Said again here, because the `.deck-columns` rule above collapses every
+       other pair of columns to one on a phone and this page keeps its three. */
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+  }
+  /* The cluster comes off the right edge and stands under the cards: on a
+     phone that edge is over a Leader, and a fixed cluster there covers the
+     card it is asking about. */
+  .lobby-hub.board-hub {
+    position: static;
+    display: flex;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    margin-top: calc(var(--hub-h) * 0.75 + 0.5rem);
+    transform: none;
+  }
+  .lobby-hub .hub-face,
+  .lobby-hub .hub-command {
+    position: static;
+    width: var(--hub-w);
+    height: var(--hub-h);
+    transform: none;
+  }
+  /* The mark leaves the row rather than standing at one end of it: it is the
+     one cell that does nothing, and three controls read as a comb without it.
+     The page is still the brand -- there is nothing else on it. */
+  .lobby-hub .hub-brand {
+    display: none;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Below this the half has no width to spare for a hand beside the mat, so the
+   hand goes back under it: the mat takes the whole width and the hand stands on
+   the half's own near edge. The mat keeps its printed shape either way -- what
+   it loses is the column the hand used to stand in.
+
+   The hand is also smaller here than on a desktop, and smaller again when it
+   stacks: two rows at the desktop measure are most of a phone's half. */
+@media (max-width: 900px) {
+  .game-shell {
+    --hand-h: clamp(3.4rem, 12vh, 7rem);
+  }
+  .player-board {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  /* The mat takes what the hand does not, on whichever side of it the hand is:
+     the mat's row is the flexible one in both halves, or a mat sized by its own
+     content ends up a fraction of the half it is drawn in. */
+  .self-board {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .opponent-board {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .mat-frame {
+    justify-items: center;
+  }
+  .self-board .mat-frame {
+    grid-area: 1 / 1;
+  }
+  .self-board .hand-zone {
+    grid-area: 2 / 1;
+  }
+  .opponent-board .mat-frame {
+    grid-area: 2 / 1;
+  }
+  .opponent-board .hand-zone {
+    grid-area: 1 / 1;
+  }
+  .hand-zone {
+    width: 100%;
+    height: auto;
+  }
+  .hand-two-rows .game-card,
+  .hand-two-rows .physical-card-back {
+    height: calc(var(--hand-h) * 0.72);
+  }
+  /* The hand stacks under the mat here, in a grid row sized by its own
+     content -- so a child asking for a percentage of that row is asking for a
+     share of a height the row has not decided yet. `.hand-cards` asked for
+     100% of it, the row resolved that against nothing, and `.game-card`'s own
+     `max-height: 100%` then clamped every card to the result: a hand of five
+     cards 7px tall, its whole row 5px of the screen. The row measures itself
+     from the cards instead, which is what an `auto` track needs from its
+     content. */
+  .hand-cards {
+    height: auto;
+  }
+  .hand-row {
+    flex: 0 0 auto;
+  }
+  /* Their hand takes the left of its row rather than the right: the toolbar is
+     fixed over the other corner, and there is no room here to drop below it. */
+  .opponent-board .hand-zone {
+    justify-items: start;
+  }
+  .opponent-hand-fan {
+    padding-top: 0;
+    align-items: start;
+  }
+}
+
+@media (max-width: 760px) {
+  /* A spectator's bar carries up to eight controls into a top bar that is a
+     thumb wide on a phone. The words go first -- every control keeps its icon
+     and its label to a screen reader -- and what is left wraps onto a second
+     row rather than running off the edge. */
+  .spectator-bar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: calc(100vw - 2.6rem);
+  }
+  .spectator-tag,
+  .spectator-takeover-label {
+    display: none;
+  }
+  .replay-turn {
+    max-width: 7.5rem;
+  }
+  /* A phone's half has no open water beside its Leader: the mat takes the
+     whole width, so the watcher's report crosses it at the seam instead of
+     standing to one side of it. */
+  .spectator-notice {
+    left: 50%;
+    width: calc(100vw - 1.6rem);
+    max-height: 30%;
+  }
+
+  .deck-editor-shell {
+    height: auto;
+    display: block;
+  }
+  .matchup-topline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .matchup-versus {
+    justify-self: center;
+    padding: 0;
+  }
+  .matchup-title {
+    text-align: left;
+  }
+  .turn-order {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .deck-editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    grid-template-columns: 4rem 1fr auto;
+    padding: 0.75rem;
+  }
+  .deck-editor-header h1 {
+    font-size: 1.05rem;
+  }
+  .deck-count b {
+    font-size: 1.2rem;
+  }
+  .deck-editor-tools {
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--rigging);
+  }
+  .card-catalog {
+    display: block;
+  }
+  .catalog-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .catalog-search {
+    width: 100%;
+    max-width: none;
+  }
+  /* The heading stacks here, and a flex basis is a height in a column: left
+     as a width the filter row would be 26rem tall with its lines pushed
+     apart. On a phone the filters own the row outright, from the left. */
+  .catalog-controls {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+  .catalog-list {
+    overflow: visible;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .setup-shell {
+    --shell-pad-x: 1.25rem;
+    --shell-pad-y: 1.25rem;
+  }
+  .matchup-shell {
+    --shell-pad-x: 1.25rem;
+    --shell-pad-y: 1.25rem;
+  }
+  .setup-form,
+  .matchup-card {
+    padding: 1.1rem;
+  }
+
+  .game-shell {
+    --card-h: clamp(1.9rem, 8.5vh, 3.6rem);
+    --hand-h: clamp(3rem, 12.5vh, 5.4rem);
+
+    height: 100dvh;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .topbar {
+    top: 0.35rem;
+    right: 0.35rem;
+    padding: 0.25rem 0.35rem;
+    gap: 0.35rem;
+  }
+  .desktop-secondary {
+    display: none;
+  }
+  .mobile-only {
+    display: grid !important;
+  }
+  /* The cluster shrinks: a phone's board has no room for a hexagon the size of
+     a card. It keeps the right edge and the faces it stands on there, as on a
+     desktop -- it was moved to the left edge without turning the cells round
+     with it, and pushed out along the right-hand normals from the left edge
+     they walked off the screen. End turn, a full cell-width sideways, walked
+     off it completely, which left a phone no way to end its turn. */
+  .board-hub {
+    --hub-h: clamp(2.2rem, 5.4vh, 3rem);
+  }
+  .hub-face svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  /* The line still reads along the seam, centred, as it does on a desktop --
+     it was hung at 175% of the shell instead, which is a screen and three
+     quarters below the top of a phone and so nowhere at all. The cluster is at
+     the edge here, so the middle is free for it.
+
+     One size for both halves, as on a desktop: the count set smaller than the
+     name read as a label on it rather than as half of the same phrase, and at
+     a phone's scale the smaller half had stopped being legible. */
+  .turn-status {
+    --turn-gap: 0.55rem;
+    top: 50%;
+    padding: 0.22rem 0.4rem;
+    font-size: 0.62rem;
+  }
+  .table {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  /* Nameplates share the outer edge with the life dial on narrow screens,
+     so the rows step in to clear them. */
+  .opponent-board {
+    padding: 1.5rem 0.4rem 0.3rem;
+  }
+  .self-board {
+    padding: 0.3rem 0.4rem 0.3rem;
+  }
+
+  /* The hand leaves the table, and the mat takes the whole half.
+
+     Below 900px the hand had already dropped under the mat, and on a phone the
+     two shared a half that was too short for either. The hand is a sheet here
+     (overlays.css, `.hand-sheet`), opened from the button on the near edge,
+     and their hand is a count on the far edge -- the fan of backs never said
+     more than the number. */
+  .self-board .hand-zone,
+  .opponent-board .hand-zone {
+    display: none;
+  }
+  .self-board,
+  .opponent-board {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  /* Back into the one row: the 900px rule above put their mat in the second
+     row, under the hand, and with one explicit row left that is an implicit
+     `auto` row a 100%-tall frame resolves to nothing in. */
+  .opponent-board .mat-frame {
+    grid-area: 1 / 1;
+  }
+  .hand-toggle,
+  .opponent-hand-count {
+    display: flex;
+  }
+
+  /* The phone's own mat: five columns, not six.
+
+     Six columns of cards across a phone's width is what made every card a
+     thumbnail: the mat is as wide as the screen, and its width -- not its
+     height, which the hand's leaving has just freed -- is what sized the card.
+     Freeing the height alone changes nothing at a 1.85 aspect. So the phone
+     mat is a taller rectangle laid out in five columns, the Character area's
+     own width, and the one-card zones the sixth column held move in beside
+     the Leader row: Life keeps the outer column and runs two rows deep, as it
+     does on the desktop mat, and the DON!! deck stands beside it under the
+     first slot. The cost area gives up one column for it and still lays ten
+     DON!! out legibly. A card comes out about half again as tall. */
+  .player-mat {
+    width: 100cqw;
+    height: min(100cqh, calc(100cqw * 0.86));
+    --card-h: min(calc(100cqh * 0.3), calc(100cqw * 0.258));
+    grid-template-columns: repeat(5, calc(var(--card-h) * 0.71));
+  }
+  .life-zone {
+    grid-column: 1;
+  }
+  .don-deck-zone {
+    grid-column: 2;
+  }
+  .character-row {
+    grid-column: 1 / -1;
+  }
+  .mat-leader {
+    grid-column: 3;
+  }
+  .mat-stage {
+    grid-column: 4;
+  }
+  .deck-pile,
+  .trash-zone-button {
+    grid-column: 5;
+  }
+  .cost-area {
+    grid-column: 2 / 5;
+  }
+  .self-board .player-mat > .life-zone {
+    grid-row: 2 / 4;
+  }
+  .self-board .player-mat > .don-deck-zone {
+    grid-row: 2;
+  }
+  .opponent-board .player-mat > .life-zone {
+    grid-row: 1 / 3;
+  }
+  .opponent-board .player-mat > .don-deck-zone {
+    grid-row: 2;
+  }
+  .deck-pile small,
+  .trash-zone-button small,
+  .don-deck-zone small {
+    display: none;
+  }
+
+  /* A deck's own art comes off the mat here. It hangs in a corner of a half,
+     which on a desktop is corner and on a phone is the hand fan, the life dial
+     and the opponent's Leader: a third of the width puts the painting under
+     the pieces rather than beside them. The half keeps its wash, its ruling
+     and its seam split -- what goes is the picture. */
+  html[data-self-mat] .self-board::after,
+  html[data-opp-mat] .opponent-board::after {
+    display: none;
+  }
+
+  .character-row::before {
+    inset: 2% 0;
+  }
+  .game-card {
+    padding: 0.22rem;
+    border-radius: 6px;
+  }
+  .game-card > strong {
+    font-size: 0.44rem;
+  }
+  .don-badge {
+    top: 1.1rem;
+    left: 0.2rem;
+    padding: 0.06rem 0.18rem;
+  }
+  .don-badge b {
+    font-size: 0.5rem;
+  }
+  .don-badge small {
+    display: none;
+  }
+  .power-overlay,
+  .cost-overlay {
+    padding: 0.05rem 0.15rem;
+  }
+  .power-overlay b,
+  .cost-overlay b {
+    font-size: 0.44rem;
+  }
+  .power-overlay small,
+  .cost-overlay small {
+    font-size: 0.34rem;
+  }
+  .blocker-badge {
+    top: 1.1rem;
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
+  /* The mat's own card size already scales every pile and every DON!! card, so
+     what a phone drops is the printed names -- and that width goes to the
+     cards. The counts stay: they are the piles' only readable figure here. */
+  .cost-area-label {
+    display: none;
+  }
+  .deck-pile b,
+  .trash-zone-button b,
+  .don-deck-zone > b,
+  .life-stack > b {
+    padding: 0.05rem 0.25rem;
+  }
+  .hand-zone::before {
+    bottom: -4.5rem;
+    width: 100%;
+    height: 8rem;
+  }
+  .hand-cards {
+    padding: 0.3rem 0.6rem 0;
+  }
+  .hand-row .game-card {
+    margin-left: calc(var(--hand-h) * -0.2);
+  }
+  .hand-row .game-card:hover,
+  .hand-row .game-card.selected-source {
+    transform: translateY(-1.4rem) scale(1.06);
+  }
+
+  .end-turn-button {
+    min-width: 4.8rem;
+    padding: 0.32rem 0.5rem;
+    font-size: 0.48rem;
+  }
+
+  .decision-modal {
+    top: 47%;
+    width: calc(100vw - 0.75rem);
+    max-height: calc(100dvh - 7.5rem);
+    padding: 0.9rem;
+  }
+  .review-choice-button {
+    right: 0.6rem;
+    bottom: 4.3rem;
+  }
+  /* Too narrow for a corner bar -- the targeting strip takes the bottom edge,
+     clear of the end-turn dial, and the board keeps the rest. */
+  .decision-modal.targeting-bar {
+    top: auto;
+    bottom: 0.35rem;
+    left: 0.4rem;
+    width: calc(100vw - 5.6rem);
+    padding: 0.55rem 0.7rem;
+  }
+  /* One option per row at this width: two columns of card faces leave neither
+     the face nor its sentence a readable size. */
+  .decision-modal .action-list.target-picker-list {
+    grid-template-columns: 1fr;
+  }
+  .decision-modal .action-list {
+    grid-template-columns: 1fr;
+  }
+  .decision-modal .action-list.card-choice-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .decision-modal .action-button.action-card-choice {
+    min-height: 8.5rem;
+    padding: 0.45rem;
+  }
+  .decision-modal .action-card-choice .game-card {
+    height: clamp(4.2rem, 16vh, 6rem);
+  }
+  .decision-modal .look-notice-cards .game-card,
+  .decision-modal .bottom-order .game-card {
+    height: clamp(3.6rem, 13vh, 5rem);
+  }
+  /* One column, turned on its side: the card alone and centred, the three
+     numbers as one row of three under it, the type line as a row under those,
+     then the printed text and the offers. Beside a card the numbers were a
+     tall stack that left the card a third of the width and the text nowhere
+     but under both; across the width each box is as wide as a thumb and the
+     card gets the room it is being looked at for. The text is the row that
+     shrinks, so its button list scrolls when a Leader offers eight things. */
+  .card-action-overview {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    justify-items: center;
+    gap: 0.7rem;
+  }
+  .card-action-stats,
+  .card-action-text {
+    width: 100%;
+  }
+  .card-action-stats .rule-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+  .card-action-stats .rule-types {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+  /* The card is what the panel is opened to look at, so it takes the width:
+     as wide as the modal, the numbers and the words under it, and the whole
+     panel scrolls -- rather than the card at a third of the height with the
+     text row squeezed. */
+  .card-action-modal .selection-card-preview,
+  .card-action-modal .card-action-stats,
+  .card-action-modal .card-action-text {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .selection-card-preview {
+    width: 100%;
+  }
+  .selection-card-preview .game-card {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    aspect-ratio: 0.71;
+    /* The table lifts a selected card half a rem; in a scroll box that lift
+       carries the frame past the top edge, where it is clipped. */
+    transform: none;
+  }
+  .card-action-modal:not(.target-picker):not(.targeting-bar) {
+    max-height: calc(100dvh - 2.5rem);
+  }
+  .card-action-modal .card-action-overview {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    min-height: 0;
+    overflow-y: auto;
+    /* A scroll box clips at its edge; this is the card's frame and lift. */
+    padding: 0.35rem 0.3rem;
+  }
+  .card-action-modal .card-action-stats,
+  .card-action-modal .card-action-text .action-list {
+    overflow: visible;
+    /* No scrollbar to leave room for once the whole panel scrolls instead, and
+       the gutter left every offer a few pixels narrower than the number boxes
+       stacked directly above it -- read as a misalignment rather than as a
+       column. */
+    padding-right: 0;
+  }
+  /* One tile, the whole row, when one stays (overlays.css says which). */
+  .card-action-modal .card-action-stats .rule-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card-action-modal .context-actions {
+    grid-template-columns: 1fr;
+  }
+  .card-action-modal .target-card-choice {
+    min-height: 0;
+  }
+  .card-action-modal .target-card-choice .game-card {
+    height: 4.6rem;
+  }
+  .card-action-modal .card-action-text p {
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+  /* Five cards in one row across a phone were a strip of thumbnails, and the
+     opening hand is the one hand a player has to read whole before choosing.
+     Three to a row was twice the height and still no words: a keep is decided
+     on what the cards do, not on their faces. So the opening hand reads here
+     exactly as the hand sheet does -- one card to a row with its printed text
+     beside it (overlays.css, `.hand-sheet-entry`) -- and the modal's own body
+     scrolls through the five. */
+  .mulligan-hand-preview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    gap: 0.8rem;
+    margin-top: 0.9rem;
+    text-align: left;
+  }
+  .mulligan-hand-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 0.7rem;
+    align-items: start;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--editor-border);
+  }
+  .mulligan-hand-entry:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .mulligan-hand-preview .mulligan-card-inspect {
+    display: block;
+    min-width: 0;
+  }
+  .mulligan-hand-preview .game-card {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 0.71;
+  }
+  .mulligan-card-text {
+    display: block;
+    min-width: 0;
+  }
+  .mulligan-card-text strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    font: 700 0.9rem/1.2 var(--font-display);
+  }
+  .mulligan-card-text p {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  /* The opponent's report is the only sight of a card the player never held,
+     and at 5rem across a phone it was a stamp: the name unreadable and the art
+     too small to recognise the card by. The panel has the width to spare --
+     three columns of 5rem left a third of it empty -- so the faces take it,
+     and the verb between them gives up the room it was padding. */
+  .opponent-action-modal {
+    --opponent-card-w: 6.6rem;
+  }
+  .opponent-action-pair {
+    grid-template-columns:
+      var(--opponent-card-w) minmax(3.4rem, 5rem)
+      var(--opponent-card-w);
+    gap: 0.35rem;
+  }
+  .opponent-action-card figcaption span {
+    font-size: 0.46rem;
+  }
+  .history-modal {
+    padding: 1rem;
+  }
+  /* The icon alone on a phone: the row is two lines of text wide there, and a
+     labelled pill beside it would take a third of them. */
+  .history-reset b {
+    display: none;
+  }
+  .history-reset {
+    padding: 0.3rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .catalog-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Every loop pauses. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

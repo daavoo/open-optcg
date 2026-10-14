@@ -1,0 +1,85 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op17LinlinDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Yellow) Charlotte Linlin - Official Feature Deck",
+  archetype: "OP-17 (Yellow) Charlotte Linlin {Big Mom Pirates} Life-bank",
+  gamePlan: [
+    'You do not win the board, you outlast it and then re-price it. Nine of the thirteen slots are 4000-power Characters printing "[Trigger] Play this card", which every Leader in the format beats by attacking. OP17-112 Charlotte Linlin\'s [Your Turn] makes the base power of all of your Characters with a [Trigger] and 4000 base power 8000, so the turn the 10-drop lands the whole board becomes a threat at once. Everything before that turn is buying the time to reach it.',
+    "The currency you buy it with is Life cards taken off the top of your own deck. Six clauses add one -- the Leader's [When Attacking], OP17-104 Cracker, OP17-106 Smoothie, OP17-103 Katakuri, OP17-114 Sweet 3 Generals and OP17-112's own [On Play]. Because the cards on top of your deck are your own 4000 [Trigger] bodies, a Life card the opponent takes later plays itself. Being attacked is how this deck develops, so absorbing a hit is usually better than blocking one.",
+    "The Leader's clause is a trade, not a profit. \"[When Attacking] You may trash 1 card from your hand: Your opponent chooses one: - Trash 1 card from your hand. Then, add up to 1 card from the top of your deck to the top of your Life cards. - Trash 1 card from your opponent's hand.\" You pay a card before they choose anything, and the branch they take while their own hand is full costs you a second. Two cards for one Life card is a price, and your hand is the only thing your 4000 bodies defend with.",
+    "OP17-102 Charlotte Oven is why removal aimed at this deck is a bad trade: its [On K.O.] plays a 4000-power-or-less Character other than itself out of your trash, so the small bodies keep coming back. OP17-111 Charlotte Mont-d'or is the deck's only removal and it only reaches cost 1, revealing two [Trigger] cards from hand to do it -- a reveal, not a cost, so the cards stay.",
+    "OP17-110 Charlotte Perospero is the turn the deck converts. Its [On Play] plays a {Big Mom Pirates} Character of cost 6 or less out of your hand and then gives itself [Rush], so at 7 DON!! it is two bodies and an attack in one card. OP17-115 is the closer: [Main] makes your [Charlotte Linlin] Leader [Unblockable] for the turn, and its [Counter] half is +4000 on a [Charlotte Linlin], which is either the Leader or the 10-drop.",
+  ],
+  mulligan: [
+    "Keep a hand with OP17-113 Streusen. At 1 cost it plays on turn one and looks three deep for a {Big Mom Pirates} card, which in this fifty is everything but the Event, and the deck's other cheap slot is not a play.",
+    "OP17-109 Charlotte Pudding is the other card worth keeping on. At 3 it trades one [Trigger] card from hand for three cards, which is the only way this deck refills the hand its Leader spends.",
+    "Do not keep a hand whose only cheap card is OP17-115. It is a 1-cost Event, but its [Main] half only matters on a turn you are attacking for the win and its [Counter] half needs a battle, so on turn one it is neither.",
+    "A hand of OP17-112 and 6-and-7-cost bodies with nothing under 4 goes back. The 10-drop is where the deck is going and you will draw one; the problem is surviving to cast it.",
+  ],
+  priorities: [
+    "Do not activate the Leader's [When Attacking] automatically. It is optional every turn, it costs a card before your opponent chooses, and a hand spent into Life is a hand with no Counter -- which for a board of 4000s is no defence at all. Activate it while your hand can afford it and stop when it cannot.",
+    "Pay it with the card the plan can most afford. OP17-107 Charlotte Daifuku and ST20-003 Charlotte Brulee print nothing but a [Trigger], so they do the same thing from Life as from hand; OP17-112 and OP17-115 are the two cards the fifty has no substitute for and are never the payment.",
+    "Stop adding Life once you are comfortably ahead of the attacks you are actually facing. Every card banked comes off the top of your own deck, this deck banks more than any other in the format, and losing to an empty deck is a real way for this list to lose a game it had won.",
+    "Take the hit rather than blocking it, unless the block saves a Character you were going to need. A Life card taken goes to your hand, and nine of your thirteen slots play themselves off it for free; a 4000 blocker traded away is a body that is not on the board when OP17-112 lands.",
+    "Sequence Perospero around what it plays: OP17-110's [On Play] casts a 6-cost-or-less {Big Mom Pirates} Character from hand and then gives itself [Rush], so at 7 DON!! the right target is OP17-103 Charlotte Katakuri -- a Life card, -3000 on one of their Characters, and an attack from a body that started the turn in hand.",
+    "Hold OP17-112 until the board it is lifting is worth lifting. It is a 10-cost that adds 4000 to each 4000 [Trigger] body you already control, so casting it into one Character is casting a 12000 vanilla; casting it into three is casting a 12000 and three 8000s.",
+    "Rest DON!! for the [On Play] Life gains only once the turn's plays are paid for. OP17-104 Cracker, OP17-106 Smoothie and OP17-114 Sweet 3 Generals each rest 2 of your DON!! as a cost, and DON!! rested is DON!! that cannot cast the next body.",
+    "OP17-114 Sweet 3 Generals and OP17-103 Katakuri give -3000, not removal. Point them at the body that is currently stopping an attack, and take the attack the debuff opens in the same turn -- the power is gone at end of turn whether or not you used it.",
+    "OP17-111 Mont-d'or's reveal is not a cost. Two [Trigger] cards are shown and stay in hand, so play it whenever their board has a cost-1-or-less Character, and never trash a [Trigger] card away that the reveal was going to need.",
+    "OP17-109 Pudding's draw is the deck's refill, and it costs a [Trigger] card. Pay it with the same cards you would pay the Leader with, and take it before a turn where the hand has to hold Counter.",
+  ],
+  commonVariants: [
+    "This is Bandai's own featured deck transcribed slot for slot. Built lists for the Leader cut a copy or two of the 3-cost bodies for OP17-117 Maser Saber, a 1-cost [Counter] giving a [Charlotte Linlin] +3000 whose [Trigger] is its own clause, on the reading that the deck's defence is too thin.",
+    "The two OP17-115 slots are the list's only non-four-of. A build that expects to be blocked out of its last points of damage plays more of them; a build that expects to be raced plays another body.",
+    "Yellow lists that do not lead this Leader use the same {Big Mom Pirates} cards very differently -- as a Life-manipulation package around a Leader that pays for having few Life cards. Here Life is something to accumulate, so a card is not playable in this seat merely for being in the tribe.",
+  ],
+  commonCombos: [
+    "OP17-110 Charlotte Perospero into OP17-103 Charlotte Katakuri at 7 DON!!: the 6-cost lands free off Perospero's [On Play], banks a Life card and shrinks one of their Characters by 3000, and Perospero attacks the same turn on the [Rush] it gives itself.",
+    "OP17-112 Charlotte Linlin onto a board of 4000 [Trigger] bodies: every one of them becomes an 8000 on your turn, and OP17-112's own [On Play] draws a card and then either banks another Life card or takes the top of their Life pile into their hand -- the second mode is a point of damage you do not have to attack for.",
+    "OP17-115 [Main] with the Leader: [Unblockable] for the turn, which is how the last points of damage get through a board this deck cannot remove.",
+    "A Life card taken while OP17-112 is already down: the [Trigger] plays a 4000 body, and the aura makes it an 8000 on your next turn without spending a card.",
+    "OP17-102 Charlotte Oven traded off in a battle: its [On K.O.] plays another 4000-or-less body out of the trash, so the attack that answered it developed your board instead.",
+  ],
+  keyCardNumbers: [
+    "OP17-099",
+    "OP17-112",
+    "OP17-110",
+    "OP17-103",
+    "OP17-109",
+    "OP17-113",
+    "OP17-102",
+    "OP17-114",
+    "OP17-111",
+    "OP17-115",
+  ],
+  counterplay: [
+    "Do not attack into their Life without a reason. Every Life card you take hands them a card and may play a free body off its [Trigger]; against this deck the Leader is often the wrong target and their board is the right one.",
+    "Their board is 4000 until the 10-cost lands. Any removal that reaches 4000, and any body above it, trades up -- but check for OP17-102 Charlotte Oven first, whose [On K.O.] replaces itself out of their trash.",
+    "Race the turn before OP17-112. At 10 DON!! their whole board doubles in threat, so the damage has to be in before then; after it lands, a 4000 they cast is an 8000.",
+    "Their Counter is thin -- 1000 on the 4000 line and 2000 on the cheap bodies -- and their Leader spends the same hand every time it attacks. An attack that demands two cards rather than one is what empties it.",
+    "Their only removal reaches cost 1, and their debuffs are -3000 for the turn. A body at 5000 or more is safe from everything in the fifty except a battle.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_108.php",
+      retrievedAt: "2026-09-20",
+      note: "Bandai's own featured deck for OP17-099, transcribed slot for slot as the deck manifest. Its strategy notes are the source for the early Pudding line, the mid-game rest-2-DON!! Life gains, and the end-game OP17-112 / OP17-115 / Perospero sequence.",
+    },
+    {
+      url: "https://opdeckguide.com/deck-guides/charlotte-linlin-op17/",
+      retrievedAt: "2026-09-20",
+      note: "A written guide for this Leader. Source for the Streusen-first mulligan, the Perospero-into-Katakuri turn, and the claim that the Leader's clause should not be activated automatically.",
+    },
+    {
+      url: "https://www.thornberrymedia.com/post/op-17-charlotte-linlin-deck-list",
+      retrievedAt: "2026-09-20",
+      note: "A written guide for this Leader. Source for the three-phase reading of the list and for the do-not-overheal warning: Life is a resource to manage, and the deck can lose to an empty deck rather than to damage.",
+    },
+    {
+      url: "https://www.shonentcg.com/blog/op-17-big-mom-deck-guide",
+      retrievedAt: "2026-09-20",
+      note: "A written guide for this Leader. Source for paying the Leader's cost with the least useful card in hand rather than the first one, and for reading the opponent's hand size when judging which branch they will take.",
+    },
+  ],
+};

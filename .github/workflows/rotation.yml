@@ -1,0 +1,139 @@
+name: Rotation watch
+
+# Bandai retires the oldest block from Standard roughly once a year, and lists
+# new products in between. Both change which cards a Standard deck may name, and
+# neither sends anyone a message -- the failure mode this guards is a floor that
+# moved months ago while every gate in the repo went on passing.
+#
+# This is the one workflow in the repo that pushes. Every other derived artefact
+# (`standings:check`, `coverage:clauses:check`,
+# `decks:provenance:check`, `fixtures:check`) is a check-only ratchet the author
+# refreshes by hand, and `standings.yml` explains why: a push from CI races the
+# author's own pushes and cannot work on a fork PR. Neither applies to a cron on
+# a branch of its own, with no author to race. The alternative -- waiting for
+# somebody to think to run the check -- is exactly what failed here before.
+#
+# Weekly rather than daily: Bandai lists a new product every few weeks, so a
+# daily run is six wasted fetch sweeps against their servers for every useful
+# one. Change the cron to `0 6 * * *` if you want it daily anyway.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      open_pr:
+        description: "Open a PR if anything changed (off = report only)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: rotation-watch
+  cancel-in-progress: false
+
+jobs:
+  rotation:
+    name: Has rotation moved?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Exit 0 and there is nothing to do: the icons match and the floor's
+      # review deadline is far enough off. The report reaches the job summary
+      # either way, so a quiet week still records what was checked.
+      - name: Check Bandai's cardlist against the committed block data
+        id: check
+        run: |
+          set +e
+          pnpm rotation:check > "$RUNNER_TEMP/rotation.txt" 2>&1
+          status=$?
+          {
+            echo '## Rotation watch'
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/rotation.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/rotation.txt"
+          if [ $status -eq 0 ]; then
+            echo "drifted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drifted=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only the block icons are rewritten, and only when they grew. The floor
+      # is never touched here: which blocks are still legal is a sentence in a
+      # Bandai announcement, not a field on any page this fetches, so a human
+      # reads it. `--write` refuses outright if any identity *lost* a printing,
+      # which cannot be a real change and is what a bad fetch looks like.
+      - name: Refresh the block icons
+        if: steps.check.outputs.drifted == 'true'
+        run: |
+          pnpm rotation:write
+          npx prettier --write packages/cards/src/generated-blocks.ts
+
+      # The PR arrives already verified. A PR opened with GITHUB_TOKEN does not
+      # trigger other workflows, so if these do not run here nothing runs them
+      # at all. See docs/rules-map/rotation.md for swapping in a PAT if you
+      # would rather the normal CI suite attached itself.
+      - name: Verify
+        if: steps.check.outputs.drifted == 'true'
+        run: |
+          pnpm typecheck
+          pnpm test
+          pnpm decks:provenance:check
+          pnpm decks:legality:check
+
+      - name: Open or update the pull request
+        if: >-
+          steps.check.outputs.drifted == 'true' &&
+          (github.event_name == 'schedule' || inputs.open_pr)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: bot/rotation-watch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A
+          # `--allow-empty` is deliberate: when the only finding is the floor
+          # review coming due there is no diff to show, and the PR itself is
+          # the notification. Its body carries the report either way.
+          git commit --allow-empty \
+            -m "Rotation watch: refresh block icons" \
+            -m "Opened by .github/workflows/rotation.yml. The PR body carries the report and what still needs a human."
+          git push --force origin "$BRANCH"
+
+          {
+            echo 'Automated by `.github/workflows/rotation.yml`. It re-read every cardlist page recorded in the reference snapshot manifest and compared the block icons to `packages/cards/src/generated-blocks.ts`.'
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/rotation.txt"
+            echo '```'
+            echo
+            echo '### Before merging'
+            echo
+            echo '- [ ] If a **new block icon** is listed above, read the [rotation schedule](https://onepiece.gg/rotation/). A new block usually means the floor moved with it.'
+            echo '- [ ] If the **floor review is due or overdue**, confirm `STANDARD_FLOORS` in `packages/cards/src/block-icons.ts`, then re-stamp `verifiedOn` and `reviewBy`.'
+            echo '- [ ] If the floor moved, run `pnpm decks:legality:check` and re-tune or re-declare every deck it fails.'
+            echo
+            echo 'Block icons only ever get *added* to an identity, so a refresh here can only make cards more legal -- it cannot make a shipped deck illegal on its own. The bot never edits the floor.'
+          } > "$RUNNER_TEMP/body.md"
+
+          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
+            gh pr edit "$BRANCH" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Rotation watch: Bandai's block data has changed" \
+              --body-file "$RUNNER_TEMP/body.md"
+          fi

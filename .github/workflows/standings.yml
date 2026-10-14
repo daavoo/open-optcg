@@ -1,0 +1,208 @@
+name: Deck standings
+
+# The all-vs-all benchmark is the only instrument that says whether a rules or
+# policy change made the field better or worse. The policies matter as much as
+# the engine here: a policy change with no rules change at all can swing a deck
+# twenty points.
+#
+# The sweep is two divisions -- `featured` and `starter` -- and this job runs
+# both. Which one a change moves is not something a path filter can tell: the
+# shared rule families, the mulligan and the whole engine move both, and
+# `registerPolicy` keys on a Leader, so OP13-004 alone moves both divisions from
+# one policy file, fronting ST-35 on the starter shelf and the OP-17 Elbaph list
+# on the featured one. `pnpm standings --group <division>` is there for the
+# author who knows which half they touched; CI does not guess.
+#
+# The path list is those two and the files' own harness, and deliberately not
+# everything that could in principle move a number -- not card or deck data, not
+# the protocol, not the lockfile. This is a signal for someone iterating on a
+# policy or a mechanic, and a whole-field sweep on a Dependabot bump or a
+# reference-data refresh was paid on every such PR to say nothing. Narrowing it
+# defers the other cases rather than dropping them: `--check` holds the rules
+# stamp and each division to exact equality, so a card-data or deck-list change
+# that never triggered a sweep still fails this job the next time it runs, and
+# `workflow_dispatch` is there when you want the answer sooner.
+#
+# Two narrowings within those two packages. `packages/agents/src/rules/**`, not
+# the whole package: the benchmark seats `@one-piece-sim/agents/local`, so the
+# LLM agent and its clients and dossiers cannot reach a single game in the table.
+# `packages/engine-core/src/**`, not the whole package, so a dependency bump in
+# its `package.json` is treated like the lockfile.
+#
+# What this list cannot narrow is the inside of a rules file. The engine writes
+# the human-facing `summary` for each legal action in the same modules that
+# decide legality, so a wording fix in `legal-actions/` reads to a path filter
+# exactly like a legality change and pays the sweep. Splitting those strings out
+# of the legality modules is what would fix that; until then, it is the price of
+# the filter never missing a real one.
+#
+# Pull requests only. The sweep is a function of the tree, and a squash merge
+# lands the tree the PR's own run already measured, so a second run on `main`
+# re-answers a question at whole-field cost. What makes that safe is that the PR
+# run is required: a tree reaches `main` having been swept, and `--check` holds
+# the deck field and the rules stamp exactly, so anything that slipped past the
+# path filter fails the next run rather than never being asked.
+#
+# Check-only, deliberately. The issue that asked for this weighed auto-committing
+# the regenerated table back onto the PR branch, and check-only wins for two
+# reasons: a push from CI races the author's own pushes, and every other derived
+# artefact in this repo (`coverage:clauses:check`, `decks:provenance:check`,
+# `fixtures:check`) is a ratchet the author refreshes by hand. One shape for all
+# four beats a special case, and it works identically
+# on a fork PR, which cannot be pushed to at all. The job summary carries the
+# table diff so the refresh does not need a local run to understand.
+on:
+  pull_request:
+    paths:
+      - "packages/engine-core/src/**"
+      - "packages/agents/src/rules/**"
+      - "docs/rules-map/deck-standings-featured.csv"
+      - "docs/rules-map/deck-standings-starter.csv"
+      - "tools/deck-standings.ts"
+      - "tools/shard.ts"
+      - ".github/workflows/standings.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A standings run is a whole-field sweep; superseding an in-flight one on the
+# same ref is always right, because only the tip's numbers are the answer.
+concurrency:
+  group: standings-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The two divisions are 189 matchups and 3,600 games, and each grows with the
+  # square of its own deck count -- a deck added to `featured` costs another ~270
+  # games, forever. On one four-core runner a single 27-deck field had reached
+  # half an hour, which is not a signal anyone waits for. So the sweep is split
+  # across machines: each shard plays a stripe of every division's matchups on
+  # its own cores and saves its games, and `merge` puts them back together.
+  #
+  # This is a split, not a sample. `--shard` stripes whole matchups within each
+  # division, and a shard writes one report per division it played. A game is a
+  # pure function of (decks, seed, seat), and a worker's shard composes with its
+  # machine's, so eight runners forking four workers each cover both divisions
+  # exactly once. `test/shard.test.ts` pins that composition, and
+  # `test/deck-benchmark.test.ts` pins that merging shards reassembles the rows a
+  # single run produces -- identical, not merely equivalent.
+  #
+  # The failure this cannot tolerate is a shard that never arrives: a cancelled
+  # job or a shard that did not save would otherwise merge cleanly into a
+  # file quietly covering part of a division. `--merge` counts the games it was
+  # handed against each division's own total and fails when they disagree, which
+  # `test/deck-standings.test.ts` pins.
+  shard:
+    name: sweep ${{ matrix.shard }}/8
+    runs-on: ubuntu-latest
+    strategy:
+      # One slow shard would otherwise cancel the seven that are about to finish,
+      # and the merge needs all eight.
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Play this shard of the field
+        run: |
+          mkdir -p standings-shards
+          pnpm standings --shard "${{ matrix.shard }}/8" \
+            --shard-out "standings-shards/${{ matrix.shard }}.json"
+      # Carried to the merge in the Actions cache, not as an artifact: artifact
+      # storage is an account-wide quota, and when it is full every shard fails
+      # to upload after playing its games. The cache is this repository's own
+      # (10 GB, evicted oldest first), and the key is unique to the run attempt,
+      # so a re-run never reads an earlier attempt's games.
+      - uses: actions/cache/save@v4
+        with:
+          path: standings-shards/${{ matrix.shard }}.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
+
+  standings:
+    name: the committed deck standings are current
+    needs: shard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # One restore per shard: a cache entry restores by exact key, and a shard
+      # that never saved fails here by name rather than reaching the merge.
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/0.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-0
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/1.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-1
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/2.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-2
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/3.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-3
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/4.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-4
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/5.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-5
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/6.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-6
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: standings-shards/7.json
+          key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-7
+          fail-on-cache-miss: true
+      # `--merge` plays nothing: it reads the shards' games, rebuilds both files
+      # and compares. A shard whose cache entry is missing, whose configuration
+      # differs, or which is short a division fails the merge rather than
+      # producing a file that quietly covers part of a division.
+      #
+      # `--check` never inherits `deck:benchmark run`'s exit code for an
+      # unfinished game; the incomplete count is a column in the files.
+      #
+      # The result is written to a file rather than piped, so the check's own
+      # exit code is what fails the job -- a pipe would hand the job `tee`'s.
+      # The diff goes to the job summary either way: knowing which decks moved is
+      # what tells the author whether the move was intended.
+      - run: |
+          set +e
+          pnpm standings:check --merge standings-shards > "$RUNNER_TEMP/standings.txt"
+          status=$?
+          {
+            echo '## Deck standings'
+            echo
+            echo 'Refresh with `pnpm standings` and commit the result.'
+            echo
+            echo '```diff'
+            cat "$RUNNER_TEMP/standings.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/standings.txt"
+          exit $status

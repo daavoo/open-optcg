@@ -1,0 +1,13 @@
+{
+  "name": "@one-piece-sim/engine-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "@one-piece-sim/cards": "workspace:*",
+    "@one-piece-sim/protocol": "workspace:*"
+  },
+  "license": "MIT"
+}

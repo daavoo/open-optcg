@@ -1,0 +1,151 @@
+/* ============================================================================
+   TOKENS
+   ========================================================================= */
+:root {
+  color-scheme: dark;
+
+  /* Hull & surface — graphite, deliberately achromatic.
+     The chrome owns no hue, because every hue on this screen is a deck's.
+     The previous navy hull competed with a blue leader's sea and the old
+     brass trim competed with a yellow one; both are now the mat's alone. */
+  --abyss: #0a0a0b;
+  --hull: #131315;
+  --hull-2: #1c1c20;
+  --deep: #17171a;
+  --shoal: #2a2a2f;
+  --rigging: #4a4a52;
+  --hairline: rgba(255, 255, 255, 0.14);
+  --hairline-strong: rgba(255, 255, 255, 0.28);
+
+  /* Ember & paper — the one warm accent, at a hue no leader colour claims.
+     Terracotta sits below red and beside yellow without being either: dark
+     and low-chroma where the flag colours are light and saturated. */
+  --ember: #c76a38;
+  --ember-bright: #e79a63;
+  --ember-deep: #6e3517;
+  --parchment: #efeae1;
+  --ink-white: #f3f2f0;
+  --mist: #b5b3ae;
+  --fog: #8a8883;
+  --slate: #7f7d76; /* the quietest step that still clears 4.5:1 on --hull */
+
+  /* Flag colours — one per card faction */
+  --red: #d1594f;
+  --green: #4fae86;
+  --blue: #4f8fd1;
+  --purple: #9b6fc4;
+  --yellow: #e0b64a;
+  --black: #5d6b80;
+  --neutral: #5d6b80;
+
+  /* Printed keyword chips — Bandai's own colour coding, tuned for a dark card.
+     Timing is blue, [Counter] and per-turn limits red, keyword abilities
+    orange, the DON!! requirement black, and
+     [Trigger] gold. See card-text.ts.
+
+     The ability orange is held lighter and more saturated than --ember on
+     purpose. Both are warm, but a chip is a bright mark on a card face and
+     the chrome accent is a dark line on the shell, so they never read as
+     the same thing even where they meet. */
+  --kw-timing: #2f74c8;
+  --kw-alert: #cf3644;
+  --kw-ability: #f5a03a;
+  --kw-trigger: #e5b64a;
+  --kw-cost: #dfe7f2;
+
+  /* State pops — reserved, never decorative */
+  --state-playable: #78f0be;
+  --state-target: #ffffff;
+  --state-damage: #ff8a7e;
+  --state-illegal: #5d6b80;
+
+  /* Type */
+  --font-display:
+    "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Printed-card type, used where the UI imitates a card face. */
+  --font-card: Roboto, system-ui, sans-serif;
+  --font-card-name: "Roboto Condensed", Roboto, system-ui, sans-serif;
+
+  /* The scrim every menu shell lays over its backdrop drawing.
+  
+     One token, because three shells paint the same stack and a scrim that
+     drifts between them reads as three different pages. It was 0.62 -> 0.78,
+     which is most of the way to opaque: the shipped drawing is ink on near-white
+     paper, so at that strength the page showed a grey murk rather than the
+     drawing. Held low enough now that the art reads as itself; what the strong
+     version was really protecting was the white wordmark over the bright sky,
+     and that is a text-shadow's job, not the whole backdrop's. */
+  --shell-scrim: linear-gradient(
+    180deg,
+    rgba(10, 10, 11, 0.3),
+    rgba(10, 10, 11, 0.45)
+  );
+
+  /* Elevation */
+  --lift-raised: 0 8px 22px rgba(0, 0, 0, 0.55);
+  --lift-lifted: 0 14px 34px rgba(0, 0, 0, 0.6);
+  --lift-sealed: 0 30px 70px rgba(0, 0, 0, 0.75);
+
+  /* Motion — nothing over 400ms except idle loops */
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.25, 1.1);
+
+  /* Defaults; overridden per theme in section 02 */
+  --mat-self-tint: #2c6ba0;
+  --mat-self-deep: #0e2740;
+  --mat-self-glow: rgba(140, 205, 255, 0.3);
+  --mat-self-secondary-tint: var(--mat-self-tint);
+  --mat-self-secondary-deep: var(--mat-self-deep);
+  --mat-self-secondary-layer: linear-gradient(transparent, transparent);
+  --mat-self-divider: linear-gradient(
+    var(--mat-self-tint),
+    var(--mat-self-tint)
+  );
+  --mat-opp-tint: #8f2f2c;
+  --mat-opp-deep: #3a1210;
+  --mat-opp-glow: rgba(255, 140, 130, 0.3);
+  --mat-opp-secondary-tint: var(--mat-opp-tint);
+  --mat-opp-secondary-deep: var(--mat-opp-deep);
+  --mat-opp-secondary-layer: linear-gradient(transparent, transparent);
+  --mat-opp-divider: linear-gradient(var(--mat-opp-tint), var(--mat-opp-tint));
+  /* The chart's ruling: one hairline every 46px each way, on both halves and
+     under everything else the mat paints. Named here because six recipes read
+     it -- the two halves, the two that carry deck art, and the two a Sealed
+     Leader gets -- and a grid that differed between them read as two mats.
+
+     Ruled in black rather than white: a mat is printed, and ink on a coloured
+     ground is darker than the ground, not lighter. White ruling read as light
+     coming through the mat from behind it. */
+  --mat-rule-ink: rgba(0, 0, 0, 0.08);
+  --mat-rule-horizontal: repeating-linear-gradient(
+    0deg,
+    var(--mat-rule-ink) 0 1px,
+    transparent 1px 46px
+  );
+  --mat-rule-vertical: repeating-linear-gradient(
+    90deg,
+    var(--mat-rule-ink) 0 1px,
+    transparent 1px 46px
+  );
+  /* How big one repeat of a deck's mat painting is: a few tiles across a half,
+     not a dense weave. Large enough that the seams where the painting meets
+     itself are rare, small enough that it still reads as texture under the
+     pieces rather than as a picture they sit on top of. */
+  --mat-art-tile: 34rem;
+  /* How present a deck's own art is on its mat. It sits in a corner rather
+     than under the cards, so it can carry more than a watermark would -- but
+     the cards still have to win every contrast fight against the mat. Held back
+     to a little over half, it read as a stain on the mat rather than as the
+     deck's own art printed on it. */
+  --mat-sprite-opacity: 0.85;
+  --flag: #4f8fd1;
+  /* The other seat's, for an edge that belongs to their half. Defaulted here
+     beside `--flag` so a surface using it draws before a match sets the two
+     mat skins (mat-skins.css), rather than drawing with no colour at all. */
+  --opp-flag: #4f8fd1;
+
+  font-family: var(--font-body);
+  background: var(--abyss);
+  color: var(--ink-white);
+}

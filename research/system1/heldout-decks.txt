@@ -1,0 +1,7 @@
+# Decks held out of training for the unseen-cards evaluation
+# (CARD-REPRESENTATION.md step 1): every card in each is in no other
+# selectable deck, so a model trained without them has never played them.
+(Red/Green) Krieg - Official Feature Deck
+(Red/Blue) Lucy - Official Feature Deck
+(Blue) Rocks.D.Xebec - Official Feature Deck
+(Red/Black) Sabo - Starter Deck 35

@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # ~15 dev dependencies on `^` ranges. Weekly, grouped, so the noise is one PR
+  # to review rather than fifteen.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pip
+    directory: /ml/python
+    schedule:
+      interval: monthly

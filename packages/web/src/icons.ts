@@ -1,0 +1,108 @@
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  Ban,
+  ChartColumn,
+  Check,
+  ChevronDown,
+  Coins,
+  Copy,
+  Crown,
+  createIcons,
+  Download,
+  Eye,
+  FileUp,
+  Flag,
+  FolderOpen,
+  Globe,
+  Hand,
+  Heart,
+  History,
+  Hourglass,
+  Layers,
+  Lightbulb,
+  List,
+  Menu,
+  Minus,
+  PackageOpen,
+  Pause,
+  Play,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
+  Settings,
+  Shield,
+  SkipBack,
+  SkipForward,
+  Skull,
+  Sparkles,
+  Swords,
+  Trash2,
+  X,
+  Zap,
+} from "lucide";
+import { escapeHtml } from "./card-text.js";
+
+/**
+ * An icon plus its screen-reader label.
+ *
+ * Both arguments are escaped. Every caller in this repo passes a literal, but
+ * the home screen passes a mode's title through here, so this is a spot where
+ * data can reach markup -- and a helper that escapes is one less thing for the
+ * next caller to remember.
+ */
+export function icon(name: string, label: string): string {
+  return `<i data-lucide="${escapeHtml(name)}" aria-hidden="true"></i><span class="sr-only">${escapeHtml(label)}</span>`;
+}
+
+export function hydrateIcons(): void {
+  createIcons({
+    icons: {
+      ArrowLeft,
+      ArrowLeftRight,
+      Ban,
+      ChartColumn,
+      Check,
+      ChevronDown,
+      Coins,
+      Copy,
+      Crown,
+      Download,
+      Eye,
+      FileUp,
+      Flag,
+      FolderOpen,
+      Globe,
+      Hand,
+      Heart,
+      History,
+      Hourglass,
+      Layers,
+      Lightbulb,
+      List,
+      Menu,
+      Minus,
+      PackageOpen,
+      Pause,
+      Play,
+      Plus,
+      RefreshCw,
+      RotateCcw,
+      Save,
+      Search,
+      Settings,
+      Shield,
+      SkipBack,
+      SkipForward,
+      Skull,
+      Sparkles,
+      Swords,
+      Trash2,
+      X,
+      Zap,
+    },
+    attrs: { "stroke-width": 1.8 },
+  });
+}

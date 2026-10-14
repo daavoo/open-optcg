@@ -1,0 +1,92 @@
+# The match server. One Durable Object per match, addressed by match id.
+#
+# Not deployed by any script in this repo: `pnpm referee:dev` runs it locally,
+# and deploying is `npx wrangler deploy` from this directory with an account of
+# your own. The Durable Objects free tier covers the traffic this design
+# generates; see docs/online-play.md.
+name = "open-optcg-match"
+main = "src/worker.ts"
+compatibility_date = "2026-08-01"
+
+[[durable_objects.bindings]]
+name = "MATCH"
+class_name = "MatchObject"
+
+# The browser client, served in front of the Worker so the app and the server it
+# talks to are one origin and one deploy. Built by `pnpm web:build:server`, which
+# holds no card art or printed text -- a player loads their own asset pack.
+[assets]
+directory = "../../dist/pages"
+not_found_handling = "single-page-application"
+
+# What a stranger with a loop can cost: `POST /match` creates something, and a
+# match is a Durable Object. Twenty a minute per IP
+# is far more than a person does and far less than a script wants. The Worker
+# treats this binding as optional, so a local run and the tests need no
+# configuration at all.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
+
+# A seat's socket upgrades cannot share the number above: a phone walking
+# between cells reconnects several times a minute by itself, and twenty a minute
+# would lock a seat out of its own match. They still need a limit, because an
+# upgrade wakes a Durable Object and may replay a whole match. Ten a second,
+# which covers everybody behind one household's address and is still three
+# orders of magnitude short of what a loop wants.
+[[ratelimits]]
+name = "POLL_LIMITER"
+namespace_id = "1002"
+simple = { limit = 600, period = 60 }
+
+# The two blocks above are optional *in code*, because a local run and the tests
+# bind nothing and must still work. That is also how a broken deploy hides: a
+# mistyped `name`, a namespace id already used by another Worker, or a block
+# lost in an edit leaves the route that creates Durable Objects unlimited, with
+# no error and no log line, and the first symptom is a bill. This says the
+# limiters are meant to be there, so a route that cannot find one answers 503
+# and records why instead of quietly serving whoever found it. It lives here,
+# a few lines from the blocks it is about, because deploying this file is what
+# ships both -- they cannot drift apart.
+[vars]
+REQUIRE_RATE_LIMIT = "1"
+
+# What the match objects say about themselves: matches dealt and finished, and
+# refusals. Optional in code exactly as the limiter is,
+# so a local run and the tests write only their `console.log` half -- which
+# `wrangler tail` reads without any dashboard at all.
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "open_optcg_match"
+
+# Deliberately not declared, like MAINTENANCE below: ALLOW_FIXED_DEAL lets a
+# caller of `POST /match` pin the seed and who starts, which a local run and the
+# tests want and a deploy must not offer -- a chosen seed is a chosen pair of
+# opening hands. `tools/match-server.ts` binds it; nothing here does.
+
+# The off switch: `npx wrangler secret put MAINTENANCE` with a sentence to show
+# players, and `POST /match` refuses until it is deleted.
+# Matches already under way play to their end. Deliberately not declared here --
+# a variable in this file would be turned on by a deploy, which is the thing it
+# exists to avoid needing.
+
+# `wrangler tail` reads what `telemetry.ts` writes without this; this is what
+# keeps those lines readable in the dashboard afterwards, and what makes a
+# `MISCONFIGURED` refusal from a bad deploy findable rather than something you
+# have to be tailing at the right moment to catch.
+[observability]
+enabled = true
+
+# `new_sqlite_classes` rather than `new_classes`: SQLite-backed objects are what
+# the free tier covers, and this object's storage is one small record.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MatchObject", "QueueObject", "AccountObject"]
+
+# v1 also created classes for a matchmaking queue and accounts, which this
+# Worker no longer exports; deleting them drops whatever their objects stored.
+# A deployed migration tag is permanent, so both stay in this file.
+[[migrations]]
+tag = "v2"
+deleted_classes = ["QueueObject", "AccountObject"]

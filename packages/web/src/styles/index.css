@@ -1,0 +1,65 @@
+/* ============================================================================
+   THE GRAND LINE SYSTEM — Open OPTCG
+   Board v4: two coloured seas creased together under one chart, each half the
+   printed mat, graphite chrome gathered into a honeycomb on the seam.
+
+   One rule governs colour here: the six leader colours are the only saturated
+   hues on screen, and the chrome owns none of them. Board v2 broke this by
+   accident -- its hull was navy and its trim was brass, so a blue deck fought
+   the shell and a yellow deck fought every rule and label. The hull is now
+   achromatic graphite and the single accent is terracotta (--ember), a hue no
+   leader claims. Deck colour lives in mat-skins.css and nowhere else.
+
+   Every painted surface is CSS-only and IP-safe. Anything that could be art
+   instead reads an anchor first (art-anchors.css) and falls back to the
+   drawing.
+
+   This file is the whole stylesheet's running order, and the only thing that
+   decides it: the imports below are concatenated in the order written, so a
+   rule in a later file beats an equally specific rule in an earlier one.
+   Adding a file means adding an @import here -- the build fails on a file in
+   this directory that nothing imports, rather than silently dropping it.
+
+   Where to make a change:
+
+     the palette, spacing, type scale ......... tokens.css
+     a deck colour, a mat wash ................ mat-skins.css
+     swapping a drawn surface for artwork ..... art-anchors.css
+     a menu screen ............................ lobby, home, matchup-form,
+                                                dialogs, buttons, deck-editor
+     the in-match board ....................... table, cards, zones, shell
+     drawers, trays, action lists ............. command-surfaces.css
+     modals, banners, toasts, end-of-match .... overlays.css
+     a whole screen of its own ................ analytics, sealed
+     how any of it behaves narrow ............. responsive.css
+   ========================================================================= */
+
+/* Foundations: what every later file reads. */
+@import "./art-anchors.css";
+@import "./tokens.css";
+@import "./mat-skins.css";
+@import "./base.css";
+
+/* The menu screens, in the order a player meets them. */
+@import "./lobby.css";
+@import "./home.css";
+@import "./matchup-form.css";
+@import "./dialogs.css";
+@import "./buttons.css";
+@import "./deck-editor.css";
+
+/* The match itself. */
+@import "./shell.css";
+@import "./table.css";
+@import "./cards.css";
+@import "./zones.css";
+@import "./command-surfaces.css";
+@import "./overlays.css";
+@import "./replay.css";
+
+/* The screens that stand on their own. */
+@import "./analytics.css";
+@import "./sealed.css";
+
+/* Last, so its overrides beat everything above at the same specificity. */
+@import "./responsive.css";

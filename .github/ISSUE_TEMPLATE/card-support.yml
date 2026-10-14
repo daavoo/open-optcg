@@ -1,0 +1,22 @@
+name: Missing card or deck
+description: A card you want to play isn't implemented, or a deck won't load.
+labels: ["card support"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Not every card is in the registry — see
+        [docs/card-support.md](https://github.com/daavoo/open-optcg/blob/main/docs/card-support.md)
+        for what's covered today.
+  - type: textarea
+    id: cards
+    attributes:
+      label: Card numbers
+      description: One per line. A whole deck list is fine.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: What you're trying to practise, and whether you'd like to implement it yourself.

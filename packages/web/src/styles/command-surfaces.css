@@ -1,0 +1,723 @@
+/* ============================================================================
+   COMMAND SURFACES — drawers, trays, action lists
+   ========================================================================= */
+.command-surface {
+  z-index: 25;
+}
+.drawer-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+}
+.drawer-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.drawer-close svg {
+  width: 0.95rem;
+}
+/* The history is one modal now: the steps, and the model calls that chose them
+   (see battle-history.ts). Paper, like every other modal the match raises --
+   the decision modal, the card panel, the trash inspector -- because it is one
+   of them and had been drawing itself as a black console beside them. Wider
+   than the drawer it replaced, because a provider payload has to be readable
+   in it. */
+.history-modal {
+  --editor-paper: #fbf9f5;
+  --editor-field: #f3f0e9;
+  --editor-border: #d8d1c5;
+  --editor-ink: #221f1a;
+  --editor-muted: #6b6257;
+  position: relative;
+  display: flex;
+  width: min(52rem, 100%);
+  max-height: min(46rem, calc(100dvh - 2.5rem));
+  overflow: hidden;
+  padding: 1.5rem;
+  border-top: 4px solid var(--flag);
+  border-radius: 8px;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  box-shadow: var(--lift-sealed);
+}
+/* The list scrolls, not the modal: it opens at the newest entry, and a title
+   and a close button that scrolled away with the match's first turn would
+   leave the reader in the middle of a log with no way out of it. */
+.history-modal .history {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.history .muted {
+  margin: 0 0 0.9rem;
+  color: var(--editor-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.history .muted b {
+  color: var(--editor-ink);
+}
+.trace-payload-warning {
+  padding-left: 0.65rem;
+  border-left: 2px solid var(--ember);
+  color: var(--editor-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+/* A decision's calls, under the entry they chose: the indent is what says
+   "this belongs to the line above it" while the list scrolls. */
+.history-calls {
+  margin: 0.1rem 0 0.35rem 1.1rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid color-mix(in srgb, var(--ember) 55%, transparent);
+}
+.history-calls.failed {
+  border-left-color: #b4422f;
+}
+.history-call {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: rgba(199, 106, 56, 0.08);
+}
+.history-call + .history-call {
+  margin-top: 0.35rem;
+}
+.history-call > header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--ember-deep);
+  font: 600 0.68rem var(--font-body);
+}
+.history-call > header b.failed {
+  color: #b4422f;
+}
+.history-call > header code {
+  color: var(--editor-ink);
+  font: 0.68rem var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.history-call > header span {
+  margin-left: auto;
+  color: var(--editor-muted);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+.history-call > header + details {
+  margin-top: 0.4rem;
+}
+.history-call p {
+  margin: 0.35rem 0 0;
+  color: var(--editor-ink);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+.history-call p b {
+  color: var(--editor-muted);
+  font: 600 0.68rem var(--font-body);
+}
+/* The plan as the numbered list it is: a step per line, so two consecutive
+   calls can be compared down the left edge rather than read as prose. */
+.history-call-plan-label {
+  margin-top: 0.35rem;
+}
+.history-call-plan {
+  margin: 0.15rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--editor-ink);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+.history-call-plan li + li {
+  margin-top: 0.1rem;
+}
+.history-call-reasons > summary {
+  color: var(--ember-deep);
+  font: 600 0.72rem var(--font-body);
+  cursor: pointer;
+}
+.history-call-reasons[open] > summary {
+  margin-bottom: 0.15rem;
+}
+.history-calls-note {
+  margin: 0.8rem 0 0;
+  color: var(--editor-muted);
+  font: 600 0.72rem var(--font-body);
+}
+.card-action-modal .context-copy {
+  margin: 0.7rem 0 0;
+  color: var(--mist);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.actions-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.actions-heading h2 {
+  margin: 0;
+  color: var(--parchment);
+  font: 700 1.1rem var(--font-display);
+  letter-spacing: -0.01em;
+}
+.action-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.action-button {
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 0.65rem 0.8rem;
+  display: grid;
+  gap: 0.15rem;
+  border: 1px solid var(--rigging);
+  border-radius: 8px;
+  background: rgba(239, 234, 225, 0.05);
+  color: var(--parchment);
+  text-align: left;
+  cursor: pointer;
+}
+.action-button:hover {
+  border-color: var(--ember);
+  background: rgba(239, 234, 225, 0.12);
+}
+.action-button span {
+  color: rgba(255, 255, 255, 0.5);
+  font: 0.52rem var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.action-button b {
+  font: 600 0.78rem var(--font-body);
+}
+.action-button.secondary {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--mist);
+}
+
+.waiting {
+  min-height: 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--fog);
+}
+.waiting h2 {
+  margin: 0.2rem 0;
+  color: var(--parchment);
+  font: 700 1.05rem var(--font-display);
+}
+.waiting p {
+  max-width: 15rem;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.compass {
+  width: 3.2rem;
+  height: 3.2rem;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 11.25deg,
+    rgba(199, 106, 56, 0.5) 0 1.4deg,
+    transparent 1.4deg 22.5deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 0 46%, transparent 48%);
+  mask-image: radial-gradient(circle, #000 0 46%, transparent 48%);
+  animation: gl-spin 12s linear infinite;
+}
+.rule-card h2 {
+  margin: 0 0 0.9rem;
+  color: var(--parchment);
+  font: 700 1.15rem var(--font-display);
+}
+.rule-card p {
+  color: var(--mist);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.rule-card h3 {
+  margin-bottom: 0.3rem;
+  color: var(--ember);
+  font: 0.7rem var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.ability-status {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin: 0.75rem 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+}
+.ability-status.active {
+  color: var(--jade);
+}
+.ability-status.inactive {
+  color: var(--ember);
+}
+.ability-status > span {
+  display: grid;
+  place-items: center;
+}
+.ability-status svg {
+  width: 1rem;
+  height: 1rem;
+}
+.ability-status div {
+  display: grid;
+  gap: 0.08rem;
+}
+.ability-status b,
+.ability-status small {
+  display: block;
+}
+.ability-status b {
+  font-size: 0.72rem;
+}
+.ability-status small {
+  font-size: 0.68rem;
+}
+/* Printed card text — keyword chips coloured the way the card prints them. */
+.card-text {
+  line-height: 1.8;
+}
+.card-keyword {
+  display: inline-block;
+  padding: 0.02em 0.4em;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.92em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.card-keyword-timing {
+  background: var(--kw-timing);
+  color: #fff;
+}
+.card-keyword-counter,
+.card-keyword-limit {
+  background: var(--kw-alert);
+  color: #fff;
+}
+.card-keyword-ability {
+  border-color: color-mix(in srgb, var(--kw-ability) 55%, transparent);
+  background: color-mix(in srgb, var(--kw-ability) 14%, transparent);
+  color: var(--kw-ability);
+}
+.card-keyword-cost {
+  background: #000;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+.card-keyword-trigger {
+  background: var(--kw-trigger);
+  color: var(--abyss);
+}
+.card-reminder {
+  color: var(--fog);
+}
+
+.rule-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+.rule-stats > span {
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--fog);
+  font: 0.52rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.rule-stats > span > b {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--parchment);
+  font-size: 0.75rem;
+}
+.rule-stats > span > small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--fog);
+  font: 0.5rem var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+.rule-stats > .raised > b {
+  color: var(--kw-alert);
+}
+.rule-stats > .lowered > b {
+  color: var(--kw-ability);
+}
+.power-breakdown {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.14);
+}
+.power-breakdown > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--mist);
+  font-size: 0.72rem;
+}
+.power-breakdown span,
+.power-breakdown small {
+  display: block;
+}
+.power-breakdown small {
+  margin-top: 0.1rem;
+  color: var(--fog);
+  font: 0.56rem var(--font-mono);
+}
+.power-breakdown b {
+  color: var(--parchment);
+  font: 700 0.72rem var(--font-mono);
+  white-space: nowrap;
+}
+.power-breakdown .negative b {
+  color: var(--kw-alert);
+}
+.power-breakdown .positive b {
+  color: var(--kw-ability);
+}
+.power-breakdown .inactive,
+.power-breakdown .inactive b {
+  color: var(--fog);
+}
+/* Inside the power tile the breakdown is a footnote to the number above it, not
+   a panel of its own: the tile already draws the border and the fill, and a
+   second set of both around three small rows read as a box in a box. */
+.rule-stats > span .power-breakdown {
+  gap: 0.15rem;
+  margin-top: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.rule-stats > span .power-breakdown > div {
+  gap: 0.4rem;
+  font-size: 0.62rem;
+}
+.rule-stats > span .power-breakdown b {
+  font-size: 0.62rem;
+}
+.rule-stats > span .power-breakdown small {
+  font-size: 0.5rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* The label is the row, so it keeps the tile's mono caps at the tile's size
+   rather than growing into the body text the breakdown uses on its own. */
+.rule-stats > span .power-breakdown span {
+  font: 0.52rem var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rule-types {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+.rule-types small {
+  color: var(--fog);
+  font: 0.52rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.rule-types > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  color: var(--fog);
+  font-size: 0.72rem;
+}
+.rule-types b {
+  padding: 0.22rem 0.42rem;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--parchment);
+  font: 550 0.65rem var(--font-body);
+}
+
+/* Match history */
+.history h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 2.5rem 0.35rem 0;
+  color: var(--editor-ink);
+  font: 700 1.15rem var(--font-display);
+}
+.history h2 span {
+  color: var(--editor-muted);
+  font: 500 0.78rem var(--font-body);
+}
+.history-list {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  /* Room for the reset pill's focus ring and the band heads' own left edge. */
+  padding: 0 0.15rem;
+}
+/* A turn is a section of the list, and the seat that played it is the colour
+   of that section: your deck's flag for your turns, the opponent's mat tint for
+   theirs. Two decks of one colour make the tints equal, which is why the
+   heading still says the seat in words. */
+.history-band {
+  --history-seat: #9a9287;
+  display: grid;
+  gap: 0.4rem;
+}
+.history-band.mine,
+.history-group.mine {
+  --history-seat: var(--flag);
+}
+/* Darkened rather than lightened: this sits on paper, and a mat tint mixed
+   towards white is the one thing that would not read against it. */
+.history-band.theirs,
+.history-group.theirs {
+  --history-seat: color-mix(in srgb, var(--mat-opp-tint, #9a9287) 82%, #17120f);
+}
+/* Sticky, because the answer to "whose turn was this" has to survive the scroll
+   that took the reader away from the heading. The modal is the scrollport this
+   sticks to, which is why the list itself must not be one: an `overflow` of its
+   own would pin the heading to a box that never scrolls. */
+.history-band-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.45rem 0 0.5rem;
+  background: var(--editor-paper);
+  font: inherit;
+}
+.history-band-head b {
+  color: var(--editor-ink);
+  font: 700 0.95rem var(--font-display);
+}
+/* The seat as a chip with its own colour in it, rather than four letter-spaced
+   capitals: the word is what survives a mirror, the dot is what is scanned. */
+.history-band-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.1rem 0.5rem 0.14rem;
+  border: 1px solid color-mix(in srgb, var(--history-seat) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--history-seat) 10%, transparent);
+  color: var(--history-seat);
+  font: 600 0.7rem var(--font-body);
+}
+.history-band-head span::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--history-seat);
+}
+/* The rule fills the line out to the edge, so the heading reads as a divider
+   rather than as another row of the list. */
+.history-band-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--editor-border);
+}
+.history-group {
+  display: grid;
+  gap: 0.15rem;
+}
+/* The other seat's rows are inset, which is the cue that survives a mirror:
+   two black decks make the two seat colours nearly equal, and the log's own
+   "You"/"Opponent" is a word to read rather than a shape to scan past. It is
+   the only thing that insets a row, so an indent has one meaning. */
+.history-group.theirs {
+  padding-left: 1.25rem;
+}
+.history-entry {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.55rem 0.5rem 0.6rem;
+  border: 1px solid var(--editor-border);
+  border-left: 3px solid var(--history-seat);
+  border-radius: 7px;
+  background: var(--editor-field);
+}
+.history-ordinal {
+  color: var(--editor-muted);
+  font: 0.65rem var(--font-mono);
+  text-align: right;
+}
+.history-entry p {
+  margin: 0;
+  color: var(--editor-ink);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+/* The one thing a reader can do here, standing rather than revealed on hover.
+   It used to be the whole row with an icon at zero opacity, so the affordance
+   was invisible until the pointer was already on it and reading a line meant
+   risking the match. */
+.history-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--editor-muted);
+  font: 600 0.7rem var(--font-body);
+  cursor: pointer;
+}
+.history-reset b {
+  font-weight: 600;
+}
+.history-reset svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.history-entry:hover .history-reset {
+  border-color: color-mix(in srgb, var(--ember) 60%, transparent);
+  color: var(--ember-deep);
+}
+.history-reset:hover,
+.history-reset:focus-visible {
+  border-color: var(--ember);
+  background: var(--ember);
+  color: #fff;
+}
+/* What that Reset would throw away, while the pointer is still on it: the
+   price of the click, on screen before it is paid. */
+.history-group.discarding .history-entry {
+  border-style: dashed;
+  border-left-style: solid;
+  opacity: 0.4;
+}
+.history-group.discarding .history-steps {
+  opacity: 0.4;
+}
+/* The steps the entry stands for, folded: a search's three reveals and three
+   moves are one thing that happened, and reading them is a choice. */
+.history-steps {
+  margin-left: 2.2rem;
+}
+.history-steps > summary {
+  padding: 0.1rem 0.2rem;
+  color: var(--editor-muted);
+  font: 600 0.72rem var(--font-body);
+  cursor: pointer;
+}
+.history-steps > summary:hover {
+  color: var(--ember-deep);
+}
+.history-steps > ol {
+  margin: 0.15rem 0 0.2rem;
+  padding-left: 1.5rem;
+  color: var(--editor-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.history-steps > ol li + li {
+  margin-top: 0.1rem;
+}
+.history-steps > ol li::marker {
+  color: #9a9287;
+  font: 0.65rem var(--font-mono);
+}
+.rewind-confirm-dialog {
+  width: min(27rem, 100%);
+  display: grid;
+  gap: 0.75rem;
+}
+/* The entry being wound back to, quoted in the dialog: it covers the list it
+   was clicked in, so "this point" on its own names nothing. */
+.rewind-confirm-point {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--ember);
+  border-radius: 0 6px 6px 0;
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.rewind-confirm-dialog h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+.rewind-confirm-dialog p {
+  margin: 0;
+  color: var(--editor-muted);
+}
+.rewind-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+/* The end of an online match, when the engine does not say so itself: a
+ * resignation, a timeout, a no-show. The position behind this is untouched and
+ * still looks playable, so this modal is the only thing on screen that says the
+ * match is over -- which is why it takes the whole command surface rather than
+ * sitting in a corner. */
+.match-over-modal {
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+.match-over-modal h2 {
+  margin: 0;
+  font: 800 1.1rem var(--font-display);
+  letter-spacing: 0.04em;
+}
+.match-over-modal p {
+  margin: 0;
+}

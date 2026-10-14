@@ -1,0 +1,184 @@
+/* ============================================================================
+   MAT SKINS
+   A skin is three values — tint, deep, glow — fed to one layer recipe, and a
+   flag: the deck's own colour, for the edge of anything that belongs to that
+   seat. Your half comes from [data-theme], theirs from [data-opp-theme]; both
+   are set from the decks in play, and the picker overrides yours.
+   ========================================================================= */
+html[data-theme="red"] {
+  --mat-self-tint: #8f2f2c;
+  --mat-self-deep: #3a1210;
+  --mat-self-glow: rgba(255, 140, 130, 0.3);
+  --flag: var(--red);
+}
+html[data-theme="blue"] {
+  --mat-self-tint: #2c6ba0;
+  --mat-self-deep: #0e2740;
+  --mat-self-glow: rgba(140, 205, 255, 0.3);
+  --flag: var(--blue);
+}
+html[data-theme="green"] {
+  --mat-self-tint: #2b7a5f;
+  --mat-self-deep: #0d2b22;
+  --mat-self-glow: rgba(140, 240, 205, 0.28);
+  --flag: var(--green);
+}
+html[data-theme="purple"] {
+  --mat-self-tint: #6a3f8e;
+  --mat-self-deep: #25133a;
+  --mat-self-glow: rgba(215, 165, 255, 0.28);
+  --flag: var(--purple);
+}
+html[data-theme="yellow"] {
+  --mat-self-tint: #96702a;
+  --mat-self-deep: #3a2a0c;
+  --mat-self-glow: rgba(255, 215, 140, 0.28);
+  --flag: var(--yellow);
+}
+html[data-theme="black"] {
+  --mat-self-tint: #3b4757;
+  --mat-self-deep: #12181f;
+  --mat-self-glow: rgba(200, 215, 235, 0.22);
+  --flag: var(--black);
+}
+
+html[data-opp-theme="red"] {
+  --opp-flag: var(--red);
+  --mat-opp-tint: #8f2f2c;
+  --mat-opp-deep: #3a1210;
+  --mat-opp-glow: rgba(255, 140, 130, 0.3);
+}
+html[data-opp-theme="blue"] {
+  --opp-flag: var(--blue);
+  --mat-opp-tint: #2c6ba0;
+  --mat-opp-deep: #0e2740;
+  --mat-opp-glow: rgba(140, 205, 255, 0.3);
+}
+html[data-opp-theme="green"] {
+  --opp-flag: var(--green);
+  --mat-opp-tint: #2b7a5f;
+  --mat-opp-deep: #0d2b22;
+  --mat-opp-glow: rgba(140, 240, 205, 0.28);
+}
+html[data-opp-theme="purple"] {
+  --opp-flag: var(--purple);
+  --mat-opp-tint: #6a3f8e;
+  --mat-opp-deep: #25133a;
+  --mat-opp-glow: rgba(215, 165, 255, 0.28);
+}
+html[data-opp-theme="yellow"] {
+  --opp-flag: var(--yellow);
+  --mat-opp-tint: #96702a;
+  --mat-opp-deep: #3a2a0c;
+  --mat-opp-glow: rgba(255, 215, 140, 0.28);
+}
+html[data-opp-theme="black"] {
+  --opp-flag: var(--black);
+  --mat-opp-tint: #3b4757;
+  --mat-opp-deep: #12181f;
+  --mat-opp-glow: rgba(200, 215, 235, 0.22);
+}
+
+html[data-theme-secondary="red"] {
+  --mat-self-secondary-tint: #8f2f2c;
+  --mat-self-secondary-deep: #3a1210;
+}
+html[data-theme-secondary="blue"] {
+  --mat-self-secondary-tint: #2c6ba0;
+  --mat-self-secondary-deep: #0e2740;
+}
+html[data-theme-secondary="green"] {
+  --mat-self-secondary-tint: #2b7a5f;
+  --mat-self-secondary-deep: #0d2b22;
+}
+html[data-theme-secondary="purple"] {
+  --mat-self-secondary-tint: #6a3f8e;
+  --mat-self-secondary-deep: #25133a;
+}
+html[data-theme-secondary="yellow"] {
+  --mat-self-secondary-tint: #96702a;
+  --mat-self-secondary-deep: #3a2a0c;
+}
+html[data-theme-secondary="black"] {
+  --mat-self-secondary-tint: #3b4757;
+  --mat-self-secondary-deep: #12181f;
+}
+html[data-opp-theme-secondary="red"] {
+  --mat-opp-secondary-tint: #8f2f2c;
+  --mat-opp-secondary-deep: #3a1210;
+}
+html[data-opp-theme-secondary="blue"] {
+  --mat-opp-secondary-tint: #2c6ba0;
+  --mat-opp-secondary-deep: #0e2740;
+}
+html[data-opp-theme-secondary="green"] {
+  --mat-opp-secondary-tint: #2b7a5f;
+  --mat-opp-secondary-deep: #0d2b22;
+}
+html[data-opp-theme-secondary="purple"] {
+  --mat-opp-secondary-tint: #6a3f8e;
+  --mat-opp-secondary-deep: #25133a;
+}
+html[data-opp-theme-secondary="yellow"] {
+  --mat-opp-secondary-tint: #96702a;
+  --mat-opp-secondary-deep: #3a2a0c;
+}
+html[data-opp-theme-secondary="black"] {
+  --mat-opp-secondary-tint: #3b4757;
+  --mat-opp-secondary-deep: #12181f;
+}
+html[data-theme-dual="true"] {
+  --mat-self-secondary-layer: linear-gradient(
+    135deg,
+    transparent 0 49.7%,
+    rgba(255, 255, 255, 0.18) 49.9% 50.1%,
+    var(--mat-self-secondary-deep) 50.3%,
+    var(--mat-self-secondary-tint) 100%
+  );
+  --mat-self-divider: linear-gradient(
+    135deg,
+    var(--mat-self-tint) 0 49.8%,
+    var(--mat-self-secondary-tint) 50.2% 100%
+  );
+}
+html[data-opp-theme-dual="true"] {
+  --mat-opp-secondary-layer: linear-gradient(
+    45deg,
+    transparent 0 49.7%,
+    rgba(255, 255, 255, 0.18) 49.9% 50.1%,
+    var(--mat-opp-secondary-deep) 50.3%,
+    var(--mat-opp-secondary-tint) 100%
+  );
+  --mat-opp-divider: linear-gradient(
+    45deg,
+    var(--mat-opp-tint) 0 49.8%,
+    var(--mat-opp-secondary-tint) 50.2% 100%
+  );
+}
+
+/* A deck may lay its own art over its half, instead of the layer recipe above
+   painting the whole half. The mat under it goes plain -- see table.css -- so
+   the art is the only thing on the colour, and both halves place it from the
+   same corner: the far half's whole scatter is turned through 180 degrees, the
+   way the mat opposite you at a table is your mat turned around.
+
+   Add a Leader by dropping sprite-<key>.webp into packages/web/src/assets/,
+   pairing the key here, and naming it in LEADER_MATS in main.ts. */
+html[data-self-mat="ST31"] {
+  --mat-self-sprites: var(--art-sprite-st31) left bottom / 18rem no-repeat;
+}
+html[data-opp-mat="ST31"] {
+  --mat-opp-sprites: var(--art-sprite-st31) left bottom / 18rem no-repeat;
+}
+html[data-self-mat="XEBEC"] {
+  --mat-self-sprites: var(--art-sprite-xebec) left bottom / 18rem no-repeat;
+}
+html[data-opp-mat="XEBEC"] {
+  --mat-opp-sprites: var(--art-sprite-xebec) left bottom / 18rem no-repeat;
+}
+html[data-self-mat="MIHAWK"] {
+  --mat-self-sprites: var(--art-sprite-mihawk) left bottom / 18rem no-repeat;
+}
+html[data-opp-mat="MIHAWK"] {
+  --mat-opp-sprites: var(--art-sprite-mihawk) left bottom / 18rem no-repeat;
+}

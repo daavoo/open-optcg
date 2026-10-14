@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    // `@mozilla-ai/otari@0.4.0` emits extensionless relative imports in its
+    // declarations too (`from "./_client/index"`), which NodeNext resolution
+    // cannot follow -- 52 errors inside the package, none in this repo's code.
+    // Nothing here can fix them, and they otherwise fail `pnpm verify`. Remove
+    // once upstream ships extensions.
+    "skipLibCheck": true,
+    "declaration": true,
+    "outDir": "dist-tsc",
+    "rootDir": ".",
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "@one-piece-sim/protocol": ["./packages/protocol/src/index.ts"],
+      "@one-piece-sim/cards": ["./packages/cards/src/index.ts"],
+      "@one-piece-sim/decks": ["./packages/decks/src/index.ts"],
+      "@one-piece-sim/engine-core": ["./packages/engine-core/src/index.ts"],
+      "@one-piece-sim/referee": ["./packages/referee/src/index.ts"],
+      "@one-piece-sim/agents": ["./packages/agents/src/index.ts"],
+      "@one-piece-sim/agents/local": ["./packages/agents/src/rules/local.ts"],
+      "@one-piece-sim/agents/llm": ["./packages/agents/src/llm/index.ts"],
+      "@one-piece-sim/agents/scorer": ["./packages/agents/src/scorer/index.ts"],
+      "@one-piece-sim/agents/llm-dossiers": [
+        "./packages/agents/src/llm/dossiers/index.ts"
+      ],
+      "@one-piece-sim/agents/otari": [
+        "./packages/agents/src/llm/clients/otari.ts"
+      ],
+      "@one-piece-sim/agents/chat-client": [
+        "./packages/agents/src/llm/clients/factory.ts"
+      ]
+    }
+  },
+  "include": [
+    "packages/**/*.ts",
+    "test/**/*.ts",
+    "tools/**/*.ts",
+    "ml/**/*.ts",
+    "research/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["dist", "dist-tsc", "node_modules"]
+}

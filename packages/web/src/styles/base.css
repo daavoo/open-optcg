@@ -1,0 +1,107 @@
+/* ============================================================================
+   BASE
+   ========================================================================= */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--abyss);
+  color: var(--ink-white);
+  font-family: var(--font-body);
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  color: inherit;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ember-bright);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.eyebrow {
+  margin: 0 0 0.45rem;
+  color: var(--ember);
+  font: 500 0.68rem/1.2 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.muted {
+  color: var(--fog);
+}
+
+/* A card you can act on, emitting its own edge: the outline starts on the card
+   and expands away from it as it fades. Offset and colour only -- no box shadow,
+   so whatever the card already casts is untouched. */
+@keyframes gl-emit {
+  from {
+    outline-color: rgba(255, 255, 255, 0.85);
+    outline-offset: 0;
+  }
+  to {
+    outline-color: rgba(255, 255, 255, 0);
+    outline-offset: 0.55rem;
+  }
+}
+@keyframes gl-bob {
+  0%,
+  100% {
+    transform: translateY(-50%);
+  }
+  50% {
+    transform: translateY(calc(-50% - 4px));
+  }
+}
+@keyframes gl-sheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(600%);
+  }
+}
+/* A card the board is currently asking about. On a board dimmed down to its
+   legal answers this pulse is the only motion left, which is what makes the
+   answers findable without reading anything. */
+@keyframes gl-target {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px var(--state-target),
+      0 0 26px rgba(255, 255, 255, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--state-target) 55%, transparent),
+      0 0 38px rgba(255, 255, 255, 0.26);
+  }
+}
+@keyframes gl-notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.6rem);
+  }
+}
+
+@keyframes gl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

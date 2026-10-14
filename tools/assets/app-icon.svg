@@ -1,0 +1,25 @@
+<!--
+  The page's icon, which `tools/build-web.ts` inlines as the favicon.
+
+  The same hexagon the app's own header draws (`#brand-hex` in
+  packages/web/src/index.html), lifted out as a standalone file because an icon
+  has to exist before the page does. Keep the two in step by eye: this is not
+  generated from that one, since that one is a `<symbol>` in a template.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="70 48 200 224" width="1024" height="1024">
+  <defs>
+    <clipPath id="brand-hex-clip">
+      <path d="M253.14,124 Q253.14,112 242.75,106 L180.39,70 Q170,64 159.61,70 L97.25,106 Q86.86,112 86.86,124 L86.86,196 Q86.86,208 97.25,214 L159.61,250 Q170,256 180.39,250 L242.75,214 Q253.14,208 253.14,196 Z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#brand-hex-clip)">
+    <polygon points="253.14,112 170,64 170,140 187.32,150" fill="#c13b34" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+    <polygon points="170,64 86.86,112 152.68,150 170,140" fill="#efb93b" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+    <polygon points="86.86,112 86.86,208 152.68,170 152.68,150" fill="#2a2a2e" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+    <polygon points="86.86,208 170,256 170,180 152.68,170" fill="#7c4a9e" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+    <polygon points="170,256 253.14,208 187.32,170 170,180" fill="#2e6ca6" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+    <polygon points="253.14,208 253.14,112 187.32,150 187.32,170" fill="#2f8f5c" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+    <path d="M187.32,154 Q187.32,150 183.86,148 L173.46,142 Q170,140 166.54,142 L156.14,148 Q152.68,150 152.68,154 L152.68,166 Q152.68,170 156.14,172 L166.54,178 Q170,180 173.46,178 L183.86,172 Q187.32,170 187.32,166 Z" fill="#faf8f3" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+  </g>
+  <path d="M253.14,124 Q253.14,112 242.75,106 L180.39,70 Q170,64 159.61,70 L97.25,106 Q86.86,112 86.86,124 L86.86,196 Q86.86,208 97.25,214 L159.61,250 Q170,256 180.39,250 L242.75,214 Q253.14,208 253.14,196 Z" fill="none" stroke="#ffffff" stroke-width="4" />
+</svg>

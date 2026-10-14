@@ -1,0 +1,44 @@
+{
+  "name": "@one-piece-sim/agents",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./src/rules/local.ts",
+      "default": "./src/index.ts"
+    },
+    "./local": "./src/rules/local.ts",
+    "./llm": {
+      "browser": null,
+      "default": "./src/llm/index.ts"
+    },
+    "./llm-dossiers": "./src/llm/dossiers/index.ts",
+    "./scorer": "./src/scorer/index.ts",
+    "./otari": {
+      "browser": null,
+      "default": "./src/llm/clients/otari.ts"
+    },
+    "./chat-client": {
+      "browser": null,
+      "default": "./src/llm/clients/factory.ts"
+    },
+    "./chat-completions": {
+      "browser": null,
+      "default": "./src/llm/clients/chat-completions.ts"
+    },
+    "./gemini": {
+      "browser": null,
+      "default": "./src/llm/clients/gemini.ts"
+    }
+  },
+  "dependencies": {
+    "@mozilla-ai/otari": "^0.4.0",
+    "@one-piece-sim/cards": "workspace:*",
+    "@one-piece-sim/decks": "workspace:*",
+    "@one-piece-sim/engine-core": "workspace:*",
+    "@one-piece-sim/protocol": "workspace:*",
+    "openai": "^7.8.0"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,84 @@
+name: Release asset downloader
+
+on:
+  push:
+    # Dated releases, `YYYY.M.D`. There is no API to promise compatibility
+    # with, so a number would only look like a promise.
+    tags: ["2[0-9][0-9][0-9].*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# The game is the hosted page; a release is the asset downloader beside it.
+# One job per platform, because a Node single-executable application is a copy
+# of the runner's own `node` with the program injected into it -- there is no
+# cross-compiling. The asset names are what the app's "Get the downloader"
+# link and the docs point at, so they are an interface.
+jobs:
+  package:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            label: macOS (Apple silicon)
+            asset: open-optcg-assets-macos-arm64.zip
+          - os: macos-13
+            label: macOS (Intel)
+            asset: open-optcg-assets-macos-x64.zip
+          - os: windows-latest
+            label: Windows
+            asset: open-optcg-assets-windows-x64.exe
+          - os: ubuntu-latest
+            label: Linux
+            asset: open-optcg-assets-linux-x64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The downloader fetches Bandai's card text and art onto the player's
+      # own machine; the release itself carries none. See docs/asset-packs.md.
+      - run: pnpm assets:package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/app/${{ matrix.asset }}
+          retention-days: 7
+      # Only a tag produces a release; a manual run leaves the build artifact
+      # above, which is enough to try a change to the packaging itself.
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: dist/app/${{ matrix.asset }}
+          draft: false
+          fail_on_unmatched_files: true
+          body: |
+            Play at https://daavoo.github.io/open-optcg/.
+
+            The game ships with no card images or printed card text. Download
+            the asset downloader for your computer below and double-click it:
+            it asks for a folder and fills it from Bandai's card list. Then, on
+            the page, choose **Load asset folder** and pick that folder. Run it
+            again after a new set comes out; it fetches only what is new.
+
+            | Platform | Download |
+            | --- | --- |
+            | macOS (Apple silicon) | `open-optcg-assets-macos-arm64.zip` |
+            | macOS (Intel) | `open-optcg-assets-macos-x64.zip` |
+            | Windows | `open-optcg-assets-windows-x64.exe` |
+            | Linux | `open-optcg-assets-linux-x64` |
+
+            These builds are unsigned. macOS: unzip, then right-click the
+            downloader and choose **Open** the first time. Windows: choose
+            **More info → Run anyway** at the SmartScreen prompt. Linux:
+            `chmod +x` first; the folder dialog uses zenity or kdialog.
+
+            On a phone or tablet, zip the folder on a computer and load the zip
+            instead. See docs/asset-packs.md.

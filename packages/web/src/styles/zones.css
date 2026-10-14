@@ -1,0 +1,405 @@
+/* ============================================================================
+   ZONES & RIGS
+   ========================================================================= */
+
+/* Life — a dial with a ladder of pips beneath it. */
+.life-zone {
+  display: grid;
+  place-items: center;
+}
+/* Life as it sits on a real mat: a physical pile of cards, one per slot,
+   cascading downward from the top card at `--stack:0` — not a dial with a
+   number on it. The cards are the mat's own card size, like every other card on
+   it, and they lie a quarter of a card apart: enough of each one shows to count
+   the pile at a glance, which is the whole job of this zone. */
+.life-stack {
+  position: relative;
+  width: calc(var(--card-h) * 0.71);
+  /* A full pile: the top card, plus four cards' worth of step under it. */
+  height: calc(var(--card-h) * 2.04);
+  max-height: 100%;
+}
+/*
+ * The stack is rendered slot by slot in Life order, so the wrapper dissolves
+ * into the stack's own layout rather than nesting a second one.
+ */
+.life-slots {
+  display: contents;
+}
+.life-slot {
+  position: absolute;
+  /* The step is parenthesised: a flat `number * length * number` product is
+     rejected outright, and one invalid offset drops the whole cascade -- which
+     leaves five absolutely-positioned cards in flow, down the mat and past it. */
+  top: calc(var(--stack) * (var(--card-h) * 0.26));
+  right: 0;
+  left: 0;
+  z-index: calc(100 - var(--stack));
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+/* Life cards are deck cards set aside face down, so their back is the same
+   cover as the Deck pile's — not a distinct colour of its own. */
+.life-stack .physical-card-back {
+  display: block;
+  width: 100%;
+  height: var(--card-h);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.zone-label {
+  color: rgba(255, 255, 255, 0.55);
+  font: 0.5rem var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Deck — a face-down stack that carries its own count. */
+.deck-pile {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.2rem;
+}
+.deck-pile .physical-card-back {
+  height: var(--slot-h);
+  max-height: 100%;
+  width: auto;
+  aspect-ratio: 0.71;
+}
+/* Every pile's count, drawn the same way wherever it is: a rounded tag in the
+   middle of the pile. Four face-down piles on one mat -- deck, trash, Life, the
+   DON!! deck -- so four of the same tag, rather than three of one and a badge
+   pinned to a corner. */
+.deck-pile b,
+.trash-zone-button b,
+.don-deck-zone > b,
+.life-stack > b {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  padding: 0.1rem 0.4rem;
+  transform: translate(-50%, -50%);
+  border-radius: 5px;
+  background: rgba(14, 14, 16, 0.82);
+  color: var(--parchment);
+  font: 600 clamp(0.5rem, calc(var(--card-h) * 0.16), 0.85rem) / 1
+    var(--font-mono);
+}
+/* Life is the one pile whose height is its count, so its tag sits on the top
+   card rather than in the middle of a stack that grows downward -- and above
+   the cascade, whose own slots stack up to a hundred deep. */
+.life-stack > b {
+  top: calc(var(--card-h) * 0.5);
+  z-index: 101;
+}
+
+/* The cost area (DON!!) — the mat's own near strip: the DON!! deck at the outer
+   edge, then every DON!! card the seat owns, lying the way it was spent.
+
+   This replaces three fanned piles labelled Active / Rested / Deck. The piles
+   said the same thing, but they said it as a HUD panel parked in the board row,
+   and they needed a track three piles wide. Here the orientation carries the
+   state, the way it does on a table: upright is spendable, turned is spent.
+
+   The zone is an outline on the mat and nothing else -- the dark slab it used to
+   be read as a panel laid over the mat rather than a box printed on it, and it
+   was the only zone that painted a background of its own. */
+.cost-area {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  /* The cards, then the zone's name on the far edge -- set on its side like
+     every other zone's name on the mat, and on the same side as theirs. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(var(--card-h) * 0.06);
+  padding: calc(var(--card-h) * 0.02) calc(var(--card-h) * 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  background: none;
+  color: inherit;
+  cursor: default;
+  text-align: left;
+}
+button.cost-area {
+  cursor: pointer;
+}
+.cost-area-label {
+  /* Placed outright, row and column: auto-placement puts an item whose column
+     it has already passed on the next row, so naming only the columns left the
+     cards on a row of their own under the label. A phone hides this label, and
+     the other two must not move when it goes. */
+  grid-area: 1 / 2;
+  writing-mode: vertical-rl;
+  color: rgba(255, 255, 255, 0.45);
+  font: 700 clamp(0.3rem, calc(var(--card-h) * 0.075), 0.5rem) / 1
+    var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* The cards, in one row that closes up rather than shrinks.
+ *
+ * `--don-count` comes from the markup, because CSS cannot count its own
+ * children. From it the row works out one step from card to card: a card's
+ * width plus a hair while there is room for that, and otherwise whatever share
+ * of the row each card can have. Every card then keeps the mat's card size and
+ * the pile simply closes up -- two DON!! lie apart, ten overlap into a stack.
+ *
+ * The step is what is held even, not the overlap: a rested card lies on its
+ * side and is half again as wide as an upright one, so a single margin would
+ * show a sliver of each upright card and half of each turned one.
+ */
+.cost-dons {
+  grid-area: 1 / 1;
+  --don-step: min(
+    calc(var(--card-h) * 0.78),
+    calc((100% - var(--card-h)) / max(var(--don-count) - 1, 1))
+  );
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+/* Keyed on the card *before* it: the margin has to close the gap left by that
+   card's own width, and an upright card is narrower than a turned one. */
+.don-slot.active + .don-slot {
+  margin-left: calc(var(--don-step) - var(--card-h) * 0.71);
+}
+.don-slot.rested + .don-slot {
+  margin-left: calc(var(--don-step) - var(--card-h));
+}
+/* One DON!! card, in the box it occupies on the mat. The box is the layout and
+   the card inside it is the drawing, because a rested card is *rotated* and a
+   rotation leaves the layout box where it was: without the wrapper a turned
+   card would reserve an upright card's width and overlap its neighbour. */
+.don-slot {
+  position: relative;
+  flex: 0 0 auto;
+  height: var(--card-h);
+  width: calc(var(--card-h) * 0.71);
+}
+.don-slot.rested {
+  width: var(--card-h);
+}
+.don-slot .don-card {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: var(--card-h);
+  width: calc(var(--card-h) * 0.71);
+  transform: translateX(-50%);
+}
+/* Turned a quarter turn, and nothing else: which way a DON!! lies is the whole
+   difference between spendable and spent, the way it is on a table. The two
+   used to carry a mint and a dimmed edge as well, from the days when they were
+   two boxes in a panel and the edge was the only tell -- and a green ring on a
+   card now reads as "you can act on this", which is a different statement and
+   belongs to the one highlight every card shares. */
+.don-slot.rested .don-card {
+  transform: translateX(-50%) rotate(90deg);
+  transform-origin: center;
+}
+.don-card {
+  /* A DON!! in the cost area lies face up, so it is its image and nothing else:
+     the border is transparent and the art paints right through where it was.
+     The edge the drawn fallback needs is the bottom background layer, clipped
+     to the border box while the drawn face is clipped to the padding box -- so
+     the hairline shows through as an edge when there is no DON!! image, and is
+     covered by the image when there is. The DON!! deck below is face down and
+     keeps a real border. */
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background:
+    var(--art-don) center / cover no-repeat border-box,
+    linear-gradient(to top, #16161a 0 18%, transparent 18% 100%) padding-box,
+    radial-gradient(circle at 50% 42%, #fbfbfa 0 22%, transparent 22% 100%)
+      padding-box,
+    repeating-conic-gradient(
+        from 0deg at 50% 42%,
+        #16161a 0deg 3deg,
+        #fbfbfa 3deg 9deg
+      )
+      padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.82) 0 0) border-box;
+  /* The dark left edge is what keeps a closed-up pile from merging into one
+     striped block: it is the shadow the card above casts on the one below. */
+  box-shadow:
+    -0.06rem 0 0 rgba(0, 0, 0, 0.55),
+    0 3px 8px rgba(0, 0, 0, 0.5);
+  color: #1d1d21;
+}
+.don-card.pile-empty {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+/* The DON!! deck, face down: the seat's own Leader colour under white stripes.
+   Colour alone would make it a second copy of the mat it sits on -- the stripes
+   are what keep a face-down pile telling itself apart from the card faces
+   beside it, the way a printed card back does. `--don-flag` is the seat's
+   colour, set per board below, so the opponent's deck wears theirs not yours. */
+.don-deck-zone {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+}
+.don-deck-zone .don-slot {
+  max-height: 100%;
+}
+/* The DON!! deck's own printed back, and under it the drawing it had before one
+   existed: the seat's Leader colour under white stripes, edged in that colour.
+   Same order as the face above -- art clipped to the border box so it takes the
+   whole card, the drawing clipped to the padding box, and its edge the layer
+   underneath. */
+.don-deck-pile .don-card {
+  background:
+    var(--art-don-back) center / cover no-repeat border-box,
+    repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.72) 0 0.085rem,
+        transparent 0.085rem 0.42rem
+      )
+      padding-box,
+    linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--don-flag, var(--flag)) 88%, white),
+        color-mix(in srgb, var(--don-flag, var(--flag)) 78%, black)
+      )
+      padding-box,
+    linear-gradient(
+        color-mix(in srgb, var(--don-flag, var(--flag)) 55%, white) 0 0
+      )
+      border-box;
+}
+/* Whose colour each board's DON!! cards wear. The mat tint is the Leader's
+   colour as this screen already draws it, and unlike `--flag` it exists for
+   both seats. */
+.self-board .don-card {
+  --don-flag: var(--mat-self-tint);
+}
+.opponent-board .don-card {
+  --don-flag: var(--mat-opp-tint);
+}
+
+html[data-custom-mat] .zone-label,
+html[data-custom-mat] .deck-pile small,
+html[data-custom-mat] .trash-zone-button small,
+html[data-custom-mat] .empty-slot:not(.character) {
+  padding: 0.2rem 0.38rem;
+  border-radius: 4px;
+  background: rgba(10, 10, 11, 0.88);
+  color: #fff;
+  font-size: 0.56rem;
+  font-weight: 700;
+}
+
+/* Hand — fanned, the cards overlapping upward toward the leader the way a
+   held hand actually reads at a table. No count printed beside it: the cards
+   themselves are the count. The shelf under it is bare mat unless
+   --art-hand-tray names a tray: the dark slab that used to sit here read as a
+   black rectangle laid over a painted mat, and the cards are legible against
+   the mat's own wash without it. */
+.hand-zone {
+  position: relative;
+  isolation: isolate;
+  grid-area: 1 / 2;
+  /* Five fanned cards wide, always: a hand of one would otherwise let the mat
+     grow into the room it left, and the two mats would sit at different sizes
+     and in different places depending on what each player was holding. */
+  width: calc(var(--hand-h) * 2.95);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, auto);
+  align-items: end;
+  justify-items: end;
+}
+.hand-zone::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -0.6rem -2rem -2rem;
+  background: var(--art-hand-tray) bottom center / cover no-repeat;
+}
+.opponent-hand-zone {
+  align-items: start;
+}
+.opponent-hand-zone::before {
+  inset: -2rem -2rem -0.6rem;
+  background: var(--art-hand-tray) top center / cover no-repeat;
+}
+/* Rows of five, standing on the right-hand end of the cost row -- where a hand
+   is actually held, rather than centred under the middle of the mat. A second
+   row stacks away from the player, so the row nearest them stays the one they
+   drew first.
+
+   The cards stand upright and overlap, and that is all: the fan they used to be
+   held in tilted every card by a few degrees, which is charming on a photograph
+   of a hand and a nuisance on one you read -- the art sat at an angle, the cost
+   in the corner sat at an angle, and no two cards were on the same baseline. A
+   sixth card already dropped the tilt to make room for a second row; this is
+   that row's shape, applied to the first one too. */
+.hand-cards {
+  min-width: 0;
+  height: 100%;
+  padding: 0.35rem 0.5rem 0;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: end;
+  justify-content: end;
+  gap: 0.1rem;
+  overflow: visible;
+}
+/* Each row takes an equal share of the height the track was given. Card height
+   stays a viewport measure rather than a percentage of the row: a card's width
+   comes from its aspect ratio, and a percentage height contributes nothing to
+   the intrinsic width, so a row sized that way reports no width at all and
+   overflows the track it was meant to fit. */
+.hand-row {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: end;
+}
+.hand-row .game-card {
+  height: var(--hand-h);
+  width: auto;
+  flex: 0 0 auto;
+  margin-left: calc(var(--hand-h) * -0.16);
+  transform-origin: bottom center;
+}
+.hand-row .game-card:first-child {
+  margin-left: 0;
+}
+/* A second row is the same cards at the same size, stacked -- not the hand
+   shrunk to fit one row's worth of height. */
+.hand-two-rows {
+  height: auto;
+  align-self: end;
+}
+.hand-two-rows .hand-row {
+  flex: 0 0 auto;
+}
+/* Pulled clear of the cards it overlaps, so the one being read is whole. */
+.hand-row .game-card:hover,
+.hand-row .game-card:focus-visible,
+.hand-row .game-card.selected-source {
+  z-index: 20;
+  transform: translateY(-2.4rem) scale(1.07);
+}
+.phase-mulligan .hand-zone {
+  visibility: hidden;
+}

@@ -1,0 +1,58 @@
+.DS_Store
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+
+# Matchup run output: traces and per-decision LLM JSONL, hundreds of MB per run.
+traces/
+
+# Local benchmark reports (`--output analysis/...`) and traces exported from the
+# browser. Both are run artefacts, not sources.
+analysis/
+open-optcg-trace*.jsonl
+
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+local-art/
+fixtures/reference/*/bandai/*
+fixtures/reference/*/egman/*.json
+!fixtures/reference/**/manifest.json
+
+# `tsc`'s emit. Separate from `dist`, which holds the browser artifact.
+dist-tsc/
+
+.scratch
+# Local LLM benchmark inputs and results; regenerate with pnpm llm:fixture / llm:bench
+llm-prompt-fixture.json
+bench-*.txt
+
+# Printed card text is Bandai's copyright and is never committed. `pnpm
+# reference:audit` writes it here from the fetched reference pages; tests and
+# tools that quote it read this file, and it doubles as the app's text pack.
+packages/cards/printed-text.json
+
+# An asset pack a player built for themselves: `pnpm assets:download` writes
+# the printed text and one image per card here by default, and
+# it is Bandai's on every count. It lands in the working tree rather than in a
+# cache directory, so it needs saying out loud -- `local-art/` above is
+# ignored for the same reason.
+open-optcg-assets/
+
+# System-1 research: rendered decision corpora, card tables and checkpoints.
+# Rendered text carries no printed text, but a checkpoint trained on the local
+# pack does, so none of it is committed.
+research/system1/data
+research/system1/checkpoints
+research/system1/.venv
+research/system1/**/__pycache__/
+
+# The in-browser scorer's model pack (research/system1/sys1/export_web.py). One
+# trained with the local text pack carries Bandai's words in its weights, so no
+# pack is committed; a build inlines one only when it is present.
+packages/web/src/scorer-model.json
+packages/web/src/scorer-adapters/

@@ -1,0 +1,180 @@
+/* =========================================================================
+   SEALED — the booster expansion, chosen before anything is opened
+
+   The chosen expansion is one card that is also the button that changes it,
+   with the pills and the picker tiles that compare expansions; what is only
+   sealed's beyond that is the pack itself.
+   ========================================================================= */
+.booster-choice {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem 0.6rem;
+  border: 1px solid var(--menu-border);
+  border-radius: 12px;
+  background: var(--menu-field);
+  color: var(--menu-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.booster-choice:hover,
+.booster-choice:focus-visible {
+  border-color: var(--flag);
+}
+.booster-choice-head {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+.booster-choice-head strong {
+  font: 700 1.15rem var(--font-display);
+  letter-spacing: 0.01em;
+}
+.booster-choice-body {
+  position: relative;
+}
+.booster-choice-swap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.4rem;
+  border-radius: 6px;
+  background: rgba(26, 16, 6, 0.72);
+  color: var(--parchment);
+  font: 600 0.7rem/1.3 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.booster-choice:hover .booster-choice-swap,
+.booster-choice:focus-visible .booster-choice-swap {
+  opacity: 1;
+}
+.booster-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.booster-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--menu-border, var(--hairline));
+  border-radius: 999px;
+  color: var(--menu-muted, var(--mist));
+  font: 0.58rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.booster-tag svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+/* The pack, as the product photo where the build fetched one and as a drawn
+   foil panel where it did not -- the same anchor-or-placeholder contract every
+   other painted surface here follows. Both states occupy the identical box, so
+   an offline build lays out exactly like a fetched one. */
+.booster-pack {
+  display: grid;
+  place-items: center;
+  /* Every expansion's pack comes out at this ratio once the photo's
+     transparent margin is trimmed (`convertBoosterPackArt`), so `contain`
+     fills the box instead of letterboxing inside a near-square canvas. */
+  aspect-ratio: 3 / 5;
+  width: 100%;
+  border-radius: 8px;
+}
+.booster-pack:not(.has-art) {
+  /* A foil wrapper, roughly: a diagonal sheen over the shell's own field. */
+  border: 1px solid var(--menu-border, var(--hairline));
+  background:
+    linear-gradient(
+      118deg,
+      transparent 34%,
+      color-mix(in srgb, var(--yellow) 26%, transparent) 50%,
+      transparent 66%
+    ),
+    var(--menu-field, #f3f0e9);
+}
+.booster-pack.has-art {
+  /* No frame and no fill: the photo is a cut-out of the pack on transparency,
+     so anything behind it reads as a box the pack is sitting in. */
+  background: var(--booster-art) center / contain no-repeat;
+}
+/* The set's product code, and the whole of what the drawn pack says. Hidden
+   under a photo because the pack itself prints it, larger and in Bandai's
+   type. */
+.booster-pack-code {
+  color: var(--menu-muted, var(--mist));
+  font: 600 0.72rem var(--font-mono);
+  letter-spacing: 0.16em;
+}
+.booster-pack.has-art .booster-pack-code {
+  display: none;
+}
+/* The pack, centred: this card's whole middle row. */
+.booster-choice-body {
+  display: grid;
+  justify-items: center;
+}
+.booster-choice-body .booster-pack {
+  width: min(7rem, 42%);
+}
+/* The code is the pill a player scans the picker for, so it is the one that
+   wears the flag colour. */
+.booster-tag.code {
+  border-color: var(--flag);
+  color: var(--flag);
+}
+.booster-tag.latest {
+  border-color: color-mix(in srgb, var(--state-playable) 45%, #2f7a55);
+  background: color-mix(in srgb, var(--state-playable) 28%, white);
+  color: #1f5c3c;
+}
+
+/* The picker: the same modal grid a deck is chosen in, one tile
+   per expansion. Sized off the pack rather than off a card, because the pack is
+   what a player recognises a set by. */
+.booster-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.7rem;
+}
+.booster-tile {
+  display: grid;
+  /* Pack, then the title, then the pills on the floor of the tile: a title that
+     wraps to two lines must not push its neighbours' pills out of line. */
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.6rem;
+  border: 1px solid var(--editor-border, #d8d1c5);
+  border-radius: 8px;
+  background: var(--editor-field, #f3f0e9);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.booster-tile:hover,
+.booster-tile.picked {
+  border-color: var(--flag);
+}
+.booster-tile.picked {
+  box-shadow: inset 0 0 0 2px var(--flag);
+}
+.booster-tile .booster-pack {
+  width: min(8rem, 100%);
+}
+.booster-tile-name {
+  font: 700 0.8rem/1.3 var(--font-display);
+}

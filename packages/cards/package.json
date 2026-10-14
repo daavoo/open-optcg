@@ -1,0 +1,14 @@
+{
+  "name": "@one-piece-sim/cards",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "dependencies": {
+    "@one-piece-sim/protocol": "workspace:*"
+  },
+  "license": "MIT"
+}

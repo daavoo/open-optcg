@@ -1,0 +1,430 @@
+/* ============================================================================
+   SHELL & TOP BAR
+   ========================================================================= */
+.game-shell {
+  /* The same paper tokens the lobby and deck editor use, so every decision
+     popup on the board — mulligan, effect choices, the card detail dialog —
+     reads as the same light chrome, while the board itself stays dark. */
+  --editor-paper: #fbf9f5;
+  --editor-canvas: #efede7;
+  --editor-field: #f3f0e9;
+  --editor-border: #ddd8cc;
+  --editor-ink: #221f1a;
+  --editor-muted: #6d675d;
+
+  /* Card height is the board's one unit of size, and the mat redeclares it as a
+     share of its own rectangle (see table.css): every piece drawn on the mat is
+     a card, so one measure sizes all of them. The value here is the fallback for
+     anything drawn off the mat -- a card in a dialog, a card in the hand -- and
+     the hand keeps its own measure, because the hand is not on the mat. */
+  --card-h: clamp(2.6rem, 10.9vh, 6.8rem);
+  --leader-h: var(--card-h);
+  --slot-h: var(--card-h);
+  --hand-h: clamp(4rem, 15vh, 9.8rem);
+
+  position: relative;
+  height: 100dvh;
+  min-height: 34rem;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--abyss);
+  color: var(--ink-white);
+  font-family: var(--font-body);
+}
+
+/* The board's chrome: one hexagon on the seam, and its three controls standing
+   on its three right-hand faces.
+ *
+ * It used to be two things -- a white band across the middle of the table
+ * carrying the turn and End turn, and a box in the top-right corner carrying
+ * the brand, the history and the trace. The band cost the sea its middle, and
+ * now that one chart is drawn across both halves it read as a cut through the
+ * drawing. The corner box put the app's own controls where a deck's art goes.
+ *
+ * The cluster stands at the left edge, centred on the seam, so it reads as the
+ * fold between the two halves rather than as a bar over either of them.
+ *
+ * `--hub-h` is the hexagon point to point. A pointy-top hexagon's flat sides
+ * are `0.866` of that apart, which makes the element's own box exactly the
+ * hexagon's two vertical faces, with no magic numbers beyond that ratio. Every
+ * cell then sits at the same place -- centred on the box -- and is pushed out
+ * along the face it stands on: a full width for the vertical face, half a
+ * width and three quarters of a height for the two diagonals, which is how a
+ * honeycomb of this orientation is spaced. `--hub-lap` scales all three at
+ * once, so the cluster tightens or opens from one place.
+ */
+.board-hub {
+  --hub-h: clamp(3.3rem, 8.4vh, 4.8rem);
+  /* Flat side to flat side: the cell's own width, and the centre-to-centre
+     distance between two cells that share a vertical face. */
+  --hub-w: calc(var(--hub-h) * 0.866);
+  /* How far each control sits from the mark, as a share of the honeycomb's own
+     spacing. 1 is the honeycomb itself: each cell's face laid against the
+     mark's, edges adjacent and nothing covered. Below it the cells close up and
+     lap over one another, which buries the icons -- the whole geometry of the
+     cluster is this one number, so it is worth saying what it means. */
+  --hub-lap: 1;
+  position: absolute;
+  /* Over the board, under anything that asks a question. At 40 the cluster
+     printed straight through an open modal -- three hexagons of chrome laid
+     over the words of a decision, and clickable there -- which is the same
+     mistake `.turn-status` below was already holding itself back from. Above
+     the trays and the review button (24, 25) and below the decision modal
+     (30), all of which are in overlays.css. */
+  z-index: 26;
+  top: 50%;
+  right: clamp(0.5rem, 1.5vw, 1.6rem);
+  width: var(--hub-w);
+  height: var(--hub-h);
+  transform: translateY(-50%);
+}
+/* The brand mark is the middle cell, and the way out.
+ *
+ * It is one cell like the other three -- same hexagon, same size -- and it is
+ * the one drawn on top where they overlap, so the cluster reads as a mark with
+ * its controls tucked under it rather than as four buttons in a row. The lift
+ * is heavier than a cell's for the same reason: the overlap has to look like a
+ * stack.
+ *
+ * The size is set on the mark itself rather than left to `inset: 0`, because
+ * `.brand-mark.small` (lobby.css) pins the shared mark at 1.85rem and outranks
+ * a `.hub-brand svg` descendant selector -- which is why the mark used to stay
+ * that size no matter what `--hub-h` said. Matching its specificity and coming
+ * later in the cascade is what lets the cluster size its own mark. */
+.hub-brand {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: var(--hub-w);
+  height: var(--hub-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 7px 20px rgba(0, 0, 0, 0.62));
+}
+.hub-brand .brand-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The mark's own hexagon sits a little inside its viewBox -- 0.92 of the box
+     across the flats, 0.94 of it point to point -- so it is scaled back out to
+     fill the box it is given. Without this the mark is visibly smaller than
+     the footprint it is meant to have. */
+  transform: scale(1.0825, 1.0625);
+}
+.hub-brand:hover,
+.hub-brand:focus-visible {
+  filter: drop-shadow(0 7px 22px rgba(0, 0, 0, 0.66)) brightness(1.12);
+}
+/* Every control is a cell of the same honeycomb as the mark: same hexagon, same
+   size, laid against the face it stands on. They take the mark's three *left*
+   faces, because the cluster sits at the right edge of the board. */
+.hub-face {
+  position: absolute;
+  /* Every cell is placed the same way: centred on the mark, then pushed out
+     along its own face's normal by `--hub-dx/--hub-dy`. The normals of the
+     three faces in play are (-1, 0) and (-0.5, -+0.75) in units of the
+     honeycomb's spacing -- a full width sideways, half a width and three
+     quarters of a height diagonally -- and `--hub-lap` shortens all three
+     together so the cells lap rather than tile. */
+  --hub-dx: 0px;
+  --hub-dy: 0px;
+  top: 50%;
+  left: 50%;
+  width: var(--hub-w);
+  height: var(--hub-h);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  /* A clipped shape takes no border, so the rim is drawn as a background the
+     fill sits a hairline inside of: this element paints the edge, its
+     `::before` paints the face. That is what lets hover light the outline
+     rather than flood the cell -- the chrome stays graphite, and the only
+     thing that moves is its edge. */
+  background: var(--hairline-strong);
+  /* The mark's outline, not a CSS `polygon()` hexagon: its corners are rounded
+     and a polygon's cannot be, which beside the mark read as two shapes. See
+     #hub-hex in index.html. */
+  clip-path: url(#hub-hex);
+  color: var(--mist);
+  cursor: pointer;
+  isolation: isolate;
+  transform: translate(calc(-50% + var(--hub-dx)), calc(-50% + var(--hub-dy)));
+  /* The lift is what separates the cell from the mat under it. */
+  filter: drop-shadow(0 5px 14px rgba(0, 0, 0, 0.5));
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+/* The face inside the rim. Negative z-index keeps it above the element's own
+   background -- the rim -- and below the icon or the words, which is why the
+   button needs its own stacking context above. */
+.hub-face::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1.5px;
+  /* Opaque, unlike the translucent cell this used to be: the cells meet along
+     their faces, and a seam where two translucent faces met read as a third
+     colour rather than as a join. */
+  background: #0f0f11;
+  clip-path: url(#hub-hex);
+  transition: background 140ms ease;
+}
+.hub-history {
+  --hub-dx: calc(var(--hub-w) * -0.5 * var(--hub-lap));
+  --hub-dy: calc(var(--hub-h) * -0.75 * var(--hub-lap));
+}
+.hub-trace {
+  --hub-dx: calc(var(--hub-w) * -0.5 * var(--hub-lap));
+  --hub-dy: calc(var(--hub-h) * 0.75 * var(--hub-lap));
+}
+/* End turn, on the flat face. A cell is barely wider than the words, which is
+   what wraps them onto two lines -- one text node still, so the button's name
+   stays "End turn" for anything reading it out. */
+.hub-command {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--hub-w);
+  height: var(--hub-h);
+  transform: translate(calc(-50% + var(--hub-w) * -1 * var(--hub-lap)), -50%);
+}
+.hub-command > * {
+  position: static;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+/* Hover, focus and pressed all read on the rim, in white: the deck's own
+   colour used to wash the cell, which made a pointer on the chrome look like a
+   seat's state, and an accent hue on the outline still read as a meaning
+   rather than as a pointer. White is the one colour the chrome can light up in
+   without claiming to say anything -- the cell is simply brighter. */
+.hub-face:hover,
+.hub-face:focus-visible,
+.hub-face[aria-pressed="true"] {
+  /* Above its neighbours while lit, so the whole rim reads as one outline
+     where it runs alongside theirs. */
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink-white);
+}
+/* A held-down cell -- the history panel is open -- lifts its face too, because
+   an outline alone cannot say "still on" once the pointer has left. */
+.hub-face[aria-pressed="true"]::before {
+  background: color-mix(in srgb, #ffffff 13%, #0f0f11);
+}
+.hub-face svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+/* End turn and "Thinking" are cells with words in them rather than an icon: the
+   type is the cell's own, so neither carries a pill of its own inside it. */
+.hub-face.end-turn-button,
+.hub-face.hub-waiting {
+  min-width: 0;
+  padding: 0 12%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--parchment);
+  font: 700 0.6rem/1.25 var(--font-display);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+/* One cell of the cluster like any other while there is still something to do
+   with the turn -- ending it is a choice, not a prompt. The accent fills the
+   cell only once nothing else is legal, which is the moment it stops being an
+   option and becomes the answer: the rim whitens under the pointer, the face
+   carries the accent when the cell *is* the move. */
+.hub-face.end-turn-button.end-turn-ready {
+  background: var(--ember-bright);
+  color: #fff;
+}
+.hub-face.end-turn-button.end-turn-ready::before {
+  background: color-mix(in srgb, var(--ember) 62%, #0f0f11);
+}
+/* Its rim whitens like every other cell's -- the accent rule above would
+   otherwise outrank the shared hover on specificity and keep it orange. */
+.hub-face.end-turn-button.end-turn-ready:hover,
+.hub-face.end-turn-button.end-turn-ready:focus-visible {
+  background: rgba(255, 255, 255, 0.92);
+}
+.hub-face.end-turn-button.end-turn-ready:hover::before,
+.hub-face.end-turn-button.end-turn-ready:focus-visible::before {
+  background: color-mix(in srgb, var(--ember) 88%, #0f0f11);
+}
+/* Nothing to press, so the rim is quieter than the rest of the cluster's. */
+.hub-face.hub-waiting {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--mist);
+  cursor: default;
+}
+.hub-face.hub-waiting::before {
+  background: #131316;
+}
+/* The turn and the phase, read along the seam itself: centred on the table,
+   one line, no chip behind it. The band used to print this in the middle at
+   twice the size; the crease between the two halves is the same place, and the
+   only thing it needs to stay legible over a chart is its own shadow. */
+.turn-status {
+  /* The gap the dot is centred in, and so the space between the two halves of
+     the line. Named because the dot's placement is derived from it. */
+  --turn-gap: 1.3rem;
+
+  position: absolute;
+  /* Above the table and below every surface that asks a question: at the
+     cluster's own level it printed straight through an open modal. */
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  /* Two equal columns rather than a centred row, so what sits at the table's
+     middle is the *dot* and not the line. A row centres its own width, which
+     puts the dot wherever the two texts happen to leave it and shifts it every
+     time "Your turn" becomes "Opponent turn". Equal columns put the gap between
+     them on the centre line whatever they hold -- and the chart is cut to put
+     Reverse Mountain on that same point, so the two agree. */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: baseline;
+  column-gap: var(--turn-gap);
+  margin: 0;
+  /* One size and one colour for both halves of the line: the turn and whose it
+     is are one sentence, and the count set smaller or dimmer read as a label on
+     the name rather than as half of the same phrase. Only the dot between them
+     is held back. */
+  color: var(--parchment);
+  font: 700 0.86rem var(--font-display);
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+  text-transform: uppercase;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+.turn-status span {
+  text-align: right;
+}
+.turn-status b {
+  position: relative;
+  font: inherit;
+  text-align: left;
+}
+/* The dot between the two, drawn rather than written: it belongs to the pair,
+   not to either half. Taken out of the flow and hung half a gap to the left of
+   the second column, which is the table's own centre line -- in the flow it
+   would push its column sideways by its own width and take the centre with
+   it. */
+.turn-status b::before {
+  content: "·";
+  position: absolute;
+  left: calc(var(--turn-gap) / -2);
+  color: var(--mist);
+  font-weight: 400;
+  transform: translateX(-50%);
+}
+
+/* What is left of the top bar: an online match's clock and the spectator
+   bar. */
+.topbar {
+  position: absolute;
+  z-index: 40;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(10, 10, 11, 0.82);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+.topbar > .match-clock:first-child {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+.status-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--state-playable);
+  box-shadow: 0 0 10px var(--state-playable);
+}
+.toolbar {
+  display: flex;
+  gap: 0.28rem;
+}
+.toolbar button,
+.actions-heading button {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--mist);
+  cursor: pointer;
+}
+.toolbar button:hover,
+.toolbar button[aria-pressed="true"],
+.actions-heading button:hover {
+  border-color: var(--flag);
+  background: color-mix(in srgb, var(--flag) 16%, transparent);
+  color: var(--parchment);
+}
+.toolbar button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.toolbar svg,
+.actions-heading svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.mobile-only {
+  display: none;
+}
+
+/* The match clock, in the topbar of an online match.
+ *
+ * Two faces, because a chess clock is only meaningful against the other one:
+ * "4:12" says nothing until you can see the opponent has 11:40. Only ever
+ * rendered where a server is running a clock -- a local match has none, and
+ * there is nobody to be unfair to. */
+.match-clock {
+  display: flex;
+  gap: 0.55rem;
+  padding-left: 0.55rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+.match-clock span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+.match-clock small {
+  color: var(--muted);
+  font: 700 0.55rem var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.match-clock b {
+  color: var(--parchment);
+  font: 700 0.85rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+/* The running side is the one being spent, so it is the one drawn as live. */
+.match-clock .clock-ticking b {
+  color: var(--gold, #e8c46a);
+}

@@ -1,0 +1,132 @@
+/* ============================================================================
+   DIALOGS
+   The modal layer the menu screens raise: backdrop, paper, fields, actions,
+   and the controller choice printed inside one.
+   ========================================================================= */
+.app-dialog-backdrop {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(15, 14, 12, 0.58);
+  backdrop-filter: blur(5px);
+}
+.app-dialog-backdrop[hidden] {
+  display: none;
+}
+.app-dialog {
+  --editor-paper: #fbf9f5;
+  --editor-field: #f3f0e9;
+  --editor-border: #d8d1c5;
+  --editor-ink: #221f1a;
+  --editor-muted: #6b6257;
+  display: grid;
+  gap: 0.85rem;
+  width: min(30rem, 100%);
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-top: 4px solid var(--flag);
+  border-radius: 8px;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  box-shadow: var(--lift-sealed);
+}
+.app-dialog h2 {
+  margin: 0;
+  font: 700 1.15rem var(--font-display);
+}
+.app-dialog label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--editor-muted);
+}
+.app-dialog label[hidden] {
+  display: none;
+}
+
+/* Who pilots the opponent: two cards side by side rather than a select, because
+   the choice turns on differences a collapsed dropdown cannot state -- speed,
+   determinism, and whether the build can run it at all. The fieldset carries
+   the group's label, so it is stripped back to the layout the labels above use
+   and the legend is styled to match them. */
+.controller-choice {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.controller-choice legend {
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--editor-muted);
+}
+.controller-cards {
+  display: grid;
+  /* Side by side wherever the dialog is wide enough for two readable columns,
+     stacked below that -- the notes are two lines of prose each, and a 9rem
+     column turns them into a word ladder. `min(11rem, 100%)` rather than a bare
+     `11rem`, so a dialog narrower than one column stacks instead of overflowing
+     sideways. */
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: 0.5rem;
+}
+/* Same affordance as the deck grid's tiles: a bordered card, a ring on the one
+   that is chosen. `align-content: start` keeps the title at the top of a card
+   whose note is shorter than its neighbour's. */
+.controller-card {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 8px;
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.controller-card:hover {
+  border-color: var(--flag);
+}
+.controller-card.picked {
+  border-color: var(--flag);
+  box-shadow: inset 0 0 0 2px var(--flag);
+}
+.controller-card-title {
+  font: 700 0.92rem var(--font-display);
+}
+.controller-card-note {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--editor-muted);
+}
+/* The blocked note, written by the capability probe. Empty when the LLM can
+   run, and an empty span must not leave a gap above the card's bottom edge. */
+.controller-card-hint {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--flag);
+}
+.controller-card-hint:empty {
+  display: none;
+}
+.app-dialog input,
+.app-dialog select {
+  width: 100%;
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+}
+.app-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}

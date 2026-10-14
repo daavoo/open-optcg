@@ -1,0 +1,16 @@
+# The decks a pilot-only phase trains the learner on (`compact_ppo
+# --pilot-decks`): the catalog's tournament shelf, every list transcribed
+# from an event's results rather than a Bandai product or feature page
+# (`deckShelf` in packages/decks). Its opponents still draw from the whole pool.
+(Purple) Enel - 1st Place EU Championship 26-27 S1
+(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1
+(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1
+(Red/Black) Sabo - OP17 Elbaph List
+(Purple) Kaido - Open OPTCG
+(Red/Green) Luffy & Ace - Open OPTCG
+(Red/Green) Monkey.D.Luffy - Open OPTCG
+(Black) Monkey.D.Luffy - Open OPTCG
+(Red) Portgas.D.Ace - Open OPTCG
+(Blue) Rocks.D.Xebec - Open OPTCG
+(Purple/Yellow) Charlotte Pudding - Open OPTCG
+(Yellow) Enel - Open OPTCG

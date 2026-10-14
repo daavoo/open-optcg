@@ -1,0 +1,78 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op15LucyDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Red/Blue) Lucy - Official Feature Deck",
+  archetype: "OP-15 (Red/Blue) Lucy {Dressrosa} free-Event control",
+  gamePlan: [
+    "Sixteen of the fifty cards are Events and four more are a Stage, and the deck is built so you rarely pay for any of them. OP15-014 Bartolomeo's [On Play] activates a {Dressrosa} Event of base cost 3 or less out of your hand, and OP15-046 Sabo's activates one of any cost. Casting the body and casting the Event are one play, which is what lets a 7-cost removal Event resolve on a turn the DON!! is already spent.",
+    "The Leader turns that into cards. OP15-002's [Activate: Main] draws once a turn as long as an Event with a base cost of 3 or more has been activated this turn -- base cost, so OP15-021 still counts on the turn its own discount makes it cost 1. Sequence the Event before you take the draw; the clause reads the turn so far, not the future.",
+    "The Leader's other half is the whole defence. On its own attack and on the opponent's, it may trash any number of Event or Stage cards from hand for +1000 each. Eight of the sixteen Events print no [Counter] at all, so the trash clause is what makes them defensive cards rather than dead ones -- and it costs nothing but the card.",
+    "OP15-057 Dressrosa Kingdom upgrades that. Once the Stage is out, resting it and trashing one Event or Stage buys +2000 on any one of your cards for the battle rather than the Leader's +1000, and it reaches a Character rather than only the Leader. It also draws on the way in under a {Dressrosa} Leader, so it costs 1 and replaces itself. Play it early.",
+    "The trash is the third resource. OP15-021 costs 1 instead of 4 once four Events sit in your trash, and OP15-006 Cavendish is a 6000 body on the same count -- so the Events you have already spent keep paying. Every Event you trash for the Leader's +1000 moves both of those closer.",
+  ],
+  mulligan: [
+    "Keep a hand with OP15-040 Viola or OP15-053 Rebecca. Both are 1-cost bodies that look 3 deep and add a {Dressrosa} card, which in this fifty is every card but nothing, and Rebecca becomes a [Blocker] for one DON!! later.",
+    "Keep OP15-057 Dressrosa Kingdom. It costs 1, draws a card under this Leader, and is the card that turns the deck's dead Events into +2000s for the rest of the game.",
+    "A hand whose cheap half is all Events goes back. The Events are what the Characters cast for free; with no body to cast them and no DON!! to pay, they sit in hand as +1000s.",
+    "Do not keep on OP15-046 Sabo or OP15-020 Fire Fist alone. They are the turns the deck builds toward at 7 cost, and the searchers find them.",
+  ],
+  priorities: [
+    "Cast the Event off a body before you cast it off your DON!!. OP15-014 Bartolomeo reaches base cost 3 or less and OP15-046 Sabo reaches anything; an Event paid for in DON!! that either of them could have activated is a whole turn of tempo given away.",
+    "Take the Leader's draw every turn you activated an Event of base cost 3 or more. It is [Once Per Turn] and free, and the turn it is not taken is a card.",
+    "OP15-020 Fire Fist is the deck's removal ceiling, not a tempo card: −8000 until the end of their next End Phase, and then the option to trash 2 more cards to K.O. anything at 0 power or less. At 7 cost it is a card you activate off OP15-046 Sabo, and the −8000 outlasts the turn, so a body you cannot finish is still a body that cannot attack.",
+    "OP10-060 Barrier-Barrier Pistol answers a Character the K.O. effects cannot: it places one at 6000 power or less at the bottom of their deck, so nothing that watches a K.O. or a trash fires, and the card is gone rather than recurred. Reach for it against a body whose [On K.O.] is the reason it was played.",
+    "Stack the debuffs before the bounce. OP15-021 at −3000 and OP15-020 at −8000 both bring a Character under OP10-060's 6000 line, which is how a 9000 body leaves the field.",
+    "Take the early hits. A Life card taken is a card in hand, and in this deck a card in hand is the next free cast, the next +1000 and the next Event in the trash -- so an Event trashed to save a Life at full Life costs two cards for one. Trash Events to the Leader for the hit that has to be stopped, and there spend to the shortfall and no further; the Event in the trash still counts toward OP15-021 at 1 cost and OP15-006 at 6000 power.",
+    "Play OP15-057 Dressrosa Kingdom on the turn you can, not the turn you need it. Its defensive half needs the Stage already on the field and already active, so a Stage cast during the opponent's attack is not a thing that exists.",
+    "On their last Life, the Leader's own attack is where the trash clause goes on offence: their Counter window will spend the whole hand to stop that hit, and the hand's size is known, so an attack past their power plus 2000 a card cannot be stopped. Pitch to that line when the hand reaches it and there is no active [Blocker] to take the attack; otherwise a Leader hit lands or is countered whatever the extra 1000, and the cards are better kept.",
+    "Pay a card cost with the card the hand can most afford: a Counter-less Event before OP15-021, a second Stage before a body, and never OP15-014 or OP15-046 while anything else is in hand. Chinjao's [On Play], OP15-054's trash and Fire Fist's rider all ask the same hand, and the card they take is the next free cast or the next +1000.",
+    "OP15-020 Fire Fist's rider -- trash 2 cards to K.O. the body at 0 -- is worth paying for a Blocker or a body of cost 4 or more, and not otherwise: the −8000 already holds a smaller body for their turn, and the two cards are two +1000s on the next attack.",
+    "OP15-048 Chinjao is a trade you want on their turn. Its [On Play] trades one Event from hand for two cards, and its [On K.O.] on the opponent's turn takes a card out of their hand -- so it is a body that pays whether it lives or dies, and the deck would rather they answer it than the free-Event bodies.",
+    "OP15-052 Leo refuses your opponent's removal of any Character you own at 7000 base power or less, for one of your Characters placed at the bottom of your deck. The Character you hand over may be the threatened one -- bottoming it saves it from the trash, not from the field -- so the real use is paying with a spent 1-cost searcher to keep OP15-014 or OP15-046 on the table.",
+    "OP15-054 is the hand-fixer, not a value card. Draw 2 and trash 1, then put a {Dressrosa} Character of cost 4 or less down for free -- so it finds the body that casts the Event you are holding, and pays for it.",
+  ],
+  commonVariants: [
+    "This is Bandai's own featured deck transcribed slot for slot. Tournament builds of this Leader run more of the OP-10 {Dressrosa} half -- extra copies of OP10-060 and further searchers -- and cut the 2-of Events this list plays for consistency.",
+    "The 2-ofs are the flex: OP15-052 Leo, OP10-059, OP15-019 Barrier Bulls, OP15-054 and OP10-060. A build expecting removal plays more Leo; one expecting to be raced plays more of the Events with a [Counter] half.",
+    "OP15-019 Barrier Bulls is the only Event here whose [Main] half does nothing to the board -- a card and +1000 on the Leader until the end of their next End Phase. It is in the list for its [Trigger], a −4000 off a Life card.",
+  ],
+  commonCombos: [
+    "OP15-046 Sabo into OP15-020 Fire Fist: a 7-cost 9000 [Blocker] lands and a 7-cost removal Event resolves on the same 7 DON!!, and the Leader's draw is on top of it because Fire Fist's base cost is 7.",
+    "OP15-014 Bartolomeo into OP15-055: the Event's draw-2 half is base cost 3, so the body, two cards and the Leader's draw are one 4-DON!! play -- three cards off one card.",
+    "OP15-021 after four Events are in the trash: a 1-cost −3000 that also has a [Counter] half, so the same card is removal on your turn and defence on theirs. Cast off OP15-046 Sabo it is free, its base cost of 4 still earns the Leader's draw, and the −3000 is what the turn's attacks then run into -- so into a board with a Character it is a cast, and into an empty one a card to hold.",
+    "OP15-020's −8000 into OP10-060's bottom-of-deck: the debuff lasts until the end of their next End Phase, so the bounce can come on the following turn and still find the body under 6000.",
+    "OP15-057 Dressrosa Kingdom plus a hand of uncastable Events: every one of them is +2000 on a Character in a battle, which is what makes this deck's board hold against a wider one.",
+  ],
+  keyCardNumbers: [
+    "OP15-002",
+    "OP15-046",
+    "OP15-014",
+    "OP15-020",
+    "OP15-057",
+    "OP15-021",
+    "OP15-040",
+    "OP15-053",
+    "OP10-060",
+    "OP15-054",
+  ],
+  counterplay: [
+    "The free-Event bodies are the deck, not the Events. OP15-014 Bartolomeo and OP15-046 Sabo are what make a 7-cost Event castable on a spent turn; answering them leaves a hand of Events that must be paid for one a turn.",
+    "Bartolomeo refuses its own K.O. by trashing an Event from hand, and OP15-052 Leo refuses removal of anything at 7000 base power or less. Expect the first answer to be declined, and note that both payments are cards this deck wanted anyway -- the Event goes to a trash it is counting.",
+    "Attacking into the Leader is not free. Every Event and Stage in their hand is +1000 on it, and the Stage is another +2000 on any one card; an attack that needed 1000 more can be turned by a card they were never going to cast.",
+    "Their Character count is low and their bodies are small: four 6000s, four 5000s and four 9000 [Blocker]s, over twelve 1-cost and 4-cost bodies at 2000 or less. A wide board outpaces the removal, which answers one Character a card.",
+    "Their removal reads current power. A Character kept above 6000 is out of OP10-060's reach, and one above 8000 survives OP15-020 without the K.O. rider -- so DON!! left on a body is protection, not just damage.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_096.php",
+      retrievedAt: "2026-09-18",
+      note: "Bandai's own featured deck for OP15-002, transcribed slot for slot as the deck manifest. The page's strategy notes are the source for the early Dressrosa Kingdom priority, the Bartolomeo-into-OP15-055 mid-game line and the Sabo-into-Fire-Fist and Sabo-into-Barrier-Barrier-Pistol finishing turns.",
+    },
+    {
+      url: "https://onepiece.gg/red-blue-lucy-guide-best-decks-strategy-op15/",
+      retrievedAt: "2026-09-18",
+      note: "A written guide for this Leader. Source for the reading that the deck rarely bricks because of its searchers, so the mulligan is about finding a body rather than finding Events, and for Sabo as the late-game card rather than a curve play.",
+    },
+  ],
+};

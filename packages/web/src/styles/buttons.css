@@ -1,0 +1,113 @@
+/* ============================================================================
+   BUTTONS
+   The three shared button grammars -- primary, secondary, text -- and the
+   overrides the menu card's paper puts on them.
+   ========================================================================= */
+.primary,
+.secondary:not(.action-button),
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 9px;
+  font: 700 0.9rem var(--font-display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.primary {
+  position: relative;
+  border: 1px solid var(--parchment);
+  background: linear-gradient(180deg, var(--ember-bright), #c97442);
+  color: #241109;
+  box-shadow:
+    0 4px 0 var(--ember-deep),
+    0 10px 22px rgba(0, 0, 0, 0.5);
+}
+/* Hover lifts the button 2px, which moves its edges away from the cursor that
+   caused the lift -- a pointer resting within 2px of an edge un-hovers, drops
+   back onto the button, and jitters forever. This pad keeps the hover area at
+   the un-lifted bounds, so a hover that starts holds. */
+.primary::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+}
+.primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 0 var(--ember-deep),
+    0 14px 26px rgba(0, 0, 0, 0.55);
+}
+.primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ember-deep);
+}
+.secondary:not(.action-button) {
+  border: 1px solid var(--rigging);
+  background: rgba(239, 234, 225, 0.05);
+  color: var(--parchment);
+}
+.secondary:not(.action-button):hover {
+  border-color: var(--ember);
+  background: rgba(239, 234, 225, 0.12);
+}
+.wide {
+  width: 100%;
+}
+.text-button {
+  padding: 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--mist);
+  font: 500 0.75rem var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.text-button:hover {
+  color: var(--ember-bright);
+}
+.primary svg,
+.secondary:not(.action-button) svg,
+.text-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+.menu-card .secondary:not(.action-button) {
+  border-color: var(--menu-border);
+  background: var(--menu-field);
+  color: var(--menu-ink);
+}
+.menu-card .secondary:not(.action-button):hover {
+  border-color: var(--ember);
+  background: var(--menu-card);
+}
+.menu-card .text-button {
+  color: var(--menu-muted);
+}
+.menu-card .text-button:hover {
+  color: var(--ember-deep);
+}
+
+.deck-edit-button {
+  width: 100%;
+  padding: 0.55rem 0.75rem !important;
+  font-size: 0.72rem !important;
+}
+.text-button.wide {
+  width: 100%;
+}
+/* Card art is asset management, not part of starting or resuming a match —
+   set off below a rule so it doesn't read as one more way to begin playing. */
+.setup-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--menu-border);
+}
+.setup-footer .text-button {
+  font-size: 0.7rem;
+}

@@ -1,0 +1,58 @@
+# The sidecar is experimental, but the results in `ml/README.md` are only
+# reproducible if the dependency set is recorded. Versions are the ones the
+# reported runs were trained under.
+[project]
+name = "optcg-rl"
+version = "0.1.0"
+description = "Experimental reinforcement-learning sidecar for open-optcg"
+requires-python = ">=3.12"
+dependencies = [
+  "gymnasium==1.3.0",
+  "numpy==2.5.2",
+  "pettingzoo==1.27.0",
+  "sb3-contrib==2.9.0",
+  "stable-baselines3==2.9.0",
+  "torch==2.13.0",
+]
+
+[project.optional-dependencies]
+dev = ["mypy==1.18.2", "ruff==0.16.5"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+# Not `strict` yet: the trainer's callbacks and env wrappers are written against
+# untyped SB3/Gymnasium base classes, so `strict` reports ~40 missing annotations
+# in code that is deliberately experimental. This level catches the errors that
+# matter -- bad calls, unreachable branches, wrong optionals -- and the ratchet
+# is to annotate `train.py` and turn `strict` on.
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+warn_unreachable = true
+# The RL stack ships no type information, so every import from it is `Any`.
+# `numpy.*` is listed too so the CI lint job can run without installing torch:
+# with the package present its real types are used, and only a bare checkout
+# falls back to `Any`.
+[[tool.mypy.overrides]]
+module = [
+  "gymnasium.*",
+  "numpy.*",
+  "pettingzoo.*",
+  "sb3_contrib.*",
+  "stable_baselines3.*",
+  "torch.*",
+]
+ignore_missing_imports = true
+disallow_untyped_calls = false
+disallow_subclassing_any = false
+
+[tool.uv]
+package = false

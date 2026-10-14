@@ -1,0 +1,443 @@
+/* ============================================================================
+   HOME
+   The landing page. It borrows the lobby's shell and menu-card surface, and
+   adds the fanned hand of ways to play plus the footer everything else lives
+   in -- the downloads, the repository link.
+   ========================================================================= */
+/* The landing page: a single card that routes into the two ways to play.
+   It reuses the lobby shell and menu-card surface, so it reads as the same
+   choice being made one level up. */
+.home-shell {
+  /* Stretched rather than started at the top: the fan owns the middle row and
+     centres itself in whatever is left between topbar and footer. */
+  align-content: stretch;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+/* The landing page has no panel of its own: the three cards sit straight on
+   the backdrop, and everything that is not a way to play sits in the footer.
+   So these rules use the app's dark tokens, not the menu card's light ones --
+   there is no menu card here to shadow them. */
+/* The tagline belongs to the wordmark, so it wraps under it in the topbar
+   rather than floating above the cards. */
+.home-shell .setup-topbar {
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.home-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.home-main {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+}
+.home-tagline {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--parchment);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+  /* Same reason as the wordmark above it: this line crosses the drawing's
+     brightest region, and the scrim is no longer strong enough to carry it. */
+  text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
+}
+
+/* The match a reload interrupted, offered back as a modal.
+
+   It is a question rather than a section of either page that raises it -- the
+   lobby, or the mode fan behind `#modes` -- so it wears the shared dialog paper
+   (dialogs.css) and only the two lines inside it are said here. Both were
+   written for a dark banner and would be an ember eyebrow and grey type on
+   paper, so they take the dialog's own ink.
+*/
+.resume-dialog {
+  width: min(24rem, 100%);
+}
+.resume-dialog .home-resume-eyebrow {
+  margin: 0;
+  color: var(--flag);
+  font: 500 0.6rem/1.2 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.resume-dialog .home-resume-decks {
+  margin: 0;
+  overflow: hidden;
+  color: var(--editor-ink);
+  font: 600 0.95rem/1.35 var(--font-display);
+  text-overflow: ellipsis;
+}
+/* Why a resume did not work, in the offer's place: the modal keeps its shape
+   and loses everything there is nothing to press for. */
+.resume-dialog .home-resume-notice {
+  margin: 0;
+  color: var(--editor-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* The ways to play, fanned like a hand of cards.
+
+   Each mode is a painting of a whole card -- frame, effect box, name band and
+   all -- so this section frames images rather than composing cards: a white
+   trim, a drop shadow, and the overlap and slight tilt a hand takes when it is
+   held. Same grammar as the board's own hand (section 08): negative margins
+   for the overlap, a small rotation per position, and hovering pulls one card
+   up out of the fan. */
+.home-modes {
+  /* The fan's scale, in one place: the overlap and the lift are fractions of
+     the card height, so a shorter card on a small window keeps its
+     proportions instead of drifting apart. */
+  --mode-h: min(19.5rem, 44vh);
+  display: flex;
+  /* Bottom-aligned, not centred: a held hand lines up at the bottom edge,
+     which is what makes the tilt read as tilt rather than as misalignment. */
+  align-items: end;
+  justify-content: center;
+  /* Headroom for the hovered card, so lifting one never clips it. */
+  padding-top: 2.5rem;
+  /* Sits above centre rather than dead centre: the backdrop's horizon is the
+     line the cards should read as lying on, and the footer already occupies
+     the bottom of the page. In a centred grid, room left under the fan is
+     what raises it. */
+  margin-bottom: clamp(2rem, 9vh, 6rem);
+  width: 100%;
+  max-width: 78rem;
+}
+.home-mode {
+  /* Shrink-to-fit around its image: the painting's own proportion decides the
+     card's shape, so nothing is cropped or letterboxed whatever ratio a mode
+     is drawn at. */
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  margin-left: calc(var(--mode-h) * -0.1);
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid #f7f5f0;
+  border-radius: 10px;
+  background: none;
+  /* The trim reads as a mount only against a shadow: a close, tight one for
+     the card's own edge, and a wide soft one for the distance it sits above
+     the table. */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 14px 28px rgba(0, 0, 0, 0.5);
+  line-height: 0;
+  /* The tilt and the sit of one card in the fan, set per position below. One
+     transform built from two custom properties rather than a transform per
+     position, so the hover rule can lift a card without knowing which
+     position it is in. */
+  transform: rotate(var(--fan-tilt, 0deg)) translateY(var(--fan-sit, 0rem));
+  transform-origin: bottom center;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+  cursor: pointer;
+}
+.home-mode:first-child {
+  margin-left: 0;
+}
+/* A three-card fan: outer cards tilted away and sitting slightly low, the
+   middle one upright and proud. Beyond three the tilt stops growing rather
+   than folding the outer cards flat. */
+.home-mode:nth-child(1) {
+  --fan-tilt: -5deg;
+  --fan-sit: 0.55rem;
+}
+.home-mode:nth-child(2) {
+  --fan-tilt: 0deg;
+  --fan-sit: 0rem;
+}
+.home-mode:nth-child(3) {
+  --fan-tilt: 5deg;
+  --fan-sit: 0.55rem;
+}
+.home-mode:nth-child(n + 4) {
+  --fan-tilt: 8deg;
+  --fan-sit: 1.1rem;
+}
+/* Picking a card out of the hand: it comes up and forward, keeping its tilt so
+   it is the same card, raised -- not a different one that appeared. */
+.home-mode:hover,
+.home-mode:focus-visible {
+  z-index: 2;
+  transform: rotate(var(--fan-tilt, 0deg))
+    translateY(calc(var(--fan-sit, 0rem) - 1.4rem)) scale(1.03);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 22px 40px rgba(0, 0, 0, 0.58);
+}
+.home-mode-card {
+  display: block;
+  /* Bounded, never resized: the height caps how tall a card stands on the
+     page, and the width keeps the fan inside a narrow window -- three cards
+     overlapping by a tenth of their height come to about 2.7 card widths, so
+     32vw each is the widest that still fits a phone. `auto` on both of the
+     other axes is what keeps the file's own ratio. */
+  width: auto;
+  max-width: 32vw;
+  height: auto;
+  max-height: var(--mode-h);
+}
+/* No hover flourish beyond the lift: the card is already the affordance.
+   Keyboard focus still needs a visible ring, so that one stays. */
+.home-mode:focus-visible {
+  outline: 2px solid var(--ink-white);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-mode {
+    transition: none;
+  }
+}
+
+/* A mode with no painting: an art-less build, or one drawn but not yet
+   delivered. There is no image to show, so the page composes a plain card out
+   of what it does know -- icon, effect text, name band -- at the printed
+   proportion the paintings use. */
+.home-mode[data-composed] {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  height: var(--mode-h);
+  aspect-ratio: 0.71;
+  line-height: normal;
+  background: linear-gradient(180deg, #1b1b20, #0e0e10);
+  color: var(--parchment);
+  text-align: center;
+}
+.home-mode-art {
+  display: grid;
+  place-items: center;
+  color: var(--ember-bright);
+}
+.home-mode-art svg {
+  width: 2.8rem;
+  height: 2.8rem;
+}
+.home-mode-text {
+  margin: 0 0.4rem 0.5rem;
+  padding: 0.3rem 0.38rem;
+  border-radius: 5px;
+  background: rgba(252, 251, 247, 0.88);
+  color: #221d16;
+  font: 0.62rem/1.35 var(--font-card);
+  text-align: left;
+}
+.home-mode-name {
+  display: grid;
+  place-items: center;
+  padding: 0.45rem 0.4rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font: 700 1.05rem/1.2 var(--font-card-name);
+}
+
+/* The footer: everything that is not a way to play. One dark band at the
+   bottom of the page, so the cards own the middle of it. */
+.home-footer {
+  /* One flat row rather than a stack: the footer is the page's floor, and a
+     tall block of it would eat the backdrop the cards sit on. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.4rem;
+  /* Edge to edge: cancel the shell's padding rather than sit inside it. */
+  margin: 0 calc(-1 * var(--shell-pad-x)) calc(-1 * var(--shell-pad-y));
+  padding: 0.9rem var(--shell-pad-x);
+  /* Pinned to the foot of the window, not to the end of the content: on a page
+     long enough to scroll -- the matchup tables, say -- a floor
+     you have to reach the bottom to see is a floor most readers never see. */
+  position: sticky;
+  bottom: calc(-1 * var(--shell-pad-y));
+  z-index: 3;
+  border-top: 1px solid var(--hairline);
+  /* Opaque, because content now scrolls behind it rather than stopping above
+     it: at any transparency the rows sliding under it read as a rendering
+     fault rather than as depth. */
+  background: #0b0b0c;
+  box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+/* The GitHub mark, alone: the footer's one control, so it is a target rather
+   than a line of type -- padded out to a comfortable tap size around a small
+   glyph. */
+.home-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-white);
+  cursor: pointer;
+}
+.home-github:hover {
+  color: var(--ember-bright);
+}
+.home-github svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+/* The brand in a menu topbar is the way home.
+   
+   One target rather than a wordmark plus a Home button beside it: the mark is
+   already centred and already means this project, and clicking a product's
+   logo to get to its front page is a habit a reader brings with them. The
+   landing page prints the same brand as plain text, because there it would be
+   a link to the page you are on. */
+.brand-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-white);
+  cursor: pointer;
+}
+.brand-home:hover {
+  color: var(--ember-bright);
+}
+.brand-home:focus-visible {
+  outline: 2px solid var(--ink-white);
+  outline-offset: 2px;
+}
+
+/* The asset pack line: the one thing a new player has to do before the cards
+   look like cards, so it sits under the modes where the placeholders are
+   first seen, in the footer's dark register rather than a menu card's. */
+.home-assets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  margin-top: clamp(0.5rem, 1.5vw, 1rem);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  text-align: center;
+}
+.home-assets-status {
+  margin: 0;
+  flex-basis: 100%;
+}
+.home-assets-load {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+}
+.home-assets-load:hover {
+  border-color: #fff;
+}
+.home-assets-load svg {
+  width: 1rem;
+  height: 1rem;
+}
+.home-assets-help {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.home-assets-notice {
+  margin: 0;
+  flex-basis: 100%;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* The asset gate: the whole app until the card art and text are in
+   (screens/asset-gate.ts). One column of instructions on the home page's
+   drawing, ending in the pack line above. */
+.asset-gate-panel {
+  display: grid;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  justify-self: center;
+  width: calc(100% - 2rem);
+  max-width: 36rem;
+  margin: auto;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border-radius: 1rem;
+  /* The page's drawing is busy and pale; the instructions stand on a dark
+     plate so they read over any part of it. */
+  background: rgba(12, 12, 14, 0.82);
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.5;
+}
+.asset-gate-panel h1 {
+  margin: 0;
+  color: #fff;
+  font: 700 clamp(1.4rem, 4vw, 2rem) var(--font-display);
+}
+.asset-gate-panel p,
+.asset-gate-panel ol {
+  margin: 0;
+}
+.asset-gate-panel ol {
+  display: grid;
+  gap: 0.5rem;
+  padding-left: 1.25rem;
+}
+.asset-gate-panel .home-assets {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* The same block inside the Configure dialog, on paper.
+ *
+ * Everything above is written for white type on the drawing; here the block
+ * stands on the dialog's own light surface, so it takes the dialog's ink and
+ * its pills go dark-on-paper. A rule above it separates it from the seed: it is
+ * the one setting on that dialog that is not about this match in particular.
+ */
+.dialog-assets {
+  display: grid;
+  justify-items: start;
+  gap: 0.55rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--editor-border);
+  color: var(--editor-muted);
+  font-size: 0.8rem;
+}
+.dialog-assets h3 {
+  margin: 0;
+  color: var(--editor-ink);
+  font: 700 0.95rem var(--font-display);
+}
+.dialog-assets .home-assets-status,
+.dialog-assets .home-assets-notice {
+  margin: 0;
+  color: var(--editor-muted);
+  line-height: 1.5;
+}
+.dialog-assets .home-assets-notice {
+  color: var(--editor-ink);
+}
+.dialog-assets .home-assets-load {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  font-size: 0.8rem;
+}
+.dialog-assets .home-assets-load:hover {
+  border-color: var(--editor-ink);
+}
+.dialog-assets .home-assets-help {
+  color: var(--editor-muted);
+  font-size: 0.75rem;
+}

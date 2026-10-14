@@ -1,0 +1,47 @@
+name: Deploy hosted app
+
+# The hosted copy of the app, on GitHub Pages. It is the same single HTML file
+# `pnpm web:build` produces, and it carries no card art and no printed card
+# text: the player loads their own asset pack into it (docs/asset-packs.md).
+# Publishing it is fine for the same reason the release binaries are: nothing
+# of Bandai's is in it.
+#
+# Pages has to be switched on once in the repository settings, with "GitHub
+# Actions" as the source; until then this workflow fails at the deploy step.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm web:build
+      - run: mkdir -p site && cp dist/open-optcg.html site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,12 @@
+{
+  "name": "@one-piece-sim/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "zod": "^4.5.4"
+  },
+  "license": "MIT"
+}

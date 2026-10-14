@@ -1,0 +1,16 @@
+{
+  "name": "@one-piece-sim/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@one-piece-sim/agents": "workspace:*",
+    "@one-piece-sim/cards": "workspace:*",
+    "@one-piece-sim/decks": "workspace:*",
+    "@one-piece-sim/engine-core": "workspace:*",
+    "@one-piece-sim/protocol": "workspace:*",
+    "fflate": "0.8.3",
+    "lucide": "^1.39.0"
+  },
+  "license": "MIT"
+}

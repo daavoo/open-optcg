@@ -1,0 +1,41 @@
+name: Rules or card bug
+description: A card resolved wrongly, a legal play was missing, or a game got stuck.
+labels: ["bug", "rules"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks — these are the most useful reports we get.
+
+        If you can, export the trace first: **the download button in the game's
+        top bar**. It replays the exact game, which usually turns a report into a
+        test. Traces contain both players' hands, so only attach one after the
+        game is over.
+  - type: input
+    id: card
+    attributes:
+      label: Card number
+      description: The card that misbehaved, e.g. ST31-003. Leave blank if it isn't card-specific.
+      placeholder: ST31-003
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What the engine did, and what should have happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: trace
+    attributes:
+      label: Trace
+      description: Drag the exported trace file in here, or paste the seed and both deck names.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Browser app (local build)
+        - Hosted sealed demo
+        - Terminal (pnpm play)
+    validations:
+      required: true

@@ -1,0 +1,271 @@
+/* ============================================================================
+   MATCHUP FORM
+   The body of the 1v1 setup card: two deck columns either side of a crease,
+   the match options under them, and the note about who is piloting the
+   opponent -- including the LLM settings panel that note opens.
+   ========================================================================= */
+.deck-columns {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1.1rem;
+  align-items: start;
+}
+/* A crease down the middle of the sheet rather than a drawn rule: solid at
+   the fold and gone at both ends, which is how a line on paper behaves. */
+.deck-columns-divider {
+  align-self: stretch;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--menu-border) 20%,
+    var(--menu-border) 80%,
+    transparent
+  );
+}
+.deck-column {
+  display: grid;
+  gap: 0.55rem;
+}
+.deck-select-control {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+}
+.deck-select-control select {
+  width: 100%;
+}
+.deck-select-preview {
+  width: 3.2rem;
+  aspect-ratio: 0.71;
+}
+.deck-select-preview.empty {
+  border: 1px dashed var(--menu-border, var(--rigging));
+  border-radius: 5px;
+}
+.deck-select-preview .deck-select-leader-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  border-radius: 5px;
+  box-shadow: 0 4px 10px rgba(34, 29, 22, 0.18);
+  pointer-events: none;
+}
+.deck-select-leader-card .card-top {
+  padding: 0.2rem;
+  font-size: 0.42rem;
+}
+.deck-select-leader-card > strong {
+  padding: 0.2rem;
+  font-size: 0.42rem;
+}
+/* The seat, engraved over its column: centred on the card it heads, because
+   the card below it is centred and a flush-left label read as belonging to the
+   panel's edge rather than to the deck. The colour dot that used to precede it
+   is gone -- it repeated the mat tint of a seat, which is not a fact anyone
+   needs while choosing a deck, and it read as a status light. */
+.deck-column-label {
+  margin: 0;
+  color: var(--menu-muted);
+  font: 600 0.66rem var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+}
+label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--mist);
+  font-size: 0.78rem;
+}
+select,
+input,
+textarea {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--rigging);
+  border-radius: 8px;
+  background: rgba(11, 11, 12, 0.75);
+  color: var(--ink-white);
+  font-size: 0.85rem;
+}
+select:hover,
+input:hover,
+textarea:hover {
+  border-color: var(--ember);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* Light-card overrides: everything above stays the dark theme the deck
+   editor and the board use; only what's inside a menu card flips to it. */
+.menu-card label {
+  color: var(--menu-muted);
+}
+.menu-card select,
+.menu-card input {
+  background: var(--menu-field);
+  color: var(--menu-ink);
+  border-color: var(--menu-border);
+}
+.setup-form .match-options {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--menu-border);
+}
+/* The nudge towards the stronger pilot, on the lobby form under the two deck
+   columns. Tinted with `--ember`, the accent Start match already uses, rather
+   than the leader's `--flag`: nothing is wrong here -- there is just a better
+   opponent available -- and a red leader turns a `--flag` panel into what looks
+   like an error about the decks above it. */
+.pilot-callout {
+  display: grid;
+  align-items: start;
+  gap: 0.35rem 0.55rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--ember) 35%, var(--menu-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ember) 7%, var(--menu-card));
+}
+/* `display: grid` above would otherwise beat the browser's own rule for the
+   attribute, and the callout would stay on with the LLM piloting. */
+.pilot-callout[hidden] {
+  display: none;
+}
+.pilot-callout-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--menu-ink);
+}
+/* Inside the sentence, not under it: the nudge is one line -- who is piloting,
+   and the way to change it -- and a button on its own row turned a one-line
+   offer into a three-line panel. `display: inline` (over `.text-button`'s
+   inline-flex) is what lets it wrap with the words around it rather than
+   sitting on a line of its own. Selected through `.menu-card` so this beats
+   the muted colour that rule gives every text button inside the lobby's
+   panel. */
+.menu-card .pilot-callout .pilot-callout-link {
+  display: inline;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ember);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.menu-card .pilot-callout .pilot-callout-link:hover {
+  color: var(--ember-deep);
+}
+/* Who pilots the opponent, chosen inside the opponent's own column -- next to
+   the deck it applies to rather than in a row underneath both seats. Its
+   read-only status line sits under it: the LLM's model and key come from the
+   server's environment or CLI flags, never from this page, so there is nothing
+   to configure here -- only to report. */
+.deck-column-controller {
+  margin-top: 0.25rem;
+}
+/* The `hidden` attribute must beat component display rules — buttons default
+   to inline-flex and the modal backdrop to grid, either of which would
+   otherwise repaint a hidden element. */
+[hidden] {
+  display: none !important;
+}
+.llm-status-line {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--menu-muted, var(--menu-ink));
+}
+/* Blocked reads as a caution, not an error: Heuristics is still there, so
+   nothing is actually broken -- the LLM seat just cannot be picked. */
+.llm-status-line.blocked::before {
+  content: "⚠ ";
+}
+.llm-status-line.ready::before {
+  content: "✓ ";
+}
+/* A probe still in flight gets no mark at all: it is not an outcome. */
+.llm-status-line.probing {
+  opacity: 0.7;
+}
+
+/* The status line and the fields that change it, stacked as one block under
+   the controller choice. They used to be a caption and a button that opened a
+   second modal on top of the first; the fields are inline instead, so what the
+   reader has to fill in is in the dialog they are already in. */
+.llm-settings-row {
+  display: grid;
+  gap: 0.5rem;
+}
+.llm-panel {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--editor-border, var(--menu-border));
+}
+.llm-panel-lede,
+.llm-panel-hint,
+.llm-panel-message {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--editor-muted, var(--menu-muted));
+}
+.llm-panel-hint .text-button {
+  padding: 0;
+  font-size: 0.72rem;
+}
+/* A save that failed is the only thing worth colouring here: everything else
+   in the panel is instruction, not outcome. */
+.llm-panel-message {
+  color: var(--flag);
+  font-weight: 600;
+}
+.llm-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.llm-panel-actions .secondary {
+  padding: 0.55rem 1rem;
+}
+.llm-panel label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--editor-muted, var(--menu-muted));
+}
+.llm-panel label[hidden] {
+  display: none;
+}
+/* The panel sits on the dialog's paper, where the app-wide (dark) button
+   colours are all but invisible. These are the `.menu-card` treatments, which
+   are written for exactly this background. */
+.llm-panel .secondary:not(.action-button) {
+  border-color: var(--editor-border, var(--menu-border));
+  background: var(--editor-field, var(--menu-field));
+  color: var(--editor-ink, var(--menu-ink));
+}
+.llm-panel .secondary:not(.action-button):hover {
+  border-color: var(--ember);
+  background: var(--editor-paper, var(--menu-card));
+}
+.llm-panel .text-button {
+  color: var(--editor-muted, var(--menu-muted));
+  text-decoration: underline;
+}
+.llm-panel .text-button:hover {
+  color: var(--ember-deep);
+}
+.llm-panel input,
+.llm-panel select {
+  width: 100%;
+  border-color: var(--editor-border, var(--menu-border));
+  background: var(--editor-field, var(--menu-field));
+  color: var(--editor-ink, var(--menu-ink));
+}

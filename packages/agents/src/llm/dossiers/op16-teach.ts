@@ -1,0 +1,87 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op16TeachDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Black/Yellow) Marshall.D.Teach - Official Feature Deck",
+  archetype:
+    "Black/Yellow Marshall.D.Teach attack-redirection control: raise your own Characters out of removal range, then choose which of them each attack hits, paying with a [Trigger] card from hand and cashing the K.O. for cards",
+  gamePlan: [
+    "Turns 1-3, build the redirect targets before anything else: OP16-109 Doc Q, OP16-110 Vasco Shot, OP16-103 Van Augur. Each costs 1 and each draws a card on [On K.O.], so a board of them is what turns the opponent's attacks into your card advantage rather than into your losses. Land OP09-099 Fullalead in the same window; it is the only repeatable card selection in the deck.",
+    "Keep [Trigger] cards in hand from turn one. The Leader's redirect is paid with one, once per opponent's attack, so the count in hand is a defensive budget and not a property of the hand. Almost every Character in the list prints a [Trigger], which is why playing one has a hidden cost the board state does not show.",
+    "From turn 3 on, answer attacks by redirecting rather than by blocking. Redirect an attack that would kill a Character you need onto the Leader or onto a spare [On K.O.] body; leave an attack that already fails alone, because redirecting it onto the Leader hands it a target it can beat.",
+    "Mid-game, stack Life with OP16-108 Shiryu and OP16-119 Marshall.D.Teach. A card put on top of Life comes back to hand as damage, and this deck's cards are the ones that pay for redirects, so Life is stored Trigger fuel as well as a buffer.",
+    "Close at 10 DON!! with OP16-116 Zehahahahaha!, which plays OP09-093 Marshall.D.Teach from hand for free and then strips a Life card. Activate that Teach the same turn: its [Activate: Main] only fires on the turn it was played.",
+  ],
+  mulligan: [
+    "Keep a hand with at least one 1-cost Blackbeard Pirates body and at least one card printing a [Trigger]; either OP09-099 Fullalead or OP09-096 My Era...Begins!! makes a hand of one-ofs workable.",
+    "Redraw a hand of 8- and 10-cost top end with no 1-drop and no search: the deck needs bodies on the board before the Leader's redirect has anything to point at, and a redirect with only the Leader available spends Life.",
+  ],
+  priorities: [
+    "Count the [Trigger] cards in hand before spending one. Two is the floor: the Leader's ability is once per attack rather than once per turn, so a turn with two attacks in it wants two cards, and a turn spent at one Trigger against a deck that chains attacks is a turn with no defence at all. Hold a turn without redirecting to restock rather than reaching zero.",
+    "Redirect only attacks that connect. If the attack already fails against its current target, the redirect changes nothing and costs a card; if it connects, ask what the current target is worth before paying.",
+    "Prefer redirecting into OP16-109 Doc Q, OP16-110 Vasco Shot, OP16-103 Van Augur or OP16-106 Sanjuan.Wolf when the attack will kill them: each draws a card and three of them also answer something on the way out, so the attack is spent and you are up a card. These bodies are the plan, not chaff to be protected.",
+    "Redirect onto the Leader while Life allows it. Losing a Life card is not free, but it is cheaper than losing a real body, and the card taken joins your hand as more Trigger fuel.",
+    "Pay the redirect with the cheapest fuel: a card with no Counter value first, and never an Event or a finisher you still intend to cast. Spending a 2000 Counter to redirect an attack a 2000 Counter would have survived is a wash at best.",
+    "Do not cast EB04-059 Black Rope Dragon Twister unless you have fewer Characters than the opponent. The two K.O.s are gated on being behind on board and the gate is checked after the cost, so casting from an equal or wider board pays 6 DON!! and a face-up Life card for nothing.",
+    "Do not cast OP16-116 Zehahahahaha! below 10 DON!! on the field, or with no [Marshall.D.Teach] in hand. Below either it is an 8-cost Event that removes one Life card, and the field-DON!! clause is what makes it free.",
+    "Play OP09-086 Jesus Burgess once the trash has filled. He is +1000 power for every four cards in your trash and cannot be K.O.'d by an opponent's effect, so late he is a wall the opponent has to attack into; the searchers trashing their leftovers is what grows him.",
+    "Remember the Leader's other half: on the opponent's turn all of your Characters cost 1 more, so a 4-cost body sits at 5 and is out of range of the format's cost-4-or-less removal. That is passive and needs no decision, but it is why holding a 4-drop on board through the opponent's turn is safer than it looks.",
+  ],
+  commonVariants: [
+    "Bandai's own feature deck for this Leader (deck_107) runs 4 OP16-106 Sanjuan.Wolf, 2 OP16-103 Van Augur, 4 OP16-116 Zehahahahaha! and 2 OP16-102 Avalo Pizarro / 2 OP16-114 Laffitte, with no Yellow Life package at all -- no EB04-058 Borsalino, no OP15-113 Roronoa Zoro, no OP12-112 Baby 5 and no EB04-059.",
+    "Week-one JP lists ran four copies each of Van Augur, Vasco Shot and Doc Q. The Champion list transcribed here keeps four Doc Q and four Vasco Shot but cuts Van Augur and Sanjuan.Wolf to one each, spending the slots on the Yellow Life and draw package instead.",
+    "Some lists add OP16-117 Black Hole as further Blackbeard Pirates recursion out of the trash rather than the second copy of Black Rope Dragon Twister.",
+  ],
+  commonCombos: [
+    "Leader redirect into OP16-110 Vasco Shot: the attack kills a 1-cost body, you draw a card and rest one of their cost-6-or-less Characters, so the swing costs them their attacker's tempo and buys you a card.",
+    "Leader redirect into OP16-109 Doc Q: draw 1 and K.O. up to two of their cost-1-or-less Characters, which answers an entire early board out of a body they chose to kill.",
+    "Leader redirect into OP16-103 Van Augur on the opponent's turn: draw 1 and give their Leader or a Character -3000 for the turn, which can turn the next attack in the same turn into one that fails.",
+    "OP16-116 Zehahahahaha! at 10 DON!! plays OP09-093 Marshall.D.Teach for free; activating it the same turn negates their Leader for the turn and negates one of their Characters and stops it attacking until the end of their next turn.",
+    "OP16-108 Shiryu trashes a card to put a Blackbeard Pirates card of cost 6 or less from the trash on top of Life face-up -- a known Trigger that comes back to hand when it is taken.",
+    "OP16-104 Catarina Devon copies an opposing Character's power for the turn when it attacks, so a 3000 body trades with whatever their biggest body is; its own [Trigger] draws 1 and replays a 1-cost Blackbeard Pirates from the trash.",
+    "OP16-119 Marshall.D.Teach's [Trigger] negates one of their Characters for the turn and then K.O.s one of cost 5 or less, which is why a Life card holding it is worth stacking.",
+    "OP12-112 Baby 5's [Trigger] draws 2 behind a multicoloured Leader, and this Leader is Black/Yellow, so it is always live.",
+  ],
+  keyCardNumbers: [
+    "OP16-080",
+    "OP09-093",
+    "OP16-119",
+    "OP16-108",
+    "OP09-086",
+    "OP16-104",
+    "OP16-109",
+    "OP16-110",
+    "OP16-103",
+    "OP16-106",
+    "OP16-116",
+    "OP09-099",
+    "OP09-096",
+    "EB04-058",
+    "EB04-059",
+  ],
+  counterplay: [
+    "Attack this deck's hand, not its board. The redirect costs a [Trigger] card per attack, so a turn of several attacks drains the resource that answers them -- but only if each attack is one they must answer. Attacks that already fail are free for them to ignore.",
+    "Expect exactly one redirect per attack, not per turn: a wide board presenting more threats than one redirect can move is the shape that beats this Leader, which is why swarm decks are a bad matchup for it.",
+    "Do not count on cost-4-or-less removal. On their turn their Characters cost their printed cost; on yours they all cost 1 more, and the removal windows in the format are on your turn. Read the raised cost, not the printed one.",
+    "Bottom-deck or move Characters into Life rather than K.O.ing them where you can: OP09-086 Jesus Burgess cannot be K.O.'d by your effects at all, but he can still be taken off the field another way, and none of the [On K.O.] bodies pay their controller when they leave without dying.",
+    "Their cheap bodies want to die. Killing a Doc Q, Vasco Shot or Van Augur with an effect or a battle hands them a card and an answer, so remove them only when the tempo is worth the trade, and prefer pressing the Leader.",
+    "Their finisher turn is 10 DON!! with OP16-116 in hand. Before it, a 12000 [Blocker] with an [Activate: Main] that negates your Leader and locks a Character is the swing they are building to; play around losing your Leader's ability for a turn on the turn they reach ten DON!!.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_107.php",
+      retrievedAt: "2026-08-24",
+      note: "Official Bandai feature deck and strategy note for this Leader: early defensive Characters with beneficial K.O. effects, Shiryu into Life mid-game, Zehahahahaha! into a high-cost Teach to close.",
+    },
+    {
+      url: "https://www.shonentcg.com/blog/op-16-blackbeard-deck-guide",
+      retrievedAt: "2026-08-24",
+      note: "OP-16 Blackbeard guide: the redirect decision framework (when to redirect and when not to), Trigger-fuel budgeting and 'redirect debt', turn-by-turn phases, and matchup notes.",
+    },
+    {
+      url: "https://onepiece.limitlesstcg.com/cards/OP16-080",
+      retrievedAt: "2026-08-24",
+      note: "Printed Leader text and current tournament standing for the Leader.",
+    },
+  ],
+};

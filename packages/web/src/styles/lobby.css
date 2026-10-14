@@ -1,0 +1,864 @@
+/* ============================================================================
+   LOBBY
+   The one place colour comes from outside the mat: the backdrop washes from
+   your leader's colour to the opponent's, meeting at the same lit, neutral
+   seam the board uses — a preview of the match, not a decoration. The form
+   sitting on it is a plain light card, so the two colours read as a choice
+   being made rather than another surface fighting for the same hue.
+   ========================================================================= */
+.setup-shell {
+  /* Height-capped (not min-height): the shell is the scroll container, so
+     the lobby never pushes the page itself past the viewport. `position:
+     relative` makes the shell a containing block; without it, the grid's
+     overflowing rows leak past the overflow clip and scroll the document. */
+  position: relative;
+  height: 100dvh;
+  display: grid;
+  /* The content column, and a full-width track to hold it.
+  
+     The track used to *be* the column, which made the footer as narrow as the
+     form above it. Now every child is capped at the column and centred, so a
+     row that should reach both edges -- the footer -- simply opts out. */
+  --shell-col: 46rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-content: start;
+  gap: clamp(1.5rem, 4vw, 2.75rem);
+  /* Named, because the landing page's footer is full-bleed and cancels exactly
+     this much: every media query below moves the tokens, not the padding. */
+  --shell-pad-x: clamp(1.5rem, 4vw, 3rem);
+  --shell-pad-y: clamp(1.5rem, 4vw, 3rem);
+  padding: var(--shell-pad-y) var(--shell-pad-x);
+  overflow: auto;
+  background:
+    /* Scrim first, so it sits over the drawing: the shipped art is bright ink
+       and everything above it -- chrome, cards, type -- is dark. */
+    var(--shell-scrim),
+    var(--art-home) center / cover no-repeat,
+    var(--art-lobby) center / cover no-repeat,
+    radial-gradient(52% 60% at 14% 20%, var(--mat-self-glow), transparent 65%),
+    radial-gradient(52% 60% at 86% 80%, var(--mat-opp-glow), transparent 65%),
+    linear-gradient(
+      120deg,
+      var(--mat-self-deep) 0%,
+      var(--mat-self-tint) 26%,
+      #26262b 48%,
+      #26262b 52%,
+      var(--mat-opp-tint) 74%,
+      var(--mat-opp-deep) 100%
+    );
+  /* Fixed, not scrolled: each shell is its own scroll container, so a
+     scrolling backdrop would be sized to the content rather than the window,
+     and `cover` would crop the drawing to a corner of itself. */
+  background-attachment: fixed;
+}
+
+/* Sealed play isn't tied to two chosen decks, so it skips the two-seas split
+   and echoes the brand mark's full six-colour wheel instead, at low alpha
+   over the same dark base. */
+.sealed-shell {
+  background:
+    /* Scrim first, so it sits over the drawing: the shipped art is bright ink
+       and everything above it -- chrome, cards, type -- is dark. */
+    var(--shell-scrim),
+    var(--art-home) center / cover no-repeat,
+    var(--art-lobby) center / cover no-repeat,
+    radial-gradient(
+      40% 46% at 18% 18%,
+      color-mix(in srgb, var(--red) 55%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 46% at 50% 8%,
+      color-mix(in srgb, var(--yellow) 50%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 46% at 82% 18%,
+      color-mix(in srgb, var(--black) 60%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 46% at 82% 82%,
+      color-mix(in srgb, var(--blue) 55%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 46% at 50% 92%,
+      color-mix(in srgb, var(--purple) 50%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 46% at 18% 82%,
+      color-mix(in srgb, var(--green) 55%, transparent),
+      transparent 70%
+    ),
+    var(--deep);
+  /* Fixed for the same reason as the lobby's, and restated because the
+     `background` shorthand above resets the attachment. */
+  background-attachment: fixed;
+}
+
+/* Every row of a menu page is capped at the content column and centred, with
+   two exceptions: the footer, which reaches both edges, and any dialog, which
+   is a fixed overlay covering the window. Capping a fixed backdrop gives it a
+   width, which in an over-constrained box wins over its `right: 0` -- the
+   scrim and its blur then cover a column-shaped rectangle instead of the
+   page. */
+.setup-shell > *:not(.home-footer, [class*="backdrop"]),
+.matchup-shell > *:not(.home-footer, [class*="backdrop"]) {
+  width: min(var(--shell-col), 100%);
+  margin-inline: auto;
+  /* Top of its row, not stretched down it: the middle row is `1fr`, so a
+     stretched panel paints its own background over every pixel of the row it
+     does not use -- a tall white block with nothing in the bottom half of it,
+     covering the drawing the page is built on. */
+  align-self: start;
+}
+/* The landing page's own children set their own widths: the topbar centres
+   itself and the fan is wider than any form. */
+.home-shell > *:not(.home-footer) {
+  width: auto;
+}
+
+.setup-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.setup-wordmark {
+  color: var(--ink-white);
+  font: 700 1rem var(--font-display);
+  letter-spacing: -0.01em;
+  /* White type sits directly on the backdrop drawing, whose brightest region
+     is the sky right behind this line. The scrim used to hold that down for
+     it; a shadow does the same job without dimming the whole page. */
+  text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
+}
+
+.brand-mark {
+  width: 3.4rem;
+  height: 3.4rem;
+  display: block;
+  flex-shrink: 0;
+}
+.brand-mark.small {
+  width: 1.85rem;
+  height: 1.85rem;
+}
+
+/* The lobby's dialogs: the deck picker and the matchup settings.
+
+   Both wear the shared dialog grammar above. What they add is a head with a
+   close button, because unlike the LLM dialog they are opened to browse rather
+   than to fill in, and closing is the common exit. */
+.app-dialog-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+/* What a dialog has to say about what it was given -- an empty deck name, so
+   far. Coloured, because unlike the rest of a dialog it is an outcome. */
+.app-dialog-message {
+  margin: 0;
+  color: var(--flag);
+  font: 600 0.78rem/1.5 var(--font-display);
+}
+/* An aside under a field, saying what the field is for. Muted and small: it is
+   the answer to a question the control already asks, not one of its own. */
+.app-dialog-note {
+  margin: -0.35rem 0 0;
+  color: var(--fog);
+  font: 400 0.75rem/1.45 var(--font-body);
+}
+/* Wider than a form dialog, and said with both classes so it beats the shared
+   `.app-dialog` width below it in the file. */
+.app-dialog.deck-picker {
+  width: min(52rem, 100%);
+}
+/* The shelves, stacked: decks of the player's own, then the shipped ones by
+   where the list came from. A player looking for a deck they built is looking
+   for one of two or three names, and the heading above them is what makes that
+   a glance rather than a scan of the whole catalog. */
+.deck-picker-shelves {
+  display: grid;
+  gap: 1.1rem;
+}
+.deck-picker-group {
+  display: grid;
+  gap: 0.5rem;
+}
+/* A panel and a tile are both `display: grid`, which beats the UA's `hidden`
+   rule -- without these a switched-away tab and a filtered-out deck stay put. */
+.deck-picker-group[hidden],
+.deck-tile-wrap[hidden],
+.deck-picker-empty[hidden] {
+  display: none;
+}
+/* The shipped shelves' tabs: one underlined row, the chosen shelf in ink and
+   the flag colour, the others muted. The count beside each label is how many
+   decks the shelf holds before any filter. */
+.deck-picker-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: -0.35rem;
+  border-bottom: 1px solid var(--editor-border, #d8d1c5);
+  overflow-x: auto;
+}
+.deck-picker-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--editor-muted, #6b6257);
+  font: 600 0.85rem/1.2 var(--font-display);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.deck-picker-tab:hover {
+  color: var(--editor-ink, #221f1a);
+}
+.deck-picker-tab[aria-selected="true"] {
+  border-bottom-color: var(--flag);
+  color: var(--editor-ink, #221f1a);
+}
+.deck-picker-tab-count {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--editor-field, #f3f0e9);
+  color: var(--editor-muted, #6b6257);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+.deck-picker-filter input {
+  max-width: 22rem;
+}
+.deck-picker-empty {
+  margin: 0;
+}
+/* A shelf label, not a title: it sits between the dialog's own heading and the
+   card names under every tile, so it is small, spaced and quiet. */
+.deck-picker-group h3 {
+  margin: 0;
+  color: var(--editor-muted, #6b6257);
+  font: 600 0.7rem/1.2 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* Four to a row on a full-width dialog, where six left every Leader at
+   thumbnail size -- and picking a deck is reading the card. The `min()` is
+   what keeps that from becoming one huge tile per row on a phone: below about
+   25rem of grid the 45% takes over and the grid settles at two. */
+.deck-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(11rem, 45%), 1fr));
+  gap: 0.8rem;
+}
+/* A tile is the deck's card plus the pencil that opens it, stacked so the
+   pencil can sit on the card's corner. */
+.deck-tile-wrap {
+  position: relative;
+  display: grid;
+}
+.deck-tile-edit {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 1px solid var(--editor-border, #d8d1c5);
+  border-radius: 999px;
+  background: var(--editor-paper, #fbf9f5);
+  color: var(--editor-muted, #6b6257);
+  cursor: pointer;
+}
+.deck-tile-edit:hover,
+.deck-tile-delete:hover {
+  border-color: var(--flag);
+  color: var(--flag);
+}
+.deck-tile-edit svg,
+.deck-tile-delete svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+/* The bin on a deck of the player's own, under the pencil rather than beside
+   it: two round buttons in the same corner would each be a smaller target. */
+.deck-tile-delete {
+  position: absolute;
+  top: 2.1rem;
+  right: 0.3rem;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 1px solid var(--editor-border, #d8d1c5);
+  border-radius: 999px;
+  background: var(--editor-paper, #fbf9f5);
+  color: var(--editor-muted, #6b6257);
+  cursor: pointer;
+}
+/* One deck, as the Leader on the front of it. The name under the card is the
+   caption, not the control: the card is what the eye picks. */
+.deck-tile {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  border: 1px solid var(--editor-border, #d8d1c5);
+  border-radius: 8px;
+  background: var(--editor-field, #f3f0e9);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.deck-tile:hover {
+  border-color: var(--flag);
+}
+/* The deck this seat is set to, marked on the tile itself: the grid is a set
+   of radio buttons wearing card art, and one of them is always chosen. */
+.deck-tile.picked {
+  border-color: var(--flag);
+  box-shadow: inset 0 0 0 2px var(--flag);
+}
+/* The card is the tile's subject, so it is printed at a size a Leader can be
+   recognised at rather than at the inline preview's thumbnail size. */
+.deck-tile .deck-select-preview {
+  justify-self: center;
+  width: min(8.5rem, 92%);
+}
+/* The preview is a span inside the Leader grid's buttons, where a block
+   element would be invalid markup -- so the class carries its own display. */
+.deck-select-preview {
+  display: block;
+}
+.deck-select-preview .deck-select-leader-card {
+  display: grid;
+}
+.deck-tile-name {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+/* The empty slot, first in the grid: a deck that does not exist yet. Drawn as
+   an outline rather than a filled tile, which is what says "empty". */
+.deck-tile-builder {
+  border-style: dashed;
+  background: none;
+}
+.deck-tile-slot {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  /* Exactly the box a Leader card occupies in the tiles beside it, so the
+     empty slot is a card-shaped hole rather than a short panel. */
+  width: min(8.5rem, 92%);
+  aspect-ratio: 0.71;
+  font: 300 2rem/1 var(--font-display);
+  color: var(--editor-muted, #6b6257);
+}
+
+/* The deck a seat is set to, as it reads on the lobby: the Leader card, the
+   deck's name, and what clicking it does.
+
+   The button draws nothing of its own. A printed card is already a bounded
+   object with its own edge, and the panel it sits on is paper -- a second
+   rectangle around the first only said "control" in a place where a card is
+   the more literal thing to click. What is left is the card, lifting on
+   hover. */
+.deck-choice-button {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--menu-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+/* The Leader is what tells two decks apart, so on the lobby it is the subject
+   of the button rather than an icon beside the name -- printed large, with the
+   name read underneath it. The wrapper is what the hover legend is positioned
+   against, so it is exactly the card and not the button's whole column. */
+.deck-choice-card {
+  position: relative;
+  display: block;
+  width: min(12rem, 82%);
+  border-radius: 8px;
+}
+.deck-choice .deck-select-preview {
+  width: 100%;
+}
+.deck-choice .deck-select-leader-card {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.deck-choice-button:hover .deck-select-leader-card,
+.deck-choice-button:focus-visible .deck-select-leader-card {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 26px rgba(40, 26, 10, 0.5);
+}
+.deck-choice .deck-select-leader-card .card-top,
+.deck-choice .deck-select-leader-card > strong {
+  padding: 0.35rem;
+  font-size: 0.7rem;
+}
+/* What clicking does, told on the card at the moment it is asked and never
+   before: hidden by opacity rather than by `display`, so it stays in the
+   accessible name the button has always had. */
+.deck-choice-change {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.3rem;
+  border-radius: inherit;
+  background: rgba(26, 16, 6, 0.6);
+  color: var(--parchment);
+  font: 600 0.6rem/1.3 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.deck-choice-button:hover .deck-choice-change,
+.deck-choice-button:focus-visible .deck-choice-change {
+  opacity: 1;
+}
+
+/* The menu card: a plain light surface, the one neutral thing on a coloured
+   page. Its own tokens shadow the app's dark ones for every control inside it,
+   without touching the deck editor or the board, which stay on the dark theme
+   these tokens are named after. The lobby and the matchup page are both built
+   on it, which is what makes them read as two views of the same choice. */
+.menu-card {
+  --menu-card: #fbf9f5;
+  --menu-field: #f0ede4;
+  --menu-border: #e2ddd0;
+  --menu-ink: #221d16;
+  --menu-muted: #635d51;
+  display: grid;
+  align-content: start;
+  border-radius: 16px;
+  background: var(--menu-card);
+  box-shadow: var(--lift-sealed);
+  color: var(--menu-ink);
+}
+.setup-form {
+  width: min(46rem, 100%);
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+  /* The setup forms -- 1v1 and sealed -- are printed on the chart
+     paper, and the paper is the panel: it carries its own deckle edge in the
+     image's alpha, so the form draws no rounded rectangle and no colour behind
+     it, and the backdrop shows through the tears and the gaps. Sized to the
+     panel rather than `cover` for the same reason -- a cover crop would push
+     two of the four torn edges outside the box. The shadow is a drop-shadow,
+     which follows that outline, where a box-shadow would draw the rectangle
+     the paper is here to replace. */
+  background: var(--art-menu-card) center / 100% 100% no-repeat;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.5));
+}
+/* ----------------------------------------------------------------------------
+   The controls on the paper.
+
+   The menu card's own tokens are neutral by design: it is a white panel, and
+   grey ink on it is correct. Paper is not neutral, and the same controls
+   printed on it read as a form pasted over a map -- cool plates, cool ink, a
+   glossy button. So the setup forms shadow four of those tokens with warm
+   ones, and every control inside them inherits the change: ink goes to a dark
+   sepia, rules to a low-alpha ink line, and a field stops being a plate and
+   becomes a wash the paper still shows through. Only these three screens are
+   affected; the analytics card and the deck editor keep the white panel and
+   the tokens named for it.
+   ------------------------------------------------------------------------- */
+.setup-form {
+  --menu-field: rgba(255, 250, 236, 0.5);
+  --menu-border: rgba(74, 51, 24, 0.3);
+  --menu-ink: #2e2114;
+  --menu-muted: #5f4a2e;
+}
+/* Stamped rather than moulded: a hairline of the same ink as the type, a flat
+   wash, and no radius large enough to read as a chip of plastic on a sheet of
+   paper. */
+.setup-form .secondary:not(.action-button),
+.setup-form .primary {
+  border-radius: 6px;
+  letter-spacing: 0.09em;
+}
+.setup-form .secondary:not(.action-button) {
+  background: rgba(255, 250, 236, 0.34);
+}
+.setup-form .secondary:not(.action-button):hover {
+  border-color: color-mix(in srgb, var(--ember) 55%, var(--menu-border));
+  background: rgba(255, 250, 236, 0.62);
+}
+/* Start match stays the one saturated thing on the page -- it is the page's
+   one instruction -- but loses the gradient and the 4px ledge it used to sit
+   on. Flat ink-bordered colour is what a stamp on a document looks like; the
+   ledge was a plastic key. The lift on hover, and the pad that keeps it from
+   jittering, are inherited from `.primary` unchanged. */
+.setup-form .primary {
+  border-color: rgba(46, 33, 20, 0.55);
+  background: var(--ember);
+  /* Ink on the stamp, not white: at this size white on `--ember` is a 3:1
+     contrast and the dark brown is a 7:1 one, and it is the same ink every
+     other word on the sheet is written in. */
+  color: #2a1206;
+  box-shadow:
+    0 2px 0 rgba(46, 33, 20, 0.35),
+    0 8px 18px rgba(46, 33, 20, 0.3);
+}
+.setup-form .primary:hover {
+  background: var(--ember-bright);
+  box-shadow:
+    0 4px 0 rgba(46, 33, 20, 0.35),
+    0 12px 22px rgba(46, 33, 20, 0.34);
+}
+.setup-form .primary:active {
+  box-shadow: 0 1px 0 rgba(46, 33, 20, 0.35);
+}
+/* The nudge towards the stronger pilot: a marginal note on the sheet, so it
+   is tinted and ruled rather than filled. */
+.setup-form .pilot-callout {
+  border-radius: 6px;
+  border-color: color-mix(in srgb, var(--ember) 40%, transparent);
+  background: color-mix(in srgb, var(--ember) 8%, rgba(255, 250, 236, 0.42));
+}
+/* The one card the sealed form carries. Same treatment as a field, stated
+   here because it draws its own surface. */
+.setup-form .booster-choice {
+  border-radius: 8px;
+  background: var(--menu-field);
+}
+.setup-form .booster-choice:hover,
+.setup-form .booster-choice:focus-visible {
+  border-color: color-mix(in srgb, var(--ember) 55%, var(--menu-border));
+  background: rgba(255, 250, 236, 0.62);
+  box-shadow: 0 12px 24px rgba(40, 26, 10, 0.28);
+}
+/* Ink, not the browser's blue, and offset far enough to clear the paper's own
+   marks. */
+.setup-form :focus-visible {
+  outline: 2px solid var(--menu-ink);
+  outline-offset: 3px;
+}
+/* No paper to stand on -- an anchor left at `none`, or cleared by hand -- and
+   the form goes back to being the flat menu card every other panel is. Stated
+   as the exception rather than the default because the shipped build inlines
+   the image, so the paper is what a reader actually sees. */
+@container style(--art-menu-card: none) {
+  .setup-form {
+    border-radius: 16px;
+    background: var(--menu-card);
+    box-shadow: var(--lift-sealed);
+    filter: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   The 1v1 lobby, which is the landing page.
+
+   No paper. The two Leaders stand straight on the backdrop drawing, with the
+   hub between them, the way the board itself puts the two seats either side
+   of the seam: the lobby is a preview of the match, and a sheet of chart
+   paper between the drawing and the cards was a third surface saying
+   "form" over a page whose only controls are three cells and two cards. The
+   sealed form keeps the paper -- it carries prose and fields the drawing
+   cannot hold up.
+   ------------------------------------------------------------------------- */
+/* The lobby is the one menu page with no topbar -- the mark and the wordmark
+   above two Leaders and a honeycomb were a third brand on a page that is
+   already the brand -- so the shell here is two rows rather than three. Said
+   as its own template because the shared `auto 1fr auto` would drop the footer
+   into the `1fr` row and stretch a sticky floor into a tall band. */
+/* The lobby is the one menu page with no topbar, so its shell is two rows
+   rather than three -- and the content is laid across both of them.
+
+   The cards and the hub have to sit on the same line: the cluster is pinned to
+   the middle of the window, and content centred in a row that stops short of
+   the footer lands half a footer high. Spanning both rows makes "centred" mean
+   the same thing to the two of them, and the footer keeps its own row and its
+   own pinning underneath. */
+.setup-shell:has(> .lobby-main) {
+  grid-template-rows: 1fr auto;
+}
+.setup-shell > .lobby-main {
+  grid-row: 1 / -1;
+  align-self: center;
+  /* Symmetric, so the room left for the footer the row no longer reserves does
+     not move the middle: the cards stay on the cluster's line. */
+  padding-block: 3rem;
+}
+.lobby-main {
+  display: grid;
+  justify-items: center;
+  /* Centred in its row rather than stacked from the top: the hub is pinned to
+     the middle of the right edge, and two Leaders starting under the top of
+     the window read as a page the cluster is floating beside rather than as
+     one row of three things. */
+  align-content: center;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+.lobby-main > * {
+  width: 100%;
+}
+.setup-form.lobby-form {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  filter: none;
+  /* Back to the app's dark tokens: there is no paper for the warm ink to sit
+     on, and grey type here is type on the drawing. */
+  --menu-field: rgba(18, 17, 19, 0.82);
+  --menu-border: var(--hairline-strong);
+  --menu-ink: var(--ink-white);
+  --menu-muted: var(--mist);
+  --menu-card: #0f0f11;
+}
+.lobby-form .deck-column-label {
+  color: var(--parchment);
+  /* The same shadow the wordmark wears, for the same reason: the label
+     crosses the drawing's bright sky. */
+  text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
+}
+/* Who plays the seat, said in the heading rather than under it.
+ *
+ * The two answers are set in the heading's own mono capitals and inherit its
+ * colour, so the line reads as one sentence -- "player one · you / ai" -- and
+ * not as a control that has been parked on top of the drawing. Which one is in
+ * force is carried by weight and opacity alone: a box or a fill here would be
+ * a second pill above the two Leader cards, which is the thing this replaced.
+ *
+ * The dimmed word is still a button, and says so on hover and on focus. At
+ * 0.5 it stays legible against the bright sky the heading crosses, which is
+ * what the shadow above is for. */
+.lobby-form .seat-pilot-option {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  transition:
+    opacity 120ms ease,
+    text-shadow 120ms ease;
+}
+.lobby-form .seat-pilot-option.picked {
+  opacity: 1;
+  /* A glow rather than an underline: the heading sits over a drawing, and a
+     rule under one word of it reads as an artefact of the picture. */
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+}
+.lobby-form .seat-pilot-option:hover,
+.lobby-form .seat-pilot-option:focus-visible {
+  opacity: 1;
+}
+/* The slash is punctuation, not a choice, so it is dimmer than either word and
+   is not read out. */
+.lobby-form .seat-pilot-slash {
+  margin: 0 0.15em;
+  opacity: 0.3;
+}
+.lobby-form .deck-choice-button {
+  color: var(--parchment);
+}
+/* On the lobby a Leader card stands on the backdrop drawing rather than on the
+   menu card's paper, and a printed edge against bright ink loses its own
+   outline. What lifts it off the drawing is a white glow thrown around the
+   card, not a panel behind it: a plate was a third surface between the drawing
+   and the two things being chosen. A hairline of white and a soft halo give it one -- the same thing
+   the wordmark's shadow does for type, said as a border because the card is an
+   object. Stated for hover too, since the lift's shadow would otherwise
+   replace it. */
+.lobby-form .deck-select-leader-card {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 26px 6px rgba(255, 255, 255, 0.45),
+    0 10px 26px rgba(10, 10, 11, 0.45);
+}
+.lobby-form .deck-choice-button:hover .deck-select-leader-card,
+.lobby-form .deck-choice-button:focus-visible .deck-select-leader-card {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.85),
+    0 0 34px 10px rgba(255, 255, 255, 0.6),
+    0 16px 30px rgba(10, 10, 11, 0.5);
+}
+/* Two Leaders with the versus mark between them. The middle column is only as
+   wide as the mark, so the two cards share everything else equally and the mark
+   stays on the page's centre line whatever they do. */
+.lobby-columns {
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(0.75rem, 3vw, 2rem);
+}
+.lobby-form .deck-choice-card {
+  width: min(13rem, 100%);
+}
+/* The mark in the seam, painted when `--art-vs` holds an image. */
+.lobby-vs {
+  display: block;
+  width: clamp(3.6rem, 9vw, 7rem);
+  aspect-ratio: 1;
+  background: var(--art-vs) center / contain no-repeat;
+  /* Said on the mark rather than on the row, because `.deck-columns`
+     (matchup-form.css) starts its columns and comes later in the cascade. */
+  align-self: center;
+  /* The mark is white letters in a black brush stroke, and the sky it stands
+     against is the drawing's brightest region: a dark shadow is what holds its
+     outline there, the same thing the wordmark's does for type. */
+  filter: drop-shadow(0 3px 10px rgba(10, 10, 11, 0.6));
+}
+/* No image behind the anchor -- an art-free build, or one cleared by hand --
+   and the seam says the same thing in type. Stated as the exception because
+   the shipped build inlines the mark, which is what a reader actually sees. */
+@container style(--art-vs: none) {
+  .lobby-vs {
+    filter: none;
+  }
+  .lobby-vs::after {
+    content: "VS";
+    color: var(--parchment);
+    font: 700 clamp(1.1rem, 2.6vw, 1.8rem) / 1 var(--font-display);
+    letter-spacing: 0.06em;
+    text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
+  }
+}
+
+/* What an online seat has to say, under the columns: the way back to a held
+   seat, the connection's status, why it dropped. A dark panel, because it is
+   prose and rows on a drawing, and it is the one part of this page that is
+   still a form. */
+.lobby-online {
+  display: grid;
+  gap: 0.6rem;
+  width: min(100%, 26rem);
+  margin-inline: auto;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 10px;
+  background: rgba(18, 17, 19, 0.88);
+  box-shadow: var(--lift-lifted);
+  color: var(--parchment);
+}
+.lobby-online .muted {
+  color: var(--mist);
+}
+
+/* The hub: the board's honeycomb, in the board's own place.
+
+   The element carries `.board-hub` (shell.css) rather than restating its
+   geometry, so the cluster a player will use for the rest of the session --
+   configure on the upper diagonal, the command on the flat face, the trace cell
+   on the lower one -- is the same object in the same corner before the match
+   starts. Fixed rather than absolute, because unlike the board this page can
+   scroll and the cluster should not scroll off it.
+
+   `.hub-history` is the board's upper cell; the lobby's is Configure, so it
+   takes the same offsets under its own name. `.hub-trace` is shared outright:
+   both pages load a trace from the lower one. */
+.lobby-hub {
+  position: fixed;
+}
+.lobby-hub .hub-configure {
+  --hub-dx: calc(var(--hub-w) * -0.5 * var(--hub-lap));
+  --hub-dy: calc(var(--hub-h) * -0.75 * var(--hub-lap));
+}
+/* The one cell the board has no counterpart for, so it takes a face no board
+   cell uses: Configure's left one, which is also a honeycomb neighbour of the
+   command cell below it. */
+.lobby-hub .hub-analytics {
+  --hub-dx: calc(var(--hub-w) * -1.5 * var(--hub-lap));
+  --hub-dy: calc(var(--hub-h) * -0.75 * var(--hub-lap));
+}
+/* The mark is a span here, not the way home -- there is no topbar mark on this
+   page -- so it neither invites a pointer nor lights under one. */
+.lobby-hub .hub-brand {
+  cursor: default;
+}
+/* Pulled in by the width of a seam.
+   
+   The mark's hexagon is drawn to fill its cell exactly (`.hub-brand
+   .brand-mark`, shell.css), which on the board is right -- it is the cell the
+   others tuck under. Here the four cells are meant to read as one comb, and a
+   mark at full size laps over its neighbours' rims: it looked like the biggest
+   hexagon rather than one of four. Scaled back so the same hairline of
+   backdrop shows around it as shows between the other three. */
+.lobby-hub .hub-brand .brand-mark {
+  transform: scale(1.0176, 0.9988);
+}
+.lobby-hub .hub-brand:hover {
+  filter: drop-shadow(0 7px 20px rgba(0, 0, 0, 0.62));
+}
+/* Paper cells, not the board's graphite.
+
+   On the board the cluster is chrome laid over a game in progress and keeps out
+   of the way; here it is the page's only set of controls, standing on a grey
+   drawing with two cards for company. White is what reads as "these are the
+   things to press" against that -- and it leaves the mark in the middle the one
+   coloured object on the page, which is the right way round for a lobby. The
+   rim goes to full white under the pointer, so the cell still lights the way
+   every cell in the app does. */
+.lobby-hub .hub-face {
+  background: rgba(255, 255, 255, 0.55);
+  color: #16151a;
+}
+.lobby-hub .hub-face::before {
+  background: var(--parchment);
+}
+.lobby-hub .hub-face:hover,
+.lobby-hub .hub-face:focus-visible {
+  background: #ffffff;
+  /* The shared rule takes the ink white with the rim, which on paper is a cell
+     with nothing in it. */
+  color: #16151a;
+}
+.lobby-hub .hub-face:hover::before,
+.lobby-hub .hub-face:focus-visible::before {
+  background: #ffffff;
+}
+/* Start is the command cell, printed the way End turn is: the cell's own type,
+   no pill inside it, and the words wrapping across the hexagon. Its colour is
+   every other cell's -- position is what says which cell begins the match. */
+.lobby-hub .hub-play {
+  padding: 0 12%;
+  font: 700 clamp(0.5rem, 1.3vw, 0.6rem) / 1.25 var(--font-display);
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+/* Nothing to press -- an online seat still connecting -- so the cell
+   goes quiet the way the board's Waiting cell does: the paper greys and the
+   words go with it. */
+.lobby-hub .hub-play[disabled] {
+  background: rgba(255, 255, 255, 0.28);
+  color: #6b6257;
+  cursor: default;
+}
+.lobby-hub .hub-play[disabled]::before {
+  background: #cdc7bb;
+}

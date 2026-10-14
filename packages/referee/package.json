@@ -1,0 +1,14 @@
+{
+  "name": "@one-piece-sim/referee",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@one-piece-sim/decks": "workspace:*",
+    "@one-piece-sim/engine-core": "workspace:*",
+    "@one-piece-sim/protocol": "workspace:*",
+    "zod": "^4.5.4"
+  },
+  "license": "MIT"
+}

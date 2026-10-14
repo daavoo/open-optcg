@@ -1,0 +1,80 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const eb04BonneyDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Red/Yellow) Jewelry Bonney - Official Feature Deck",
+  archetype: "EB-04 Red/Yellow Jewelry Bonney Egghead low-Life midrange",
+  gamePlan: [
+    "Read this deck backwards from every other one in the format: a low Life total is where it wants to be, not where it is losing. The Leader prints \"[Opponent's Turn] If you have 1 or less Life cards, this Leader gains +2000 power\", so a Leader the opponent has spent four attacks getting to one Life is a 7000 Leader on defence -- and a further +2000 from EB04-007 or EB04-061 makes it 9000, which is the number Bandai's own guide tells you to draw the game out behind.",
+    "The Leader's other half is the ride down: \"[Activate: Main] [Once Per Turn] Give up to 1 of your opponent's Characters −1000 power during this turn. Then, if you have 2 or more Life cards, you may add 1 card from the top of your Life cards to your hand.\" Free every turn, and while you are above the line it converts a Life card into a card in hand. At 1 Life the second sentence switches off and the +2000 above switches on, so the two clauses share one threshold from opposite sides and the Leader cannot dig itself to zero.",
+    "Below 2 Life the yellow bodies start paying Life back. EB04-058 Borsalino and EB04-054 Bartholomew Kuma each bank the top of the deck on Life on play, OP12-119 Kuma buys one for a card from hand and another from the grave on the opponent's turn, and EB04-052 Sanji's [On K.O.] replaces itself with a yellow body from hand. So the deck holds at one or two Life and refills rather than racing to zero.",
+    "At 1 or less Life the payoffs turn on: EB04-061 Monkey.D.Luffy costs nine instead of ten, and OP07-107 Franky's [Trigger] draws and then puts *itself* onto the board for free. Four Franky in the list means the last Life cards each arrive as a card and a 5000 body, which is what makes taking damage a resource rather than a concession.",
+    "At 0 Life EB04-056 Pacifista gains [Blocker] under a [Jewelry Bonney] Leader -- four 1-cost bodies that become four chump blocks on the turn the deck would otherwise die.",
+    "The red half is the clock the yellow half buys time for. EB04-007 Roronoa Zoro is the 7-cost 9000 that hands the Leader +2000 across the turn, and OP13-108 Jewelry Bonney is the finisher: 10000 with [Rush] under an {Egghead} Leader, paid for by handing the opponent a card off their own Life. Play it, per Bandai's own guide, once the opponent is on their last Life card and the attack ends the game.",
+  ],
+  mulligan: [
+    "Keep any hand with a searcher. EB04-002 Jewelry Bonney digs four for an {Egghead} or {Straw Hat Crew} card and OP07-114 digs five for an {Egghead} one, and 46 of the 50 slots carry {Egghead}, so both are close to guaranteed hits. The deck tech's advice is exactly this: prioritise the searchers for consistency early.",
+    "The searchers are also the cheap slot. Only twelve cards in the list cost 2 or less -- 4x EB04-002, 4x EB04-056 Pacifista and 4x OP07-114 -- so a hand with none of them is a hand that does nothing until turn 4 and has not started digging for the top end either.",
+    "Throw back a hand of only 7-, 9- and 10-cost bodies. The deck has no ramp; the big yellow bodies are what the searchers find, not what the opening hand is supposed to hold.",
+  ],
+  priorities: [
+    "Use the Leader's [Activate: Main] every single turn you are on 2 or more Life. It costs nothing, it is once per turn, and it is the deck's whole card advantage engine. Spending your own Life here is the plan, not a risk -- the clauses that pay out are all gated on being low.",
+    "The −1000 half of that activation resolves whether or not you take the Life card, and it is turn-scoped. Use it early in your own turn when it puts a body into range of an attack, and take it even on an empty board for the Life trade alone.",
+    "Do not protect your Life total with Counter cards you would rather keep. Being on 1 Life is the position the Leader, EB04-061 and OP07-107 are all written for. What must not happen is going from 1 to lethal, which is a different thing: keep enough [Blocker] and Counter to survive the *turn*, not to keep the total high.",
+    "EB04-007 Roronoa Zoro's [On Play] +2000 lasts until the end of the opponent's next End Phase, so it is defence. Playing it on your turn means their attacks come into a 7000 (or 9000 at low Life) Leader.",
+    'Zoro\'s [Activate: Main] is conditional removal, not a second attacker: it grants [Rush: Character] only while the opponent has a Character at 8000 power or more, and [Rush: Character] cannot be pointed at a Leader. Read it as "the 9000 answers their biggest body the turn it lands".',
+    "EB04-061 Monkey.D.Luffy's [On Play] costs one card from hand and gives the Leader +2000 *and* itself [Blocker], both until the end of the opponent's next End Phase. A 12000 [Blocker] in front of a 9000 Leader is the wall the whole plan is heading for, so pay the cost unless the hand is genuinely empty.",
+    "OP13-108 Jewelry Bonney hands the opponent a card off their own Life as a separate sentence -- it is not conditional on the {Egghead} Leader that grants the [Rush]. That means playing it moves the opponent one Life closer to hand but also one attack further from dead, so play it as the finisher rather than as a mid-game 10000.",
+    "EB04-052 Sanji attacks as whatever the opponent's Leader currently is, taken once when the attack is declared. Against a Leader that has pumped itself she is a 4-cost body swinging for their number; DON!! given to Sanji stacks on top of the copied base, so two DON!! on her is their Leader's power plus 2000.",
+    "EB04-054 Bartholomew Kuma banks a Life card on play only at 2 or less Life, and its [On K.O.] takes one off the opponent's Life at any total. So it is a body you are happy to trade off: dying moves the clock a turn closer.",
+    "EB04-056 Pacifista is a 1-cost 2000-Counter card for most of the game and only a [Blocker] at exactly 0 Life. Do not hold them back as blockers early -- they are Counter fodder until the last turn, when all four wall at once.",
+  ],
+  commonVariants: [
+    "Most lists of this Leader run a wider searcher package than Bandai's -- OP07-111 Lilith and ST29-004 Sanji are the usual additions -- and cut some of the top end for them. This 50 keeps the searchers to two names and eight slots, so it finds its threats slightly less often and holds more of them.",
+    "EB04-058 Borsalino is the card every list agrees on and the deck tech calls the real threat: a 5-cost [Blocker] that banks a Life card on the way in. A list short on Blockers is not this deck.",
+    "Bandai's list runs only 2x EB04-054 Kuma against 4x of most other slots, which is where a tournament build usually differs: the 7-cost is the deck's most replaceable card, because OP12-119 Kuma does the same job a DON!! cheaper and covers the opponent's turn as well.",
+  ],
+  commonCombos: [
+    "The Leader's activation into its own +2000: trade Life for cards until you are on 1, at which point the trade stops and the Leader is a 7000 on defence for the rest of the game.",
+    "EB04-007 Zoro or EB04-061 Luffy on top of that 7000: 9000, which is the number Bandai's guide names as what you draw the game out behind.",
+    "Being at 1 Life with OP07-107 Franky still in the deck: the flip draws a card and plays the 5000 body for free, so the opponent's last attack hands you a blocker.",
+    "EB04-052 Sanji's [On K.O.] at 2 or less Life into ST29-010 Franky or EB04-058 Borsalino out of hand: a body traded in combat replaces itself with a 6000, free.",
+    "OP13-108 Jewelry Bonney with [Rush] under this {Egghead} Leader, on the turn the opponent is on their last Life card: 10000 attacking immediately is the deck's kill.",
+  ],
+  keyCardNumbers: [
+    "EB04-001",
+    "EB04-002",
+    "EB04-007",
+    "EB04-052",
+    "EB04-058",
+    "EB04-061",
+    "OP07-107",
+    "OP07-114",
+    "OP12-119",
+    "OP13-108",
+  ],
+  counterplay: [
+    "Attacking this Leader makes it stronger, which the deck tech states plainly: the opponent faces a paradox where taking their Life away switches their defences on. Win on the board and on cards instead, and take the Leader's Life only when the attacks are actually lethal.",
+    "The whole plan is a threshold. Anything that *gives* them Life, or that wins before they reach one, is playing against the deck's own clauses rather than into them.",
+    "EB04-056 Pacifista blocks only at exactly 0 Life. A kill that goes from 1 Life to lethal never meets the wall; a kill that chips them to 0 and then attacks meets four of them.",
+    "OP07-107 Franky is four cards that put themselves on the board off a Life flip, and only at 1 or less Life. Attacks that take their last two Life cards are the ones that hand them free bodies.",
+    "The red half is small: eight cards, and EB04-007 is the only one above 2 cost. Removal aimed at the Leader-buffing 9000 takes both the clock and the +2000 with it.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_101.php",
+      retrievedAt: "2026-09-04",
+      note: "Bandai's own feature-deck page: the source of the 50-card list transcribed in `packages/decks/src/eb04-bonney-manifest.ts`, and of the early/mid/end-game plan quoted in `gamePlan` -- including the instruction to draw the game out behind a 9000 Leader and to play OP13-108 once the opponent is on one Life card.",
+    },
+    {
+      url: "https://en.onepiece-cardgame.com/cardlist/?series=569115",
+      retrievedAt: "2026-09-04",
+      note: "Bandai's English EB-04 cardlist, which is carried on the OP-15 series page. The primary source for every EB04 card's printed text, and what `pnpm reference:audit` stamps them from.",
+    },
+    {
+      url: "https://onepiece.cardsrealm.com/en-gb/articles/one-piece-tcg-deck-tech-red-yellow-jewelry-bonney-op15",
+      retrievedAt: "2026-09-04",
+      note: "Deck tech for the same Leader. The source for reading the archetype as midrange rather than aggro, for the mulligan advice (prioritise the searchers), for EB04-007 being 'one of the most important cards in this list', and for the counterplay paradox that attacking their Life strengthens them. Written about a tournament build with a wider searcher package, so its card choices do not all transfer to Bandai's 50.",
+    },
+  ],
+};

@@ -1,0 +1,75 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op16SengokuDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Purple) Sengoku - Official Feature Deck",
+  archetype: "OP-16 (Purple) Sengoku {Navy} DON!! ramp",
+  gamePlan: [
+    "This is the field's only ramp deck, and it ramps in one direction: onto the field. Twelve of the fifty slots add DON!! cards from your DON!! deck, and the whole point of them is a turn that has more DON!! than the turn number allows. Nothing here races; the deck buys turns and then spends them all at once.",
+    "The payoff is the Leader. OP16-060 Sengoku returns 8 of your ACTIVE DON!! to the DON!! deck and plays up to 3 {Admiral} Characters with different card names out of your hand. The set prints exactly three Admirals -- OP16-063 Kuzan, OP16-065 Sakazuki and OP16-073 Borsalino -- so the ceiling is a 24000-power board on one action, and 'different card names' means holding one of each rather than three of the best.",
+    "The eight DON!! do not stay spent. Kuzan's [On Play] adds 2 rested DON!!, Borsalino's adds one active and one rested, and Sakazuki's [Activate: Main] rests one DON!! to add two active ones under a {Navy} Leader. The Leader's activation puts eight cards back into the DON!! deck and the Admirals it plays start pulling them out again, which is why the turn after the big turn is not empty.",
+    "Before that turn the deck is a control deck. Sakazuki's [On Play] gives a Character -6000 until the end of the opponent's next End Phase -- removal, not tempo, because it survives their turn -- and Kuzan's [Activate: Main] switches a [Blocker] off for a turn, which is how a board of 8000s gets through. Your own Life total is never a resource here; nothing in the fifty spends a Life card, and every turn you stay alive is a turn closer to eight active DON!!.",
+    "The cheap half of the deck is four 1-cost searchers in three flavours -- OP16-064 Koby, OP16-067 Tsuru and, as an Event, OP16-077 \"Buddha\" Sengoku -- plus the OP16-078 Marineford Stage. All of them look 5 deep for {Navy}. Twelve copies of 'dig 5' in one list is not redundancy: the deck needs a specific three cards in hand and will not find them by drawing one card a turn.",
+  ],
+  mulligan: [
+    'Keep a hand with a 1-cost play: OP16-064 Koby, OP16-067 Tsuru, OP16-077 "Buddha" Sengoku or OP16-078 Marineford. All four dig 5 for {Navy}, which is how the Admirals get into your hand in time for the Leader to want them there.',
+    "Koby is the best of them on turn 1 because it is the only one that does not make you trash a card afterwards. Tsuru, Buddha and Marineford's own search all end with a mandatory discard, which is a real cost out of a five-card hand.",
+    'Do not keep a hand whose only cheap card is OP15-078 Mamaragan or OP16-076 "The Three Admirals!!". Mamaragan is a Counter Event, and The Three Admirals!! needs {Admiral} Characters on the board before either half of it does anything -- neither is a turn-1 play.',
+    "A hand of three 7-cost Admirals and nothing under 5 goes back. They are the payoff, not the plan; without a searcher or a ramp body the deck reaches them on the turn it would have anyway.",
+  ],
+  priorities: [
+    "Count to eight active DON!!, every turn, and know whether this is the turn. The Leader's ability wants 8 ACTIVE DON!! -- DON!! you have not spent -- so a turn that develops two bodies is a turn the ability was never available on. Holding DON!! is a real play in this deck in a way it is in no other.",
+    "Check whether you hold three differently-named Admirals before committing to hold the DON!!. Two Kuzan and a Sakazuki is two bodies off the activation, not three; the third slot is worth casting a searcher for.",
+    "Play OP16-070 Donquixote Rosinante on a turn you have 4 DON!! rather than the turn you first can. Its cost rests 2 of your DON!! to add 1, so it is DON!!-neutral this turn and +1 on the field next turn -- Bandai's own guide sequences it exactly here, to reach 7 next turn and cast an Admiral a turn early.",
+    "OP16-075 Monkey.D.Garp and OP16-066 Sengoku both read 'If your Leader has the {Navy} type' and both add DON!! -- Garp one active and one rested, Sengoku two rested plus a draw-2/trash-2. Sengoku is the one to cast when the hand is wrong rather than small: it is the only card that both ramps and changes which cards you hold.",
+    "Sakazuki's [On Play] -6000 lasts through the opponent's next End Phase. Spend it on the body that is actually stopping you -- usually a [Blocker] -- rather than on the biggest thing across the table, because a -6000 that only shrinks an attacker gives back a turn's worth of removal.",
+    "Kuzan's [Activate: Main] costs DON!! -1 and turns a [Blocker] off for the turn. It does not remove the keyword and it does not K.O. anything, so it is worth exactly the attack it lets through -- use it on the turn you are converting, not on the turn you are ramping.",
+    "OP16-073 Borsalino's [End of Your Turn] pays DON!! -2 to set itself active and gain [Blocker] until the end of the opponent's next End Phase. That is an 8000 [Blocker] on the opponent's turn bought with DON!! you were about to lose to the End Phase anyway -- take it unless the two DON!! are the eighth and ninth you are holding for the Leader.",
+    "OP16-078 Marineford's [Activate: Main] rests the Stage for DON!! -1 to draw 1 and trash 1. It rests itself, so it is once a turn, and its value is the trash rather than the draw: this deck's dead cards are Admirals it already has three names of.",
+    'OP16-076 "The Three Admirals!!" is two cards in one and the halves want opposite boards. Its [Main] rests 3 DON!! to give up to 3 Admirals +2000 for the finishing turn; its [Counter] gives one Leader or Character +4000 for the battle but ONLY while you have an {Admiral} Character, and is a blank without one.',
+    "OP16-062 Younger Brother Marine has no printed effect and is the deck's Counter reserve at 2000. It is also the only body here that costs nothing to decide about -- hold it for the Counter step when the board does not need a fifth 6000.",
+  ],
+  commonVariants: [
+    "This is Bandai's own feature list (deck_105) transcribed slot for slot, and it is the only published list for this Leader: OP16-060 has no recorded results in the English OP-17 tournament field, where onepiecetopdecks' entries under Purple are Enel and Kaido. Treat differences from other Sengoku builds as differences from an unrecorded archetype rather than from a known better one.",
+    "The two OP16-078 Marineford slots are the list's only non-4-of, and they are the flex. A build that wants a fourth searcher rather than a Stage plays more OP16-077 there; a build that wants to survive to turn 8 more reliably plays defensive Events instead.",
+    "Purple {Navy} shells in other formats have run OP16-072 Hannyabal and the Impel Down package alongside this Leader. Nothing in this list does, and the reason is the Leader's ability: every slot that is not a {Navy} body or a DON!! source is a slot that does not help you hold three differently-named Admirals.",
+  ],
+  commonCombos: [
+    "Eight active DON!! plus Kuzan, Sakazuki and Borsalino in hand: one action for a 24000-power board. Then Sakazuki's [Activate: Main] and Borsalino's and Kuzan's [On Play] DON!! start refilling the cost area the activation just emptied.",
+    'The same turn plus OP16-076 "The Three Admirals!!": rest 3 DON!! for +2000 on each of the three, which is three 10000 attackers on the turn the opponent has just been given three new things to answer.',
+    "Rosinante on 4 DON!!, then a 7-cost Admiral next turn. Rosinante rests two to add one, so the field goes 4 -> 5 while the turn's DON!! is spent, and the next Refresh hands you 7 rather than 6.",
+    "Sakazuki's -6000 on a [Blocker], or Kuzan's DON!! -1 on it, then attack with the 8000s. The deck's Characters out-power almost everything in the field; what stops them is being blocked, and it carries two separate answers to exactly that.",
+    "Borsalino ends your turn active with [Blocker], and the keyword lasts through the opponent's next End Phase -- so it blocks on their turn and is still an active 8000 attacker on yours.",
+  ],
+  keyCardNumbers: [
+    "OP16-060",
+    "OP16-063",
+    "OP16-065",
+    "OP16-073",
+    "OP16-064",
+    "OP16-066",
+    "OP16-070",
+    "OP16-075",
+    "OP16-076",
+    "OP16-078",
+  ],
+  counterplay: [
+    "Attack the DON!! plan, not the board. This deck's turns are worth what its DON!! count is, and it has no way to refill a hand it has emptied -- the searchers replace themselves and nothing draws more than two. Pressure that forces it to spend DON!! on Counters is pressure on the Leader's eight.",
+    "Its Leader is a 5000 with no defensive text and 5 Life, and the deck's own Counter power is thin: the three Admirals print no Counter at all, and OP16-078 and the Events are 0. Realistically it defends with OP16-062 at 2000, OP15-078 Mamaragan and OP16-076 -- attacks that demand two cards instead of one drain that quickly.",
+    "The dangerous turn is the one where it has eight active DON!! and has not spent them. If it passes a turn having attacked with nothing and developed nothing, the next turn is three Admirals -- so that is the turn to commit a board rather than hold one back.",
+    "Removal aimed at cost is nearly useless here: nine of the deck's Characters cost 5 or more and three cost 7. What does work is answering the board it makes in one action, or racing the four or five turns it needs before that action exists.",
+    "OP16-076's [Counter] is a blank while it has no {Admiral} on the board. Before its big turn, +4000 is not in the deck's defensive arithmetic; after it, assume it is.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_105.php",
+      retrievedAt: "2026-09-04",
+      note: "Bandai's own featured deck for OP16-060, transcribed slot for slot as the deck manifest. The page's own strategy notes are the source for the Rosinante-on-4-DON!! sequencing, the Koby/Buddha 'gather Admirals in hand' line and the Leader-activation-into-The-Three-Admirals!! finishing turn.",
+    },
+    {
+      url: "https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/",
+      retrievedAt: "2026-09-04",
+      note: "Checked for OP-17-era tournament lists behind OP16-060 and found none. The priorities and counterplay here are read off the printed cards and Bandai's own guide rather than from piloted tournament lines.",
+    },
+  ],
+};

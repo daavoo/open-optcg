@@ -1,0 +1,54 @@
+/* ============================================================================
+   IMAGE ASSET ANCHORS
+   Each anchor defaults to `none`, and the surface that reads it paints a
+   procedural fallback underneath. Point one at an image and that surface
+   becomes the image — nothing else changes.
+
+     · At build    — drop a file named after an anchor into
+                     packages/web/src/assets/ and build-web.ts inlines it.
+     · By hand     — replace `none` below with url("…").
+
+   See docs/art-anchors.md for the full table.
+   ========================================================================= */
+:root {
+  --art-mat-self: none; /* your half of the sea */
+  --art-mat-opponent: none; /* their half of the sea */
+  --art-mat-st31: none; /* the ST31 mat, on whichever half plays it */
+  /* Resolved per half from the deck in play -- see mat-skins.css. A half with
+     no painting resolves both to `none` and keeps the colour recipe. */
+  --mat-self-art: none;
+  --mat-opp-art: none;
+  --mat-self-art-scrim: none;
+  --mat-opp-art-scrim: none;
+  /* Mat sprites: art a deck lays over its colour mat, one anchor per deck. */
+  --art-sprite-st31: none;
+  --art-sprite-xebec: none;
+  --art-sprite-mihawk: none;
+  /* The placement itself -- a list of background layers, one per sprite laid.
+     `none` for a deck that lays nothing, which is most of them. */
+  --mat-self-sprites: none;
+  --mat-opp-sprites: none;
+  --art-table: none; /* surround behind both halves */
+  --art-chart: none; /* one chart drawn across both halves */
+  --art-card-back: none; /* deck, Life, opponent hand */
+  --art-don-back: none; /* the DON!! deck's own back */
+  --art-card-frame: none; /* trim ring around a drawn (art-less) card */
+  --art-card-slot: none; /* empty character / stage slot */
+  --art-character-area: none; /* the two character-area panels */
+  --art-hand-tray: none; /* shelf under your hand */
+  --art-don: none; /* resource (DON!!) card face */
+  --art-life: none; /* life dial face */
+  --art-brand: none; /* brand mark, top bar + lobby */
+  --art-lobby: none; /* lobby backdrop */
+  --art-home: none; /* backdrop behind every menu page */
+  --art-menu-card: none; /* paper the setup forms are printed on */
+  /* One per way to play, named after the mode id: drop mode-<id>.jpg into
+     packages/web/src/assets/ and that card's art box is painted with it. */
+  --art-mode-1v1: none;
+  --art-mode-sealed: none;
+  --art-end-turn: none; /* turn-end dial face */
+  --art-vs: none; /* the mark between the lobby's two Leaders */
+
+  /* Per-card art is set inline on each element by main.ts. */
+  --card-art: none;
+}

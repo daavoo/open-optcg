@@ -1,0 +1,505 @@
+/* ============================================================================
+   CARDS
+   One frame grammar: cost · art · name · stats. Trim is a border-box gradient,
+   body a padding-box wash of the card's flag colour.
+   ========================================================================= */
+.game-card {
+  position: relative;
+  height: var(--card-h);
+  max-height: 100%;
+  width: auto;
+  aspect-ratio: 0.71;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem;
+  border: 2px solid transparent;
+  border-radius: 9px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+        170deg,
+        color-mix(in srgb, var(--card-color, #5d6b80) 42%, #1f1f23),
+        color-mix(in srgb, var(--card-color, #5d6b80) 16%, #0e0e10)
+      )
+      padding-box,
+    var(--art-card-frame) border-box,
+    linear-gradient(160deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.1))
+      border-box;
+  box-shadow: var(--lift-raised);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.18s var(--ease-snap),
+    box-shadow 0.18s ease;
+}
+/* Rope hatching over the body. */
+.game-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.24;
+  background: repeating-linear-gradient(
+    -40deg,
+    rgba(239, 234, 225, 0.07) 0 1px,
+    transparent 1px 8px
+  );
+  pointer-events: none;
+}
+.card-top {
+  order: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.2rem;
+}
+/* The cost badge duplicated the number already printed on the card art
+   itself, so it's dropped — the card number stays. */
+.card-top b {
+  display: none;
+}
+.card-top small {
+  padding-top: 0.15rem;
+  color: rgba(239, 234, 225, 0.5);
+  font: 0.42rem var(--font-mono);
+  letter-spacing: 0.1em;
+}
+/* Art slot — hatched placeholder until a card image is loaded. */
+.game-card::before {
+  content: "";
+  order: 1;
+  z-index: 1;
+  height: 36%;
+  margin-top: 0.28rem;
+  border: 1px solid rgba(239, 234, 225, 0.18);
+  border-radius: 4px;
+  background:
+    var(--card-art) center / cover no-repeat,
+    repeating-linear-gradient(
+      45deg,
+      rgba(239, 234, 225, 0.09) 0 6px,
+      rgba(239, 234, 225, 0.02) 6px 12px
+    );
+}
+.game-card > strong {
+  order: 2;
+  z-index: 1;
+  margin-top: 0.28rem;
+  overflow-wrap: anywhere;
+  color: #f1ece3;
+  font: 700 0.66rem/1.1 var(--font-display);
+}
+/* Shown only while an effect is actually touching this card's power --
+   otherwise the printed number on the card art itself is the only source
+   of truth, so there's nothing worth overlaying. */
+.power-overlay {
+  position: absolute;
+  z-index: 3;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.28rem;
+  border: 1px solid rgba(239, 234, 225, 0.16);
+  border-radius: 4px;
+  background: rgba(14, 14, 16, 0.62);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.power-overlay small {
+  color: rgba(239, 234, 225, 0.55);
+  font: 0.4rem var(--font-mono);
+}
+.power-overlay b {
+  color: #f1ece3;
+  font: 600 0.55rem var(--font-mono);
+}
+/* Given DON!! uses the card's own colour, so a power increase stays on-theme. */
+.power-overlay.increased {
+  border-color: color-mix(in srgb, var(--card-color) 72%, white);
+  background: color-mix(in srgb, var(--card-color) 42%, #111113);
+}
+.power-overlay.increased b {
+  color: #fff;
+}
+.power-overlay.decreased {
+  border-color: color-mix(in srgb, #c94a4a 72%, white);
+  background: color-mix(in srgb, #c94a4a 42%, #111113);
+}
+.power-overlay.decreased b {
+  color: #fff;
+}
+/* The engine's price for this card, drawn over the printed one on the art --
+   the only place a discount the card's own text grants itself is visible
+   before you open it. Shown only where the two disagree; see `costOverlay`. */
+.cost-overlay {
+  position: absolute;
+  z-index: 3;
+  top: 0.3rem;
+  left: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.28rem;
+  border: 1px solid rgba(239, 234, 225, 0.16);
+  border-radius: 4px;
+  background: rgba(14, 14, 16, 0.62);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.cost-overlay small {
+  color: rgba(239, 234, 225, 0.55);
+  font: 0.4rem var(--font-mono);
+}
+.cost-overlay b {
+  color: #f1ece3;
+  font: 600 0.55rem var(--font-mono);
+}
+/* Cheaper is the good news and dearer the bad, which is the opposite polarity
+   to power -- so the colours are swapped rather than shared with it. */
+.cost-overlay.lowered {
+  border-color: color-mix(in srgb, var(--green) 72%, white);
+  background: color-mix(in srgb, var(--green) 42%, #111113);
+}
+.cost-overlay.lowered b {
+  color: #fff;
+}
+.cost-overlay.raised {
+  border-color: color-mix(in srgb, #c94a4a 72%, white);
+  background: color-mix(in srgb, #c94a4a 42%, #111113);
+}
+.cost-overlay.raised b {
+  color: #fff;
+}
+.don-badge {
+  position: absolute;
+  z-index: 3;
+  top: 1.7rem;
+  left: 0.3rem;
+  display: grid;
+  justify-items: center;
+  padding: 0.12rem 0.26rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--card-color) 78%, #111113);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.don-badge small {
+  font: 700 0.32rem var(--font-mono);
+  letter-spacing: 0.06em;
+}
+.don-badge b {
+  font: 700 0.62rem/1 var(--font-mono);
+}
+.game-card.has-don {
+  outline: 2px solid color-mix(in srgb, var(--card-color) 72%, white);
+  outline-offset: -2px;
+}
+
+/* A loaded card image owns the whole face; chrome steps back to a scrim. */
+/* A card with art is the art, edge to edge: no border, and no drawn trim ring
+   around it. A printed card already carries its own white border in the image,
+   so the ring was a second frame around the first -- and on a mat where every
+   piece is a card, a card that is only its picture reads faster than one in a
+   box. `--art-card-frame` still trims the drawn face below, which is the face
+   that has no border of its own. */
+.game-card.has-art {
+  border-width: 0;
+  background: var(--card-art) center / cover no-repeat padding-box;
+}
+.game-card.has-art::before,
+.game-card.has-art > strong,
+.game-card.has-art::after {
+  display: none;
+}
+.game-card.has-art .power-overlay,
+.game-card.has-art .cost-overlay {
+  padding: 0.15rem;
+  border-radius: 5px;
+}
+
+.game-card:hover {
+  z-index: 18;
+  transform: translateY(-0.55rem);
+}
+.game-card.rested {
+  transform: rotate(90deg) scale(0.78);
+  opacity: 0.88;
+}
+.game-card.rested:hover {
+  transform: rotate(90deg) scale(0.82);
+  opacity: 1;
+}
+.game-card.leader {
+  height: min(var(--leader-h), calc(100% - 0.5rem));
+  border-width: 3px;
+  background:
+    linear-gradient(
+        170deg,
+        color-mix(in srgb, var(--card-color, #5d6b80) 42%, #1f1f23),
+        color-mix(in srgb, var(--card-color, #5d6b80) 16%, #0e0e10)
+      )
+      padding-box,
+    var(--art-card-frame) border-box,
+    linear-gradient(160deg, var(--card-color), white 52%, var(--card-color))
+      border-box;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.14),
+    var(--lift-lifted);
+}
+.game-card.leader.has-art {
+  border-width: 0;
+  background: var(--card-art) center / cover no-repeat padding-box;
+}
+.game-card.stage {
+  height: var(--slot-h);
+  opacity: 0.92;
+}
+.game-card.mini {
+  height: 1.6rem;
+  padding: 0.15rem;
+  border-width: 1px;
+}
+.game-card.mini::before,
+.game-card.mini > strong,
+.game-card.mini .power-overlay,
+.game-card.mini .cost-overlay,
+.game-card.mini .card-top small {
+  display: none;
+}
+
+/* States — pops are reserved, never decorative.
+
+   One light for every card, wherever it is: a Character, the Leader, a card in
+   hand and a DON!! in the cost area all pick up the same one when they are what
+   you can act on. It is the card's own edge, emitted: a thin white outline that
+   expands out of the card and fades. An outline rather than a ring of box
+   shadow, because a shadow ring is a second border drawn around cards that no
+   longer have a first one -- and because `outline` leaves the lift, the pile
+   edge and the art underneath it alone.
+
+   The cost area is the exception that proves the rule: it is a box printed on
+   the mat rather than a piece on it, so the light goes to the DON!! cards inside
+   it and the box itself shows nothing. */
+.actionable-source:not(.cost-area),
+.cost-area.actionable-source .don-slot.active .don-card {
+  outline: 1.5px solid rgba(255, 255, 255, 0.85);
+  animation: gl-emit 1.7s ease-out infinite;
+}
+/* The card you have picked holds still: a steady white edge, standing a hair
+   off the card. The question has been answered, so nothing is inviting. */
+.selected-source:not(.cost-area),
+.cost-area.selected-source .don-slot.active .don-card {
+  z-index: 19;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.game-card.selected-source {
+  transform: translateY(-0.55rem);
+}
+/* Targeting. The board itself is the question, so its legal answers are the
+   only lit things on it and everything else drops back: dimmed and drained of
+   colour, but still in place. Dimming rather than covering, because an attack
+   is weighed *against* the board -- what else is out there, what is left
+   standing after -- and a scrim would hide the half of it being read. */
+.table.targeting .game-card:not(.valid-target):not(.selected-source),
+.table.targeting .life-zone,
+.table.targeting .deck-pile,
+.table.targeting .trash-zone-button,
+.table.targeting .don-deck-zone,
+.table.targeting .cost-area:not(.selected-source),
+.table.targeting .hand-zone {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+/* The mat itself goes down with them, through the layer that already carries
+   the vignette: a colour under its gradients, beneath everything except the
+   two things lifted above it -- the card doing the aiming and the cards it can
+   be aimed at. */
+.table.targeting::after {
+  background-color: rgba(9, 9, 12, 0.55);
+}
+/* `.character-row` isolates, so a lit Character's z-index stops at the row and
+   never reaches past the layer above -- the one carrying the vignette and, here,
+   the dimming wash. The Leader has no such ceiling, which is how a Leader came
+   out bright and the Character beside it stayed under the wash while both were
+   equally legal. Lifting the row over that layer puts them on the same side of
+   it; the field row already sits there. */
+.table.targeting .character-row {
+  z-index: 4;
+}
+.game-card.valid-target {
+  z-index: 20;
+  cursor: crosshair;
+  animation: gl-target 1.1s ease-in-out infinite;
+}
+/* Hover stops the pulse: once the pointer is on one the question is no longer
+   "which of these", and the card holding still is the one about to be hit. */
+.game-card.valid-target:hover,
+.game-card.valid-target:focus-visible {
+  animation: none;
+  transform: translateY(-0.5rem);
+  box-shadow:
+    0 0 0 3px var(--state-target),
+    0 0 40px rgba(255, 255, 255, 0.5),
+    var(--lift-lifted);
+}
+/* A Character can only be attacked while it is rested, so most attack targets
+   are turned a quarter turn: the lift has to be added to that rotation rather
+   than replace it, or hovering one stands it upright. */
+.game-card.rested.valid-target:hover,
+.game-card.rested.valid-target:focus-visible {
+  transform: translateY(-0.5rem) rotate(90deg) scale(0.82);
+}
+.game-card.attacking {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 30px color-mix(in srgb, var(--card-color) 65%, transparent);
+}
+.game-card.attack-target {
+  box-shadow:
+    0 0 0 2px var(--state-damage),
+    0 0 30px rgba(255, 138, 126, 0.45);
+}
+.game-card.attack-locked {
+  z-index: 4;
+  filter: saturate(0.55);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 138, 126, 0.78),
+    var(--lift-resting);
+}
+/* Same red as `attack-locked`: both are an effect switching this Character off
+   for the turn -- one bars the attack, the other bars the rest that pays for
+   it. */
+.game-card.rest-locked {
+  z-index: 4;
+  filter: saturate(0.55);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 138, 126, 0.78),
+    var(--lift-resting);
+}
+.game-card.refresh-locked {
+  z-index: 4;
+  box-shadow:
+    inset 0 0 0 2px rgba(150, 190, 255, 0.7),
+    var(--lift-resting);
+}
+/*
+ * "Can't attack", "Stays rested" and "Negated" read the same way: a thing about
+ * the card that is currently switched off, with nothing else on the board to
+ * show it. They stack in one column because a Character can carry more than one
+ * at a time.
+ */
+.card-flags {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  pointer-events: none;
+}
+.attack-lock-badge,
+.rest-lock-badge,
+.refresh-lock-badge,
+.summoning-sick-badge,
+.granted-keyword-badge,
+.on-play-off-badge,
+.negated-badge {
+  padding: 0.16rem 0.28rem;
+  border: 1px solid rgba(255, 206, 199, 0.8);
+  border-radius: 4px;
+  background: rgba(103, 25, 27, 0.94);
+  color: #fff4f0;
+  font: 700 0.42rem/1 var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.refresh-lock-badge {
+  border-color: rgba(199, 222, 255, 0.8);
+  background: rgba(23, 52, 103, 0.94);
+  color: #f0f6ff;
+}
+
+/* Not a penalty, just a Character that has not settled in yet. */
+.summoning-sick-badge {
+  border-color: rgba(255, 232, 191, 0.8);
+  background: rgba(92, 63, 15, 0.94);
+  color: #fff8ec;
+}
+
+.negated-badge {
+  border-color: rgba(214, 214, 224, 0.8);
+  background: rgba(38, 38, 48, 0.94);
+  color: #f2f2f7;
+}
+
+/* The same grey as "Negated", because it is the same news about a different
+   scope: that badge switches one Character off, this one switches a clause off
+   across a whole side. */
+.on-play-off-badge {
+  border-color: rgba(214, 214, 224, 0.8);
+  background: rgba(38, 38, 48, 0.94);
+  color: #f2f2f7;
+}
+
+/* A granted keyword is the one badge here that is good news for its owner, so
+   it is the one badge that is not in the restriction palette. */
+.granted-keyword-badge {
+  border-color: rgba(191, 255, 219, 0.8);
+  background: rgba(14, 82, 51, 0.94);
+  color: #eefff5;
+}
+.blocker-badge {
+  position: absolute;
+  z-index: 3;
+  top: 1.7rem;
+  right: 0.3rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: rgba(11, 11, 12, 0.88);
+  color: #fff;
+  pointer-events: none;
+}
+.blocker-badge svg {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+/* Empty slots — empty must read as empty. */
+.empty-slot {
+  height: var(--slot-h);
+  max-height: 100%;
+  width: auto;
+  aspect-ratio: 0.71;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 7px;
+  background:
+    var(--art-card-slot) center / cover no-repeat,
+    rgba(0, 0, 0, 0.28);
+  color: rgba(255, 255, 255, 0.55);
+  font: 0.5rem var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.empty-slot.character {
+  height: var(--card-h);
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.26);
+  background: transparent;
+  color: transparent;
+}

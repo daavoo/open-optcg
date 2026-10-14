@@ -1,0 +1,17 @@
+# Decks added to the selectable catalog since distill-ppo was trained: the
+# decks it has never played. `sys1.breadth --group new-decks.txt` reads how a
+# model does on them apart from the rest.
+(Black) Imu - Official Feature Deck
+(Black) Yamato - Official Feature Deck
+(Blue) Jinbe - Official Feature Deck
+(Blue) Rocks.D.Xebec - Open OPTCG
+(Blue/Yellow) Boa Hancock - Official Feature Deck
+(Purple) Donquixote Doflamingo - Official Feature Deck
+(Purple/Yellow) Charlotte Pudding - Open OPTCG
+(Red) Portgas.D.Ace - Open OPTCG
+(Red) Trafalgar Law - Official Feature Deck
+(Red/Blue) Nefeltari Vivi - Official Feature Deck
+(Red/Purple) Gol.D.Roger - Official Feature Deck
+(Yellow) Enel - Open OPTCG
+daavoo
+mon

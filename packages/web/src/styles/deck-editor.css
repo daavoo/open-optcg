@@ -1,0 +1,1030 @@
+/* ============================================================================
+   DECK EDITOR
+   Deck construction: the fixed header of rules and totals, the tools row, and
+   the card catalog that scrolls under both.
+   ========================================================================= */
+/* Deck construction keeps the rules and totals fixed while the pool scrolls. */
+.deck-editor-shell {
+  --editor-paper: #fbf9f5;
+  --editor-canvas: #efede7;
+  --editor-field: #f3f0e9;
+  --editor-border: #ddd8cc;
+  --editor-ink: #221f1a;
+  --editor-muted: #6d675d;
+  height: 100dvh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(17rem, 22rem) minmax(30rem, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(34, 31, 26, 0.025) 0 1px,
+      transparent 1px 46px
+    ),
+    var(--editor-canvas);
+  color: var(--editor-ink);
+}
+/* The way in: the choice of how to start, and the two selectors behind it.
+   One column instead of the editor's tools-and-catalog pair, because there is
+   no deck yet to lay out. */
+.deck-start-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+.deck-start-header {
+  grid-template-columns: minmax(6rem, 1fr) auto minmax(6rem, 1fr);
+}
+.deck-start-header .eyebrow {
+  margin: 0 0 0.15rem;
+  color: var(--editor-muted);
+}
+.deck-start-body {
+  overflow: auto;
+  padding: 1.5rem;
+}
+.deck-start-lead {
+  margin: 1.5rem 0 1.25rem;
+  text-align: center;
+  font: 400 1.1rem var(--font-body);
+  color: var(--editor-muted);
+}
+/* Two cards of equal weight, side by side while the page is wide enough for
+   both to be read at a glance, and stacked once it is not. */
+.deck-start-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 1.25rem;
+  width: min(44rem, 100%);
+  margin: 0 auto;
+}
+.deck-start-option {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  padding: 2rem 1.5rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 10px;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.deck-start-option:hover,
+.deck-start-option:focus-visible {
+  border-color: var(--flag);
+  box-shadow: 0 8px 22px rgba(40, 34, 26, 0.1);
+}
+.deck-start-option strong {
+  font: 700 1.25rem var(--font-display);
+}
+.deck-start-option span:last-child {
+  color: var(--editor-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.deck-start-option-art {
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--flag) 14%, var(--editor-field));
+  color: var(--flag);
+}
+.deck-start-option-art svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+/* A selector on a page rather than in a dialog gets the dialog's width, so
+   the tiles are the size the lobby's picker draws them at. */
+.deck-start-grid {
+  width: min(52rem, 100%);
+  margin: 0 auto;
+}
+.deck-editor-header {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) auto minmax(6rem, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--flag) 35%, #d7d1c5);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--flag) 16%, white),
+    white 42%,
+    color-mix(in srgb, var(--flag) 10%, white)
+  );
+  box-shadow: 0 4px 16px rgba(40, 34, 26, 0.08);
+}
+.deck-editor-header > div:nth-child(2) {
+  text-align: center;
+}
+.deck-editor-header h1,
+.catalog-heading h2 {
+  margin: 0;
+  font: 700 1.45rem var(--font-display);
+  letter-spacing: 0;
+}
+.deck-editor-verdict {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.deck-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  color: var(--state-danger);
+}
+.deck-count.valid {
+  color: var(--state-valid);
+}
+.deck-count b {
+  font: 700 1.8rem var(--font-mono);
+}
+.deck-count span {
+  color: var(--editor-muted);
+  font-size: 0.72rem;
+}
+/* Sits beside the card count in the verdict block: the format is the other
+   half of "is this deck legal", and rotation is the one part of that the
+   builder chooses rather than fixes. */
+.deck-format-select {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--editor-muted);
+}
+.deck-format-select select {
+  font-size: 0.82rem;
+}
+.deck-editor-header .text-button {
+  color: var(--editor-muted);
+}
+.deck-editor-header .text-button:hover {
+  color: var(--flag);
+}
+.deck-editor-tools {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-right: 1px solid var(--editor-border);
+  background: var(--editor-paper);
+  box-shadow: 6px 0 18px rgba(40, 34, 26, 0.04);
+}
+/* Long Leader option labels would otherwise widen the grid items past the
+   sidebar track and clip against the catalog. */
+.deck-editor-tools,
+.deck-editor-tools > *,
+.editor-tool-row > * {
+  min-width: 0;
+}
+.deck-editor-tools select,
+.deck-editor-tools input {
+  width: 100%;
+  max-width: 100%;
+}
+.deck-editor-tools .wide,
+.editor-tool-row button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.deck-editor-tools label {
+  color: var(--editor-muted);
+}
+.deck-editor-tools select,
+.deck-editor-tools input,
+.deck-editor-tools textarea,
+.card-catalog input {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+}
+.deck-editor-tools select:hover,
+.deck-editor-tools input:hover,
+.deck-editor-tools textarea:hover,
+.card-catalog input:hover,
+.deck-editor-tools select:focus,
+.deck-editor-tools input:focus,
+.deck-editor-tools textarea:focus,
+.card-catalog input:focus {
+  border-color: var(--flag);
+  outline-color: var(--flag);
+}
+.deck-editor-tools .secondary:not(.action-button) {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+}
+.deck-editor-tools .secondary:not(.action-button):hover {
+  border-color: var(--flag);
+  background: white;
+}
+.deck-editor-tools .primary {
+  border-color: color-mix(in srgb, var(--flag) 72%, #222);
+  background: var(--flag);
+  color: white;
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--flag) 65%, #222),
+    0 10px 22px rgba(40, 34, 26, 0.18);
+}
+.deck-editor-tools textarea {
+  width: 100%;
+  resize: vertical;
+  font: 0.72rem/1.5 var(--font-mono);
+}
+.leader-summary {
+  display: grid;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--flag);
+}
+.leader-summary span,
+.card-number {
+  color: color-mix(in srgb, var(--flag) 78%, #222);
+  font: 0.65rem var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.editor-leader-card {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.85rem;
+}
+.editor-leader-card .catalog-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.editor-leader-card .catalog-card-caption {
+  display: none;
+}
+.editor-tool-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+.editor-message {
+  margin: 0;
+  color: color-mix(in srgb, var(--flag) 78%, #222);
+  font-size: 0.75rem;
+}
+.deck-rule-status {
+  padding: 0.9rem;
+  border-left: 3px solid;
+  background: var(--editor-field);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.deck-rule-status.valid {
+  border-color: var(--state-valid);
+}
+.deck-rule-status.invalid {
+  border-color: var(--state-danger);
+}
+.deck-rule-status p,
+.deck-rule-status ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--editor-muted);
+}
+.deck-rule-status p {
+  padding-left: 0;
+}
+/* In the header the verdict sits beside the count, so it stays one tidy block
+   however many rules the deck currently breaks. */
+.deck-editor-verdict .deck-rule-status {
+  max-width: 24rem;
+  max-height: 4.2rem;
+  overflow-y: auto;
+  padding: 0.25rem 0 0.25rem 0.7rem;
+  background: transparent;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.deck-editor-verdict .deck-rule-status p,
+.deck-editor-verdict .deck-rule-status ul {
+  margin-top: 0.15rem;
+}
+.primary:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.card-catalog {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: max-content max-content;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+.deck-card-section,
+.pool-card-section {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: 1rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 8px;
+  background: var(--editor-paper);
+  box-shadow: 0 6px 20px rgba(40, 34, 26, 0.06);
+}
+.deck-card-section {
+  border-top: 3px solid var(--flag);
+}
+.catalog-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+}
+/* Takes the width the heading is not using and lays the filters out against
+   the right edge. The two boxes shrink first and the chips and the cost pair
+   wrap as whole controls, because a colour row split across two lines reads
+   as two unrelated rows of checkboxes. */
+.catalog-controls {
+  min-width: 0;
+  /* A whole row of its own once there are four controls: sharing the line with
+     the heading squeezed the pool count into a two-line column. */
+  flex: 1 1 26rem;
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.catalog-search {
+  min-width: 8rem;
+  flex: 1 1 10rem;
+  max-width: 18rem;
+  color: var(--editor-muted);
+}
+/* The input keeps its default ~20-character intrinsic width unless told
+   otherwise, and would spill out from under the shrunken label onto the
+   control beside it. */
+.catalog-search input {
+  min-width: 0;
+  width: 100%;
+}
+.catalog-sort {
+  flex: none;
+  width: 7rem;
+  color: var(--editor-muted);
+}
+.catalog-sort select {
+  min-width: 0;
+  width: 100%;
+}
+.catalog-cost {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* A legend inside a flex fieldset is a flex item like any other, so it takes
+   a full-width row of its own to sit above the controls it names. */
+.catalog-cost legend,
+.catalog-menu-label {
+  flex: 1 0 100%;
+  display: block;
+  padding: 0 0 0.15rem;
+  color: var(--editor-muted);
+  font-size: 0.75rem;
+}
+/* No spinner: its arrows take a third of a box this narrow, and a cost is
+   typed or cleared rather than stepped to. */
+.catalog-cost input {
+  min-width: 0;
+  width: 4.1rem;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.catalog-cost input::-webkit-outer-spin-button,
+.catalog-cost input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+.catalog-cost span {
+  color: var(--editor-muted);
+}
+.catalog-menu-field {
+  flex: none;
+  width: 9.5rem;
+}
+/* The panel hangs off this, and the filter row is the only thing above the
+   card grid, so it needs somewhere to hang from and a way over the cards. */
+.catalog-menu {
+  position: relative;
+}
+.catalog-menu summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-field);
+  font-size: 0.8rem;
+  line-height: 1.2;
+  cursor: pointer;
+  list-style: none;
+}
+.catalog-menu summary::-webkit-details-marker {
+  display: none;
+}
+/* The marker a select has, drawn rather than inherited: the summary is not a
+   select and does not get one. */
+.catalog-menu summary::after {
+  content: "";
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-bottom: 0.15rem;
+  border-right: 1.5px solid var(--editor-muted);
+  border-bottom: 1.5px solid var(--editor-muted);
+  transform: rotate(45deg);
+}
+.catalog-menu[open] summary {
+  border-color: var(--flag);
+}
+.catalog-menu[open] summary::after {
+  margin-bottom: -0.15rem;
+  transform: rotate(-135deg);
+}
+.catalog-menu summary:focus-visible {
+  outline: 2px solid var(--flag);
+  outline-offset: 2px;
+}
+.catalog-menu-panel {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  min-width: 100%;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: 0.35rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-paper);
+  box-shadow: 0 8px 24px rgba(40, 34, 26, 0.18);
+}
+.catalog-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.catalog-menu-row:hover {
+  background: var(--editor-field);
+}
+/* The colour itself is set on the element: it is the card colour's own token,
+   which only the row knows. */
+.catalog-menu-dot {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+.catalog-menu-all {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.35rem;
+  border: 0;
+  border-top: 1px solid var(--editor-border);
+  border-radius: 0 0 4px 4px;
+  background: none;
+  color: var(--flag);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.catalog-menu-all:disabled {
+  color: var(--editor-muted);
+  cursor: default;
+}
+/* Under the filters that produced it, not beside them: the pool's own size is
+   a fact the cards already show. */
+.catalog-count {
+  /* A width, not a basis: the heading stacks on a phone, where a basis is a
+     height and would leave the line floating in its own empty row. */
+  flex: none;
+  width: 100%;
+  margin: 0.5rem 0 0;
+  color: var(--editor-muted);
+  font-size: 0.78rem;
+}
+.catalog-count b {
+  color: var(--editor-ink);
+  font-size: 0.95rem;
+}
+/* No spinner: its arrows take a third of a box this narrow, and a cost is
+   typed or cleared rather than stepped to. */
+.catalog-cost input {
+  min-width: 0;
+  width: 4.1rem;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.catalog-cost input::-webkit-outer-spin-button,
+.catalog-cost input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+.catalog-cost span {
+  color: var(--editor-muted);
+}
+/* Said where the results would be, and only while a text search is actually
+   running against a build that has no text. */
+.catalog-note {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.6rem;
+  border-left: 3px solid var(--flag);
+  background: var(--editor-field);
+  color: var(--editor-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.catalog-note b {
+  color: var(--editor-ink);
+  font: 700 0.75rem var(--font-mono);
+}
+.catalog-list {
+  min-height: 0;
+  overflow: visible;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  align-content: start;
+  gap: 0.5rem;
+  padding-right: 0.35rem;
+}
+.catalog-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.45rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 7px;
+  background: white;
+}
+.catalog-card.in-deck {
+  border-color: color-mix(in srgb, var(--flag) 55%, var(--editor-border));
+  background: color-mix(in srgb, var(--flag) 6%, white);
+}
+.catalog-card .catalog-card-face {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 0.71;
+  flex: none;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.catalog-card .catalog-card-face:hover {
+  z-index: auto;
+  transform: translateY(-2px);
+}
+.catalog-card-caption {
+  min-height: 2.25rem;
+  display: grid;
+  align-content: start;
+  gap: 0.15rem;
+}
+.catalog-card-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+.card-pool-count {
+  color: var(--editor-muted);
+  font: 0.65rem var(--font-mono);
+  white-space: nowrap;
+}
+.catalog-card-caption strong {
+  overflow-wrap: anywhere;
+  color: var(--editor-ink);
+  font: 650 0.78rem/1.15 var(--font-display);
+  letter-spacing: 0;
+}
+.quantity-control {
+  display: grid;
+  grid-template-columns: 1.8rem 1.8rem 1.8rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+}
+.quantity-control button {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--editor-border);
+  border-radius: 5px;
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  cursor: pointer;
+}
+.quantity-control button:hover:not(:disabled) {
+  border-color: var(--flag);
+  color: var(--flag);
+}
+.catalog-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--editor-muted);
+}
+.card-detail-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(15, 14, 12, 0.58);
+  backdrop-filter: blur(5px);
+}
+.card-detail-dialog {
+  --editor-paper: #fbf9f5;
+  --editor-field: #f3f0e9;
+  --editor-border: #d8d1c5;
+  --editor-ink: #221f1a;
+  --editor-muted: #6b6257;
+  position: relative;
+  width: min(66rem, 100%);
+  max-height: min(46rem, calc(100dvh - 2rem));
+  overflow-y: auto;
+  padding: clamp(0.9rem, 1.8vw, 1.4rem);
+  border-top: 4px solid var(--flag);
+  border-radius: 8px;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  box-shadow: var(--lift-sealed);
+}
+/* The same title the in-game modal gives the same card: mono, letter-spaced,
+   centred over the three columns, with the close button as its right margin. */
+.card-detail-heading {
+  margin: 0 2.5rem;
+  color: var(--ember);
+  font: 500 0.68rem/1.2 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-transform: uppercase;
+}
+/* The popup shows a card nobody can act on, which is the only difference from
+   the in-game modal -- so it lays the card out the same way, and only the art
+   column differs: a printed image where the modal has the live board card. It
+   sets the first track itself, because a background image has no width to be
+   sized from. */
+.card-detail-dialog .card-action-overview {
+  grid-template-columns: minmax(0, 1.15fr) minmax(7rem, 0.7fr) minmax(0, 1.7fr);
+}
+.card-detail-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  border-radius: 8px;
+  background: var(--card-detail-art) center / cover no-repeat;
+  box-shadow: 0 8px 22px rgba(34, 31, 26, 0.22);
+}
+/* An offline build has no art behind the column, and an empty box with a drop
+   shadow reads as a failed image rather than a card that was never fetched. */
+.card-detail-art.no-art {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 1rem;
+  border: 1px dashed var(--editor-border);
+  background: var(--editor-field);
+  box-shadow: none;
+  text-align: center;
+}
+.card-detail-art.no-art b {
+  color: var(--editor-ink);
+  font: 700 0.95rem var(--font-display);
+}
+.card-detail-art.no-art small {
+  color: var(--editor-muted);
+  font: 0.6rem var(--font-mono);
+  letter-spacing: 0.12em;
+}
+.card-detail-dialog .rule-card {
+  color: var(--editor-ink);
+}
+.card-detail-dialog .rule-card h2,
+.card-detail-dialog .rule-stats > span > b,
+.card-detail-dialog .rule-types b {
+  color: var(--editor-ink);
+}
+.card-detail-dialog .rule-card .eyebrow,
+.card-detail-dialog .rule-card h3 {
+  color: color-mix(in srgb, var(--flag) 78%, #222);
+}
+.card-detail-dialog .rule-stats > span,
+.card-detail-dialog .rule-stats > span > small,
+.card-detail-dialog .rule-types small,
+.card-detail-dialog .card-text {
+  color: var(--editor-muted);
+}
+.card-detail-dialog .rule-types b {
+  border-color: var(--editor-border);
+  background: var(--editor-paper);
+}
+/* The numbers column is boxed rows on this surface too -- the paper's field
+   colour, not the board's translucent white. */
+.card-detail-dialog .rule-stats > span {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+}
+.card-detail-dialog .power-breakdown > div,
+.card-detail-dialog .power-breakdown small {
+  color: var(--editor-muted);
+}
+.card-detail-dialog .power-breakdown b {
+  color: var(--editor-ink);
+}
+.card-detail-dialog .power-breakdown .positive b {
+  color: var(--ember-deep);
+}
+.card-detail-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--editor-border);
+  border-radius: 50%;
+  background: white;
+  color: var(--editor-ink);
+  cursor: pointer;
+}
+.card-detail-close svg {
+  width: 1rem;
+}
+.import-dialog {
+  display: grid;
+  gap: 0.85rem;
+}
+.import-dialog h2 {
+  margin: 0;
+  padding-right: 2rem;
+  font: 700 1.15rem var(--font-display);
+  color: var(--editor-ink);
+}
+.import-dialog label {
+  color: var(--editor-muted);
+}
+.import-dialog textarea {
+  width: 100%;
+  resize: vertical;
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  font: 0.72rem/1.5 var(--font-mono);
+}
+.import-dialog textarea:hover,
+.import-dialog textarea:focus {
+  border-color: var(--flag);
+  outline-color: var(--flag);
+}
+@media (max-width: 35rem) {
+  /* No room for a third column: the printed text takes the full width under the
+     art and the numbers, the way the in-game modal narrows. */
+  .card-detail-dialog .card-action-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .card-detail-dialog .card-action-text {
+    grid-column: 1 / -1;
+  }
+}
+.quantity-control button:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.quantity-control svg {
+  width: 0.85rem;
+}
+.quantity-control output {
+  text-align: center;
+  font: 600 0.85rem var(--font-mono);
+}
+
+/* ============================================================================
+   DECK OVERVIEW
+   What the list is made of, in the tools column beside the catalog that
+   changes it: the cost curve, the card types, the Counter split and the
+   cards that carry an ability.
+   ========================================================================= */
+.deck-overview {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--editor-border);
+}
+.deck-overview-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--editor-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.deck-overview-toggle:hover,
+.deck-overview-toggle:focus-visible {
+  color: var(--editor-ink);
+}
+.deck-overview-toggle svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  transition: transform 120ms ease;
+}
+/* The chevron points at what the panel will do, not at what it shows now. */
+.deck-overview-toggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+.deck-overview-average {
+  color: color-mix(in srgb, var(--flag) 78%, #222);
+  font: 0.65rem var(--font-mono);
+}
+.deck-overview-body {
+  display: grid;
+  gap: 0.8rem;
+}
+/* Wins against the panel's own `display: grid`, which an attribute selector
+   of equal specificity would otherwise lose to on source order alone. */
+.deck-overview-body[hidden] {
+  display: none;
+}
+/* The curve is the panel's one picture, so it gets a row of its own height
+   rather than being sized by its tallest number. */
+.cost-curve {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.2rem;
+  height: 5.5rem;
+  padding: 0.5rem 0.4rem 0.35rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-field);
+}
+.cost-bar {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.25rem;
+  justify-items: center;
+  min-height: 0;
+}
+/* The count rides on top of its own bar rather than along a shared top rule,
+   so a short bar is read with its figure instead of across a gap. */
+.cost-bar-track {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.15rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.cost-bar b {
+  flex: none;
+  color: var(--editor-ink);
+  font: 700 0.62rem/0.9rem var(--font-mono);
+}
+.cost-bar i {
+  flex: none;
+  width: 100%;
+  /* Scaled against the deck's own tallest bucket: an empty bucket still draws
+     a hairline, so the curve reads as a shape and not as a gap. The cap keeps
+     the tallest bar from pushing its own count out of the panel. */
+  height: max(2px, var(--fill));
+  max-height: calc(100% - 1.05rem);
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(
+    180deg,
+    var(--flag),
+    color-mix(in srgb, var(--flag) 55%, white)
+  );
+}
+.cost-bar.empty i {
+  background: color-mix(in srgb, var(--editor-border) 80%, transparent);
+}
+.cost-bar-label {
+  color: var(--editor-muted);
+  font: 0.6rem var(--font-mono);
+}
+.overview-block {
+  display: grid;
+  gap: 0.32rem;
+}
+.overview-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--editor-muted);
+  font: 0.62rem var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.overview-caption span,
+.overview-note span {
+  color: color-mix(in srgb, var(--flag) 78%, #222);
+  text-transform: none;
+}
+/* A note on its own line: a type list is context for the figures under it,
+   not a total to set against the caption. */
+.overview-note {
+  margin: -0.1rem 0 0.05rem;
+  font: 0.68rem/1.35 var(--font-body);
+  /* The types are joined by a middot, whose own sidebearings are too tight at
+     this size to read as a separator without help. */
+  word-spacing: 0.12em;
+}
+/* Sized by how many figures the block was given, so a block with two does not
+   leave a third column of empty grid where a reader looks for a missing one. */
+.overview-tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--tiles, 3), minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+}
+.overview-tiles > div {
+  display: grid;
+  gap: 0.1rem;
+  justify-items: center;
+  padding: 0.4rem 0.25rem 0.35rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-field);
+}
+.overview-tiles dt {
+  color: var(--editor-muted);
+  font: 0.6rem var(--font-mono);
+  letter-spacing: 0.04em;
+}
+.overview-tiles dd {
+  margin: 0;
+  color: var(--editor-ink);
+  font: 700 1.05rem var(--font-display);
+  line-height: 1.1;
+}
+
+/* The figures that are worth having and not worth a tile. A line of prose
+   rather than a fourth grid: three grids of equal weight would say these
+   matter as much as the curve and the Counters, and they do not. */
+.overview-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  margin: 0;
+  color: var(--editor-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.overview-footer b {
+  color: var(--editor-ink);
+  font: 700 0.78rem var(--font-mono);
+}

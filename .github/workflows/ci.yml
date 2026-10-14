@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One job per kind of failure, so a red check names the problem before anyone
+# opens the log. `pnpm verify` remains the single local command.
+jobs:
+  static:
+    name: format + lint + typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+
+  test:
+    name: unit + scenario tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  provenance:
+    name: deck provenance + clause coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm decks:provenance:check
+      - run: pnpm decks:legality:check
+      - run: pnpm coverage:clauses:check
+
+  browser:
+    name: browser boundary + replay parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm browser:check
+      - run: pnpm browser:parity
+      # A rules change that invalidates the recorded corpus reports itself here,
+      # with the command that refreshes it, instead of surfacing as a skipped
+      # parity test later.
+      - run: pnpm fixtures:check
+
+  e2e:
+    name: playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # `--no-art` skips ~600 image fetches and falls back to the drawn CSS card
+      # faces, which is what the suite asserts on. The two tests that check the
+      # art path itself are tagged `@art` and excluded here; run
+      # `pnpm web:e2e` locally to cover them.
+      - run: pnpm web:e2e:ci
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  python:
+    name: ml sidecar (ruff + mypy)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml/python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # Lint only, so the job does not pull ~1 GB of torch wheels: the mypy
+      # config falls back to `Any` for the RL stack when it is absent, which is
+      # what it does with the untyped stack installed anyway.
+      - run: uvx ruff@0.14.4 format --check .
+      - run: uvx ruff@0.14.4 check .
+      - run: uvx mypy@1.18.2 .

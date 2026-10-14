@@ -1,0 +1,15 @@
+# The weakest quarter of the 38 decks the control trained on: the 10 with
+# the lowest win rate against the rules agents for distill-ppo/best, from
+# checkpoints/distill-eval (the web-final-2 seeds, which no later comparison
+# plays). Fixed in advance so that no arm's own games
+# choose the decks it is scored on.
+(Blue) Rebecca - Official Feature Deck
+(Purple) Charlotte Katakuri - Starter Deck 34
+(Purple) Monkey.D.Luffy - Starter Deck 18
+(Purple/Black) Monkey.D.Luffy - Starter Deck 26
+(Yellow) Monkey.D.Luffy - Starter Deck 29
+(Black) Marshall.D.Teach - Starter Deck 27
+(Green/Black) Brook - Official Feature Deck
+(Red/Blue) Lucy - Official Feature Deck
+(Green/Blue) Monkey.D.Luffy - Official Feature Deck
+(Purple) Enel - 1st Place EU Championship 26-27 S1

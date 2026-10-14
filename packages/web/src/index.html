@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#05080c" />
+    <link rel="icon" href="__APP_ICON__" />
+    <title>Open OPTCG</title>
+    <style>
+      __APP_CSS__
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <!-- The board hub's cell shape, for CSS `clip-path: url(#hub-hex)`.
+             It is the brand mark's own outline (see #brand-hex-clip below)
+             normalized to the unit square, so the cells of the cluster carry
+             the same rounded corners as the mark standing among them -- a
+             plain CSS `polygon()` hexagon cannot round a corner, and beside
+             the mark its points read as a different shape.
+
+             The numbers are the mark's path divided through by its bounding
+             box (166.28 x 192), which is why they land on sixteenths and
+             thirty-seconds. `objectBoundingBox` units stretch with the
+             element, and a cell's box has the mark's own 0.866 aspect, so the
+             corners stay round rather than oval. -->
+        <clipPath id="hub-hex" clipPathUnits="objectBoundingBox">
+          <path
+            d="M1,0.3125 Q1,0.25 0.9375,0.21875 L0.5625,0.03125 Q0.5,0 0.4375,0.03125 L0.0625,0.21875 Q0,0.25 0,0.3125 L0,0.6875 Q0,0.75 0.0625,0.78125 L0.4375,0.96875 Q0.5,1 0.5625,0.96875 L0.9375,0.78125 Q1,0.75 1,0.6875 Z"
+          />
+        </clipPath>
+      </defs>
+      <symbol id="brand-hex" viewBox="80 58 180 204">
+        <defs>
+          <clipPath id="brand-hex-clip">
+            <path
+              d="M253.14,124 Q253.14,112 242.75,106 L180.39,70 Q170,64 159.61,70 L97.25,106 Q86.86,112 86.86,124 L86.86,196 Q86.86,208 97.25,214 L159.61,250 Q170,256 180.39,250 L242.75,214 Q253.14,208 253.14,196 Z"
+            />
+          </clipPath>
+        </defs>
+        <g clip-path="url(#brand-hex-clip)">
+          <polygon
+            points="253.14,112 170,64 170,140 187.32,150"
+            fill="#c13b34"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+          <polygon
+            points="170,64 86.86,112 152.68,150 170,140"
+            fill="#efb93b"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+          <polygon
+            points="86.86,112 86.86,208 152.68,170 152.68,150"
+            fill="#2a2a2e"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+          <polygon
+            points="86.86,208 170,256 170,180 152.68,170"
+            fill="#7c4a9e"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+          <polygon
+            points="170,256 253.14,208 187.32,170 170,180"
+            fill="#2e6ca6"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+          <polygon
+            points="253.14,208 253.14,112 187.32,150 187.32,170"
+            fill="#2f8f5c"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M187.32,154 Q187.32,150 183.86,148 L173.46,142 Q170,140 166.54,142 L156.14,148 Q152.68,150 152.68,154 L152.68,166 Q152.68,170 156.14,172 L166.54,178 Q170,180 173.46,178 L183.86,172 Q187.32,170 187.32,166 Z"
+            fill="#faf8f3"
+            stroke="#ffffff"
+            stroke-width="3"
+            stroke-linejoin="round"
+          />
+        </g>
+        <path
+          d="M253.14,124 Q253.14,112 242.75,106 L180.39,70 Q170,64 159.61,70 L97.25,106 Q86.86,112 86.86,124 L86.86,196 Q86.86,208 97.25,214 L159.61,250 Q170,256 180.39,250 L242.75,214 Q253.14,208 253.14,196 Z"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="4"
+        />
+      </symbol>
+    </svg>
+    <div id="app"></div>
+    <script>
+      __APP_JS__;
+    </script>
+  </body>
+</html>

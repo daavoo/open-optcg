@@ -1,0 +1,10 @@
+# Everything, by default.
+*                                   @daavoo
+
+# The rules kernel and the card data it reads: a wrong change here is a game
+# that misresolves a card, which is the one failure this project refuses.
+/packages/engine-core/              @daavoo
+/packages/cards/src/generated*.ts   @daavoo
+/packages/decks/src/generated.ts    @daavoo
+/tools/audit-cards/                 @daavoo
+/tools/fetch-reference/             @daavoo

@@ -1,0 +1,1596 @@
+/* ============================================================================
+   OVERLAYS & NOTICES
+   ========================================================================= */
+.decision-modal {
+  position: fixed;
+  z-index: 30;
+  top: 50%;
+  left: 50%;
+  width: min(50rem, calc(100vw - 2rem));
+  max-height: min(33rem, calc(100vh - 5rem));
+  padding: clamp(1.3rem, 3vw, 2.2rem);
+  overflow: auto;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--editor-border);
+  border-radius: 14px;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  box-shadow:
+    0 0 0 100vmax rgba(20, 17, 12, 0.55),
+    var(--lift-sealed);
+}
+/* Every modal closes the same way: one X in its corner. A decision the game is
+   still waiting on comes back through the "Review choice" button. */
+.choice-modal-close {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  float: right;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-field);
+  color: var(--editor-muted);
+  cursor: pointer;
+}
+.choice-modal-close:hover {
+  border-color: var(--ember);
+  color: var(--editor-ink);
+}
+.waiting-modal .choice-modal-close {
+  position: absolute;
+  top: clamp(1.3rem, 3vw, 2.2rem);
+  right: clamp(1.3rem, 3vw, 2.2rem);
+}
+.choice-modal-close svg,
+.review-choice-button svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.review-choice-button {
+  position: fixed;
+  z-index: 24;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ember-bright);
+  border-radius: 7px;
+  background: #181719;
+  box-shadow: var(--lift-lifted);
+  color: var(--parchment);
+  font: 700 0.72rem var(--font-display);
+  cursor: pointer;
+}
+/* Sealed like a captain's order. */
+.decision-modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, transparent, var(--ember), transparent);
+}
+.decision-modal .actions-heading {
+  justify-content: center;
+  border: 0;
+  text-align: center;
+}
+.decision-modal .actions-heading h2 {
+  color: var(--editor-ink);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 800;
+}
+/* The clause the modal is resolving, under its title: the sentence a player
+   would read off the card, which for a Leader is nowhere else on screen. */
+.decision-modal .effect-clause {
+  margin: 0.4rem auto 0;
+  max-width: 46rem;
+  color: var(--editor-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: center;
+}
+.decision-modal .effect-clause b {
+  margin-right: 0.35rem;
+  color: var(--ember-deep);
+  font-weight: 800;
+}
+/* The choice and the way to read it: one grid cell holding the action button
+   with the inspector pinned into its corner. Sibling rather than nested --
+   a button inside a button is not markup a browser will honour. */
+.action-choice-cell {
+  position: relative;
+  display: flex;
+}
+.action-choice-cell > .action-button {
+  flex: 1;
+  width: 100%;
+}
+.choice-inspect {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 1px solid var(--editor-line);
+  border-radius: 50%;
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  cursor: pointer;
+}
+.choice-inspect:hover,
+.choice-inspect:focus-visible {
+  border-color: var(--ember);
+  color: var(--ember-deep);
+}
+.choice-inspect i {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.decision-modal .effect-step {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ember) 45%, var(--editor-line));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--ember) 8%, var(--editor-field));
+  text-align: left;
+}
+.decision-modal .effect-step .eyebrow {
+  margin: 0 0 0.3rem;
+  color: var(--ember-deep);
+}
+.decision-modal .effect-step strong,
+.decision-modal .effect-step span {
+  display: block;
+}
+.decision-modal .effect-step strong {
+  color: var(--editor-ink);
+  font-size: 0.9rem;
+}
+.decision-modal .effect-step span {
+  margin-top: 0.25rem;
+  color: var(--editor-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+/* The looked-at strip. Scrolls sideways rather than wrapping: the cards are in
+   the order the deck held them, and a row that reflows loses that reading. */
+.decision-modal .look-notice {
+  /* The modal's X floats right, and this is the first thing under it: without
+     the clear, the strip's border would run behind the button. */
+  clear: right;
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--editor-line);
+  border-radius: 7px;
+  background: var(--editor-field);
+  text-align: left;
+}
+.decision-modal .look-notice .eyebrow {
+  margin: 0 0 0.5rem;
+}
+.decision-modal .look-notice-cards {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+.decision-modal .look-notice-cards .game-card {
+  flex: 0 0 auto;
+  height: clamp(5rem, 18vh, 8rem);
+  width: auto;
+  max-height: none;
+  pointer-events: none;
+}
+.look-notice-modal #dismiss-look {
+  margin-top: 1.2rem;
+  width: 100%;
+}
+/* "Place the rest at the bottom of your deck in any order": the cards laid out
+   in the order they will be placed, left first, with an arrow pair per card.
+   One row that scrolls rather than a grid -- the order is the whole point, and
+   a wrapped second line would not read as one. */
+.decision-modal .bottom-order-note {
+  margin: 1rem 0 0.6rem;
+  color: var(--editor-muted);
+  font-size: 0.82rem;
+}
+.decision-modal .bottom-order {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0 0 0.25rem;
+  overflow-x: auto;
+  list-style: none;
+}
+.decision-modal .bottom-order-slot {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+}
+.decision-modal .bottom-order .game-card {
+  flex: 0 0 auto;
+  height: clamp(5rem, 18vh, 8rem);
+  width: auto;
+  max-height: none;
+  pointer-events: none;
+}
+.decision-modal .bottom-order-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--editor-muted);
+  font-size: 0.78rem;
+}
+.decision-modal .bottom-order-move {
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  cursor: pointer;
+  padding: 0.05rem 0.4rem;
+}
+.decision-modal .bottom-order-move:hover:not(:disabled) {
+  border-color: var(--ember);
+}
+.decision-modal .bottom-order-move:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+/* The panel's one button is the whole decision, so it spans the surface rather
+   than sitting in the left half of the two-column action grid. */
+.decision-modal .action-list.bottom-order-confirm {
+  grid-template-columns: 1fr;
+}
+.decision-modal .action-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+}
+.decision-modal .action-button {
+  min-height: 4.2rem;
+  align-content: center;
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  text-align: center;
+}
+.decision-modal .action-button:hover {
+  border-color: var(--ember);
+  background: var(--editor-paper);
+}
+.decision-modal .action-button span {
+  color: var(--editor-muted);
+}
+.decision-modal .action-button.secondary {
+  border-color: var(--editor-border);
+  background: transparent;
+  color: var(--editor-muted);
+}
+.don-quantity {
+  width: fit-content;
+  display: grid;
+  grid-template-columns: 2.5rem 3rem 2.5rem;
+  align-items: center;
+  margin: 1.2rem auto 0;
+  border: 1px solid var(--editor-border);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--editor-field);
+}
+.don-quantity button {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--editor-ink);
+  cursor: pointer;
+}
+.don-quantity button:hover:not(:disabled) {
+  background: var(--editor-paper);
+  color: var(--ember-deep);
+}
+.don-quantity button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.don-quantity output {
+  display: grid;
+  align-self: stretch;
+  place-items: center;
+  border-right: 1px solid var(--editor-border);
+  border-left: 1px solid var(--editor-border);
+  color: var(--editor-ink);
+  font: 700 1rem var(--font-display);
+}
+/* The DON!! payment composer: the pools the DON!! come out of, and what the
+   field looks like once they have. One surface, because which DON!! go back
+   and how many is one decision to the player even though the engine has to ask
+   it in two. There is no total control: the sum of the pool steppers is the
+   payment, and a stepper for the total beside steppers for its parts was two
+   ways to say one number. */
+/* Already centred as a block by `.don-quantity`; in a pool row it is one item
+   among others, so it gives up the margin that centring wants. */
+.don-pool-row .don-quantity {
+  margin: 0;
+}
+.don-pool-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.don-pool-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 8px;
+  background: var(--editor-field);
+}
+/* A pool this payment is actually taking from, so the split reads at a glance
+   rather than by comparing numbers in three steppers. */
+.don-pool-row.taking {
+  border-color: color-mix(in srgb, var(--ember) 55%, var(--editor-border));
+  background: color-mix(in srgb, var(--ember) 8%, var(--editor-field));
+}
+.don-pool-name {
+  display: grid;
+  gap: 0.1rem;
+  text-align: left;
+}
+.don-pool-name b {
+  color: var(--editor-ink);
+  font: 700 0.86rem var(--font-body);
+}
+/* What taking from this pool costs, which is the whole reason the choice is
+   the player's: a rested DON!! is already spent, an active one is not, and one
+   given to a card is 1000 power off that card. */
+.don-pool-name small {
+  color: var(--editor-muted);
+  font: 500 0.72rem var(--font-body);
+}
+.don-return-summary {
+  margin: 0.9rem 0 0;
+  color: var(--editor-muted);
+  font: 500 0.78rem var(--font-body);
+  text-align: center;
+}
+.don-return-summary b {
+  color: var(--editor-ink);
+  font: 700 0.78rem var(--font-body);
+}
+/* The one thing to press, so it takes the whole width whatever column count
+   the list around it has, and the ember the board's other commitments use. */
+.action-button.don-return-confirm {
+  grid-column: 1 / -1;
+  justify-items: center;
+  border-color: var(--ember);
+  background: color-mix(in srgb, var(--ember) 16%, transparent);
+  text-align: center;
+}
+.action-button.don-return-confirm:disabled {
+  border-color: var(--editor-border);
+  background: transparent;
+  color: var(--editor-muted);
+  cursor: not-allowed;
+}
+
+.don-quantity svg {
+  width: 1rem;
+  height: 1rem;
+}
+/* Aiming at the board hands the table back to the player: the panel drops to
+   a corner bar, so every lit card stays visible and clickable. It sits above
+   the nameplate, on the side away from the end-turn dial. */
+.decision-modal.targeting-bar {
+  top: auto;
+  bottom: 3.3rem;
+  left: 0.9rem;
+  width: min(20rem, calc(100vw - 1.8rem));
+  max-height: none;
+  padding: 0.8rem 0.95rem;
+  transform: none;
+  box-shadow: var(--lift-lifted);
+}
+.decision-modal.targeting-bar .actions-heading {
+  justify-content: space-between;
+  padding-bottom: 0.55rem;
+  text-align: left;
+}
+.decision-modal.targeting-bar .actions-heading h2 {
+  font-size: 1rem;
+}
+.decision-modal.targeting-bar .context-copy {
+  margin-top: 0.55rem;
+}
+.decision-modal.targeting-bar .action-list {
+  grid-template-columns: 1fr;
+  margin-top: 0.6rem;
+}
+.decision-modal.targeting-bar .action-button {
+  min-height: 0;
+  padding: 0.5rem;
+}
+/* Step two for an offer the board cannot ask -- a Main activation whose
+   options are not all board cards. It is narrower than the card panel it came
+   from: no art, no stats, no printed text, only the options. */
+.card-action-modal.target-picker {
+  width: min(52rem, calc(100vw - 1.5rem));
+  max-height: min(40rem, calc(100vh - 2rem));
+  padding: clamp(1rem, 2vw, 1.6rem);
+}
+.decision-modal .action-list.target-picker-list {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  margin-top: 1rem;
+}
+.decision-modal .action-list.target-picker-list .action-button {
+  text-align: left;
+}
+/* Cancel is the way back to the card, not one more thing to aim at, so it
+   takes the full width beneath the faces rather than a cell among them. */
+.decision-modal .action-list.target-picker-list .picker-back {
+  grid-column: 1 / -1;
+  min-height: 3rem;
+  text-align: center;
+}
+
+/* Three columns for what the card *is* -- its art, its printed numbers, its
+   printed text -- with everything that is only true right now inside the column
+   it amends: the power breakdown in the power tile, the keywords another card
+   lent it under the text that does not print them. Nothing the modal exists to
+   offer opens below its own fold. */
+.card-action-overview {
+  display: grid;
+  grid-template-columns: auto minmax(7rem, 0.62fr) minmax(0, 1.6fr);
+  gap: clamp(0.7rem, 1.8vw, 1.2rem);
+  align-items: start;
+  margin-top: 0.6rem;
+  text-align: left;
+}
+/* The in-match panel is the card and its offers.
+
+   The card is drawn big enough to be read, so the tiles and the printed text
+   beside it said the card twice; the deck editor's card dialog keeps them,
+   because there the face is the only copy of the numbers. What the face
+   cannot say is where a number the engine disagrees with came from, so a
+   tile stays only when its value has moved -- a cost an effect shifted, a
+   power with a breakdown -- and stacks above the offers. What another card
+   lent it (the status badges) is the same kind of news and stays too. */
+.card-action-modal .card-action-overview {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.card-action-modal .selection-card-preview {
+  grid-row: 1 / 3;
+}
+.card-action-modal .card-action-stats {
+  display: none;
+  grid-column: 2;
+}
+.card-action-modal .card-action-stats:has(.raised, .lowered, .power-breakdown) {
+  display: grid;
+}
+.card-action-modal .card-action-text {
+  grid-column: 2;
+  grid-row: 2;
+}
+.card-action-modal .card-action-stats .rule-types,
+.card-action-modal
+  .rule-stats
+  > span:not(.raised, .lowered, :has(.power-breakdown)),
+.card-action-modal .card-action-text > .card-text,
+.card-action-modal .card-action-text > h3 {
+  display: none;
+}
+.card-action-stats {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+/* Stacked rows, not the detail dialog's three-across strip: this is a narrow
+   column, and the type line joins the same stack below the numbers. */
+.card-action-stats .rule-stats {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* The type line is a fourth row of the same stack, so it wears the same box
+   the three numbers do rather than a label and a wrap beside it. */
+.card-action-stats .rule-types {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  margin-top: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 7px;
+  background: var(--editor-field);
+}
+/* A pill on a field of the same colour is invisible; the paper behind it is
+   what the other three rows put their numbers on. Named through the modal so it
+   outranks the light-surface `.decision-modal .rule-types b` further down. */
+.card-action-modal .card-action-stats .rule-types b {
+  background: var(--editor-paper);
+}
+/* The text column is the one that grows without bound -- a Leader can offer
+   eight actions -- so it is the one that scrolls. The card, the numbers and the
+   printed text keep the size they have at any count, and only the button list
+   under them runs out of room. */
+.card-action-text {
+  align-self: stretch;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+.card-action-text p {
+  margin: 0 0 0.5rem;
+}
+.card-action-text .action-list {
+  min-height: 0;
+  margin-top: 0.9rem;
+  overflow-y: auto;
+  /* Room for the scrollbar, so it never sits on top of a button's edge. */
+  padding-right: 0.25rem;
+}
+/* The card is printed right there beside the title, so the title does not need
+   the display size a bare decision prompt does: it wears the eyebrow's letter-
+   spaced mono, which is the label this line used to carry above it.
+   Three tracks, so it centres on the modal rather than on what is left of the
+   row after the close button -- the empty first track is the button's mirror. */
+.card-action-modal .actions-heading {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+.card-action-modal .actions-heading h2 {
+  grid-column: 2;
+  text-align: center;
+  color: var(--ember);
+  font: 500 0.68rem/1.2 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.card-action-modal .actions-heading button {
+  grid-column: 3;
+  justify-self: end;
+}
+/* The card is the thing being looked at, so it gets as much of the modal as the
+   viewport will give it rather than sitting in a frame of margin. */
+.selection-card-preview .game-card {
+  height: clamp(14rem, 68vh, 34rem);
+  width: auto;
+  max-height: none;
+  pointer-events: none;
+}
+/* Two rows -- the title, then the card -- and the modal itself does not
+   scroll: the action list inside the third column is what absorbs a card with
+   more to offer than fits. `minmax(0, 1fr)` is what lets that column be shorter
+   than its content and hand the overflow down. */
+.card-action-modal:not(.target-picker):not(.targeting-bar) {
+  /* Wide enough for the card and a column of offers, and no wider: at the
+     three-column width the offers column was mostly empty paper. */
+  width: min(50rem, calc(100vw - 1.5rem));
+  max-height: min(46rem, calc(100vh - 2rem));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: clamp(0.9rem, 1.8vw, 1.4rem);
+  overflow: hidden;
+}
+.card-action-modal:not(.target-picker):not(.targeting-bar)
+  .card-action-overview {
+  min-height: 0;
+}
+/* The numbers column can outrun the card beside it too -- a moved cost and a
+   long power breakdown -- and it scrolls rather than stretching the modal. */
+.card-action-modal .card-action-stats {
+  align-self: stretch;
+  min-height: 0;
+  overflow-y: auto;
+}
+.card-action-modal .context-actions {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+.card-action-modal .context-actions .action-button {
+  min-height: 3.2rem;
+  align-content: start;
+  text-align: left;
+}
+/* A button that is only its label: no eyebrow above it, because the eyebrow
+   said the same words the label now does. Centred and a line taller, so a
+   short label does not read as a fragment of a row that failed to fill. */
+.card-action-modal .context-actions .action-button.context-action-plain {
+  min-height: 3.4rem;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+.card-action-modal .context-actions .action-button.context-action-plain b {
+  font-size: 0.85rem;
+}
+/* Playing the card is the affirmative move of this modal, so it wears the
+   green the mulligan keep and the effect "do it" option already wear -- the
+   same colour meaning the same thing in a third place, rather than a new one
+   meaning it here.
+
+   Attack takes it too. On a phone the offers sit directly under the printed
+   numbers, which are boxes of the same paper with a label and a value in them,
+   and a plain offer button among them read as a fourth read-out rather than as
+   the turn's most committing move. The green is what tells the one thing you
+   can press from the things you are being told. */
+.card-action-modal .context-actions .action-button.play-card,
+.card-action-modal .context-actions .action-button.target-group.attack {
+  border-color: color-mix(in srgb, var(--state-playable) 55%, #2f7a55);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--state-playable) 30%, var(--editor-field)),
+    var(--editor-field) 46%
+  );
+}
+.card-action-modal .context-actions .action-button.play-card:hover,
+.card-action-modal .context-actions .action-button.play-card:focus-visible,
+.card-action-modal .context-actions .action-button.target-group.attack:hover,
+.card-action-modal
+  .context-actions
+  .action-button.target-group.attack:focus-visible {
+  border-color: color-mix(in srgb, var(--state-playable) 75%, #2f7a55);
+  background: color-mix(in srgb, var(--state-playable) 30%, white);
+}
+/* Kept only for an action that names a *different* card -- the selected card's
+   own actions drop the thumbnail rather than repeat the preview above. */
+.card-action-modal .target-card-choice {
+  min-height: 7.5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 0.25rem 0.7rem;
+  align-items: center;
+  text-align: left;
+}
+.card-action-modal .target-card-choice .game-card {
+  height: 6rem;
+  width: auto;
+  max-height: none;
+  grid-row: 1 / -1;
+  pointer-events: none;
+}
+/* The selected card's full rule text, on the modal's light paper — the same
+   override the card detail dialog already applies. */
+.decision-modal .rule-card,
+.decision-modal .rule-card h2,
+.decision-modal .rule-stats > span > b {
+  color: var(--editor-ink);
+}
+/* ...except a cost an effect has moved, which is the one number on the strip
+   that is not the printed one and has to keep saying so on paper. */
+.decision-modal .rule-stats > .raised > b {
+  color: var(--kw-alert);
+}
+.decision-modal .rule-stats > .lowered > b {
+  color: color-mix(in srgb, var(--kw-ability) 72%, #222);
+}
+.decision-modal .rule-stats > span > small {
+  color: var(--editor-muted);
+}
+.decision-modal .rule-card .eyebrow,
+.decision-modal .rule-card h3 {
+  color: color-mix(in srgb, var(--flag) 78%, #222);
+}
+.decision-modal .rule-card p,
+.decision-modal .rule-stats > span,
+.decision-modal .card-text {
+  color: var(--editor-muted);
+}
+.decision-modal .rule-stats > span {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+}
+/* The type row was missed when this surface went light: its label and its
+   pills still carried the board's fog-on-dark colours, which on paper is grey
+   on cream -- the row was there and could not be read. Same three roles the
+   card detail dialog gives it. */
+.decision-modal .rule-types small {
+  color: var(--editor-muted);
+}
+.decision-modal .rule-types > span,
+.decision-modal .rule-types b {
+  color: var(--editor-ink);
+}
+.decision-modal .rule-types b {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+}
+/* The power breakdown was still dressed for the dark board: a near-black fill
+   and fog-grey rows, which on paper is grey on cream -- the one row that says
+   where the card's extra power came from, unreadable. */
+.decision-modal .power-breakdown {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+}
+.decision-modal .power-breakdown > div,
+.decision-modal .power-breakdown small {
+  color: var(--editor-muted);
+}
+.decision-modal .power-breakdown b {
+  color: var(--editor-ink);
+}
+.decision-modal .power-breakdown .positive b {
+  color: var(--ember-deep);
+}
+.decision-modal .context-copy {
+  color: var(--editor-muted);
+}
+/* "Opponent thinking", match results, and the opponent's action recap all
+   render inside the same light dialog. */
+.decision-modal .waiting {
+  color: var(--editor-muted);
+}
+.decision-modal .waiting h2,
+.decision-modal .result h2,
+.decision-modal .opponent-action-content h2 {
+  color: var(--editor-ink);
+}
+.decision-modal .action-list.card-choice-list {
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+}
+.decision-modal .action-button.action-card-choice {
+  min-height: 13rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+.decision-modal .action-card-choice .game-card {
+  height: clamp(6rem, 22vh, 9.5rem);
+  width: auto;
+  max-height: none;
+  pointer-events: none;
+}
+.decision-modal .action-card-choice > b {
+  font-size: 0.72rem;
+}
+.decision-modal .action-button.mulligan-keep,
+.decision-modal .action-button.effect-add {
+  border-color: color-mix(in srgb, var(--state-playable) 55%, #2f7a55);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--state-playable) 30%, var(--editor-field)),
+    var(--editor-field) 46%
+  );
+}
+.decision-modal .action-button.mulligan-keep:hover,
+.decision-modal .action-button.effect-add:hover,
+.decision-modal .action-button.mulligan-keep:focus-visible,
+.decision-modal .action-button.effect-add:focus-visible {
+  border-color: color-mix(in srgb, var(--state-playable) 75%, #2f7a55);
+  background: color-mix(in srgb, var(--state-playable) 30%, white);
+}
+.decision-modal .action-button.mulligan-redraw,
+.decision-modal .action-button.effect-pass,
+.decision-modal .action-button.trigger-pass {
+  border-color: color-mix(in srgb, var(--state-damage) 55%, #a5352c);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--state-damage) 28%, var(--editor-field)),
+    var(--editor-field) 46%
+  );
+}
+.decision-modal .action-button.mulligan-redraw:hover,
+.decision-modal .action-button.effect-pass:hover,
+.decision-modal .action-button.mulligan-redraw:focus-visible,
+.decision-modal .action-button.effect-pass:focus-visible {
+  border-color: color-mix(in srgb, var(--state-damage) 75%, #a5352c);
+  background: color-mix(in srgb, var(--state-damage) 30%, white);
+}
+.decision-modal .action-button.trigger-pass,
+.decision-modal .action-button.pass {
+  grid-column: 1 / -1;
+}
+.decision-modal .action-button.counter-extra {
+  border-color: var(--editor-border);
+  background: var(--editor-canvas);
+  color: color-mix(in srgb, var(--editor-ink) 55%, transparent);
+  filter: saturate(0.5);
+}
+.decision-modal .action-button.counter-extra:hover,
+.decision-modal .action-button.counter-extra:focus-visible {
+  border-color: var(--flag);
+  color: var(--editor-ink);
+  filter: saturate(0.85);
+}
+.decision-modal .action-button.counter-resolve-ready {
+  border-color: color-mix(in srgb, var(--state-playable) 70%, #2f7a55);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--state-playable) 34%, var(--editor-field)),
+    var(--editor-field) 46%,
+    color-mix(in srgb, var(--state-playable) 22%, var(--editor-field))
+  );
+}
+.mulligan-hand-preview {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: clamp(0.25rem, 1vw, 0.7rem);
+  margin-top: 1.3rem;
+}
+.mulligan-hand-preview .game-card {
+  height: clamp(6rem, 22vh, 9.5rem);
+  width: auto;
+  max-height: none;
+  pointer-events: none;
+}
+/* The printed text belongs to the phone's column of cards; a desktop reads
+   the five faces themselves, and opens one for its text. */
+.mulligan-card-text {
+  display: none;
+}
+.mulligan-card-inspect {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-snap);
+}
+.mulligan-card-inspect:hover,
+.mulligan-card-inspect:focus-visible {
+  transform: translateY(-4px);
+}
+
+.trigger-context {
+  margin-top: 0.9rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(199, 106, 56, 0.35);
+  border-radius: 10px;
+  background: rgba(199, 106, 56, 0.07);
+}
+.trigger-context .eyebrow {
+  margin-bottom: 0.35rem;
+}
+.trigger-context > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.trigger-context strong {
+  color: #fff;
+  font: 700 1rem var(--font-display);
+}
+.trigger-context span {
+  color: var(--fog);
+  font: 0.62rem var(--font-mono);
+}
+.trigger-context > p:last-child {
+  margin: 0.5rem 0 0;
+  color: var(--mist);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.battle-context {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-block: 1px solid rgba(255, 255, 255, 0.14);
+}
+/* Each side is one stack -- whose it is, which card, how much power -- because
+   holding the number in its own column put it at the far edge of the panel,
+   nearer the other side's name than its own. */
+.battle-context > div {
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.battle-context > div:last-child {
+  text-align: right;
+}
+.battle-context span,
+.battle-context small {
+  color: var(--fog);
+  font: 0.58rem var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.battle-context strong {
+  overflow: hidden;
+  font: 700 0.9rem var(--font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The battle context only ever renders inside the decision modal's light
+   paper, where the board's near-white number vanished entirely. Ink is the
+   same role at the contrast that surface needs. */
+.battle-context b {
+  color: var(--editor-ink);
+  font: 600 1.15rem var(--font-mono);
+}
+.battle-context i {
+  color: var(--state-damage);
+}
+.opponent-counter-cards {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+.opponent-counter-cards > span {
+  align-self: center;
+  width: 5.2rem;
+  flex: 0 0 5.2rem;
+  color: var(--fog);
+  font: 0.6rem/1.45 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.counter-chip {
+  width: 17rem;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 2.65rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.35rem;
+  border: 1px solid rgba(140, 201, 255, 0.42);
+  border-radius: 6px;
+  background: rgba(38, 70, 96, 0.42);
+}
+.counter-chip-art {
+  width: 2.65rem;
+  aspect-ratio: 0.71;
+  border-radius: 4px;
+  background: var(--art-card-back) center / cover no-repeat;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.48);
+}
+.counter-chip.has-art .counter-chip-art {
+  background-image: var(--counter-art);
+}
+.counter-chip-label {
+  min-width: 0;
+  display: grid;
+  gap: 0.18rem;
+}
+.counter-chip-label strong {
+  overflow: hidden;
+  color: #fff;
+  font: 700 0.78rem/1.2 var(--font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.counter-chip-label small {
+  color: var(--fog);
+  font: 0.58rem var(--font-mono);
+  letter-spacing: 0.08em;
+}
+.counter-chip > b {
+  min-width: 2.6rem;
+  padding: 0.28rem 0.35rem;
+  border-radius: 4px;
+  background: #dcefff;
+  color: #0b1822;
+  font: 800 0.82rem var(--font-mono);
+  text-align: center;
+}
+
+.battle-notice {
+  position: fixed;
+  z-index: 40;
+  top: 3.9rem;
+  left: 50%;
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 0.7rem 1.1rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.8rem;
+  transform: translateX(-50%);
+  border: 1px solid var(--rigging);
+  border-left: 4px solid var(--ember);
+  border-radius: 9px;
+  background: rgba(11, 11, 12, 0.96);
+  box-shadow: var(--lift-lifted);
+  animation: gl-notice-in 180ms ease-out;
+}
+.battle-notice #dismiss-battle-notice {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fog);
+}
+.battle-notice #dismiss-battle-notice:hover,
+.battle-notice #dismiss-battle-notice:focus-visible {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.battle-notice #dismiss-battle-notice svg {
+  width: 1rem;
+  height: 1rem;
+}
+.battle-notice > span {
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--ember-bright);
+  font: 0.62rem var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.battle-notice strong {
+  padding-right: 1.8rem;
+  color: #fff;
+  font: 700 0.92rem var(--font-display);
+}
+.battle-notice small {
+  color: var(--fog);
+  font: 0.6rem var(--font-mono);
+}
+.battle-notice .opponent-counter-cards {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+}
+.battle-notice.defended,
+.battle-notice.blocked {
+  border-left-color: var(--blue);
+}
+.battle-notice.defended > span,
+.battle-notice.blocked > span {
+  color: var(--ember-bright);
+}
+.battle-notice.character-ko,
+.battle-notice.damage,
+.battle-notice.game-win {
+  border-left-color: var(--red);
+}
+.battle-notice.character-ko > span,
+.battle-notice.damage > span,
+.battle-notice.game-win > span {
+  color: var(--state-damage);
+}
+
+.opponent-action-modal {
+  /* One measure sizes every face in the report, and the two row shapes keep
+     their columns from it, so a wider phone card cannot pull the pair and the
+     single out of line with each other. */
+  --opponent-card-w: 5rem;
+  width: min(28rem, calc(100vw - 2rem));
+  /* The panel's own body scrolls instead, so that OK below it is always on
+     screen: a five-step turn used to push the only way out of the panel under
+     the fold. */
+  display: grid;
+  /* Named, not left to `auto`: an auto row is sized by its content, so the
+     panel clipped its own overflow instead of handing it to the body below. */
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+.opponent-action-content {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  justify-items: center;
+  text-align: center;
+}
+.opponent-action-body {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+.opponent-action-footer {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--editor-border);
+}
+.opponent-action-content h2 {
+  margin: 0.2rem 0 0.8rem;
+  color: #fff;
+  font: 800 1.8rem var(--font-display);
+}
+/* Every step of the opponent's turn, in the order it happened, one row each.
+   A row is a card and what happened to it, so nothing is said twice: the strip
+   of faces with a written report under it named every card once as a picture
+   and again in a sentence. */
+.opponent-action-steps {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 0.2rem 0 0.9rem;
+}
+/* A step with a cause and a subject, an attack included: the card that acted on
+   the left, the card it acted on on the right, and the mark, the verb and the
+   arrow between them. */
+.opponent-action-pair {
+  display: grid;
+  grid-template-columns:
+    var(--opponent-card-w) minmax(4.5rem, 7rem)
+    var(--opponent-card-w);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+/* A step with one card: the same first column, and the mark and the verb across
+   the two the pair spends on its arrow and its second face -- so the cards of
+   every row line up down one edge whichever shape the row is. */
+.opponent-action-single {
+  display: grid;
+  grid-template-columns: var(--opponent-card-w) minmax(5rem, 12.5rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+/* The verbs of one card's steps, stacked beside its single face. A clause that
+   acts three times through the same card -- a Leader's [Activate: Main] -- is
+   one face and three lines, not three faces. */
+.single-actions {
+  display: grid;
+  gap: 0.35rem;
+  align-content: center;
+}
+.single-action {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ember-deep);
+  text-align: left;
+}
+.single-action b {
+  font: 650 0.82rem/1.3 var(--font-display);
+}
+.pair-direction {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  color: var(--ember-deep);
+  text-align: center;
+}
+.pair-direction-mark {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ember) 22%, transparent);
+}
+.pair-direction-mark svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.pair-direction b {
+  font: 650 0.7rem/1.25 var(--font-display);
+}
+.pair-direction i {
+  font: 700 1.1rem var(--font-display);
+  font-style: normal;
+  line-height: 0.8;
+}
+/* Cards the opponent moved without showing: the same covers the written steps
+   use, stacked into the space a card face would have taken so the pair keeps
+   its three columns. */
+.opponent-cover-card .cover-stack {
+  display: grid;
+  place-items: center;
+  width: var(--opponent-card-w);
+  aspect-ratio: 0.71;
+}
+.opponent-cover-card .physical-card-back {
+  grid-area: 1 / 1;
+  width: calc(var(--opponent-card-w) * 0.64);
+  height: calc(var(--opponent-card-w) * 0.9);
+}
+.opponent-cover-card .physical-card-back:nth-of-type(2) {
+  transform: translate(0.28rem, -0.2rem) rotate(5deg);
+}
+.opponent-cover-card .physical-card-back:nth-of-type(3) {
+  transform: translate(0.56rem, -0.4rem) rotate(10deg);
+}
+.opponent-cover-card .physical-card-back:nth-of-type(4) {
+  transform: translate(0.84rem, -0.6rem) rotate(15deg);
+}
+.opponent-action-card {
+  flex: 0 0 var(--opponent-card-w);
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+.opponent-action-card .game-card {
+  width: var(--opponent-card-w);
+  height: auto;
+  max-height: none;
+  aspect-ratio: 0.71;
+  border-radius: 7px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.opponent-action-card .game-card:hover,
+.opponent-action-card .game-card:focus-visible {
+  border-color: var(--ember-bright);
+  outline: 2px solid color-mix(in srgb, var(--ember-bright) 65%, transparent);
+  outline-offset: 2px;
+}
+.opponent-action-card figcaption {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+.opponent-action-card figcaption span {
+  color: var(--editor-muted);
+  font: 0.5rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.opponent-action-card figcaption small {
+  color: var(--ember-bright);
+  font: 0.62rem var(--font-mono);
+}
+/* How many identical steps one row stands for, printed on the thing there is
+   more than one of. */
+.opponent-action-count {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.35rem;
+  display: grid;
+  place-items: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  background: var(--ember-deep);
+  color: #fff;
+  font: 700 0.7rem var(--font-mono);
+}
+.opponent-action-card .game-card,
+.opponent-cover-card .cover-stack {
+  position: relative;
+}
+.opponent-cover-card .opponent-action-count {
+  right: 0.35rem;
+  bottom: 0.6rem;
+}
+/* This notice renders on the light dialog, where the bright ember number
+   washes out. The deep ember is the same role at the contrast that surface
+   needs. */
+.decision-modal .opponent-action-card figcaption small {
+  color: var(--ember-deep);
+}
+/* A step with no card to draw beside: a mark and the few words that say it,
+   taking the width of a card row so its mark sits under theirs. */
+.notice-step {
+  width: min(100%, 18rem);
+  display: grid;
+  text-align: left;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--mist);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.notice-step-mark {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ember) 16%, transparent);
+  color: var(--ember-deep);
+}
+.notice-step-mark svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+/* Cards the opponent moved without showing: one cover each, overlapped the way
+   they sit in a hand, so two and five read as different amounts without a
+   number to count. Past six the pile stops growing and says how many. */
+.notice-covers {
+  display: flex;
+  align-items: center;
+  gap: 0.12rem;
+}
+.notice-covers .physical-card-back {
+  width: 0.95rem;
+  height: 1.34rem;
+  margin-right: -0.35rem;
+  padding: 1px;
+}
+.notice-covers .physical-card-back:last-of-type {
+  margin-right: 0;
+}
+.notice-covers b {
+  margin-left: 0.45rem;
+  color: var(--editor-muted);
+  font: 700 0.7rem var(--font-mono);
+}
+/* The opponent's colour, said here because this cover is in a dialog rather
+   than on their half of the board -- and it is the tint under the printed back,
+   which only shows if the back's anchor is cleared. */
+.physical-card-back.opponent-cover {
+  --back-tint: var(--mat-opp-tint);
+}
+.decision-modal .notice-step {
+  color: var(--editor-ink);
+}
+.opponent-action-content .primary {
+  min-width: 8rem;
+  margin-top: 1.1rem;
+}
+
+.result {
+  padding: 1.5rem 0;
+  text-align: center;
+}
+.result h2 {
+  margin: 0.2rem;
+  color: var(--parchment);
+  font: 800 2.2rem var(--font-display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   The hand, lifted off the table.
+
+   A phone's half is too short to hold a mat and a hand, and it was holding
+   both: the mat's cards came out a thumbnail tall and the hand a row of
+   slivers under them. Below 760px (responsive.css) the hand leaves the table
+   -- the mat takes the whole half -- and comes up as this sheet when asked
+   for, the way a player lifts their cards to read them. The button that asks
+   stands on the near edge and carries the count, and it lights when a card in
+   the hidden hand can be played, so the hand still says when it has a move.
+
+   Both are drawn at every width and shown only on a phone: on a desktop the
+   hand stands on the table and needs neither. The sheet reuses the card
+   dialog's backdrop and close button, and every card in it is the fan's own
+   `[data-card]` markup, so a tap selects it exactly as a click on the fan
+   does.
+   ------------------------------------------------------------------------ */
+.hand-toggle,
+.opponent-hand-count {
+  display: none;
+}
+/* On the seam at the left edge, opposite the hexagon cluster: the one strip
+   of a phone's board neither half is using, so the near edge goes back to the
+   mat. Compact -- the mark and the count -- so it clears the turn line that
+   reads along the same seam, centred. */
+.hand-toggle {
+  position: absolute;
+  z-index: 24;
+  top: 50%;
+  left: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
+  /* A touch bigger than the opponent's count opposite it: that one is a
+     read-out, this one is the only way to your hand, and a thumb has to find
+     it on the seam without covering the turn line beside it. */
+  padding: 0.5rem 0.8rem 0.5rem 0.7rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  background: #121214;
+  box-shadow: var(--lift-lifted);
+  color: var(--parchment);
+  font: 700 0.72rem var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.hand-toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.hand-toggle b {
+  min-width: 1.35rem;
+  padding: 0.12rem 0.38rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font: 600 0.74rem/1 var(--font-mono);
+  text-align: center;
+}
+/* The same light a playable card gets on the table (cards.css), on the button
+   that stands in for the hand. */
+.hand-toggle.hand-playable {
+  border-color: rgba(255, 255, 255, 0.85);
+  outline: 1.5px solid rgba(255, 255, 255, 0.85);
+  animation: gl-emit 1.7s ease-out infinite;
+}
+/* Their hand as a count, on the far edge where the fan of backs used to hang:
+   the number is all the fan ever said. */
+.opponent-hand-count {
+  position: absolute;
+  z-index: 8;
+  top: 0.4rem;
+  left: 0.6rem;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.2rem 0.5rem 0.2rem 0.4rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  background: rgba(14, 14, 16, 0.82);
+  color: var(--parchment);
+  font: 600 0.62rem/1 var(--font-mono);
+}
+.opponent-hand-count svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  opacity: 0.7;
+}
+/* The same pill, as the way into a hand that is face up: on a phone there is
+   no fan to read, so the count is what lifts it. It says so by being pressable
+   rather than by changing shape -- the number is still the thing it shows. */
+.opponent-hand-toggle {
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+.opponent-hand-toggle:hover,
+.opponent-hand-toggle:focus-visible {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+/* The sheet rises from the near edge and stops short of the top, so the
+   opponent's half stays in view behind it while the hand is read. */
+.hand-sheet-backdrop {
+  align-items: end;
+  padding: 0;
+}
+.hand-sheet {
+  --editor-paper: #fbf9f5;
+  --editor-field: #f3f0e9;
+  --editor-border: #d8d1c5;
+  --editor-ink: #221f1a;
+  --editor-muted: #6b6257;
+  position: relative;
+  width: 100%;
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  padding: 0.9rem 0.9rem 1.1rem;
+  border-top: 4px solid var(--flag);
+  border-radius: 14px 14px 0 0;
+  background: var(--editor-paper);
+  color: var(--editor-ink);
+  box-shadow: var(--lift-sealed);
+}
+.hand-sheet > header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 2.5rem 0.75rem 0;
+}
+.hand-sheet > header .eyebrow {
+  margin: 0;
+}
+.hand-sheet > header span,
+.hand-sheet-empty {
+  color: var(--editor-muted);
+  font: 0.72rem var(--font-mono);
+}
+.hand-sheet-empty {
+  margin: 0.5rem 0;
+}
+/* One row per card: the face on the left at two fifths of the width, its
+   printed text beside it. A face that shares the screen with four others is
+   too small to carry legible words, and the words are what the sheet is
+   opened for. */
+.hand-sheet-cards {
+  display: grid;
+  gap: 0.8rem;
+  /* The sheet scrolls, and a scroll box clips at its edge: room for the
+     card's frame and lift, which otherwise lose their top and left. */
+  padding: 0.3rem 0.25rem;
+}
+.hand-sheet-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 0.7rem;
+  align-items: start;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--editor-border);
+}
+.hand-sheet-entry:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.hand-sheet-entry .game-card {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 0.71;
+}
+.hand-sheet-text {
+  min-width: 0;
+  color: var(--editor-ink);
+}
+.hand-sheet-text strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  font: 700 0.9rem/1.2 var(--font-display);
+}
+/* The rule-card text is styled for a dark surface; the sheet is paper. */
+.hand-sheet-text p {
+  margin: 0.2rem 0 0;
+  color: var(--editor-ink);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.hand-sheet-text .card-text-missing {
+  color: var(--editor-muted);
+}
+.hand-sheet-cards .game-card.selected-source {
+  transform: none;
+}
+/* A card's offers, the whole width of the row under the face and the text
+   they were read out of. The action list is styled for the dark board, and
+   the sheet is paper -- the same light override the decision modal makes. */
+.hand-sheet-actions {
+  grid-column: 1 / -1;
+  margin-top: 0.6rem;
+}
+.hand-sheet .action-button {
+  min-height: 2.8rem;
+  align-content: center;
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+  text-align: center;
+}
+.hand-sheet .action-button:hover,
+.hand-sheet .action-button:focus-visible {
+  border-color: var(--ember);
+  background: var(--editor-paper);
+}
+.hand-sheet .action-button span {
+  color: var(--editor-muted);
+}
+/* Playing the card is this row's affirmative move, and wears the green it
+   wears in the card panel and on the mulligan keep. */
+.hand-sheet .action-button.play-card {
+  border-color: color-mix(in srgb, var(--state-playable) 55%, #2f7a55);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--state-playable) 30%, var(--editor-field)),
+    var(--editor-field) 46%
+  );
+}
+.hand-sheet .action-button.play-card:hover,
+.hand-sheet .action-button.play-card:focus-visible {
+  border-color: color-mix(in srgb, var(--state-playable) 75%, #2f7a55);
+  background: color-mix(in srgb, var(--state-playable) 30%, white);
+}
+/* An offer that names another card keeps its face in the card panel, where
+   there is room for it; in the sheet the row is a sentence. */
+.hand-sheet .action-button.target-card-choice .game-card {
+  display: none;
+}

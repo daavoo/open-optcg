@@ -1,0 +1,75 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op17NewgateDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Red) Edward.Newgate - Official Feature Deck",
+  archetype: "OP-17 (Red) Edward.Newgate {Whitebeard Pirates} defensive grind",
+  gamePlan: [
+    "Your hand is your Counter pile. Once per turn, on either player's attack, the Leader trashes one card from your hand and gives itself or one of your Characters +4000 for that battle. It does not care which card, and it has no board requirement -- so a card that prints no Counter, an Event you cannot afford, a 10-drop you will never cast are all worth exactly 4000 defence. That is why the list can run twenty-six cards that could otherwise do nothing in a battle.",
+    "The corollary is the thing to internalise: in this deck a search is a Counter. Every card you add to hand is 4000 power on a future turn, so OP17-019 and OP16-021 Moby Dick early, and OP16-118 Portgas.D.Ace in the mid-game, are defensive plays as much as they are card advantage.",
+    "Then raise the number the 4000 is added to. OP17-008 Jozu and OP17-005 Edward.Newgate both set your Leader's BASE power to 8000 until the end of your opponent's next end phase -- not a turn-scoped buff but a new base, so it is still 8000 on the turn they attack into it. An 8000 Leader plus one trashed card is a 12000 defence for the price of one card, every turn.",
+    "Your board comes from OP17-007 Kouzuki Oden, whose [On Play] puts a second Character of 6000 power or less onto the field from your hand for free, {Land of Wano} or {Whitebeard Pirates}. Seven DON!! for two bodies. The intended partner is OP17-003 Izo: a 6000 that takes 6000 off one rested opposing Character on the way in and prints [Rush: Character], so it attacks the turn it arrives.",
+    "The finisher prices itself off the opponent's board. OP17-005 Edward.Newgate is a 10-cost 12000, and while the opponent has any Character of printed 10000 or more in play it costs 4 less -- so 6 DON!!, leaving 4 for the Leader's ability and a Counter on the same turn. Against the format's big bodies that is most turns after the fourth.",
+  ],
+  mulligan: [
+    "Keep any hand with OP17-019 or OP16-021 Moby Dick. Both cost 1, both are playable on turn 1, and both convert one card into a better one -- OP17-019 looks five deep for a {Whitebeard Pirates} card, Moby Dick looks three deep and takes anything.",
+    "Do not keep a hand whose only cheap card is OP17-017 Ga Ha Ha Ha!!. It is a [Counter] Event: real defence, but never a play, and the deck's cheapest Character costs 3.",
+    "A hand of 6- and 7-drops with no searcher goes back. Every card is 4000 of defence eventually, but the deck has no ramp, and an opening with nothing to do for three turns spends those turns trading cards for 4000 one at a time.",
+  ],
+  priorities: [
+    "Use the Leader's ability on the attack that actually matters, not the first one offered. It is [Once Per Turn] and it lasts for one battle, so an opponent with two attacks can bait it with the smaller one. Ask whether the current attack is the one that would connect.",
+    "Spend it on the Leader when your Life is the thing under threat, and on a Character when the trade would lose you a body worth more than a card. Both are legal targets -- unlike the +1000 and +2000 versions of this clause on other cards, there is no restriction here.",
+    "Sequence a Leader-power play BEFORE ending your turn, not after drawing into trouble. OP17-008 Jozu and OP17-005's base-8000 clauses only matter on the opponent's turn, so the turn you cast them is the turn they defend.",
+    "Play OP17-007 Kouzuki Oden with a target already in hand. Its deploy is 'up to 1' and reads your hand at the moment it lands -- casting it on an empty hand is a 7-cost 8000 with no Counter.",
+    "Point OP17-003 Izo and OP17-013 Portgas.D.Ace at RESTED Characters only: both debuffs are printed for rested targets, so they are answers to a board that has already attacked, not to one holding back.",
+    "OP17-009 Haruta and OP17-016 Rakuyo K.O. by PRINTED power, capped at 2000 -- Rakuyo takes up to two of them. Against a wide cheap board they are the whole answer; against anything printed at 3000 or more they are bodies.",
+    "OP17-002 Atmos and OP17-009 Haruta gain +3000 on the opponent's turn. Do not measure them by what they attack for: they defend at 9000 and 8000, and this deck has almost no interest in attacking with Characters at all.",
+    "OP17-015 Marco is two cards, not one. Its own text lets you K.O. it in place of another threatened Character, and when it is K.O.'d you may trash a {Whitebeard Pirates} card from hand to put it straight back on the field. Keep one such card in hand to hold that line open -- with an empty hand of Whitebeard Pirates the recursion does nothing.",
+    "OP16-021 Moby Dick's [Activate: Main] trashes itself for one rested DON!! card. That is a ramp turn you take when the alternative is nothing; the [On Play] look is usually worth more, so play it early and cash it late.",
+    "Hold OP17-017 Ga Ha Ha Ha!! for a battle where the thing being attacked is a {Whitebeard Pirates} card -- which is the Leader and almost every Character here. Its +2000 only lands on such a target; the -2000 it puts on any one of the opponent's cards lands either way.",
+  ],
+  commonVariants: [
+    "This is Bandai's own feature deck (deck_113, 28 August 2026). The English tournament field's build differs materially: both recorded Red Newgate lists on onepiecetopdecks (Jonathan Chao, 2nd at 5-1, 28 Aug 2026; Asher, 6th at 5-1, 2 Sep 2026) go to four OP17-017 rather than two, and both cut OP17-002, OP17-007, OP17-013, OP17-015 and OP17-016 entirely.",
+    "What the field puts in their place is more Counter and more off-set Whitebeard Pirates bodies: OP13-007, EB04-007 and OP09-118 in both, plus OP09-015, OP16-003 and OP04-016 in one and PRB02-003 and OP11-018 in the other. Read the difference as 'this deck wants Counter density and fewer conditional bodies', which is the direction the Leader's own ability points.",
+    "OP17-006 Kingdew is the most negotiable slot in Bandai's list: a vanilla 7-cost 8000 with a 2000 Counter. It is four copies here and three or zero in the tournament lists.",
+  ],
+  commonCombos: [
+    "OP17-007 Kouzuki Oden deploying OP17-003 Izo: two bodies, one rested Character down 6000, and an attack from the Izo on the same turn thanks to [Rush: Character].",
+    "OP17-008 Jozu or OP17-005 on your turn, then the Leader's ability on theirs: an 8000 base plus 4000 is a 12000 defence that costs one card and does not need a Counter in it.",
+    "OP16-118 Portgas.D.Ace refills the hand OP17-007 empties -- it searches {Whitebeard Pirates} both when it enters and when it dies -- and in this deck a refilled hand is a refilled Counter pile.",
+    "Wait for the opponent to commit a printed 10000 or more, then OP17-005 for 6 DON!!: a 12000 body, an 8000 Leader base, and 4 DON!! still up for the Leader's ability and a Counter.",
+    "OP17-015 Marco absorbing a removal aimed at something else, then trashing a {Whitebeard Pirates} card to come straight back: one card of hand for two bodies' worth of board.",
+  ],
+  keyCardNumbers: [
+    "OP17-001",
+    "OP17-019",
+    "OP16-021",
+    "OP17-008",
+    "OP17-005",
+    "OP17-007",
+    "OP17-003",
+    "OP16-118",
+    "OP17-015",
+    "OP17-017",
+  ],
+  counterplay: [
+    "Attack twice, or do not attack. The Leader's +4000 is [Once Per Turn] and lasts one battle, so the cheapest way through is a small attack that eats it followed by the real one. A single big swing per turn is the pattern this deck is built to answer.",
+    "Its defence costs it a card every turn, and it has no way to refill except its searchers. Pressure that forces the ability twice-worth of decisions -- or removal aimed at OP16-118 and OP17-019 before they resolve -- runs the hand out, and an empty hand is a 5000 Leader with no Counter.",
+    "Twenty-six of its fifty cards print no Counter and are not [Counter] Events, so once the once-per-turn ability is spent the defender is often holding nothing that can be spent in a battle at all.",
+    "Keep nothing at printed 10000 or more on the board if you can help it: that is what prices OP17-005 at 6 DON!! instead of 10, and OP17-013 at 4 instead of 6.",
+    "Its removal only reaches rested Characters (OP17-003, OP17-013) or printed 2000 and under (OP17-009, OP17-016). A body printed at 3000 or more that you do not rest is untouchable by every effect in the deck.",
+    "OP17-015 Marco eats one removal for free and returns for a card in hand. Aim removal elsewhere while it is out, or force the trade twice.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_113.php",
+      retrievedAt: "2026-09-04",
+      note: "Bandai's own feature deck for OP17-001, published 28 August 2026, transcribed slot for slot as the deck manifest. Its 'Deck Breakdown' is the source for the early/mid/endgame plan above.",
+    },
+    {
+      url: "https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/",
+      retrievedAt: "2026-09-04",
+      note: "The two recorded English OP-17 Red Newgate finishes (Chao 2nd 5-1, Asher 6th 5-1) and their 50s, which is where the commonVariants entries come from.",
+    },
+  ],
+};

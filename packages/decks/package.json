@@ -1,0 +1,12 @@
+{
+  "name": "@one-piece-sim/decks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@one-piece-sim/cards": "workspace:*",
+    "@one-piece-sim/protocol": "workspace:*"
+  },
+  "license": "MIT"
+}

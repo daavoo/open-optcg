@@ -1,0 +1,75 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op15KriegDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Red/Green) Krieg - Official Feature Deck",
+  archetype: "OP-15 (Red/Green) Krieg {East Blue} DON!!-giving lock",
+  gamePlan: [
+    "You win by handing your opponent their own DON!! cards. A DON!! card given to one of their Characters leaves their cost area, so every gift is both a tax on the turn they are about to take and a counter sitting on a body your Leader can then rest. Nothing in this deck removes a Character with an effect; it takes them out of the game by resting them and shrinking them instead.",
+    "The Leader is the lock. Once per turn in your Main Phase OP15-001 Krieg rests one of their Characters carrying 2 or more given DON!! cards -- so the gifts decide what you are allowed to rest, and resting is what makes a body attackable at all. Its other clause is defensive and costs 1 given DON!! on the Leader: while every Character on your own field is {East Blue}, all of their Characters are 2000 smaller on their turn. Keeping your field pure {East Blue} is a real constraint on what you play, and this list is built so it is free.",
+    "The gift engine runs at every cost. OP15-028 Meowban Brothers and OP15-015 Higuma give one on the way in for a single DON!!, OP15-025 Kuro gives two and OP15-008 Krieg gives three and then attacks the same turn. The three [Activate: Main] bodies -- OP15-003 Alvida, OP15-017 Morgan and OP15-023 Arlong -- pay one of the opponent's already-given rested DON!! to hand another one out, which is a free gift every turn from a board that is already there.",
+    "Denying the Refresh Phase is how the lock becomes permanent. Kuro's [On Play] keeps a rested Character carrying 3 or more given DON!! down through their next Refresh Phase, OP15-023 Arlong's [On K.O.] holds two of their rested cards down, and the Event OP15-038 does the same to a rested 8-cost-or-less body carrying 2 given DON!!. A body that is rested and cannot refresh is a body that never blocks and never attacks again.",
+    "The curve is cheap on purpose: twenty-four of the fifty cards cost 1, and the deck's expensive half -- OP15-007 Gin at 6 and OP15-025 Kuro at 7 -- puts more than one body onto the table when it lands. Gin plays a 5-cost-or-less Character out of hand behind an {East Blue} Leader, which is how the three [Activate: Main] engines arrive a turn early.",
+  ],
+  mulligan: [
+    "Keep a hand with a 1-cost play that gives DON!! or finds one: OP15-015 Higuma, OP15-028 Meowban Brothers or OP15-026 Jango. The first gift is what every later turn is priced against, and Jango also digs 3 for the {East Blue} card the hand is missing.",
+    "OP15-037 is a fine keep on its own: at 1 cost it looks 5 deep for any {East Blue} card other than another copy of itself, which in this fifty is every card but one.",
+    "Do not keep a hand whose only cheap card is OP15-038. Its [Main] half needs a rested Character already carrying 2 given DON!! and its [Counter] half needs a [Krieg] card in the battle, so on turn one it is neither.",
+    "A hand of OP15-007 Gin, OP15-025 Kuro and OP15-008 Krieg with nothing under 4 goes back. They are what the gifts build toward and the deck reaches them on the turn it would have anyway.",
+  ],
+  priorities: [
+    "Count the DON!! on each of their Characters before you use the Leader. Its activation only reaches a body carrying 2 or more, so a turn that gives one DON!! to two different Characters buys nothing and a turn that gives two to one body buys the rest.",
+    "Give DON!! to the Character you intend to attack, not to the biggest one. The gift is only worth what resting it is worth, and a rested body is a legal attack target -- so the gift, the Leader's rest and the attack are one sequence, not three decisions.",
+    "Keep your own field {East Blue} only. The Leader's −2000 on their turn switches off the moment a non-{East Blue} Character stands on your field, and that clause is most of this deck's defence: it shrinks blockers and attackers alike, across their whole board, for one DON!! on the Leader.",
+    "Spend the [Activate: Main] engines every turn. OP15-003 Alvida, OP15-017 Morgan and OP15-023 Arlong each pay one of the opponent's rested DON!! to move another one, so the board keeps giving even on a turn you cast nothing -- and the DON!! they hand back goes onto your own Leader or Character where it is power you keep.",
+    "OP15-008 Krieg is the turn you have been building to, not a body to cast on curve. Three gifts at once puts a Character over the Leader's threshold by itself, the [Rush] means the turn's attack happens immediately, and its [Activate: Main] gives every opposing Character −1000 for each DON!! given to the Character it just loaded.",
+    "Hold OP15-025 Kuro until a rested Character will still be rested at end of turn. Its refresh denial is checked then, so casting it into an empty or fully active board spends a 7-cost on two DON!! gifts and a [Blocker].",
+    "OP15-011 Pearl is a [Blocker] with +2000 on their turn while your Leader is {East Blue}, and its [On K.O.] K.O.s a 6000-base-power-or-less Character. Blocking with it is therefore often removal: it trades itself for the body that killed it.",
+    "OP15-009 Koby refuses your opponent's removal for 2000 of your Leader's power for the turn, for every Character you own at 7000 base power or less and as many times a turn as you have copies. Spend it on the engine bodies -- the [Activate: Main] Characters are what the deck loses if they are answered -- and remember the Leader is smaller for the rest of the turn when you do.",
+    "OP15-038's two halves want opposite turns. The [Main] half is a lock you take on your own turn against a rested, DON!!-loaded body; the [Counter] half gives a [Krieg] card +4000 in a battle, which is the largest single defensive card in the deck.",
+    "OP15-026 Jango is worth trashing. Its [Activate: Main] trashes itself to give one of their rested DON!! to one of their Characters, which is a free gift out of a 1-cost body that has already drawn you a card's worth of search.",
+  ],
+  commonVariants: [
+    "This is Bandai's own featured deck transcribed slot for slot. Other builds of this Leader reach outside OP-15 for more refresh denial -- OP08-036 Electrical Luna is the usual addition, holding a rested cost-7-or-less Character down through the next Refresh Phase -- and cut a copy of the 8-cost Krieg for it.",
+    "The two OP15-038 slots are the list's only non-4-of and the flex. A build expecting to be raced plays more of them for the [Counter] half; a build expecting a board plays a fourth copy of a gift body instead.",
+    "Red/Green {East Blue} lists that do not lead Krieg exist and play very differently -- they use the type as a tribe and race. Here the type is a gate on the Leader's own defensive clause, so a card is not playable in this seat merely for being good.",
+  ],
+  commonCombos: [
+    "Gift, rest, attack, in that order on one turn: give a Character its second DON!! with any of the cheap bodies, use the Leader to rest it, then swing into it. Every step of that is a different card's clause and none of them works alone.",
+    "OP15-025 Kuro onto a Character that already carries one gift: it goes to three DON!!, and Kuro's own end-of-turn clause holds it down through their Refresh Phase.",
+    "OP15-007 Gin into OP15-003 Alvida or OP15-017 Morgan: a 6-cost that lands the 5-cost engine as well, so the [Activate: Main] gift starts a turn earlier than the curve allows.",
+    "OP15-008 Krieg with [Rush] after the gifts: the three DON!! it gives make its own activation worth −3000 to every Character across the table, and it attacks the same turn it lands.",
+    "The Leader's [DON!! x1] −2000 plus OP15-011 Pearl's +2000 on their turn: a 6000 [Blocker] in front of a board that is all 2000 smaller, which is what makes the deck's defensive turns hold.",
+  ],
+  keyCardNumbers: [
+    "OP15-001",
+    "OP15-008",
+    "OP15-025",
+    "OP15-023",
+    "OP15-017",
+    "OP15-003",
+    "OP15-007",
+    "OP15-011",
+    "OP15-026",
+    "OP15-038",
+  ],
+  counterplay: [
+    "The gifts are only a tax if you were going to spend that DON!! anyway. A Character carrying given DON!! is bigger for it, so committing one large body and attacking with it costs this deck more than spreading a board it can rest one piece at a time.",
+    "Its Leader's defensive −2000 switches off the moment a non-{East Blue} Character stands on the Krieg field, which nothing in the list can cause -- but it is also off on your own turn entirely. The clause is [Opponent's Turn]: on the Krieg player's turn their attacks are into a board at full size.",
+    "Removal that answers a rested body does nothing here, because resting is the point rather than the setup. What hurts is answering the [Activate: Main] engines -- OP15-003, OP15-017 and OP15-023 -- since without them the deck must spend a card to give every DON!! it gives.",
+    "The deck's Counter power is thin and concentrated: most of the bodies are 1000, and the real defence is the Leader's aura and OP15-038 at +4000 on a [Krieg] card. An attack that demands two cards rather than one drains it quickly.",
+    "OP15-009 Koby means the first effect you point at a small Character is likely refused, at the price of 2000 of their Leader's power for the turn. If their Leader has already attacked, that price is nothing -- so aim removal before they have paid it, or expect to spend a second answer.",
+  ],
+  sources: [
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_095.php",
+      retrievedAt: "2026-09-18",
+      note: "Bandai's own featured deck for OP15-001, transcribed slot for slot as the deck manifest. The page's strategy notes are the source for the early-game Jango/Arlong gift ordering, the Gin-into-Alvida/Morgan mid-game line and the Kuro and 8-cost Krieg finishing turns.",
+    },
+    {
+      url: "https://onepiece.cardsrealm.com/en-us/articles/one-piece-tcg-extra-grand-battle-krieg-from-op15",
+      retrievedAt: "2026-09-18",
+      note: "A written guide for this Leader. Source for the archetype reading -- the gift bodies decide what the Leader may rest -- and for the OP08-036 Electrical Luna slot other builds add, which this list does not run.",
+    },
+  ],
+};

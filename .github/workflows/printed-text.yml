@@ -1,0 +1,32 @@
+name: Reference text check
+
+# The printed card text is not in the repository, so CI cannot check the
+# committed rules against it on every push without fetching Bandai's pages
+# every time -- heavy on their site, flaky for us, and it would park their
+# text in this project's Actions cache. So this runs on request and once a
+# week: fetch the reference pages, run the audit, and fail if the committed
+# generated modules are not what that text derives to -- the one check that
+# can catch a hand edit to a generated file, or a card whose text moved under
+# its rules. Then run the suite with the text on disk, so the tests that quote
+# text run somewhere. Nothing fetched is cached or uploaded.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+jobs:
+  printed-text:
+    name: reference text + committed rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm reference:fetch
+      - run: pnpm reference:audit
+      - run: git diff --exit-code -- packages/cards/src packages/decks/src
+      - run: pnpm test
