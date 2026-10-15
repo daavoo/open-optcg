@@ -318,14 +318,14 @@ function renderStartControls(
   simulating: boolean,
 ): { cell: string; below: string } {
   const { state } = ctx.online;
-  // The play triangle, named by its title, and a wrapper so the cell sits on
-  // the mark's flat face the way the board's End turn does (`.hub-command`,
-  // shell.css).
-  const cell = (label: string, glyph: string, attrs: string): string =>
-    `<span class="hub-command"><button class="hub-face hub-play" title="${escapeHtml(label)}" ${attrs}>${icon(glyph, label)}</button></span>`;
+  // One word on the cell, the title saying what pressing it does, and a
+  // wrapper so the cell sits on the mark's flat face the way the board's End
+  // turn does (`.hub-command`, shell.css).
+  const cell = (word: string, label: string, attrs: string): string =>
+    `<span class="hub-command"><button class="hub-face hub-play" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" ${attrs}>${escapeHtml(word)}</button></span>`;
   if (state.connecting) {
     return {
-      cell: cell("Joining", "hourglass", 'type="button" disabled'),
+      cell: cell("Wait", "Joining", 'type="button" disabled'),
       below: `<div class="ai-status"><span></span>${state.connecting === "connecting" ? "Joining the match…" : "Waiting for your opponent to sit down…"}</div>`,
     };
   }
@@ -339,8 +339,8 @@ function renderStartControls(
   // start a match anyone is in, it asks what two agents are to do.
   return {
     cell: cell(
+      "Play",
       simulating ? "AI vs AI" : "Start match",
-      "play",
       'type="submit"',
     ),
     below: `${rejoin}${state.error ? `<p class="trace-payload-warning">${escapeHtml(state.error)}</p>` : ""}`,

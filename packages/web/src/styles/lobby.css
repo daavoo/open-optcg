@@ -866,16 +866,14 @@
 .lobby-hub .hub-face:focus-visible::before {
   background: #1f1e22;
 }
-/* Start is the command cell, and the one cell that begins anything, so its
-   triangle is filled and drawn larger than the outline glyphs beside it. Its
-   colour is every other cell's -- position and the glyph say which cell it
+/* Start is the command cell, and the one cell that begins anything, so it
+   says so in a word, set in the seat headings' heavy italic capitals. Its
+   colour is every other cell's -- position and the word say which cell it
    is. */
-.lobby-hub .hub-play svg {
-  width: 1.7rem;
-  height: 1.7rem;
-  fill: currentColor;
-  /* Optically centred: a triangle's mass sits left of its box's middle. */
-  translate: 0.1rem 0;
+.lobby-hub .hub-play {
+  font: 800 italic clamp(0.8rem, 1.6vw, 1rem) / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 /* Nothing to press -- an online seat still connecting -- so the cell
    goes quiet the way the board's Waiting cell does: the rim and the glyph

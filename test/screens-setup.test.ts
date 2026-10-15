@@ -102,9 +102,9 @@ describe("setup screen render", () => {
     // the play cell, not offered as a cell of its own.
     expect(html).not.toContain("hub-analytics");
     expect(html).not.toContain('id="open-analytics"');
-    // Start is the command cell, a play triangle named by its title.
+    // Start is the command cell: one word, named by what it does.
     expect(html).toContain(
-      '<span class="hub-command"><button class="hub-face hub-play" title="Start match" type="submit"><i data-lucide="play" aria-hidden="true"></i><span class="sr-only">Start match</span></button></span>',
+      '<span class="hub-command"><button class="hub-face hub-play" title="Start match" aria-label="Start match" type="submit">Play</button></span>',
     );
     expect(html).not.toContain("pilot-callout");
     expect(html).not.toContain("built-in heuristics");
@@ -423,7 +423,9 @@ describe("the lobby's online seat", () => {
       }),
     );
     expect(html).toContain('id="online-rejoin"');
-    expect(html).toContain('title="Start match" type="submit"');
+    expect(html).toContain(
+      'title="Start match" aria-label="Start match" type="submit"',
+    );
   });
 
   it("holds the start button while a seat is still connecting", () => {
@@ -438,7 +440,9 @@ describe("the lobby's online seat", () => {
         },
       }),
     );
-    expect(html).toMatch(/title="Joining" type="button" disabled/);
+    expect(html).toMatch(
+      /title="Joining" aria-label="Joining" type="button" disabled/,
+    );
     expect(html).toContain("Waiting for your opponent to sit down…");
   });
 });
