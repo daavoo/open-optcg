@@ -58,7 +58,6 @@ export function render(ctx: AssetGateContext): string {
       </header>
       <section class="asset-gate-panel" aria-label="Card text and art">
         <h1>Load the card art and text</h1>
-        <p>Open OPTCG ships without card images and printed card text, because they belong to Bandai. You download them yourself, from Bandai's own card list, once.</p>
         <ol>
           <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em>
             <span class="asset-gate-aside">No bookmarks bar? Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> on a Mac) to show it. Can't drag? <button class="home-assets-help" type="button" data-copy-bookmarklet>Copy the bookmark</button>, add a new bookmark and paste it as the address (URL). <span data-copy-status aria-live="polite"></span></span>
