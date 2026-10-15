@@ -17,7 +17,11 @@ Bandai's card list page can. The **Get cards** link on the app's first screen
 is a bookmarklet: a bookmark that runs a script on the page you click it on.
 Nothing is installed.
 
-1. Drag **Get cards** to your browser's bookmarks bar.
+1. Drag **Get cards** to your browser's bookmarks bar. If the bar is hidden,
+   Ctrl+Shift+B (⌘+Shift+B on a Mac) shows it in Chrome, Edge and Firefox. If
+   you cannot drag, choose **Copy the bookmark**, add a new bookmark by hand
+   and paste what was copied as its address (URL). No browser lets a page add
+   a bookmark for you, so one of these two is needed once.
 2. Open [Bandai's card list](https://en.onepiece-cardgame.com/cardlist/) and
    click the bookmark. A panel opens in the corner of Bandai's page.
 3. Choose **Download the cards**. It fetches the printed text and about 2,000

@@ -1513,6 +1513,45 @@ test.describe("before any asset pack is loaded", () => {
     await expect(page.locator("[data-home-mode]")).toHaveCount(0);
   });
 
+  test("the bookmark can be copied where it cannot be dragged", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: (text: string) => {
+            (window as unknown as { copied: string }).copied = text;
+            return Promise.resolve();
+          },
+        },
+      });
+    });
+    await page.goto(appUrl);
+    await page.getByRole("button", { name: "Copy the bookmark" }).click();
+    await expect(page.locator("[data-copy-status]")).toHaveText("Copied.");
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { copied: string }).copied,
+      ),
+    ).toBe(await page.locator("[data-get-cards]").getAttribute("href"));
+    await expect(page.locator("[data-bookmarklet-code]")).toBeHidden();
+  });
+
+  test("a refused clipboard shows the bookmark's code to copy by hand", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        value: { writeText: () => Promise.reject(new Error("denied")) },
+      });
+    });
+    await page.goto(appUrl);
+    await page.getByRole("button", { name: "Copy the bookmark" }).click();
+    const code = page.locator("[data-bookmarklet-code]");
+    await expect(code).toBeVisible();
+    await expect(code).toHaveValue(/^javascript:/);
+  });
+
   test("text without art is not enough to play", async ({ page }) => {
     await page.goto(appUrl);
     await page

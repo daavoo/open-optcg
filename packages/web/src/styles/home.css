@@ -406,6 +406,35 @@
   text-decoration: none;
   cursor: grab;
 }
+/* The ways round dragging, under the step: quieter than the step itself. */
+.asset-gate-aside {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.7);
+}
+.asset-gate-aside .home-assets-help {
+  font-size: inherit;
+}
+.asset-gate-panel kbd {
+  padding: 0 0.3em;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.25em;
+  font: inherit;
+}
+/* Shown only when the clipboard is refused: the code, selected, to copy. */
+.asset-gate-code {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: 0.75rem var(--font-mono);
+  resize: none;
+}
 
 /* The same block inside the Configure dialog, on paper.
  *
