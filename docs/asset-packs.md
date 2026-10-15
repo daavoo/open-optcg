@@ -10,10 +10,30 @@ An **asset pack** fills that gap. It is a folder of card images plus one
 `printed-text.json`, built by you, on your own computer, from Bandai's public
 card list. The project never hosts one.
 
+## Without installing anything: the Get cards bookmark
+
+A web page cannot read Bandai's site from its own, but a script running on
+Bandai's card list page can. The **Get cards** link on the app's first screen
+is a bookmarklet: a bookmark that runs a script on the page you click it on.
+
+1. Drag **Get cards** to your browser's bookmarks bar.
+2. Open [Bandai's card list](https://en.onepiece-cardgame.com/cardlist/) and
+   click the bookmark. A panel opens in the corner of Bandai's page.
+3. Choose **Save into a folder** (Chrome and Edge) or **Download as a zip**
+   (any browser). Keep the tab open while it fetches the printed text and
+   about 2,000 images.
+4. Back in the app, choose **Load asset folder** or **Load asset pack (.zip)**
+   and pick what it saved.
+
+The bookmark only fetches the downloader script from the hosted site and runs
+it, so it stays current without being re-added. Saving into the same folder
+again fetches only what is missing. It works in desktop browsers; on a phone,
+make the zip on a computer and load it as described below.
+
 ## Download a folder, then load it
 
-A web page cannot fetch from Bandai's site itself, so a small downloader does
-it on your computer and the page reads the folder it fills.
+The same downloader as a program you run on your computer, for when the
+bookmark does not suit: the page then reads the folder it fills.
 
 1. **Download.** Get the `open-optcg-assets` tool for your platform from the
    [latest release](https://github.com/daavoo/open-optcg/releases/latest) and
@@ -38,10 +58,13 @@ The downloader runs several downloads at once, more while Bandai's site keeps
 up and fewer, after a pause, the moment it pushes back. Each failed request is
 retried with a growing delay before that card is given up on.
 
-On macOS, unzip it first. The tool is unsigned: right-click it and choose
-**Open** (macOS), or **More info**, **Run anyway** (Windows). On Linux, mark
-it executable; the folder dialog needs `zenity` or `kdialog`, and without
-either it asks in the terminal instead.
+The tool is not signed with an Apple or Microsoft certificate, so the first
+run asks for confirmation. On macOS, unzip it and double-click it; when macOS
+says it cannot verify it, choose **Done**, then open **System Settings →
+Privacy & Security**, click **Open Anyway** beside its name and confirm. On
+Windows, choose **More info**, **Run anyway** at the SmartScreen prompt. On
+Linux, mark it executable; the folder dialog needs `zenity` or `kdialog`, and
+without either it asks in the terminal instead.
 
 ### Phone or tablet: load a zip
 

@@ -47,7 +47,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - run: pnpm web:build
-      - run: mkdir -p site && cp dist/open-optcg.html site/index.html
+      # The in-browser asset downloader the app's "Get cards" bookmark loads
+      # from this site (tools/get-cards.ts). Code only: it fetches the cards
+      # from Bandai's page in the player's browser.
+      - run: pnpm get-cards:build
+      - run: |
+          mkdir -p site
+          cp dist/open-optcg.html site/index.html
+          cp dist/get-cards.js site/get-cards.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

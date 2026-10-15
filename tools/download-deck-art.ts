@@ -9,6 +9,7 @@ import {
 } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { officialImageUrls } from "./fetch-reference/src/card-images.js";
 import { cardRegistry } from "@one-piece-sim/cards";
 import {
   deckManifests,
@@ -93,14 +94,7 @@ interface DownloadRecord {
   sourceBytes?: number;
 }
 
-export function officialImageUrls(html: string, cardNumber: string): string[] {
-  const escaped = cardNumber.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp(
-    `data-src=["']([^"']*\\/${escaped}(?:_[A-Za-z0-9-]+)?\\.png(?:\\?[^"']*)?)["']`,
-    "gi",
-  );
-  return [...new Set([...html.matchAll(pattern)].map((match) => match[1]!))];
-}
+export { officialImageUrls };
 
 export function parseOptions(args: readonly string[]): Options {
   const deckId = args.find((arg) => !arg.startsWith("--"));

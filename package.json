@@ -17,6 +17,7 @@
     "play": "tsx packages/cli/src/setup-match.ts",
     "play:sealed": "tsx packages/cli/src/play-sealed.ts",
     "web:build": "tsx tools/build-web.ts",
+    "get-cards:build": "tsx tools/build-get-cards.ts",
     "model:fetch": "tsx tools/fetch-model.ts",
     "web:build:server": "tsx tools/build-web.ts --match-server",
     "web:serve": "tsx tools/serve-web-cli.ts",

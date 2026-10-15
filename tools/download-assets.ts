@@ -41,12 +41,18 @@ import { cardRegistry } from "@one-piece-sim/cards";
 import { SEALED_LEADER } from "@one-piece-sim/decks";
 import { chooseFolder, showMessage } from "./assets-dialog.js";
 import { parseOfficialCards } from "./audit-cards/src/parse-cardlist.js";
-import { officialImageUrls } from "./download-deck-art.js";
+import {
+  officialImageUrls,
+  pageImageUrls,
+  type ArtUrl,
+} from "./fetch-reference/src/card-images.js";
 import {
   BANDAI,
   CARDLIST_SERIES,
   cardlistUrl,
 } from "./fetch-reference/src/sources.js";
+
+export { pageImageUrls };
 
 const USER_AGENT =
   "open-optcg-asset-downloader/0.2 (+https://github.com/daavoo/open-optcg)";
@@ -217,39 +223,10 @@ async function forEachConcurrently<T>(
  * `packages/cards/src/sealed-promo.ts`), so its text and art have no Bandai
  * source to come from.
  */
-function wantedCards(): string[] {
+export function wantedCards(): string[] {
   return [...cardRegistry.keys()]
     .filter((number) => !number.startsWith("FIX-") && number !== SEALED_LEADER)
     .sort((left, right) => left.localeCompare(right));
-}
-
-interface ArtUrl {
-  url: string;
-  /** The base printing rather than a parallel or reprint (`_p1`, `_r1`). */
-  base: boolean;
-}
-
-/**
- * Card art URLs on one list page, by card number. A page lists a card's
- * parallel and reprint art (`OP12-090_r1.png`) beside or instead of the base
- * printing; the base wins where both are there, else the first variant.
- */
-export function pageImageUrls(
-  html: string,
-  pageUrl: string,
-  into = new Map<string, ArtUrl>(),
-): Map<string, ArtUrl> {
-  const pattern =
-    /data-src=["']([^"']*\/card\/((?:[A-Z]{1,5}\d{0,2}|P)-\d{3})(_[A-Za-z0-9-]+)?\.png(?:\?[^"']*)?)["']/g;
-  for (const [, path, cardNumber, variant] of html.matchAll(pattern)) {
-    const known = into.get(cardNumber!);
-    if (known && (known.base || variant)) continue;
-    into.set(cardNumber!, {
-      url: new URL(path!, pageUrl).href,
-      base: !variant,
-    });
-  }
-  return into;
 }
 
 interface CardList {
