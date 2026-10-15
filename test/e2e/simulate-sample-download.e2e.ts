@@ -8,7 +8,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { strFromU8, unzipSync } from "fflate";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
 
 const appUrl = pathToFileURL(
   resolve(process.cwd(), "dist/open-optcg.html"),

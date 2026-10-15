@@ -58,6 +58,9 @@ jobs:
         with:
           files: dist/app/${{ matrix.asset }}
           draft: false
+          # `releases/latest` is the downloader link in the app and the docs;
+          # a `model-*` release published since must not take it.
+          make_latest: true
           fail_on_unmatched_files: true
           body: |
             Play at https://daavoo.github.io/open-optcg/.
