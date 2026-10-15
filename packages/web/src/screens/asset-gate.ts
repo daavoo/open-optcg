@@ -61,7 +61,7 @@ export function render(ctx: AssetGateContext): string {
         <p>Open OPTCG ships without card images and printed card text, because they belong to Bandai. You download them yourself, from Bandai's own card list, once.</p>
         <ol>
           <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em></li>
-          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards as a zip. That takes a few minutes: you can switch to other tabs meanwhile, but leave that tab open, on that page, until it says it is done.</li>
+          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards as a zip. That takes a few minutes: you can switch to other tabs meanwhile. If that tab is closed, run the bookmark again and it carries on where it stopped.</li>
           <li>Back here, choose <strong>Load asset pack (.zip)</strong> below and pick that zip.</li>
         </ol>
         <p>On a phone or tablet, where bookmarks are awkward, do the first two steps on a computer and move the zip over. The browser keeps the cards for your next visit. Nothing is uploaded anywhere.</p>

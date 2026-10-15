@@ -23,16 +23,23 @@ Nothing is installed.
 3. Choose **Download the cards**. It fetches the printed text and about 2,000
    images (roughly 430 MB, a few minutes); the panel counts them and
    estimates the time left, then saves `open-optcg-assets.zip` to your
-   downloads. You can switch to other tabs while it runs, but leave that tab
-   open and on Bandai's page: closing it, reloading it or browsing away
-   stops the download, and the browser asks before letting you.
+   downloads. You can switch to other tabs while it runs. Closing, reloading
+   or browsing away from that tab stops it (the browser asks first), but
+   nothing fetched is lost: run the bookmark again and it carries on from
+   the images already saved.
 4. Back in the app, choose **Load asset pack (.zip)** and pick that zip. The
    browser keeps the cards for the next visit. Nothing is uploaded anywhere. A
    newer pack loads from **Configure matchup**, under _Card text and art_.
 
 The bookmark only fetches the downloader script from the hosted site and runs
-it, so it stays current without being re-added. After a new set comes out,
-run it again for a fresh zip.
+it, so it stays current without being re-added.
+
+Each image is saved in your browser as it arrives (in IndexedDB, under
+Bandai's site, like anything else that page stores), and kept after the zip
+is made. So after a new set comes out, running the bookmark again fetches only
+the new cards and saves a complete zip. **Forget the saved images**, in the
+panel, deletes them; so does clearing that site's data in your browser. A
+private window keeps nothing, so there every run starts from scratch.
 
 It runs several downloads at once, more while Bandai's site keeps up and
 fewer, after a pause, the moment it pushes back. Each failed request is
