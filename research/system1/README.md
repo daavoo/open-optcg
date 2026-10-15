@@ -156,12 +156,13 @@ as `scorer-adapter-<deck>.json`. The hosted page's build (`pages.yml`) runs
 
 ```sh
 mkdir -p /tmp/model && cp checkpoints/<run>-scorer-model.json /tmp/model/scorer-model.json
-gh release create model-<run> /tmp/model/scorer-model.json \
+gh release create model-<run> /tmp/model/scorer-model.json --latest=false \
   --title "Learned model: <run>" --notes "..."
 ```
 
 `gh` names an asset after the file (a `#` suffix is only a display label), and
-those names are what `tools/fetch-model.ts` looks for.
+those names are what `tools/fetch-model.ts` looks for. `--latest=false` keeps
+`releases/latest` on the dated release, where the app's downloader link points.
 
 ## Using the Mac
 
