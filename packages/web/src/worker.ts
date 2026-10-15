@@ -14,6 +14,12 @@ import {
 } from "@one-piece-sim/agents/llm";
 import { llmMatchContext } from "@one-piece-sim/agents/llm-dossiers";
 import {
+  isLearnedModelMessage,
+  learnedModel,
+  receiveLearnedModel,
+  type LearnedModelMessage,
+} from "./learned-model-source.js";
+import {
   CompactBatcher,
   CompactGpu,
   CompactScorerAgent,
@@ -43,20 +49,6 @@ import { rulesSeatLeader } from "./rules-seat.js";
 declare const __LEARNED_SEALED_POLICY__: LearnedSealedPolicyWeights;
 
 /**
- * The System-1 scorer's model pack, baked in by `tools/build-web.ts` from
- * `packages/web/src/scorer-model.json` when that file exists; null otherwise,
- * and the setup screen then never offers the seat.
- */
-declare const __SCORER_PACK__: ScorerPack | CompactPack | null;
-
-/**
- * Deck adapters over the small scorer's pack, baked in by `tools/build-web.ts`
- * from `packages/web/src/scorer-adapters/*.json`; empty when there are none.
- * A seat whose deck matches one (`adapterFor`) plays the adapted model.
- */
-declare const __SCORER_ADAPTERS__: CompactAdapter[];
-
-/**
  * One loaded scorer shared by every seat that asks for it: the pack decodes
  * to megabytes of weights, and the text scorer's GPU upload is done once. The
  * small scorer's pack (`kind: "compact"`) runs on the CPU and needs no GPU.
@@ -66,16 +58,18 @@ const scorers = new Map<string, Promise<Agent>>();
 /** One WebGPU device per worker, asked for once; null where there is none. */
 let gpuDevice: ReturnType<typeof requestGpuDevice> | undefined;
 
-function loadedScorer(adapter?: CompactAdapter): Promise<Agent> {
+function loadedScorer(
+  pack: ScorerPack | CompactPack,
+  adapter?: CompactAdapter,
+): Promise<Agent> {
   const key = adapter?.deck.id ?? "";
   const cached = scorers.get(key);
   if (cached) return cached;
   const loading = (async () => {
-    if (!__SCORER_PACK__) throw new Error("SCORER_PACK_MISSING");
-    if (isCompactPack(__SCORER_PACK__)) {
+    if (isCompactPack(pack)) {
       if (adapter)
         console.info(`Learned model: the ${adapter.deck.id} deck adapter`);
-      const model = loadCompact(__SCORER_PACK__, adapter);
+      const model = loadCompact(pack, adapter);
       // The blocks on the GPU where the browser has one: a decision in a few
       // milliseconds rather than ~150 on the CPU.
       const device = await (gpuDevice ??= requestGpuDevice());
@@ -85,7 +79,7 @@ function loadedScorer(adapter?: CompactAdapter): Promise<Agent> {
           : model,
       );
     }
-    const loaded = loadScorer(__SCORER_PACK__);
+    const loaded = loadScorer(pack);
     // Seconds a decision on the CPU; milliseconds on WebGPU where the
     // browser has it. Both give the same answers.
     const device = await requestGpuDevice();
@@ -128,7 +122,7 @@ interface PrintedTextMessage {
   printedText: Record<string, PrintedText>;
 }
 
-type WorkerMessage = ChooseRequest | PrintedTextMessage;
+type WorkerMessage = ChooseRequest | PrintedTextMessage | LearnedModelMessage;
 
 const agents = new Map<string, Agent>();
 
@@ -169,13 +163,16 @@ function createAgent(request: ChooseRequest): Agent {
     // The small scorer reads its own deck list: the cards it has yet to draw.
     const manifest = request.deckManifest ?? deckManifests[request.deckId];
     const own = manifest?.cards;
-    const adapter =
-      manifest && __SCORER_PACK__ && isCompactPack(__SCORER_PACK__)
-        ? adapterFor(__SCORER_ADAPTERS__, manifest)
-        : undefined;
     return {
       async chooseAction(observation) {
-        const scorer = await loadedScorer(adapter);
+        // Waits for the pack where the page fetches it after drawing; see
+        // `learned-model-source.ts`.
+        const { pack, adapters } = await learnedModel();
+        const adapter =
+          manifest && isCompactPack(pack)
+            ? adapterFor(adapters, manifest)
+            : undefined;
+        const scorer = await loadedScorer(pack, adapter);
         const seat =
           own && scorer instanceof CompactScorerAgent
             ? scorer.withDeck(own)
@@ -212,6 +209,10 @@ function createAgent(request: ChooseRequest): Agent {
 }
 
 self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
+  if (isLearnedModelMessage(event.data)) {
+    receiveLearnedModel(event.data);
+    return;
+  }
   if ("printedText" in event.data) {
     // The pack the player loaded, handed over from the main thread. It has to
     // arrive before the first decision of a match, because `LlmAgent` renders

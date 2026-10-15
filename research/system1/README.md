@@ -152,7 +152,12 @@ checkpoint over the local match server instead:
 The published model is the newest GitHub release whose tag starts with
 `model-`, carrying the pack as `scorer-model.json` and any deck adapters over it
 as `scorer-adapter-<deck>.json`. The hosted page's build (`pages.yml`) runs
-`pnpm model:fetch` and redeploys whenever a release is published:
+`pnpm model:fetch` and redeploys whenever a release is published. It builds
+with `--external-model`, which publishes the pack and adapters beside the page
+as `learned-model.json` rather than inlining them: the page draws first, fetches
+the model after, and keeps it in Cache Storage under its content hash, so a new
+release is fetched once and the old copy dropped
+(`packages/web/src/learned-model.ts`). A plain `pnpm web:build` still inlines it.
 
 ```sh
 mkdir -p /tmp/model && cp checkpoints/<run>-scorer-model.json /tmp/model/scorer-model.json

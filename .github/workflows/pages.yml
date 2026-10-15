@@ -41,12 +41,14 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # The learned opponent: the newest `model-*` release's pack, inlined by
-      # the build. See research/system1/README.md for publishing one.
+      # The learned opponent: the newest `model-*` release's pack, published
+      # beside the page as learned-model.json rather than inlined, so the page
+      # draws first and fetches it after (packages/web/src/learned-model.ts).
+      # See research/system1/README.md for publishing one.
       - run: pnpm model:fetch
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - run: pnpm web:build
+      - run: pnpm web:build --external-model
       # The in-browser asset downloader the app's "Get cards" bookmark loads
       # from this site (tools/get-cards.ts). Code only: it fetches the cards
       # from Bandai's page in the player's browser.
@@ -55,6 +57,7 @@ jobs:
           mkdir -p site
           cp dist/open-optcg.html site/index.html
           cp dist/get-cards.js site/get-cards.js
+          if [ -f dist/learned-model.json ]; then cp dist/learned-model.json site/; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

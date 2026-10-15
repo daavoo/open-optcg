@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { build, transform } from "esbuild";
@@ -363,11 +364,19 @@ console.log(
 );
 
 /**
- * The System-1 scorer's model pack (`research/system1/sys1/export_web.py`),
- * inlined into the worker the same way. Gitignored, since at ~12 MB it would
- * weigh down every clone: `pnpm model:fetch` downloads the published one from
- * the newest `model-*` release, which is what the hosted page's build does.
+ * The System-1 scorer's model pack (`research/system1/sys1/export_web.py`).
+ * Gitignored, since at ~12 MB it would weigh down every clone: `pnpm
+ * model:fetch` downloads the published one from the newest `model-*` release,
+ * which is what the hosted page's build does.
+ *
+ * Inlined into the workers by default, so the one file plays the learned
+ * model with no network at all -- a page saved to disk included. With
+ * `--external-model` (the hosted page) it is written beside the page as
+ * `learned-model.json` instead, and the page fetches it after it has drawn,
+ * keeping it in the browser's Cache Storage (`packages/web/src/learned-model.ts`):
+ * inlined, it was most of the page's weight, and twice over, once per worker.
  */
+const externalModel = process.argv.includes("--external-model");
 const scorerPack = await readFile(
   join(webRoot, "scorer-model.json"),
   "utf8",
@@ -375,7 +384,7 @@ const scorerPack = await readFile(
 if (scorerPack) {
   const header = JSON.parse(scorerPack) as { source?: string };
   console.log(
-    `Inlined the System-1 scorer from ${header.source ?? "?"} (${Math.round(Buffer.byteLength(scorerPack) / 1024)} KB)`,
+    `${externalModel ? "Linked" : "Inlined"} the System-1 scorer from ${header.source ?? "?"} (${Math.round(Buffer.byteLength(scorerPack) / 1024)} KB)`,
   );
 }
 
@@ -405,14 +414,32 @@ for (const file of (await readdir(adaptersRoot).catch(() => [])).sort()) {
   }
   scorerAdapters.push(text);
   console.log(
-    `Inlined the ${adapter.deck?.id ?? file} deck adapter (${Math.round(Buffer.byteLength(text) / 1024)} KB)`,
+    `${externalModel ? "Linked" : "Inlined"} the ${adapter.deck?.id ?? file} deck adapter (${Math.round(Buffer.byteLength(text) / 1024)} KB)`,
   );
 }
 
+/** The pack and adapters as one file, and its content hash as the version. */
+const learnedModelFile =
+  scorerPack && externalModel
+    ? `{"pack":${scorerPack},"adapters":[${scorerAdapters.join(",")}]}`
+    : null;
+const learnedModel = learnedModelFile
+  ? {
+      url: "learned-model.json",
+      version: createHash("sha256")
+        .update(learnedModelFile)
+        .digest("hex")
+        .slice(0, 16),
+    }
+  : null;
+const inlinePack = learnedModel ? null : scorerPack;
+const inlineAdapters = learnedModel ? [] : scorerAdapters;
+
 const workerSource = await buildWorker("worker.ts", "EMPTY_WEB_WORKER_BUNDLE", {
   __LEARNED_SEALED_POLICY__: learnedSealedPolicy ?? "null",
-  __SCORER_PACK__: scorerPack ?? "null",
-  __SCORER_ADAPTERS__: `[${scorerAdapters.join(",")}]`,
+  __SCORER_PACK__: inlinePack ?? "null",
+  __SCORER_ADAPTERS__: `[${inlineAdapters.join(",")}]`,
+  __SCORER_PACK_BY_MESSAGE__: learnedModel ? "true" : "false",
 });
 // The matchup page's games can be played by the learned model, so its
 // worker carries the same pack and adapters as the game worker.
@@ -420,8 +447,9 @@ const analyticsWorkerSource = await buildWorker(
   "analytics-worker.ts",
   "EMPTY_ANALYTICS_WORKER_BUNDLE",
   {
-    __SCORER_PACK__: scorerPack ?? "null",
-    __SCORER_ADAPTERS__: `[${scorerAdapters.join(",")}]`,
+    __SCORER_PACK__: inlinePack ?? "null",
+    __SCORER_ADAPTERS__: `[${inlineAdapters.join(",")}]`,
+    __SCORER_PACK_BY_MESSAGE__: learnedModel ? "true" : "false",
   },
 );
 
@@ -444,6 +472,7 @@ const appBuild = await build({
     __MATCH_SERVER__: JSON.stringify(matchServer),
     __LEARNED_SEALED_POLICY_AVAILABLE__: learnedSealedPolicy ? "true" : "false",
     __SCORER_AVAILABLE__: scorerPack ? "true" : "false",
+    __LEARNED_MODEL__: JSON.stringify(learnedModel),
   },
   logLevel: "silent",
 });
@@ -580,6 +609,12 @@ if (!html.includes(analyticsWorkerSource.slice(0, 80))) {
 const output = join(outputDir, matchServer ? "index.html" : "open-optcg.html");
 await mkdir(outputDir, { recursive: true });
 await writeFile(output, html);
+if (learnedModelFile && learnedModel) {
+  await writeFile(join(outputDir, learnedModel.url), learnedModelFile);
+  console.log(
+    `Wrote ${join(outputDir, learnedModel.url)} (version ${learnedModel.version}); serve it beside the page`,
+  );
+}
 console.log(
   `Built ${output} (${Buffer.byteLength(html).toLocaleString()} bytes, ${Object.keys(builtInCardArt).length} card images, ${builtInPrintedText ? `${Object.keys(builtInPrintedText).length} cards of printed text` : "no printed text"})`,
 );
