@@ -26,8 +26,9 @@ right, and three controls on the hub between them.
   - **Seed**: every shuffle, random choice and turn order comes from this
     string. Reuse a seed to replay the same game. Swap the two decks and keep
     the seed to play the same matchup from the other side.
-- **Start match** is the play cell, and **Load match from trace** the bottom
-  one (see below).
+- **Start match** is the play cell (the triangle), and **Load match from
+  trace** the bottom one (see below). With **AI** on both seats, the play cell
+  asks whether to watch one game or simulate 100, 250 or 500 of them.
 
 A newer pack -- after a new set comes out -- loads from **Configure matchup**,
 under _Card text and art_.

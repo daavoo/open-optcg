@@ -49,7 +49,7 @@ describe("deck labels in the picker and the selects", () => {
 
   it("shortens a tournament list's placing and event", () => {
     // The two words a placing id can lose without losing a distinction: on
-    // the Meta shelf an ordinal is already a placing, and the event is
+    // the Community shelf an ordinal is already a placing, and the event is
     // named by where and when it was held.
     expect(
       deckLabel({}, "(Purple) Enel - 1st Place EU Championship 26-27 S1"),
@@ -147,7 +147,7 @@ describe("the shelves the picker groups decks into", () => {
     const labels = {
       official: "Official Featured",
       starter: "Starters",
-      tournament: "Meta",
+      tournament: "Community",
     };
     for (const deckId of SELECTABLE_DECK_IDS) {
       expect(shelfOf(html, deckId)).toBe(labels[deckShelf(deckId)]);
@@ -242,11 +242,11 @@ describe("the shelves the picker groups decks into", () => {
     });
     const euFinal = "(Purple) Enel - 1st Place EU Championship 26-27 S1";
     expect(deckShelf(euFinal)).toBe("tournament");
-    expect(shelfOf(html, euFinal)).toBe("Meta");
+    expect(shelfOf(html, euFinal)).toBe("Community");
     expect(html.indexOf("<h3>Your decks</h3>")).toBeLessThan(
-      html.indexOf('data-shelf-label="Meta"'),
+      html.indexOf('data-shelf-label="Community"'),
     );
-    expect(html.indexOf('data-shelf-label="Meta"')).toBeLessThan(
+    expect(html.indexOf('data-shelf-label="Community"')).toBeLessThan(
       html.indexOf('data-shelf-label="Official Featured"'),
     );
     // The Mihawk list that placed 3rd at the same event sits on the shelf
@@ -255,14 +255,14 @@ describe("the shelves the picker groups decks into", () => {
     const euThird =
       "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1";
     expect(deckShelf(euThird)).toBe("tournament");
-    expect(shelfOf(html, euThird)).toBe("Meta");
+    expect(shelfOf(html, euThird)).toBe("Community");
     expect(tileIndex(html, euFinal)).toBeLessThan(tileIndex(html, euThird));
     // A list transcribed from a tournament aggregator without a placing in
     // its id sits on the same shelf: it was read from an event too, and there
     // is no other shelf for a list that is neither a product nor Bandai's.
     const elbaph = "(Red/Black) Sabo - OP17 Elbaph List";
     expect(deckShelf(elbaph)).toBe("tournament");
-    expect(shelfOf(html, elbaph)).toBe("Meta");
+    expect(shelfOf(html, elbaph)).toBe("Community");
     expect(html.indexOf("Community Decks")).toBe(-1);
   });
 
@@ -280,7 +280,7 @@ describe("the shelves the picker groups decks into", () => {
       "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1";
 
     expect(deckShelf(second)).toBe("tournament");
-    expect(shelfOf(html, second)).toBe("Meta");
+    expect(shelfOf(html, second)).toBe("Community");
     expect(tileIndex(html, first)).toBeLessThan(tileIndex(html, second));
   });
 
@@ -314,18 +314,18 @@ describe("the shelf tabs", () => {
     );
   };
 
-  it("offers Meta, Official Featured and Starters, and opens on Meta", () => {
+  it("offers Community, Official Featured and Starters, and opens on Community", () => {
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: true,
     });
     const tabs = [...html.matchAll(/role="tab"[^>]*>([^<]+)</g)].map(
       (match) => match[1],
     );
-    expect(tabs).toEqual(["Meta", "Official Featured", "Starters"]);
+    expect(tabs).toEqual(["Community", "Official Featured", "Starters"]);
     expect(html).toMatch(
       /id="p1-deck-tab-meta" aria-controls="p1-deck-shelf-meta" aria-selected="true"/,
     );
-    expect(panelOf(html, "Meta")).not.toMatch(/<section[^>]*hidden/);
+    expect(panelOf(html, "Community")).not.toMatch(/<section[^>]*hidden/);
     expect(panelOf(html, "Starters")).toMatch(/<section[^>]*hidden/);
     // The player's own shelf is not a tab: it stays in view above them.
     expect(html.indexOf("<h3>Your decks</h3>")).toBeLessThan(
@@ -337,7 +337,7 @@ describe("the shelf tabs", () => {
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: true,
     });
-    for (const label of ["Meta", "Official Featured", "Starters"]) {
+    for (const label of ["Community", "Official Featured", "Starters"]) {
       expect(
         panelOf(html, label).match(/data-deck-filter-input/g),
       ).toHaveLength(1);

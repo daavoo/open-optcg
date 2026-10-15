@@ -326,6 +326,21 @@ function runSimulation(state: AnalyticsState, ctx: AnalyticsContext): void {
   ctx.rerender();
 }
 
+/**
+ * Start a run of `games` from outside the page: the lobby's AI-vs-AI choice
+ * asks for the size before the page is open, so the page opens already
+ * running rather than waiting on a second press of the same request.
+ */
+export function simulate(
+  state: AnalyticsState,
+  ctx: AnalyticsContext,
+  games: RunGames,
+): void {
+  if (state.running) return;
+  state.runGames = games;
+  runSimulation(state, ctx);
+}
+
 function downloadSample(state: AnalyticsState, ctx: AnalyticsContext): void {
   const samples = state.result?.samples;
   if (!samples || samples.length === 0) return;

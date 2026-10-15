@@ -740,7 +740,10 @@ const setupDeps: SetupContext = {
       homeScreen.bindLanding(homeDeps);
     },
   },
-  analyzeMatchup: showAnalytics,
+  simulateMatchup: (games) => {
+    showAnalytics();
+    analyticsScreen.simulate(store.analytics, analyticsDeps, games);
+  },
   editDeck: (target, basedOn) => {
     openDeckEditor(target, basedOn);
   },

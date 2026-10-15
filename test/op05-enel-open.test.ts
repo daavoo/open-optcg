@@ -12,7 +12,7 @@ import { deckManifests, deckShelf, loadDeck } from "@one-piece-sim/decks";
 const LIST = "(Yellow) Enel - Open OPTCG";
 
 describe("the Yellow Enel Open OPTCG list", () => {
-  it("is a legal 50 under the OP05-098 Leader, shelved under Meta", () => {
+  it("is a legal 50 under the OP05-098 Leader, shelved under Community", () => {
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(deckManifests[LIST]?.leader).toBe("OP05-098");
     expect(deckShelf(LIST)).toBe("tournament");

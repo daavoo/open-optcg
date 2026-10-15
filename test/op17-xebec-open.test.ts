@@ -12,7 +12,7 @@ import { deckManifests, deckShelf, loadDeck } from "@one-piece-sim/decks";
 const LIST = "(Blue) Rocks.D.Xebec - Open OPTCG";
 
 describe("the Blue Xebec Open OPTCG list", () => {
-  it("is a legal 50 under the OP17-039 Leader, shelved under Meta", () => {
+  it("is a legal 50 under the OP17-039 Leader, shelved under Community", () => {
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(deckManifests[LIST]?.leader).toBe("OP17-039");
     expect(deckShelf(LIST)).toBe("tournament");

@@ -26,7 +26,8 @@ async function watchOnAPhone(page: Page): Promise<void> {
   await page.locator("#seed").fill("phone-e2e");
   await page.locator("#starting-player").selectOption("p1");
   await page.locator("#matchup-config [data-close-dialog]").last().tap();
-  await page.getByRole("button", { name: "Watch AI", exact: true }).tap();
+  await page.getByRole("button", { name: "AI vs AI", exact: true }).tap();
+  await page.locator("#agents-watch").tap();
   await expect(page.locator(".simulate-bar")).toBeVisible();
 }
 

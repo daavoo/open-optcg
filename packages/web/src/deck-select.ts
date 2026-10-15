@@ -188,7 +188,7 @@ function deckGroups(
 ): DeckGroup[] {
   const shelves: DeckGroup[] = [
     { key: "saved", label: "Your decks", deckIds: [...saved] },
-    { key: "meta", label: "Meta", deckIds: [] },
+    { key: "meta", label: "Community", deckIds: [] },
     { key: "official", label: "Official Featured", deckIds: [] },
     { key: "starter", label: "Starters", deckIds: [] },
   ];
@@ -206,7 +206,7 @@ function deckGroups(
   // Each shipped shelf in the order a player reads the source it came from:
   // Bandai's feature-deck index newest first, and the starter products by
   // number -- ST-26 before ST-31, which reading them as strings would get
-  // right only by accident. The Meta shelf above them is left in the order the
+  // right only by accident. The Community shelf above them is left in the order the
   // id tuples list, which puts the two lists from one final in the order they
   // placed.
   shelves[2]!.deckIds.sort((left, right) =>
@@ -301,7 +301,7 @@ export function deckPickerDialog(
     : "";
   // The shipped shelves are tabs. An empty one -- the LLM seat's list can
   // leave a shelf with nothing on it -- gets no tab, and the grid opens on
-  // Meta, or on the first shelf left when Meta is empty.
+  // Community, or on the first shelf left when Community is empty.
   const tabs = shipped.filter((group) => group.deckIds.length > 0);
   const tabId = (group: DeckGroup): string => `${seat}-deck-tab-${group.key}`;
   const panelId = (group: DeckGroup): string =>
@@ -315,7 +315,7 @@ export function deckPickerDialog(
         .join("")}</div>`
     : "";
   // Each shelf filters on its own, so narrowing Starters to one colour does
-  // not leave Meta narrowed when the player switches back to it.
+  // not leave Community narrowed when the player switches back to it.
   const panels = tabs
     .map(
       (group, index) =>
