@@ -844,32 +844,27 @@
 .lobby-hub .hub-brand:hover {
   filter: drop-shadow(0 7px 20px rgba(0, 0, 0, 0.62));
 }
-/* Paper cells, not the board's graphite.
-
-   On the board the cluster is chrome laid over a game in progress and keeps out
-   of the way; here it is the page's only set of controls, standing on a grey
-   drawing with two cards for company. White is what reads as "these are the
-   things to press" against that -- and it leaves the mark in the middle the one
-   coloured object on the page, which is the right way round for a lobby. The
-   rim goes to full white under the pointer, so the cell still lights the way
-   every cell in the app does. */
+/* Ink cells with white glyphs, lettered like the seat headings and the
+   versus mark: black and white is the page's one palette for the things on
+   it, and it leaves the mark in the middle the one coloured object, which is
+   the right way round for a lobby. The rim is a white hairline so a black cell
+   still has an edge against the drawing's dark ink, and it goes to full white
+   under the pointer, so the cell lights the way every cell in the app does. */
 .lobby-hub .hub-face {
   background: rgba(255, 255, 255, 0.55);
-  color: #16151a;
+  color: #ffffff;
 }
 .lobby-hub .hub-face::before {
-  background: var(--parchment);
+  background: #0a0a0b;
 }
 .lobby-hub .hub-face:hover,
 .lobby-hub .hub-face:focus-visible {
   background: #ffffff;
-  /* The shared rule takes the ink white with the rim, which on paper is a cell
-     with nothing in it. */
-  color: #16151a;
+  color: #ffffff;
 }
 .lobby-hub .hub-face:hover::before,
 .lobby-hub .hub-face:focus-visible::before {
-  background: #ffffff;
+  background: #1f1e22;
 }
 /* Start is the command cell, and the one cell that begins anything, so its
    triangle is filled and drawn larger than the outline glyphs beside it. Its
@@ -883,15 +878,15 @@
   translate: 0.1rem 0;
 }
 /* Nothing to press -- an online seat still connecting -- so the cell
-   goes quiet the way the board's Waiting cell does: the paper greys and the
-   words go with it. */
+   goes quiet the way the board's Waiting cell does: the rim and the glyph
+   fade into the ink. */
 .lobby-hub .hub-play[disabled] {
-  background: rgba(255, 255, 255, 0.28);
-  color: #6b6257;
+  background: rgba(255, 255, 255, 0.22);
+  color: #6b6a70;
   cursor: default;
 }
 .lobby-hub .hub-play[disabled]::before {
-  background: #cdc7bb;
+  background: #0a0a0b;
 }
 
 /* What two agents are for: the two answers side by side (the trace dialog's
