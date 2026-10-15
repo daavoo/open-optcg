@@ -57,10 +57,8 @@ pnpm exec tsx research/system1/bridge/cards.ts   # from the repo root: card fact
 ```
 
 `data/`, `checkpoints/` and `.venv` are gitignored (they may also be symlinks,
-e.g. to a worktree holding a run in progress). A checkpoint trained with
-`--text pack` has read Bandai's printed text from the local asset pack: it and
-anything exported from it are for a personal build only. `--text none` trains
-on card facts alone and is safe to share.
+e.g. to a worktree holding a run in progress). `--text pack` trains on the
+card text in the local asset pack; `--text none` on card facts alone.
 
 ## The training run
 
@@ -145,9 +143,25 @@ pnpm web:build            # or --with-art for a personal copy with card images
 
 The build inlines the pack into the worker and the match setup offers a
 "Learned model" opponent, the default when present. The pack is gitignored;
-the build prints a warning when it inlines one trained on printed text. To play
-from a Python checkpoint over the local match server instead:
+`pnpm model:fetch` downloads the published one instead. To play from a Python
+checkpoint over the local match server instead:
 `pnpm exec tsx research/system1/bridge/play.ts`.
+
+### Publishing it
+
+The published model is the newest GitHub release whose tag starts with
+`model-`, carrying the pack as `scorer-model.json` and any deck adapters over it
+as `scorer-adapter-<deck>.json`. The hosted page's build (`pages.yml`) runs
+`pnpm model:fetch` and redeploys whenever a release is published:
+
+```sh
+mkdir -p /tmp/model && cp checkpoints/<run>-scorer-model.json /tmp/model/scorer-model.json
+gh release create model-<run> /tmp/model/scorer-model.json \
+  --title "Learned model: <run>" --notes "..."
+```
+
+`gh` names an asset after the file (a `#` suffix is only a display label), and
+those names are what `tools/fetch-model.ts` looks for.
 
 ## Using the Mac
 

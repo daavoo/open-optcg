@@ -10,10 +10,6 @@ The pack (read by packages/agents/src/scorer/pack.ts) holds:
 - only the embedding rows the renderer can produce, with a table from each
   pre-tokenised word seen in the corpus to its token ids (see tokenizer.ts).
 
-A checkpoint trained with the local text pack carries Bandai's printed text
-in its card vectors and weights: its pack is for a personal build only, like
-`pnpm web:build --with-text`. `--text none` checkpoints are clean.
-
 With `--parity out.json` it also writes sample decisions and the MLX model's
 probabilities for them, for `research/system1/bridge/parity-web.ts`.
 """
