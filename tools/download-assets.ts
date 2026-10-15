@@ -17,13 +17,10 @@
  * name and renamed, so an interrupted run never leaves a half image that a
  * later run would mistake for a finished one.
  *
- * The card list is one Apache host with no CDN in front of it, so the fetcher
- * below is what keeps a full run (about 60 list pages and 2,000 images) fast
- * without looking like an attack: a handful of requests in flight, more only
- * while every request succeeds, half as many and a pause for everyone the
- * moment the site pushes back, and `Retry-After` honoured when it is sent.
+ * Every request goes through `PoliteFetcher`
+ * (`fetch-reference/src/polite-fetcher.ts`), which keeps a full run (about 50
+ * list pages and 2,000 images) fast without looking like an attack.
  */
-import { randomInt } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
   mkdir,
@@ -47,175 +44,26 @@ import {
   type ArtUrl,
 } from "./fetch-reference/src/card-images.js";
 import {
+  forEachConcurrently,
+  PoliteFetcher,
+} from "./fetch-reference/src/polite-fetcher.js";
+import {
   BANDAI,
   CARDLIST_SERIES,
   cardlistUrl,
 } from "./fetch-reference/src/sources.js";
 
-export { pageImageUrls };
+export { pageImageUrls, PoliteFetcher };
 
 const USER_AGENT =
   "open-optcg-asset-downloader/0.2 (+https://github.com/daavoo/open-optcg)";
-/** Requests in flight at the start, and the most it will ever grow to. */
-const START_CONCURRENCY = 4;
+/** The most requests in flight, and so the width of every concurrent loop. */
 const MAX_CONCURRENCY = 8;
-const MAX_ATTEMPTS = 6;
-const REQUEST_TIMEOUT_MS = 60_000;
-const MAX_BACKOFF_MS = 60_000;
-/** A `Retry-After` longer than this is a block, not a pause; give up instead. */
-const MAX_RETRY_AFTER_MS = 5 * 60_000;
-/**
- * Statuses that mean "slow down" rather than "this does not exist": rate
- * limits, an overloaded server, and the 403 a web firewall answers with once
- * it has decided a client is too eager.
- */
-const THROTTLED = new Set([403, 408, 425, 429, 500, 502, 503, 504]);
 const IMAGE_EXTENSIONS = /\.(?:avif|gif|jpe?g|png|svg|webp)$/i;
 const PARTIAL_SUFFIX = ".part";
 const DEFAULT_FOLDER_NAME = "open-optcg-assets";
 
 type PrintedCard = { name: string; effect: string; trigger: string };
-
-const sleep = (ms: number) =>
-  new Promise<void>((done) => setTimeout(done, Math.max(0, ms)));
-
-class PermanentError extends Error {}
-
-/**
- * Every request goes through one of these, so the whole run shares one
- * concurrency budget and one view of whether the site is pushing back.
- * Additive increase, multiplicative decrease: one more request in flight
- * after each full window of successes, half as many after any failure.
- */
-export class PoliteFetcher {
-  private limit = START_CONCURRENCY;
-  private active = 0;
-  private successesAtLimit = 0;
-  private pausedUntil = 0;
-  private readonly waiting: (() => void)[] = [];
-
-  get concurrency(): number {
-    return this.limit;
-  }
-
-  private async acquire(): Promise<void> {
-    for (;;) {
-      const pause = this.pausedUntil - Date.now();
-      if (pause > 0) await sleep(pause);
-      else if (this.active < this.limit) {
-        this.active += 1;
-        return;
-      } else await new Promise<void>((wake) => this.waiting.push(wake));
-    }
-  }
-
-  private release(): void {
-    this.active -= 1;
-    this.wake();
-  }
-
-  private wake(): void {
-    const free = Math.max(1, this.limit - this.active);
-    for (const wake of this.waiting.splice(0, free)) wake();
-  }
-
-  private succeeded(): void {
-    this.successesAtLimit += 1;
-    if (
-      this.successesAtLimit >= this.limit * 2 &&
-      this.limit < MAX_CONCURRENCY
-    ) {
-      this.limit += 1;
-      this.successesAtLimit = 0;
-      this.wake();
-    }
-  }
-
-  private pushedBack(pauseMs: number): void {
-    this.limit = Math.max(1, Math.floor(this.limit / 2));
-    this.successesAtLimit = 0;
-    this.pausedUntil = Math.max(this.pausedUntil, Date.now() + pauseMs);
-  }
-
-  /** The body of `url`, retried until it arrives or plainly never will. */
-  async get(
-    url: string,
-    expectedType: "text/html" | "image/",
-  ): Promise<Buffer> {
-    let lastError: Error = new Error(url);
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-      const backoff =
-        Math.min(MAX_BACKOFF_MS, 1000 * 2 ** (attempt - 1)) + randomInt(1000);
-      let pause = backoff;
-      await this.acquire();
-      try {
-        const response = await fetch(url, {
-          headers: { "user-agent": USER_AGENT },
-          redirect: "follow",
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        });
-        if (response.ok) {
-          const type = response.headers.get("content-type") ?? "";
-          if (!type.startsWith(expectedType)) {
-            await response.body?.cancel();
-            throw new PermanentError(`unexpected content type ${type || "?"}`);
-          }
-          const body = Buffer.from(await response.arrayBuffer());
-          this.succeeded();
-          return body;
-        }
-        await response.body?.cancel();
-        if (!THROTTLED.has(response.status)) {
-          throw new PermanentError(`${response.status} ${response.statusText}`);
-        }
-        const retryAfter = retryAfterMs(response.headers.get("retry-after"));
-        if (retryAfter !== null && retryAfter > MAX_RETRY_AFTER_MS) {
-          throw new PermanentError(
-            `${response.status}: the site asked to wait ${Math.round(retryAfter / 60_000)} minutes; try again later`,
-          );
-        }
-        pause = Math.max(backoff, retryAfter ?? 0);
-        lastError = new Error(`${response.status} ${response.statusText}`);
-      } catch (error) {
-        if (error instanceof PermanentError) throw error;
-        lastError = error instanceof Error ? error : new Error(String(error));
-      } finally {
-        this.release();
-      }
-      // A timeout or a dropped connection is pushback too: an overloaded
-      // server sheds connections before it starts answering 503.
-      this.pushedBack(pause);
-      if (attempt < MAX_ATTEMPTS) await sleep(pause);
-    }
-    throw lastError;
-  }
-}
-
-function retryAfterMs(header: string | null): number | null {
-  if (!header) return null;
-  const seconds = Number(header);
-  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
-  const date = Date.parse(header);
-  return Number.isNaN(date) ? null : Math.max(0, date - Date.now());
-}
-
-/** Runs `worker` over `items` with every item started as soon as allowed. */
-async function forEachConcurrently<T>(
-  items: readonly T[],
-  worker: (item: T) => Promise<void>,
-): Promise<void> {
-  // The fetcher does the limiting; this only keeps the number of pending
-  // promises (and open file handles while writing) bounded.
-  let next = 0;
-  await Promise.all(
-    Array.from(
-      { length: Math.min(MAX_CONCURRENCY, items.length) },
-      async () => {
-        while (next < items.length) await worker(items[next++]!);
-      },
-    ),
-  );
-}
 
 /**
  * Every card a player can put in a deck, which is what the app can show --
@@ -243,17 +91,18 @@ async function readCardList(
 ): Promise<CardList> {
   const pages = new Map<string, string>();
   const failedPages: string[] = [];
-  await forEachConcurrently(CARDLIST_SERIES, async ([slug, series]) => {
-    try {
-      pages.set(
-        slug,
-        (await fetcher.get(cardlistUrl(series), "text/html")).toString("utf8"),
-      );
-    } catch (error) {
-      failedPages.push(slug);
-      log(`  could not read the ${slug} list: ${message(error)}`);
-    }
-  });
+  await forEachConcurrently(
+    CARDLIST_SERIES,
+    MAX_CONCURRENCY,
+    async ([slug, series]) => {
+      try {
+        pages.set(slug, await fetcher.text(cardlistUrl(series)));
+      } catch (error) {
+        failedPages.push(slug);
+        log(`  could not read the ${slug} list: ${message(error)}`);
+      }
+    },
+  );
   const text: Record<string, PrintedCard> = {};
   const images = new Map<string, ArtUrl>();
   // Series order, not arrival order: a card printed in more than one series
@@ -371,7 +220,10 @@ export async function downloadAssets(
     return report;
   }
 
-  const fetcher = new PoliteFetcher();
+  const fetcher = new PoliteFetcher({
+    max: MAX_CONCURRENCY,
+    headers: { "user-agent": USER_AGENT },
+  });
   log(`Reading Bandai's card list (${CARDLIST_SERIES.length} pages)…`);
   const list = await readCardList(fetcher, new Set(wanted), log);
   Object.assign(text, list.text);
@@ -387,7 +239,7 @@ export async function downloadAssets(
       "…",
   );
   const progress = progressLine(missingArt.length, () => fetcher.concurrency);
-  await forEachConcurrently(missingArt, async (card) => {
+  await forEachConcurrently(missingArt, MAX_CONCURRENCY, async (card) => {
     try {
       const url =
         list.images.get(card)?.url ?? (await searchImageUrl(fetcher, card));
@@ -416,7 +268,7 @@ async function searchImageUrl(
   const page = new URL("/cardlist/", BANDAI);
   page.searchParams.set("search", "true");
   page.searchParams.set("freewords", card);
-  const html = (await fetcher.get(page.href, "text/html")).toString("utf8");
+  const html = await fetcher.text(page.href);
   const path = officialImageUrls(html, card)[0];
   if (!path) throw new Error("not on Bandai's card list");
   return new URL(path, page).href;

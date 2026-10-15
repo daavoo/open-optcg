@@ -24,7 +24,10 @@ const result = await build({
   target: "es2022",
   minify: true,
   outfile: out,
-  define: { __WANTED_CARDS__: JSON.stringify(wantedCards()) },
+  define: {
+    __WANTED_CARDS__: JSON.stringify(wantedCards()),
+    __MAX_IN_FLIGHT__: process.env.GET_CARDS_MAX_IN_FLIGHT ?? "16",
+  },
   metafile: true,
   logLevel: "warning",
 });

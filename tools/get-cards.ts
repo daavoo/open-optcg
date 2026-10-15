@@ -25,6 +25,10 @@ import {
   type ArtUrl,
 } from "./fetch-reference/src/card-images.js";
 import {
+  forEachConcurrently,
+  PoliteFetcher,
+} from "./fetch-reference/src/polite-fetcher.js";
+import {
   BANDAI,
   CARDLIST_SERIES,
   cardlistUrl,
@@ -35,45 +39,16 @@ declare const __WANTED_CARDS__: string[];
 
 type PrintedCard = { name: string; effect: string; trigger: string };
 
-const CONCURRENCY = 4;
-const MAX_ATTEMPTS = 5;
-/** Statuses that mean "slow down", as in the Node downloader. */
-const THROTTLED = new Set([403, 408, 425, 429, 500, 502, 503, 504]);
+/**
+ * The most requests in flight; injected by the build. Twice the Node
+ * downloader's ceiling: a browser multiplexes them over one HTTP/2
+ * connection, and each request spends about a second waiting for its first
+ * byte, so it is waiting, not bandwidth, that more of them overlap. The
+ * fetcher only climbs this high while every request succeeds.
+ */
+declare const __MAX_IN_FLIGHT__: number;
+
 const PANEL_ID = "open-optcg-get-cards";
-
-const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
-
-/** The body of `url`, retried with a growing pause while the site pushes back. */
-async function get(url: string): Promise<Response> {
-  for (let attempt = 1; ; attempt += 1) {
-    let response: Response | null = null;
-    try {
-      response = await fetch(url, { credentials: "omit" });
-    } catch {
-      // A dropped connection: retried like a throttle.
-    }
-    if (response?.ok) return response;
-    if (response && !THROTTLED.has(response.status)) {
-      throw new Error(`${response.status} ${response.statusText}`);
-    }
-    if (attempt >= MAX_ATTEMPTS) {
-      throw new Error(response ? `${response.status}` : "network error");
-    }
-    await sleep(1000 * 2 ** (attempt - 1));
-  }
-}
-
-async function forEachConcurrently<T>(
-  items: readonly T[],
-  work: (item: T) => Promise<void>,
-): Promise<void> {
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: CONCURRENCY }, async () => {
-      while (next < items.length) await work(items[next++]!);
-    }),
-  );
-}
 
 /** Where the files go: a picked folder, or a zip assembled in memory. */
 interface Sink {
@@ -186,17 +161,22 @@ function panel() {
 async function run(sink: Sink, say: (line: string) => void): Promise<string> {
   const wanted = __WANTED_CARDS__;
   const wantedSet = new Set(wanted);
+  const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
   const pages = new Map<string, string>();
   let read = 0;
-  await forEachConcurrently(CARDLIST_SERIES, async ([slug, series]) => {
-    try {
-      pages.set(slug, await (await get(cardlistUrl(series))).text());
-    } catch {
-      // Counted below: a missing page shows up as cards with no text.
-    }
-    read += 1;
-    say(`Reading the card list: page ${read} of ${CARDLIST_SERIES.length}…`);
-  });
+  await forEachConcurrently(
+    CARDLIST_SERIES,
+    fetcher.max,
+    async ([slug, series]) => {
+      try {
+        pages.set(slug, await fetcher.text(cardlistUrl(series)));
+      } catch {
+        // Counted below: a missing page shows up as cards with no text.
+      }
+      read += 1;
+      say(`Reading the card list: page ${read} of ${CARDLIST_SERIES.length}…`);
+    },
+  );
 
   // Series order, not arrival order, as in the Node downloader: a card printed
   // in more than one series keeps the reading of the earlier page.
@@ -239,7 +219,8 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
   }
   const failed: string[] = [];
   let done = 0;
-  await forEachConcurrently(missing, async (card) => {
+  const started = Date.now();
+  await forEachConcurrently(missing, fetcher.max, async (card) => {
     try {
       let url = images.get(card)?.url;
       if (!url) {
@@ -247,20 +228,20 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
         const page = new URL("/cardlist/", BANDAI);
         page.searchParams.set("search", "true");
         page.searchParams.set("freewords", card);
-        const path = officialImageUrls(
-          await (await get(page.href)).text(),
-          card,
-        )[0];
+        const path = officialImageUrls(await fetcher.text(page.href), card)[0];
         if (!path) throw new Error("not on Bandai's card list");
         url = new URL(path, page).href;
       }
-      const bytes = new Uint8Array(await (await get(url)).arrayBuffer());
-      await sink.write(`art/${card}.png`, bytes);
+      await sink.write(`art/${card}.png`, await fetcher.get(url, "image/"));
     } catch {
       failed.push(card);
     }
     done += 1;
-    say(`Downloading card images: ${done} of ${missing.length}…`);
+    say(
+      `Downloading card images: ${done} of ${missing.length}` +
+        remaining(done, missing.length, Date.now() - started) +
+        ` (${fetcher.concurrency} at a time)…`,
+    );
   });
   say("Finishing…");
   await sink.finish();
@@ -275,6 +256,15 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
       : "") +
     "."
   );
+}
+
+/** ", about 12 minutes left", once there is enough of a run to judge by. */
+function remaining(done: number, total: number, elapsedMs: number): string {
+  if (done < 20) return "";
+  const minutes = Math.ceil(((total - done) * elapsedMs) / done / 60_000);
+  return minutes <= 1
+    ? ", about a minute left"
+    : `, about ${minutes} minutes left`;
 }
 
 function start(): void {
