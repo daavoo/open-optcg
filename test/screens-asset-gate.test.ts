@@ -16,13 +16,13 @@ function ctx(overrides: Partial<AssetGateContext> = {}): AssetGateContext {
 }
 
 describe("asset gate", () => {
-  it("offers the folder the downloader fills, and the zip the bookmark saves, where a folder can be picked", () => {
+  it("offers the folder and the zip the bookmark saves, where a folder can be picked", () => {
     const html = render(ctx());
     expect(html).toContain("data-asset-folder");
     expect(html).toContain("webkitdirectory");
     expect(html).toContain("Load asset folder");
     expect(html).toContain("data-asset-zip");
-    expect(html).toContain("data-asset-downloader");
+    expect(html).not.toContain("data-asset-downloader");
   });
 
   it("offers the Get cards bookmark, with its href left to bind()", () => {
@@ -38,7 +38,7 @@ describe("asset gate", () => {
     expect(html).toContain("data-asset-zip");
     expect(html).toContain('accept=".zip');
     expect(html).not.toContain("webkitdirectory");
-    expect(html).toContain("zip the folder");
+    expect(html).toContain("on a computer");
   });
 
   it("is a page of its own, with nothing to play on it", () => {

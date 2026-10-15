@@ -3,8 +3,8 @@ name: Deploy hosted app
 # The hosted copy of the app, on GitHub Pages. It is the same single HTML file
 # `pnpm web:build` produces, and it carries no card art and no printed card
 # text: the player loads their own asset pack into it (docs/asset-packs.md).
-# Publishing it is fine for the same reason the release binaries are: nothing
-# of Bandai's is in it.
+# Publishing it is fine because nothing of Bandai's is in it, nor in the
+# get-cards.js served beside it.
 #
 # Pages has to be switched on once in the repository settings, with "GitHub
 # Actions" as the source; until then this workflow fails at the deploy step.

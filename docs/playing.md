@@ -2,7 +2,8 @@
 
 Open <https://daavoo.github.io/open-optcg/> in any browser, phone included. It
 carries no card images or printed card text, and is not played without them:
-the first screen asks for the folder the asset downloader fills, see
+the first screen shows how to fetch them from Bandai's card list with the
+Get cards bookmark, see
 [Card text and art](asset-packs.md).
 
 From a checkout, `pnpm web:build` produces `dist/open-optcg.html`, the whole

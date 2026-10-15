@@ -262,9 +262,8 @@ export function artExtension(cardNumber: string, raw = false): string {
  * already skips whatever `local-art/` holds.
  */
 // Imported on first use rather than at the top: sharp is a native module, and
-// the standalone asset downloader (`pnpm assets:package`) ships without it and
-// stores the fetched format instead (`raw`), so a build that never converts
-// must never load it.
+// a run that stores the fetched format (`raw`) never converts, so it need not
+// load it.
 async function sharp(bytes: Buffer) {
   const { default: sharpModule } = await import("sharp");
   return sharpModule(bytes);

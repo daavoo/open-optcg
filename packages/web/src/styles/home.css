@@ -393,12 +393,6 @@
   gap: 0.5rem;
   padding-left: 1.25rem;
 }
-.asset-gate-panel ol ul {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0.35rem 0 0;
-  padding-left: 1.1rem;
-}
 .asset-gate-panel .home-assets {
   justify-content: flex-start;
   text-align: left;

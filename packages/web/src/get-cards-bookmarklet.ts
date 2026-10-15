@@ -9,8 +9,9 @@
  * list's Content-Security-Policy allows `'unsafe-inline'` scripts but no
  * script host of ours, and it sets no `connect-src`, so a fetch may reach the
  * hosted site (which answers with `Access-Control-Allow-Origin: *`). If Bandai
- * ever restricts `connect-src` or drops `'unsafe-inline'`, this stops working
- * and the downloader on the releases page is the way left.
+ * ever restricts `connect-src` or drops `'unsafe-inline'`, this stops working;
+ * pasting `get-cards.js` into the browser console on that page still runs it,
+ * since the console is not bound by the page's policy.
  */
 export const GET_CARDS_SCRIPT_URL =
   "https://daavoo.github.io/open-optcg/get-cards.js";

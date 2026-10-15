@@ -1,6 +1,6 @@
 /**
- * The fetcher both asset downloaders go through: the Node one
- * (`tools/download-assets.ts`) and the in-browser one (`tools/get-cards.ts`).
+ * The fetcher both asset downloaders go through: the players' in-browser one
+ * (`tools/get-cards.ts`) and a checkout's (`tools/download-assets.ts`).
  * Web APIs only, so it runs in either.
  *
  * Bandai's card list is one Apache host with no CDN in front of it, and each

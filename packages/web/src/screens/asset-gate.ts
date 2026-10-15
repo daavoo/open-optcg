@@ -9,13 +9,13 @@ import * as footer from "./footer.js";
  * The app ships with neither -- both are Bandai's, and the project distributes
  * only its own work -- and it is not played without them: until a pack is in,
  * this screen is the whole app (see `assetsReady()` in ../assets.ts). The
- * player runs the asset downloader, which fills a folder from Bandai's card
- * list, and hands that folder to the page.
+ * player runs the "Get cards" bookmark on Bandai's card list
+ * (../get-cards-bookmarklet.ts), which saves the pack as a folder or a zip,
+ * and hands that to the page.
  *
- * One way to hand it over per device, not a choice of two: a browser that can
- * pick a folder is offered the folder, which is exactly what the downloader
- * wrote. A phone or tablet cannot pick a folder, so there -- and only there --
- * the control takes a zip of it instead.
+ * A browser that can pick a folder is offered the folder and the zip, since
+ * the bookmark saves a zip wherever it cannot write a folder. A phone or
+ * tablet cannot pick a folder, so there the control takes only the zip.
  *
  * The same status line and control are printed in the Configure dialog once a
  * pack is in, which is where a newer one is loaded after a new set.
@@ -38,7 +38,6 @@ export interface AssetGateContext {
 // external `href` at all, which `tools/build-web.ts` enforces.
 const ASSET_PACK_DOCS_URL =
   "https://github.com/daavoo/open-optcg/blob/main/docs/asset-packs.md";
-const DOWNLOADER_URL = "https://github.com/daavoo/open-optcg/releases/latest";
 const BANDAI_CARDLIST_URL = "https://en.onepiece-cardgame.com/cardlist/";
 
 /**
@@ -94,8 +93,8 @@ function renderControl(ctx: AssetGateContext): string {
 /** The whole app until a pack is in. */
 export function render(ctx: AssetGateContext): string {
   const load = ctx.folderPicker
-    ? "Choose <strong>Load asset folder</strong> or <strong>Load asset pack (.zip)</strong> below and pick what it saved."
-    : "On the computer, zip the folder it filled (the bookmark saves a zip already) and move the zip to this device. Then choose <strong>Load asset pack (.zip)</strong> below and pick it.";
+    ? "Back here, choose <strong>Load asset folder</strong> or <strong>Load asset pack (.zip)</strong> below and pick what it saved."
+    : "Bookmarks are awkward on a phone or tablet, so do the steps above on a computer, choosing <strong>Download as a zip</strong>, and move the zip to this device. Then choose <strong>Load asset pack (.zip)</strong> below and pick it.";
   return `
     <main class="setup-shell home-shell asset-gate">
       <header class="setup-topbar">
@@ -108,12 +107,8 @@ export function render(ctx: AssetGateContext): string {
         <h1>Load the card art and text</h1>
         <p>Open OPTCG ships without card images and printed card text, because they belong to Bandai. You download them yourself, from Bandai's own card list, once.</p>
         <ol>
-          <li>Fetch the cards from Bandai's card list, one of two ways:
-            <ul>
-              <li>Nothing to install: drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar, open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em></li>
-              <li>Or get the asset downloader for your computer and run it. It asks where to save the cards. <button class="home-assets-help" type="button" data-asset-downloader>Get the downloader</button></li>
-            </ul>
-          </li>
+          <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em></li>
+          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards into a folder or a zip; keep that tab open until it says it is done.</li>
           <li>${load}</li>
         </ol>
         <p>The browser keeps them for your next visit. Nothing is uploaded anywhere.</p>
@@ -168,7 +163,6 @@ export function bindControls(ctx: AssetGateContext): void {
   });
   const opens: readonly [string, string][] = [
     ["[data-asset-help]", ASSET_PACK_DOCS_URL],
-    ["[data-asset-downloader]", DOWNLOADER_URL],
     ["[data-bandai-cardlist]", BANDAI_CARDLIST_URL],
   ];
   for (const [selector, url] of opens) {

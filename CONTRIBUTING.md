@@ -156,8 +156,8 @@ checklists.
 ## Card art and the hosted app
 
 `pnpm web:build` never fetches art and inlines none. The hosted page
-(`.github/workflows/pages.yml`, deployed from `main`), the release binaries and
-`dist/open-optcg.html` all ship without card art or printed text; the player
+(`.github/workflows/pages.yml`, deployed from `main`), the `get-cards.js` it
+serves and `dist/open-optcg.html` all ship without card art or printed text; the player
 loads an [asset pack](docs/asset-packs.md). `pnpm art:download --all BOOSTERS`
 fetches art into the gitignored `local-art/`, and `pnpm web:build --with-art`
 inlines it into a personal copy -- taking the union of `local-art/` and the
@@ -169,9 +169,11 @@ Art is re-encoded to WebP on the way in, which halves the size with no visible
 difference; `--raw` keeps the source format. [Art
 anchors](docs/art-anchors.md) lists the non-card surfaces.
 
-`pnpm assets:download` fills the folder a player loads, and
-`pnpm assets:package` wraps it as the double-click `open-optcg-assets-*`
-executable the release ships, which asks for the folder in a native dialog.
+Players build their pack with the **Get cards** bookmarklet: `pnpm
+get-cards:build` bundles `tools/get-cards.ts` into `dist/get-cards.js`, which
+the Pages workflow serves beside the app, and the bookmark fetches and runs it
+on Bandai's card list. `pnpm assets:download` writes the same pack from a
+checkout.
 
 ## Online play
 
@@ -185,9 +187,10 @@ map of what exists and what is still missing.
 
 ## Releases
 
-The game is the hosted page and nothing else. A dated tag (`YYYY.M.D`) runs
-`.github/workflows/release.yml`, which builds the asset downloader
-(`pnpm assets:package`) once per platform and attaches it to the release.
+The game is the hosted page and nothing else: every push to `main` redeploys
+it. A GitHub release is only for the learned model: the newest `model-*`
+release's `scorer-model.json` is what the page inlines (see
+`research/system1/README.md`).
 `pnpm web:serve` is a checkout's way to play against an LLM: its loopback
 server keeps the key in `~/.open-optcg/llm.json` and the page only ever sees its
 last four characters.

@@ -1,15 +1,14 @@
 /**
- * The asset downloader: fetches the printed text and the card art the
- * published app deliberately ships without, from Bandai's own card list, into
- * a folder on the player's disk. It does nothing else.
+ * The asset downloader for a checkout: fetches the printed text and the card
+ * art the published app deliberately ships without, from Bandai's own card
+ * list, into a folder on disk. Players get the same pack from the "Get cards"
+ * bookmark (`tools/get-cards.ts`); this is what the local builds, the tests
+ * that quote printed text and the System-1 research read.
  *
  *   pnpm assets:download [--output=<dir>]     (default: open-optcg-assets/)
- *   open-optcg-assets                         (double-clicked: asks for a folder)
  *
  * writes `<dir>/printed-text.json` (the text of every card the engine knows)
- * and `<dir>/art/<card number>.png` (one image per card). Then, in the app:
- * home screen, "Load asset folder", pick `<dir>`. `pnpm assets:package` wraps
- * this file as the double-click executable -- see docs/asset-packs.md.
+ * and `<dir>/art/<card number>.png` (one image per card).
  *
  * Rerunning it into the same folder fetches only what is missing: an image
  * already on disk is never fetched again, and a folder that already holds
@@ -31,12 +30,9 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
 import { cardRegistry } from "@one-piece-sim/cards";
 import { SEALED_LEADER } from "@one-piece-sim/decks";
-import { chooseFolder, showMessage } from "./assets-dialog.js";
 import { parseOfficialCards } from "./audit-cards/src/parse-cardlist.js";
 import {
   officialImageUrls,
@@ -300,109 +296,37 @@ function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** Whether this process is the packaged, double-clicked executable. */
-async function isStandalone(): Promise<boolean> {
-  try {
-    const sea = (await import("node:sea")) as { isSea?: () => boolean };
-    return sea.isSea?.() ?? false;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * The folder to fill, given the one the player picked. Their own pick when it
- * is empty or already a pack; otherwise a fresh `open-optcg-assets` inside
- * it, so choosing Downloads does not scatter two thousand images across it.
- */
-async function packFolder(picked: string): Promise<string> {
-  if (!existsSync(picked)) return picked;
-  const entries = (await readdir(picked)).filter(
-    (name) => !name.startsWith("."),
-  );
-  const isPack =
-    entries.length === 0 ||
-    entries.includes("printed-text.json") ||
-    entries.includes("art");
-  return isPack ? picked : join(picked, DEFAULT_FOLDER_NAME);
-}
-
-async function askForFolder(): Promise<string | null> {
-  const downloads = join(homedir(), "Downloads");
-  const startIn = existsSync(downloads) ? downloads : homedir();
-  const choice = await chooseFolder(
-    "Choose the folder to download the One Piece card art and text into",
-    startIn,
-  );
-  if (choice.kind === "chosen") return packFolder(choice.path);
-  if (choice.kind === "cancelled") return null;
-  const fallback = join(startIn, DEFAULT_FOLDER_NAME);
-  if (!process.stdin.isTTY) return fallback;
-  const prompt = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const answer = (
-    await prompt.question(`Folder to download into [${fallback}]: `)
-  ).trim();
-  prompt.close();
-  return answer ? packFolder(resolve(answer)) : fallback;
-}
-
 export async function main(args: readonly string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
     console.log(
-      "Usage: open-optcg-assets [--output=<dir>]\n" +
-        "       (from a checkout: pnpm assets:download, same flag)\n\n" +
+      "Usage: pnpm assets:download [--output=<dir>]\n\n" +
         "Downloads the printed text and card art the Open OPTCG app ships without,\n" +
-        "from Bandai's card list, into <dir>:\n" +
+        `from Bandai's card list, into <dir> (default ${DEFAULT_FOLDER_NAME}/):\n` +
         "  <dir>/printed-text.json  the printed text of every card the engine knows\n" +
         "  <dir>/art/               one image per card\n\n" +
-        "Run without --output, the downloaded executable asks for the folder. Run\n" +
-        "again into the same folder to fetch only what is missing. Then open the app,\n" +
-        'choose "Load asset folder" on the home screen, and pick <dir>.',
+        "Run again into the same folder to fetch only what is missing.",
     );
     return;
   }
   const outputArg = args.find((arg) => arg.startsWith("--output="));
-  const interactive = !outputArg && (await isStandalone());
-  const output = outputArg
-    ? resolve(outputArg.slice("--output=".length))
-    : interactive
-      ? await askForFolder()
-      : resolve(DEFAULT_FOLDER_NAME);
-  if (!output) {
-    console.log("No folder chosen; nothing downloaded.");
-    return;
-  }
+  const output = resolve(
+    outputArg ? outputArg.slice("--output=".length) : DEFAULT_FOLDER_NAME,
+  );
   console.log(`Downloading Open OPTCG card text and art into ${output}`);
-  try {
-    const report = await downloadAssets(output);
-    const failed =
-      report.failed.length === 0
-        ? ""
-        : `\n\n${report.failed.length} image${report.failed.length === 1 ? "" : "s"} could not be downloaded (${report.failed.slice(0, 10).join(", ")}${report.failed.length > 10 ? ", …" : ""}). Run this again later to fetch just those.`;
-    const summary =
-      `Printed text for ${report.textCards} cards; ` +
-      `${report.downloaded} image${report.downloaded === 1 ? "" : "s"} downloaded, ${report.alreadyThere} already there.` +
-      failed +
-      `\n\nIn the app, choose "Load asset folder" and pick:\n${output}`;
-    console.log(`\n${summary}`);
-    if (report.failed.length > 0) process.exitCode = 1;
-    if (interactive) await showMessage("Open OPTCG card assets", summary);
-  } catch (error) {
-    if (interactive) {
-      await showMessage(
-        "Open OPTCG card assets",
-        `The download stopped: ${message(error)}\n\nRun it again to continue where it left off.`,
-        true,
-      );
-    }
-    throw error;
-  }
+  const report = await downloadAssets(output);
+  const failed =
+    report.failed.length === 0
+      ? ""
+      : `\n\n${report.failed.length} image${report.failed.length === 1 ? "" : "s"} could not be downloaded (${report.failed.slice(0, 10).join(", ")}${report.failed.length > 10 ? ", …" : ""}). Run this again later to fetch just those.`;
+  const summary =
+    `Printed text for ${report.textCards} cards; ` +
+    `${report.downloaded} image${report.downloaded === 1 ? "" : "s"} downloaded, ${report.alreadyThere} already there.` +
+    failed +
+    `\n\nIn the app, choose "Load asset folder" and pick:\n${output}`;
+  console.log(`\n${summary}`);
+  if (report.failed.length > 0) process.exitCode = 1;
 }
 
-// No top-level await: the packaged executable bundles this file as CommonJS.
 const invokedDirectly =
   process.argv[1] !== undefined &&
   /download-assets\.(?:ts|js|cjs)$/.test(process.argv[1]);
