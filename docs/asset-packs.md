@@ -6,8 +6,8 @@ card's printed text. It ships without the two things that belong to Bandai:
 card images and the printed text itself, and it is not played without them:
 until both are loaded, the only screen is the one that asks for them.
 
-An **asset pack** fills that gap. It is a folder of card images plus one
-`printed-text.json`, built by you, on your own computer, from Bandai's public
+An **asset pack** fills that gap. It is a zip of card images plus one
+`printed-text.json`, built by you, in your own browser, from Bandai's public
 card list. The project never hosts one.
 
 ## Fetch it with the Get cards bookmark
@@ -20,19 +20,26 @@ Nothing is installed.
 1. Drag **Get cards** to your browser's bookmarks bar.
 2. Open [Bandai's card list](https://en.onepiece-cardgame.com/cardlist/) and
    click the bookmark. A panel opens in the corner of Bandai's page.
-3. Choose **Save into a folder** (Chrome and Edge) or **Download as a zip**
-   (any browser). Keep the tab open while it fetches the printed text and
-   about 2,000 images (roughly 430 MB); the panel counts them and estimates
-   the time left.
-4. Back in the app, choose **Load asset folder** or **Load asset pack (.zip)**
-   and pick what it saved. The browser keeps it for the next visit. Nothing is
-   uploaded anywhere. A newer pack loads from **Configure matchup**, under
-   _Card text and art_.
+3. Choose **Download the cards**. It fetches the printed text and about 2,000
+   images (roughly 430 MB, a few minutes); the panel counts them and
+   estimates the time left, then saves `open-optcg-assets.zip` to your
+   downloads. You can switch to other tabs while it runs. Closing, reloading
+   or browsing away from that tab stops it (the browser asks first), but
+   nothing fetched is lost: run the bookmark again and it carries on from
+   the images already saved.
+4. Back in the app, choose **Load asset pack (.zip)** and pick that zip. The
+   browser keeps the cards for the next visit. Nothing is uploaded anywhere. A
+   newer pack loads from **Configure matchup**, under _Card text and art_.
 
 The bookmark only fetches the downloader script from the hosted site and runs
-it, so it stays current without being re-added. After a new set comes out,
-saving into the same folder again fetches only what is missing; a zip is
-fetched whole each time.
+it, so it stays current without being re-added.
+
+Each image is saved in your browser as it arrives (in IndexedDB, under
+Bandai's site, like anything else that page stores), and kept after the zip
+is made. So after a new set comes out, running the bookmark again fetches only
+the new cards and saves a complete zip. **Forget the saved images**, in the
+panel, deletes them; so does clearing that site's data in your browser. A
+private window keeps nothing, so there every run starts from scratch.
 
 It runs several downloads at once, more while Bandai's site keeps up and
 fewer, after a pause, the moment it pushes back. Each failed request is
@@ -46,10 +53,9 @@ contents of <https://daavoo.github.io/open-optcg/get-cards.js>.
 
 ### Phone or tablet: load a zip
 
-Bookmarklets are awkward to set up on a phone, and a phone's file picker
-cannot select a folder, so there the page asks for a zip. Run the bookmark on
-a computer with **Download as a zip**, get the zip onto the device (AirDrop, a
-cable, a cloud drive), then tap **Load asset pack (.zip)** and pick it.
+Bookmarklets are awkward to set up on a phone, so run the bookmark on a
+computer, get the zip onto the device (AirDrop, a cable, a cloud drive), then
+tap **Load asset pack (.zip)** and pick it.
 
 On iPhone and iPad, add the page to your home screen. Safari clears the storage
 of a site you have not opened for a week otherwise, and you would have to load
@@ -60,11 +66,11 @@ the zip again.
 `pnpm assets:download` writes the same pack into `open-optcg-assets/`
 (`--output=<dir>` for another folder), and a rerun fetches only what is
 missing. The local builds, the tests that quote printed text and the System-1
-research read that folder.
+research read that folder; zip it to load it into the page.
 
 ## Making your own pack
 
-Anything laid out like this loads, as a folder or zipped:
+Any zip laid out like this loads:
 
 ```
 open-optcg-assets/
@@ -76,7 +82,7 @@ open-optcg-assets/
     ...
 ```
 
-Folder nesting does not matter; files are matched by name. Card
+Folder nesting inside the zip does not matter; files are matched by name. Card
 images are named by card number. Images named after a surface in
 [art anchors](art-anchors.md), such as `mat-self.jpg` or `card-back.png`,
 replace that surface. Anything else is ignored. Recognised image formats:

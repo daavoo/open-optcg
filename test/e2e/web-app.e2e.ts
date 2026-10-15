@@ -1,8 +1,9 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, test, type Page } from "./fixtures.js";
 import { pathToFileURL } from "node:url";
+import { strToU8, zipSync } from "fflate";
 import { openShelfOf } from "./deck-picker.js";
 
 /**
@@ -44,41 +45,39 @@ const PIXEL_PNG = Buffer.from(
 );
 
 /**
- * A pack folder laid out as the asset downloader writes one: the text pack,
- * and `art/` with one image per named card. The words are test data -- the
- * suite must not depend on Bandai's text -- and what is under test is the
- * import path and every surface that reads through it.
+ * A pack zip laid out as the Get cards bookmark saves one: the text pack, and
+ * `art/` with one image per named card. The words are test data -- the suite
+ * must not depend on Bandai's text -- and what is under test is the import
+ * path and every surface that reads through it.
  */
-async function writePackFolder(
+async function writePackZip(
   cards: Record<string, { effect: string; trigger?: string }>,
   art: readonly string[] = [],
 ): Promise<string> {
-  const folder = await mkdtemp(join(tmpdir(), "open-optcg-pack-"));
-  await writeFile(
-    join(folder, "printed-text.json"),
-    JSON.stringify({ version: 1, cards }),
+  const entries: Record<string, Uint8Array> = {
+    "printed-text.json": strToU8(JSON.stringify({ version: 1, cards })),
+  };
+  for (const card of art) entries[`art/${card}.png`] = PIXEL_PNG;
+  const path = join(
+    await mkdtemp(join(tmpdir(), "open-optcg-pack-")),
+    "open-optcg-assets.zip",
   );
-  await mkdir(join(folder, "art"));
-  for (const card of art) {
-    await writeFile(join(folder, "art", `${card}.png`), PIXEL_PNG);
-  }
-  return folder;
+  await writeFile(path, zipSync(entries));
+  return path;
 }
 
 /**
  * Loads a text pack the way a player with one already in loads a newer one:
- * the folder control in the Configure dialog. It is in the DOM whether or not
+ * the zip control in the Configure dialog. It is in the DOM whether or not
  * the dialog is open.
  */
 async function loadTextPack(
   page: Page,
   cards: Record<string, { effect: string; trigger?: string }>,
 ): Promise<void> {
-  const folder = await writePackFolder(cards);
+  const zip = await writePackZip(cards);
   await page.goto(appUrl);
-  await page
-    .locator(".dialog-assets [data-asset-folder]")
-    .setInputFiles(folder);
+  await page.locator(".dialog-assets [data-asset-zip]").setInputFiles(zip);
   await expect(
     page.locator(".dialog-assets .home-assets-status"),
   ).toContainText(`printed text for ${Object.keys(cards).length} card`);
@@ -1502,10 +1501,9 @@ test.describe("before any asset pack is loaded", () => {
       page.getByRole("heading", { name: "Load the card art and text" }),
     ).toBeVisible();
     await expect(page.locator("#setup-form")).toHaveCount(0);
-    await expect(page.locator("[data-asset-folder]")).toHaveCount(1);
-    // And the zip beside it: the Get cards bookmark saves one in a desktop
-    // browser that cannot write a folder.
+    // One control, the zip the Get cards bookmark saves.
     await expect(page.locator("[data-asset-zip]")).toHaveCount(1);
+    await expect(page.locator("[data-asset-folder]")).toHaveCount(0);
     await expect(page.locator("[data-get-cards]")).toHaveAttribute(
       "href",
       /^javascript:/,
@@ -1518,9 +1516,9 @@ test.describe("before any asset pack is loaded", () => {
   test("text without art is not enough to play", async ({ page }) => {
     await page.goto(appUrl);
     await page
-      .locator("[data-asset-folder]")
+      .locator("[data-asset-zip]")
       .setInputFiles(
-        await writePackFolder({ "OP01-016": { effect: "[On Play] Text." } }),
+        await writePackZip({ "OP01-016": { effect: "[On Play] Text." } }),
       );
     await expect(page.locator(".home-assets-notice")).toContainText(
       "missing the card images",
@@ -1528,14 +1526,14 @@ test.describe("before any asset pack is loaded", () => {
     await expect(page.locator("#setup-form")).toHaveCount(0);
   });
 
-  test("the folder the downloader fills opens the lobby, and stays loaded", async ({
+  test("the zip the bookmark saves opens the lobby, and stays loaded", async ({
     page,
   }) => {
     await page.goto(appUrl);
     await page
-      .locator("[data-asset-folder]")
+      .locator("[data-asset-zip]")
       .setInputFiles(
-        await writePackFolder({ "OP01-016": { effect: "[On Play] Text." } }, [
+        await writePackZip({ "OP01-016": { effect: "[On Play] Text." } }, [
           "OP01-016",
         ]),
       );

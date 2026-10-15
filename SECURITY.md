@@ -7,14 +7,14 @@ standalone build are one HTML file with no backend. There are no accounts, and
 user data never leaves the page. `pnpm web:serve`, run from a checkout, adds a
 loopback server on the player's own machine, which holds an LLM API key if the
 player configures one. The Get cards bookmark runs on Bandai's card list page:
-it only reads that site's public card list and saves into the folder or zip
-the player picks.
+it only reads that site's public card list and saves a zip to the player's
+downloads.
 That shapes what counts as a vulnerability here.
 
 **In scope:**
 
 - Anything that lets an imported trace, deck, diagnostics file or asset pack
-  (folder or zip) run code in the page. All of them are attacker-supplied input as soon as
+  zip run code in the page. All of them are attacker-supplied input as soon as
   one person sends another a file.
 - Anything that lets a card's printed text, an LLM response, or a deck name
   reach the DOM unescaped (see `escapeHtml` in `packages/web/src/card-text.ts`).

@@ -9,8 +9,7 @@
  * straight from Bandai to the player's machine.
  *
  * It writes what `tools/download-assets.ts` writes -- `printed-text.json` and
- * `art/<card number>.png` -- into a folder the player picks (where the browser
- * can pick one) or a zip it saves; the app loads either.
+ * `art/<card number>.png` -- into a zip it saves, which the app loads.
  *
  * Built by `tools/build-get-cards.ts` into `dist/get-cards.js`, which the
  * hosted site serves next to the app. The bookmarklet only fetches and runs
@@ -50,48 +49,13 @@ declare const __MAX_IN_FLIGHT__: number;
 
 const PANEL_ID = "open-optcg-get-cards";
 
-/** Where the files go: a picked folder, or a zip assembled in memory. */
-interface Sink {
-  has(path: string): Promise<boolean>;
-  write(path: string, data: Uint8Array): Promise<void>;
+/** The pack as a zip assembled in memory, saved as a download at the end. */
+interface ZipWriter {
+  write(path: string, data: Uint8Array): void;
   finish(): Promise<void>;
 }
 
-async function folderSink(): Promise<Sink> {
-  const root = await (
-    window as unknown as {
-      showDirectoryPicker(o: object): Promise<FileSystemDirectoryHandle>;
-    }
-  ).showDirectoryPicker({ id: "open-optcg-assets", mode: "readwrite" });
-  const art = await root.getDirectoryHandle("art", { create: true });
-  const dirFor = (path: string) =>
-    path.startsWith("art/")
-      ? { dir: art, name: path.slice(4) }
-      : { dir: root, name: path };
-  return {
-    // A rerun into the same folder fetches only what is missing, as the Node
-    // downloader does.
-    async has(path) {
-      const { dir, name } = dirFor(path);
-      try {
-        return (await (await dir.getFileHandle(name)).getFile()).size > 0;
-      } catch {
-        return false;
-      }
-    },
-    async write(path, data) {
-      const { dir, name } = dirFor(path);
-      const writable = await (
-        await dir.getFileHandle(name, { create: true })
-      ).createWritable();
-      await writable.write(data as Uint8Array<ArrayBuffer>);
-      await writable.close();
-    },
-    async finish() {},
-  };
-}
-
-function zipSink(): Sink {
+function zipWriter(): ZipWriter {
   // Streamed into chunks rather than one buffer: a full run is a few hundred
   // MB of PNGs, and a Blob made of parts never needs them contiguous.
   const parts: Uint8Array[] = [];
@@ -103,10 +67,7 @@ function zipSink(): Sink {
     if (final) done();
   });
   return {
-    async has() {
-      return false;
-    },
-    async write(path, data) {
+    write(path, data) {
       // Stored, not deflated: PNGs do not compress, and deflating 400 MB on
       // the page's thread would freeze it.
       const entry = new ZipPassThrough(path);
@@ -128,6 +89,92 @@ function zipSink(): Sink {
       setTimeout(() => {
         URL.revokeObjectURL(url);
       }, 60_000);
+    },
+  };
+}
+
+/**
+ * Card images kept in this browser between runs, so a run that was closed
+ * half way, or one after a new set, fetches only what it does not have yet.
+ *
+ * IndexedDB rather than `localStorage`, which holds a few MB where a full set
+ * of images is a few hundred. It belongs to the page the script runs on --
+ * Bandai's card list, in the player's own browser -- like anything else that
+ * page stores. An image is kept with the path it came from, so one Bandai
+ * moves to a new file is fetched again; the query string is left out of that
+ * comparison because the site bumps it for every image at once.
+ */
+interface ArtCache {
+  /** The saved image, if it came from `path`; any saved one when `path` is null. */
+  get(card: string, path: string | null): Promise<Uint8Array | null>;
+  put(card: string, path: string, bytes: Uint8Array): Promise<void>;
+  count(): Promise<number>;
+  clear(): Promise<void>;
+}
+
+const CACHE_DB = "open-optcg-get-cards";
+const CACHE_STORE = "art";
+
+function request<T>(req: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => {
+      resolve(req.result);
+    };
+    req.onerror = () => {
+      reject(req.error ?? new Error("IndexedDB request failed"));
+    };
+  });
+}
+
+/** The cache, or null where the browser keeps no storage (a private window). */
+async function openArtCache(): Promise<ArtCache | null> {
+  let db: IDBDatabase;
+  try {
+    const open = indexedDB.open(CACHE_DB, 1);
+    open.onupgradeneeded = () => {
+      open.result.createObjectStore(CACHE_STORE, { keyPath: "card" });
+    };
+    db = await request(open);
+  } catch {
+    return null;
+  }
+  const store = (mode: IDBTransactionMode) =>
+    db.transaction(CACHE_STORE, mode).objectStore(CACHE_STORE);
+  // A full disk or a refused quota turns the cache off for the rest of the
+  // run rather than failing it: the zip is what matters.
+  let writable = true;
+  return {
+    async get(card, path) {
+      try {
+        const row = (await request(store("readonly").get(card))) as
+          { path: string; bytes: Uint8Array } | undefined;
+        if (!row) return null;
+        return path === null || row.path === path ? row.bytes : null;
+      } catch {
+        return null;
+      }
+    },
+    async put(card, path, bytes) {
+      if (!writable) return;
+      try {
+        await request(store("readwrite").put({ card, path, bytes }));
+      } catch {
+        writable = false;
+      }
+    },
+    async count() {
+      try {
+        return await request(store("readonly").count());
+      } catch {
+        return 0;
+      }
+    },
+    async clear() {
+      try {
+        await request(store("readwrite").clear());
+      } catch {
+        // Nothing to forget.
+      }
     },
   };
 }
@@ -158,7 +205,11 @@ function panel() {
   };
 }
 
-async function run(sink: Sink, say: (line: string) => void): Promise<string> {
+async function run(
+  cache: ArtCache | null,
+  say: (line: string) => void,
+): Promise<string> {
+  const zip = zipWriter();
   const wanted = __WANTED_CARDS__;
   const wantedSet = new Set(wanted);
   const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
@@ -198,7 +249,7 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
   const sorted = Object.fromEntries(
     Object.entries(text).sort(([a], [b]) => a.localeCompare(b)),
   );
-  await sink.write(
+  zip.write(
     "printed-text.json",
     new TextEncoder().encode(
       `${JSON.stringify(
@@ -213,44 +264,45 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
     ),
   );
 
-  const missing: string[] = [];
-  for (const card of wanted) {
-    if (!(await sink.has(`art/${card}.png`))) missing.push(card);
-  }
   const failed: string[] = [];
   let done = 0;
+  let saved = 0;
   const started = Date.now();
-  await forEachConcurrently(missing, fetcher.max, async (card) => {
+  await forEachConcurrently(wanted, fetcher.max, async (card) => {
     try {
-      let url = images.get(card)?.url;
-      if (!url) {
-        // A promo or reprint no list page carries: Bandai's search finds it.
-        const page = new URL("/cardlist/", BANDAI);
-        page.searchParams.set("search", "true");
-        page.searchParams.set("freewords", card);
-        const path = officialImageUrls(await fetcher.text(page.href), card)[0];
-        if (!path) throw new Error("not on Bandai's card list");
-        url = new URL(path, page).href;
+      const listed = images.get(card)?.url;
+      // A card no list page carries is found through Bandai's search, a
+      // request of its own; a saved copy of it is taken without asking.
+      const kept = await cache?.get(
+        card,
+        listed ? new URL(listed).pathname : null,
+      );
+      if (kept) {
+        saved += 1;
+        zip.write(`art/${card}.png`, kept);
+      } else {
+        const url = listed ?? (await searchImageUrl(fetcher, card));
+        const bytes = await fetcher.get(url, "image/");
+        zip.write(`art/${card}.png`, bytes);
+        await cache?.put(card, new URL(url).pathname, bytes);
       }
-      await sink.write(`art/${card}.png`, await fetcher.get(url, "image/"));
     } catch {
       failed.push(card);
     }
     done += 1;
     say(
-      `Downloading card images: ${done} of ${missing.length}` +
-        remaining(done, missing.length, Date.now() - started) +
-        ` (${fetcher.concurrency} at a time)…`,
+      `Card images: ${done} of ${wanted.length}` +
+        (saved ? ` (${saved} already saved in this browser)` : "") +
+        remaining(done - saved, wanted.length - done, Date.now() - started) +
+        `, ${fetcher.concurrency} at a time…`,
     );
   });
   say("Finishing…");
-  await sink.finish();
+  await zip.finish();
   return (
     `Printed text for ${Object.keys(sorted).length} of ${wanted.length} cards, ` +
-    `${missing.length - failed.length} images downloaded` +
-    (missing.length < wanted.length
-      ? ` (${wanted.length - missing.length} already there)`
-      : "") +
+    `${wanted.length - failed.length} images` +
+    (saved ? ` (${saved} of them saved from an earlier run)` : "") +
     (failed.length
       ? `, ${failed.length} not found (${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""})`
       : "") +
@@ -258,16 +310,32 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
   );
 }
 
-/** ", about 12 minutes left", once there is enough of a run to judge by. */
-function remaining(done: number, total: number, elapsedMs: number): string {
-  if (done < 20) return "";
-  const minutes = Math.ceil(((total - done) * elapsedMs) / done / 60_000);
+/** The art URL of a promo or reprint no list page carries, from Bandai's search. */
+async function searchImageUrl(
+  fetcher: PoliteFetcher,
+  card: string,
+): Promise<string> {
+  const page = new URL("/cardlist/", BANDAI);
+  page.searchParams.set("search", "true");
+  page.searchParams.set("freewords", card);
+  const path = officialImageUrls(await fetcher.text(page.href), card)[0];
+  if (!path) throw new Error("not on Bandai's card list");
+  return new URL(path, page).href;
+}
+
+/**
+ * ", about 12 minutes left", once enough images have been fetched to judge the
+ * rate by. Images taken from the cache cost nothing and are left out.
+ */
+function remaining(fetched: number, left: number, elapsedMs: number): string {
+  if (fetched < 20) return "";
+  const minutes = Math.ceil((left * elapsedMs) / fetched / 60_000);
   return minutes <= 1
     ? ", about a minute left"
     : `, about ${minutes} minutes left`;
 }
 
-function start(): void {
+async function start(): Promise<void> {
   const ui = panel();
   if (location.origin !== BANDAI) {
     ui.show(
@@ -279,42 +347,60 @@ function start(): void {
     };
     return;
   }
-  const canPickFolder = "showDirectoryPicker" in window;
+  const cache = await openArtCache();
+  const kept = (await cache?.count()) ?? 0;
+  const small = "margin:8px 0 0;font-size:12px;opacity:.75";
   ui.show(
-    `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, onto your computer. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB; keep this tab open.</p>` +
-      (canPickFolder ? ui.button("Save into a folder") : "") +
-      ui.button("Download as a zip") +
-      `<p style="margin:8px 0 0;font-size:12px;opacity:.75">Then, in Open OPTCG, load ${canPickFolder ? "the folder or " : ""}the zip.</p>`,
+    `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, into one zip. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
+      (kept
+        ? `<p style="margin:8px 0 0">${kept} card images are already saved in this browser from an earlier run; only the rest are downloaded.</p>`
+        : "") +
+      `<p style="margin:8px 0 0">You can switch to other tabs while it runs. If this tab is closed or reloaded, run the bookmark again: it carries on from the images already saved.</p>` +
+      ui.button("Download the cards") +
+      `<p style="${small}">Then, in Open OPTCG, load the zip.</p>` +
+      (kept
+        ? `<button type="button" data-forget style="${small};background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit">Forget the saved images</button>`
+        : ""),
   );
-  const [folderButton, zipButton] = canPickFolder
-    ? [...ui.box.querySelectorAll("button")]
-    : [null, ui.box.querySelector("button")];
-  const go = async (makeSink: () => Promise<Sink> | Sink) => {
-    let sink: Sink;
-    try {
-      sink = await makeSink();
-    } catch {
-      return; // The folder picker was cancelled.
-    }
+  ui.box
+    .querySelector<HTMLButtonElement>("[data-forget]")
+    ?.addEventListener("click", () => {
+      void cache?.clear().then(() => start());
+    });
+  const close = () => {
+    ui.box.querySelector("button")!.onclick = () => {
+      ui.box.remove();
+    };
+  };
+  ui.box.querySelector("button")!.onclick = async () => {
     const status = (line: string) => {
       ui.show(`<p style="margin:0" aria-live="polite">${line}</p>`);
     };
     status("Starting…");
+    // The run lives in this tab: closing it or leaving the page stops it (the
+    // images saved so far are kept), so the browser asks first while it runs.
+    const holdPage = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", holdPage);
     try {
-      const summary = await run(sink, status);
-      ui.show(`<p style="margin:0">Done. ${summary}</p>` + ui.button("Close"));
+      const summary = await run(cache, status);
+      ui.show(
+        `<p style="margin:0">Done: <strong>open-optcg-assets.zip</strong> is in your downloads. ${summary}</p>` +
+          (cache
+            ? `<p style="${small}">The images stay saved in this browser, so after a new set the next run fetches only the new cards.</p>`
+            : "") +
+          ui.button("Close"),
+      );
     } catch (error) {
       ui.show(
         `<p style="margin:0">Stopped: ${error instanceof Error ? error.message : String(error)}</p>` +
           ui.button("Close"),
       );
     }
-    ui.box.querySelector("button")!.onclick = () => {
-      ui.box.remove();
-    };
+    window.removeEventListener("beforeunload", holdPage);
+    close();
   };
-  if (folderButton) folderButton.onclick = () => void go(folderSink);
-  zipButton!.onclick = () => void go(zipSink);
 }
 
-start();
+void start();
