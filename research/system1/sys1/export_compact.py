@@ -10,9 +10,8 @@ named `<module>.w`/`<module>.b`, embeddings and layer norms keep their names
 decisions from a compact corpus with the MLX model's probabilities and value,
 which `bridge/parity-compact.ts` scores again in TypeScript.
 
-A checkpoint whose card table started from a text scorer trained on the
-printed-text pack (`--text pack`) carries that text in its weights: the pack
-says so (`trainedOnPrintedText`) and is for a personal build only.
+The pack records, as `trainedOnPrintedText`, whether any card table it
+descends from was trained with the printed-text pack (`--text pack`).
 """
 
 from __future__ import annotations
@@ -153,7 +152,7 @@ def main() -> None:
     }
     Path(args.out).write_text(json.dumps(pack))
     size = Path(args.out).stat().st_size / 1e6
-    print(f"wrote {args.out}: {offset / 1e6:.2f}M parameters, {size:.1f} MB" + (", trained on printed text: personal build only" if printed else ""))
+    print(f"wrote {args.out}: {offset / 1e6:.2f}M parameters, {size:.1f} MB" + (", trained on printed text" if printed else ""))
     if args.parity:
         if not args.samples:
             raise SystemExit("--parity needs --samples")

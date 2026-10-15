@@ -364,33 +364,26 @@ console.log(
 
 /**
  * The System-1 scorer's model pack (`research/system1/sys1/export_web.py`),
- * inlined into the worker the same way. Absent from a fresh clone, from CI and
- * from releases: a pack exported from a checkpoint trained on the local text
- * pack carries Bandai's printed text in its weights, and one is present only
- * because someone exported it into their own checkout.
+ * inlined into the worker the same way. Gitignored, since at ~12 MB it would
+ * weigh down every clone: `pnpm model:fetch` downloads the published one from
+ * the newest `model-*` release, which is what the hosted page's build does.
  */
 const scorerPack = await readFile(
   join(webRoot, "scorer-model.json"),
   "utf8",
 ).catch(() => null);
 if (scorerPack) {
-  const header = JSON.parse(scorerPack) as {
-    source?: string;
-    trainedOnPrintedText?: boolean;
-  };
+  const header = JSON.parse(scorerPack) as { source?: string };
   console.log(
-    `Inlined the System-1 scorer from ${header.source ?? "?"} (${Math.round(Buffer.byteLength(scorerPack) / 1024)} KB)` +
-      (header.trainedOnPrintedText
-        ? ". It was trained on printed card text: keep this build to yourself."
-        : ""),
+    `Inlined the System-1 scorer from ${header.source ?? "?"} (${Math.round(Buffer.byteLength(scorerPack) / 1024)} KB)`,
   );
 }
 
 /**
  * Deck adapters over that pack (`research/system1/sys1/export_adapter.py`),
- * from `packages/web/src/scorer-adapters/`: gitignored like the pack, for the
- * same reason. One trained over a different pack would play nonsense, so it is
- * left out and named.
+ * from `packages/web/src/scorer-adapters/`: gitignored and published like the
+ * pack. One trained over a different pack would play nonsense, so it is left
+ * out and named.
  */
 const adaptersRoot = join(webRoot, "scorer-adapters");
 const scorerSource = scorerPack

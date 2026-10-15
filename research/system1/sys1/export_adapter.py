@@ -96,7 +96,7 @@ def main() -> None:
     size = Path(args.out).stat().st_size / 1e3
     print(f"wrote {args.out}: {args.deck} over {over}, {offset / 1e3:.0f}k parameters"
           + (f" ({len(card_rows)} card rows)" if card_rows else "") + f", {size:.0f} KB"
-          + (", trained on printed text: personal build only" if printed else ""))
+          + (", trained on printed text" if printed else ""))
     if args.parity:
         if not args.samples:
             raise SystemExit("--parity needs --samples")
