@@ -10,19 +10,18 @@ function ctx(overrides: Partial<AssetGateContext> = {}): AssetGateContext {
     assets: () => ({ images: 0, textCards: 0 }),
     loadAssets: async () => {},
     assetNotice: () => null,
-    folderPicker: true,
     ...overrides,
   };
 }
 
 describe("asset gate", () => {
-  it("offers the folder and the zip the bookmark saves, where a folder can be picked", () => {
+  it("takes the zip the bookmark saves, and nothing else", () => {
     const html = render(ctx());
-    expect(html).toContain("data-asset-folder");
-    expect(html).toContain("webkitdirectory");
-    expect(html).toContain("Load asset folder");
     expect(html).toContain("data-asset-zip");
-    expect(html).not.toContain("data-asset-downloader");
+    expect(html).toContain('accept=".zip');
+    expect(html).not.toContain("webkitdirectory");
+    expect(html).not.toContain("data-asset-folder");
+    expect(html).not.toContain("data-asset-help");
   });
 
   it("offers the Get cards bookmark, with its href left to bind()", () => {
@@ -31,14 +30,6 @@ describe("asset gate", () => {
     expect(html).toContain("data-bandai-cardlist");
     // build-web.ts refuses an external href in the artifact.
     expect(html).not.toMatch(/href=["'](?!#)/);
-  });
-
-  it("offers a zip instead where a folder cannot be picked", () => {
-    const html = render(ctx({ folderPicker: false }));
-    expect(html).toContain("data-asset-zip");
-    expect(html).toContain('accept=".zip');
-    expect(html).not.toContain("webkitdirectory");
-    expect(html).toContain("on a computer");
   });
 
   it("is a page of its own, with nothing to play on it", () => {
@@ -61,11 +52,8 @@ describe("asset gate", () => {
     expect(render(ctx())).not.toContain("home-assets-notice");
   });
 
-  it("prints the same controls as the Configure dialog's setting", () => {
-    expect(renderSetting(ctx())).toContain("data-asset-folder");
+  it("prints the same control as the Configure dialog's setting", () => {
     expect(renderSetting(ctx())).toContain("data-asset-zip");
-    expect(renderSetting(ctx({ folderPicker: false }))).toContain(
-      "data-asset-zip",
-    );
+    expect(renderSetting(ctx())).not.toContain("data-asset-folder");
   });
 });

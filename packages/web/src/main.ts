@@ -522,7 +522,6 @@ let afterAssetGate: (() => void) | null = null;
 
 const assetGateDeps: AssetGateContext = {
   assets: assetSummary,
-  folderPicker: assetGateScreen.canPickFolder(),
   loadAssets: async (files) => {
     assetNotice = files.some((file) => /\.zip$/i.test(file.name))
       ? "Unpacking the zip…"
@@ -536,7 +535,7 @@ const assetGateDeps: AssetGateContext = {
           ? "Nothing in that pack was recognised. It should hold a printed-text.json and images named by card number."
           : assetsReady()
             ? null
-            : "That pack is missing the card images or the printed text; load the folder or zip the Get cards bookmark saved.";
+            : "That pack is missing the card images or the printed text; load the zip the Get cards bookmark saved.";
     } catch {
       assetNotice = "That could not be read as an asset pack.";
     }

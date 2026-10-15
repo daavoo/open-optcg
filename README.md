@@ -11,8 +11,8 @@ Free, open source, nothing to install.
 1. Open the link.
 2. Load the card text and art.
    The app ships without them, because they belong to Bandai, and is not played until they are in.
-   Drag the page's **Get cards** link to your bookmarks bar, open Bandai's card list and click the bookmark: it saves the cards from Bandai's site as a folder or a zip, with nothing to install.
-   Then load the folder or zip on the page. The browser keeps it for your next visit.
+   Drag the page's **Get cards** link to your bookmarks bar, open Bandai's card list and click the bookmark: it saves the cards from Bandai's site as a zip, with nothing to install. You can switch tabs while it runs, but leave that tab open.
+   Then load the zip on the page. The browser keeps it for your next visit.
    See [Card text and art](docs/asset-packs.md).
 3. Pick a deck and an opponent.
 4. Have fun.

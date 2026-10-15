@@ -322,7 +322,7 @@ export async function main(args: readonly string[]): Promise<void> {
     `Printed text for ${report.textCards} cards; ` +
     `${report.downloaded} image${report.downloaded === 1 ? "" : "s"} downloaded, ${report.alreadyThere} already there.` +
     failed +
-    `\n\nIn the app, choose "Load asset folder" and pick:\n${output}`;
+    `\n\nZip that folder to load it in the app, or build a personal copy with it: pnpm web:build --with-art --with-text\n${output}`;
   console.log(`\n${summary}`);
   if (report.failed.length > 0) process.exitCode = 1;
 }

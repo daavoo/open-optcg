@@ -10,12 +10,8 @@ import * as footer from "./footer.js";
  * only its own work -- and it is not played without them: until a pack is in,
  * this screen is the whole app (see `assetsReady()` in ../assets.ts). The
  * player runs the "Get cards" bookmark on Bandai's card list
- * (../get-cards-bookmarklet.ts), which saves the pack as a folder or a zip,
- * and hands that to the page.
- *
- * A browser that can pick a folder is offered the folder and the zip, since
- * the bookmark saves a zip wherever it cannot write a folder. A phone or
- * tablet cannot pick a folder, so there the control takes only the zip.
+ * (../get-cards-bookmarklet.ts), which saves the pack as a zip, and hands
+ * that zip to the page: one control, the same on every device.
  *
  * The same status line and control are printed in the Configure dialog once a
  * pack is in, which is where a newer one is loaded after a new set.
@@ -30,34 +26,9 @@ export interface AssetGateContext {
    * pack -- under the status line; null when there is nothing to say.
    */
   assetNotice: () => string | null;
-  /** Whether this browser can pick a folder; see `canPickFolder()`. */
-  folderPicker: boolean;
 }
 
-// Opened in script rather than an `<a href>`: the artifact must contain no
-// external `href` at all, which `tools/build-web.ts` enforces.
-const ASSET_PACK_DOCS_URL =
-  "https://github.com/daavoo/open-optcg/blob/main/docs/asset-packs.md";
 const BANDAI_CARDLIST_URL = "https://en.onepiece-cardgame.com/cardlist/";
-
-/**
- * Whether the folder picker is worth offering here.
- *
- * `webkitdirectory` is the folder picker every desktop browser has under that
- * one name, but mobile Safari and Chrome on Android accept the attribute and
- * still open a file picker, so its presence is not enough: a phone or tablet
- * is told apart by its platform. iPadOS reports itself as a Mac and gives
- * itself away by its touch points.
- */
-export function canPickFolder(): boolean {
-  if (typeof document === "undefined" || typeof navigator === "undefined") {
-    return false;
-  }
-  if (!("webkitdirectory" in document.createElement("input"))) return false;
-  const agent = navigator.userAgent;
-  if (/Android|iPhone|iPad|iPod|Mobile/i.test(agent)) return false;
-  return !(/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
-}
 
 function renderStatus(ctx: AssetGateContext): string {
   const { images, textCards } = ctx.assets();
@@ -75,26 +46,8 @@ const ZIP_CONTROL = `<label class="home-assets-load">
       <input type="file" data-asset-zip accept=".zip,application/zip,application/x-zip-compressed" hidden />
     </label>`;
 
-/**
- * The folder where one can be picked, and the zip everywhere: the "Get cards"
- * bookmark saves a zip in every browser that cannot write a folder, desktop
- * Firefox and Safari among them.
- */
-function renderControl(ctx: AssetGateContext): string {
-  return ctx.folderPicker
-    ? `<label class="home-assets-load">
-      ${icon("folder-open", "")}<span>Load asset folder</span>
-      <input type="file" data-asset-folder webkitdirectory multiple hidden />
-    </label>
-    ${ZIP_CONTROL}`
-    : ZIP_CONTROL;
-}
-
 /** The whole app until a pack is in. */
 export function render(ctx: AssetGateContext): string {
-  const load = ctx.folderPicker
-    ? "Back here, choose <strong>Load asset folder</strong> or <strong>Load asset pack (.zip)</strong> below and pick what it saved."
-    : "Bookmarks are awkward on a phone or tablet, so do the steps above on a computer, choosing <strong>Download as a zip</strong>, and move the zip to this device. Then choose <strong>Load asset pack (.zip)</strong> below and pick it.";
   return `
     <main class="setup-shell home-shell asset-gate">
       <header class="setup-topbar">
@@ -108,14 +61,13 @@ export function render(ctx: AssetGateContext): string {
         <p>Open OPTCG ships without card images and printed card text, because they belong to Bandai. You download them yourself, from Bandai's own card list, once.</p>
         <ol>
           <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em></li>
-          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards into a folder or a zip; keep that tab open until it says it is done.</li>
-          <li>${load}</li>
+          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards as a zip. That takes a few minutes: you can switch to other tabs meanwhile, but leave that tab open, on that page, until it says it is done.</li>
+          <li>Back here, choose <strong>Load asset pack (.zip)</strong> below and pick that zip.</li>
         </ol>
-        <p>The browser keeps them for your next visit. Nothing is uploaded anywhere.</p>
+        <p>On a phone or tablet, where bookmarks are awkward, do the first two steps on a computer and move the zip over. The browser keeps the cards for your next visit. Nothing is uploaded anywhere.</p>
         <div class="home-assets">
           ${renderStatus(ctx)}
-          ${renderControl(ctx)}
-          <button class="home-assets-help" type="button" data-asset-help>What is an asset pack?</button>
+          ${ZIP_CONTROL}
         </div>
       </section>
       ${footer.render()}
@@ -131,15 +83,14 @@ export function renderSetting(ctx: AssetGateContext): string {
   return `<div class="dialog-assets" data-asset-setting>
     <h3>Card text and art</h3>
     ${renderStatus(ctx)}
-    ${renderControl(ctx)}
-    <button class="home-assets-help" type="button" data-asset-help>What is an asset pack?</button>
+    ${ZIP_CONTROL}
   </div>`;
 }
 
 /** Wires the controls wherever they are printed: the gate or the dialog. */
 export function bindControls(ctx: AssetGateContext): void {
   document
-    .querySelectorAll<HTMLInputElement>("[data-asset-zip], [data-asset-folder]")
+    .querySelectorAll<HTMLInputElement>("[data-asset-zip]")
     .forEach((input) => {
       input.addEventListener("change", (event) => {
         const picker = event.currentTarget as HTMLInputElement;
@@ -147,7 +98,8 @@ export function bindControls(ctx: AssetGateContext): void {
         if (files.length > 0) void ctx.loadAssets(files);
       });
     });
-  // Set here, not in the markup, for the same reason as the URLs above. The
+  // Set here, not in the markup: the artifact must contain no external `href`
+  // at all, which `tools/build-web.ts` enforces. The
   // link is for dragging to the bookmarks bar; clicked on this page it would
   // run against the wrong site, so a click says what to do instead. Its own
   // text is left alone: that text becomes the bookmark's name.
@@ -161,17 +113,14 @@ export function bindControls(ctx: AssetGateContext): void {
         ?.removeAttribute("hidden");
     });
   });
-  const opens: readonly [string, string][] = [
-    ["[data-asset-help]", ASSET_PACK_DOCS_URL],
-    ["[data-bandai-cardlist]", BANDAI_CARDLIST_URL],
-  ];
-  for (const [selector, url] of opens) {
-    document.querySelectorAll<HTMLElement>(selector).forEach((button) => {
+  // Opened in script rather than an `<a href>`, for the same reason.
+  document
+    .querySelectorAll<HTMLElement>("[data-bandai-cardlist]")
+    .forEach((button) => {
       button.addEventListener("click", () => {
-        window.open(url, "_blank", "noopener");
+        window.open(BANDAI_CARDLIST_URL, "_blank", "noopener");
       });
     });
-  }
 }
 
 export function bind(ctx: AssetGateContext): void {

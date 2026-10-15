@@ -11,7 +11,6 @@ function ctx(overrides: Partial<HomeContext> = {}): HomeContext {
       assets: () => ({ images: 12, textCards: 40 }),
       loadAssets: async () => {},
       assetNotice: () => null,
-      folderPicker: true,
     },
     resumable: () => null,
     resume: () => {},
@@ -152,7 +151,6 @@ describe("home screen render", () => {
   it("asks for no asset pack: the app is only reached once one is in", () => {
     const html = render(ctx());
     expect(html).not.toContain("home-assets");
-    expect(html).not.toContain("data-asset-folder");
     expect(html).not.toContain("data-asset-zip");
   });
 
@@ -201,7 +199,7 @@ describe("home screen render", () => {
   it("hands the asset pack setting to the Configure dialog", () => {
     const settings = renderLanding(ctx()).settings;
     expect(settings).toContain("Card text and art");
-    expect(settings).toContain("data-asset-folder");
+    expect(settings).toContain("data-asset-zip");
   });
 
   it("hands the resume offer to the slot above the decks", () => {

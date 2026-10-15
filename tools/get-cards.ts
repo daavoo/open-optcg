@@ -9,8 +9,7 @@
  * straight from Bandai to the player's machine.
  *
  * It writes what `tools/download-assets.ts` writes -- `printed-text.json` and
- * `art/<card number>.png` -- into a folder the player picks (where the browser
- * can pick one) or a zip it saves; the app loads either.
+ * `art/<card number>.png` -- into a zip it saves, which the app loads.
  *
  * Built by `tools/build-get-cards.ts` into `dist/get-cards.js`, which the
  * hosted site serves next to the app. The bookmarklet only fetches and runs
@@ -50,48 +49,13 @@ declare const __MAX_IN_FLIGHT__: number;
 
 const PANEL_ID = "open-optcg-get-cards";
 
-/** Where the files go: a picked folder, or a zip assembled in memory. */
-interface Sink {
-  has(path: string): Promise<boolean>;
-  write(path: string, data: Uint8Array): Promise<void>;
+/** The pack as a zip assembled in memory, saved as a download at the end. */
+interface ZipWriter {
+  write(path: string, data: Uint8Array): void;
   finish(): Promise<void>;
 }
 
-async function folderSink(): Promise<Sink> {
-  const root = await (
-    window as unknown as {
-      showDirectoryPicker(o: object): Promise<FileSystemDirectoryHandle>;
-    }
-  ).showDirectoryPicker({ id: "open-optcg-assets", mode: "readwrite" });
-  const art = await root.getDirectoryHandle("art", { create: true });
-  const dirFor = (path: string) =>
-    path.startsWith("art/")
-      ? { dir: art, name: path.slice(4) }
-      : { dir: root, name: path };
-  return {
-    // A rerun into the same folder fetches only what is missing, as the Node
-    // downloader does.
-    async has(path) {
-      const { dir, name } = dirFor(path);
-      try {
-        return (await (await dir.getFileHandle(name)).getFile()).size > 0;
-      } catch {
-        return false;
-      }
-    },
-    async write(path, data) {
-      const { dir, name } = dirFor(path);
-      const writable = await (
-        await dir.getFileHandle(name, { create: true })
-      ).createWritable();
-      await writable.write(data as Uint8Array<ArrayBuffer>);
-      await writable.close();
-    },
-    async finish() {},
-  };
-}
-
-function zipSink(): Sink {
+function zipWriter(): ZipWriter {
   // Streamed into chunks rather than one buffer: a full run is a few hundred
   // MB of PNGs, and a Blob made of parts never needs them contiguous.
   const parts: Uint8Array[] = [];
@@ -103,10 +67,7 @@ function zipSink(): Sink {
     if (final) done();
   });
   return {
-    async has() {
-      return false;
-    },
-    async write(path, data) {
+    write(path, data) {
       // Stored, not deflated: PNGs do not compress, and deflating 400 MB on
       // the page's thread would freeze it.
       const entry = new ZipPassThrough(path);
@@ -158,7 +119,8 @@ function panel() {
   };
 }
 
-async function run(sink: Sink, say: (line: string) => void): Promise<string> {
+async function run(say: (line: string) => void): Promise<string> {
+  const zip = zipWriter();
   const wanted = __WANTED_CARDS__;
   const wantedSet = new Set(wanted);
   const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
@@ -198,7 +160,7 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
   const sorted = Object.fromEntries(
     Object.entries(text).sort(([a], [b]) => a.localeCompare(b)),
   );
-  await sink.write(
+  zip.write(
     "printed-text.json",
     new TextEncoder().encode(
       `${JSON.stringify(
@@ -213,14 +175,10 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
     ),
   );
 
-  const missing: string[] = [];
-  for (const card of wanted) {
-    if (!(await sink.has(`art/${card}.png`))) missing.push(card);
-  }
   const failed: string[] = [];
   let done = 0;
   const started = Date.now();
-  await forEachConcurrently(missing, fetcher.max, async (card) => {
+  await forEachConcurrently(wanted, fetcher.max, async (card) => {
     try {
       let url = images.get(card)?.url;
       if (!url) {
@@ -232,25 +190,22 @@ async function run(sink: Sink, say: (line: string) => void): Promise<string> {
         if (!path) throw new Error("not on Bandai's card list");
         url = new URL(path, page).href;
       }
-      await sink.write(`art/${card}.png`, await fetcher.get(url, "image/"));
+      zip.write(`art/${card}.png`, await fetcher.get(url, "image/"));
     } catch {
       failed.push(card);
     }
     done += 1;
     say(
-      `Downloading card images: ${done} of ${missing.length}` +
-        remaining(done, missing.length, Date.now() - started) +
+      `Downloading card images: ${done} of ${wanted.length}` +
+        remaining(done, wanted.length, Date.now() - started) +
         ` (${fetcher.concurrency} at a time)…`,
     );
   });
   say("Finishing…");
-  await sink.finish();
+  await zip.finish();
   return (
     `Printed text for ${Object.keys(sorted).length} of ${wanted.length} cards, ` +
-    `${missing.length - failed.length} images downloaded` +
-    (missing.length < wanted.length
-      ? ` (${wanted.length - missing.length} already there)`
-      : "") +
+    `${wanted.length - failed.length} images` +
     (failed.length
       ? `, ${failed.length} not found (${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""})`
       : "") +
@@ -279,42 +234,43 @@ function start(): void {
     };
     return;
   }
-  const canPickFolder = "showDirectoryPicker" in window;
   ui.show(
-    `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, onto your computer. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB; keep this tab open.</p>` +
-      (canPickFolder ? ui.button("Save into a folder") : "") +
-      ui.button("Download as a zip") +
-      `<p style="margin:8px 0 0;font-size:12px;opacity:.75">Then, in Open OPTCG, load ${canPickFolder ? "the folder or " : ""}the zip.</p>`,
+    `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, into one zip. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
+      `<p style="margin:8px 0 0">You can switch to other tabs while it runs. Closing this tab, reloading it or leaving this page stops it.</p>` +
+      ui.button("Download the cards") +
+      `<p style="margin:8px 0 0;font-size:12px;opacity:.75">Then, in Open OPTCG, load the zip.</p>`,
   );
-  const [folderButton, zipButton] = canPickFolder
-    ? [...ui.box.querySelectorAll("button")]
-    : [null, ui.box.querySelector("button")];
-  const go = async (makeSink: () => Promise<Sink> | Sink) => {
-    let sink: Sink;
-    try {
-      sink = await makeSink();
-    } catch {
-      return; // The folder picker was cancelled.
-    }
+  const close = () => {
+    ui.box.querySelector("button")!.onclick = () => {
+      ui.box.remove();
+    };
+  };
+  ui.box.querySelector("button")!.onclick = async () => {
     const status = (line: string) => {
       ui.show(`<p style="margin:0" aria-live="polite">${line}</p>`);
     };
     status("Starting…");
+    // The run lives in this tab: closing it or leaving the page throws the
+    // download away, so the browser asks first while it is running.
+    const holdPage = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", holdPage);
     try {
-      const summary = await run(sink, status);
-      ui.show(`<p style="margin:0">Done. ${summary}</p>` + ui.button("Close"));
+      const summary = await run(status);
+      ui.show(
+        `<p style="margin:0">Done: <strong>open-optcg-assets.zip</strong> is in your downloads. ${summary}</p>` +
+          ui.button("Close"),
+      );
     } catch (error) {
       ui.show(
         `<p style="margin:0">Stopped: ${error instanceof Error ? error.message : String(error)}</p>` +
           ui.button("Close"),
       );
     }
-    ui.box.querySelector("button")!.onclick = () => {
-      ui.box.remove();
-    };
+    window.removeEventListener("beforeunload", holdPage);
+    close();
   };
-  if (folderButton) folderButton.onclick = () => void go(folderSink);
-  zipButton!.onclick = () => void go(zipSink);
 }
 
 start();
