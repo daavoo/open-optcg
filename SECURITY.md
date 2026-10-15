@@ -6,8 +6,9 @@ Open OPTCG is a rules engine and a static browser app. The hosted page and the
 standalone build are one HTML file with no backend. There are no accounts, and
 user data never leaves the page. `pnpm web:serve`, run from a checkout, adds a
 loopback server on the player's own machine, which holds an LLM API key if the
-player configures one. The asset downloader only reads Bandai's public card
-list and writes into the folder the player picks.
+player configures one. The Get cards bookmark runs on Bandai's card list page:
+it only reads that site's public card list and saves into the folder or zip
+the player picks.
 That shapes what counts as a vulnerability here.
 
 **In scope:**
@@ -43,5 +44,4 @@ you would rather not be named.
 
 ## Supported versions
 
-The `main` branch, which is what the hosted page runs. Release binaries are
-dated snapshots of it and are not patched separately.
+The `main` branch, which is what the hosted page and its Get cards script run.

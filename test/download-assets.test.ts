@@ -65,7 +65,7 @@ describe("asset downloader", () => {
     const fetcher = new PoliteFetcher();
     const before = fetcher.concurrency;
     const body = await fetcher.get("https://example.test/a.png", "image/");
-    expect(body.toString()).toBe("body");
+    expect(new TextDecoder().decode(body)).toBe("body");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(fetcher.concurrency).toBeLessThan(before);
   });

@@ -397,6 +397,15 @@
   justify-content: flex-start;
   text-align: left;
 }
+/* A link that is dragged, not followed: a pill to pick up, inline in the
+   sentence that says where to drop it. */
+.asset-gate-bookmarklet {
+  padding: 0.15rem 0.7rem;
+  vertical-align: baseline;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: grab;
+}
 
 /* The same block inside the Configure dialog, on paper.
  *

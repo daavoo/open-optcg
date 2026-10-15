@@ -10,49 +10,57 @@ An **asset pack** fills that gap. It is a folder of card images plus one
 `printed-text.json`, built by you, on your own computer, from Bandai's public
 card list. The project never hosts one.
 
-## Download a folder, then load it
+## Fetch it with the Get cards bookmark
 
-A web page cannot fetch from Bandai's site itself, so a small downloader does
-it on your computer and the page reads the folder it fills.
+A web page cannot read Bandai's site from its own, but a script running on
+Bandai's card list page can. The **Get cards** link on the app's first screen
+is a bookmarklet: a bookmark that runs a script on the page you click it on.
+Nothing is installed.
 
-1. **Download.** Get the `open-optcg-assets` tool for your platform from the
-   [latest release](https://github.com/daavoo/open-optcg/releases/latest) and
-   double-click it. It asks which folder to download into, then fetches the
-   printed text and one image per card (about 2,000 images, roughly 450 MB)
-   into it, and says when it is done. From a checkout,
-   `pnpm assets:download` does the same into `open-optcg-assets/`
-   (`--output=<dir>` for another folder).
-2. **Load it.** On the page's first screen, choose **Load asset folder** and
-   pick that folder. The browser keeps it for the next visit. Nothing is
+1. Drag **Get cards** to your browser's bookmarks bar.
+2. Open [Bandai's card list](https://en.onepiece-cardgame.com/cardlist/) and
+   click the bookmark. A panel opens in the corner of Bandai's page.
+3. Choose **Save into a folder** (Chrome and Edge) or **Download as a zip**
+   (any browser). Keep the tab open while it fetches the printed text and
+   about 2,000 images (roughly 430 MB); the panel counts them and estimates
+   the time left.
+4. Back in the app, choose **Load asset folder** or **Load asset pack (.zip)**
+   and pick what it saved. The browser keeps it for the next visit. Nothing is
    uploaded anywhere. A newer pack loads from **Configure matchup**, under
    _Card text and art_.
 
-Run the downloader again on the same folder after a new set comes out: it
-skips every image already there and fetches only what is missing. If a
-download was cut off or some images failed, running it again continues where
-it stopped. If you pick a folder that already has other files in it, the
-downloader makes an `open-optcg-assets` folder inside it rather than mixing
-the cards in with your files.
+The bookmark only fetches the downloader script from the hosted site and runs
+it, so it stays current without being re-added. After a new set comes out,
+saving into the same folder again fetches only what is missing; a zip is
+fetched whole each time.
 
-The downloader runs several downloads at once, more while Bandai's site keeps
-up and fewer, after a pause, the moment it pushes back. Each failed request is
-retried with a growing delay before that card is given up on.
+It runs several downloads at once, more while Bandai's site keeps up and
+fewer, after a pause, the moment it pushes back. Each failed request is
+retried with a growing delay before that card is given up on, and the panel
+names any card it could not get.
 
-On macOS, unzip it first. The tool is unsigned: right-click it and choose
-**Open** (macOS), or **More info**, **Run anyway** (Windows). On Linux, mark
-it executable; the folder dialog needs `zenity` or `kdialog`, and without
-either it asks in the terminal instead.
+If the bookmark ever stops working on Bandai's page (a site can forbid
+loading outside scripts), the same script still runs from the browser's
+developer console: open the console on the card list page and paste the
+contents of <https://daavoo.github.io/open-optcg/get-cards.js>.
 
 ### Phone or tablet: load a zip
 
-A phone's or tablet's file picker cannot select a folder, so there the page
-asks for a zip instead. Zip the folder the downloader filled on a computer, get
-the zip onto the device (AirDrop, a cable, a cloud drive), then tap
-**Load asset pack (.zip)** and pick it.
+Bookmarklets are awkward to set up on a phone, and a phone's file picker
+cannot select a folder, so there the page asks for a zip. Run the bookmark on
+a computer with **Download as a zip**, get the zip onto the device (AirDrop, a
+cable, a cloud drive), then tap **Load asset pack (.zip)** and pick it.
 
 On iPhone and iPad, add the page to your home screen. Safari clears the storage
 of a site you have not opened for a week otherwise, and you would have to load
 the zip again.
+
+### From a checkout
+
+`pnpm assets:download` writes the same pack into `open-optcg-assets/`
+(`--output=<dir>` for another folder), and a rerun fetches only what is
+missing. The local builds, the tests that quote printed text and the System-1
+research read that folder.
 
 ## Making your own pack
 
@@ -111,7 +119,7 @@ What may and may not be committed or published:
   `rules` block, the text hash, the mechanics code, the tests, and a short
   quotation of a clause in a code comment explaining an implementation.
 - **Never:** printed text as data, any card image, or any artefact that
-  contains either. The hosted page, the release binaries and
+  contains either. The hosted page, its `get-cards.js` and
   `dist/open-optcg.html` all ship without them. `pnpm web:build --with-art`
   bakes your own downloaded art into a personal copy and is for that only.
 

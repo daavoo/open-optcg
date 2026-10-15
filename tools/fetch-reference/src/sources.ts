@@ -2,9 +2,9 @@
  * The card list pages the reference snapshot reads, by series id.
  *
  * Shared between the snapshot fetch (`pnpm reference:fetch`), which stores the
- * pages for the audit, and the player's asset downloader
- * (`pnpm assets:download`), which reads the same pages straight into a text
- * pack. One list, so a set added for one is added for the other.
+ * pages for the audit, and the asset downloaders (`pnpm assets:download` and
+ * the Get cards bookmark's `tools/get-cards.ts`), which read the same pages
+ * straight into a text pack. One list, so a set added for one is added for the other.
  */
 export const BANDAI = "https://en.onepiece-cardgame.com";
 

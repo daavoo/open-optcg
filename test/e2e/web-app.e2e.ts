@@ -1503,8 +1503,13 @@ test.describe("before any asset pack is loaded", () => {
     ).toBeVisible();
     await expect(page.locator("#setup-form")).toHaveCount(0);
     await expect(page.locator("[data-asset-folder]")).toHaveCount(1);
-    // One control: a desktop browser picks the folder, so there is no zip.
-    await expect(page.locator("[data-asset-zip]")).toHaveCount(0);
+    // And the zip beside it: the Get cards bookmark saves one in a desktop
+    // browser that cannot write a folder.
+    await expect(page.locator("[data-asset-zip]")).toHaveCount(1);
+    await expect(page.locator("[data-get-cards]")).toHaveAttribute(
+      "href",
+      /^javascript:/,
+    );
     // And no way round it: the mode fan is behind the gate as well.
     await page.goto(modesUrl);
     await expect(page.locator("[data-home-mode]")).toHaveCount(0);

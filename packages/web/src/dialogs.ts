@@ -237,7 +237,7 @@ export function renderRuleText(cardNumber: string): string {
   // loads. A pack older than the card has none for it, and the popup says so
   // rather than showing a card with no effect, which is a different card.
   if (!text) {
-    return `<p class="card-text card-text-missing">This card's printed text is not in the loaded asset pack. Run the asset downloader again and load its folder from Configure matchup.</p>`;
+    return `<p class="card-text card-text-missing">This card's printed text is not in the loaded asset pack. Run the Get cards bookmark again and load what it saves from Configure matchup.</p>`;
   }
   return `<p class="card-text">${text.effect && text.effect !== "-" ? renderCardText(text.effect) : "No effect text."}</p>${text.trigger ? `<h3>Trigger</h3><p class="card-text">${renderCardText(text.trigger)}</p>` : ""}`;
 }

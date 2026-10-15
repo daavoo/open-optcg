@@ -3,8 +3,8 @@ name: Deploy hosted app
 # The hosted copy of the app, on GitHub Pages. It is the same single HTML file
 # `pnpm web:build` produces, and it carries no card art and no printed card
 # text: the player loads their own asset pack into it (docs/asset-packs.md).
-# Publishing it is fine for the same reason the release binaries are: nothing
-# of Bandai's is in it.
+# Publishing it is fine because nothing of Bandai's is in it, nor in the
+# get-cards.js served beside it.
 #
 # Pages has to be switched on once in the repository settings, with "GitHub
 # Actions" as the source; until then this workflow fails at the deploy step.
@@ -47,7 +47,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - run: pnpm web:build
-      - run: mkdir -p site && cp dist/open-optcg.html site/index.html
+      # The in-browser asset downloader the app's "Get cards" bookmark loads
+      # from this site (tools/get-cards.ts). Code only: it fetches the cards
+      # from Bandai's page in the player's browser.
+      - run: pnpm get-cards:build
+      - run: |
+          mkdir -p site
+          cp dist/open-optcg.html site/index.html
+          cp dist/get-cards.js site/get-cards.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

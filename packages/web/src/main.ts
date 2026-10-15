@@ -536,7 +536,7 @@ const assetGateDeps: AssetGateContext = {
           ? "Nothing in that pack was recognised. It should hold a printed-text.json and images named by card number."
           : assetsReady()
             ? null
-            : "That pack is missing the card images or the printed text; load the folder the downloader filled.";
+            : "That pack is missing the card images or the printed text; load the folder or zip the Get cards bookmark saved.";
     } catch {
       assetNotice = "That could not be read as an asset pack.";
     }

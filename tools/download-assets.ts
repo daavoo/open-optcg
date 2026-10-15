@@ -1,15 +1,14 @@
 /**
- * The asset downloader: fetches the printed text and the card art the
- * published app deliberately ships without, from Bandai's own card list, into
- * a folder on the player's disk. It does nothing else.
+ * The asset downloader for a checkout: fetches the printed text and the card
+ * art the published app deliberately ships without, from Bandai's own card
+ * list, into a folder on disk. Players get the same pack from the "Get cards"
+ * bookmark (`tools/get-cards.ts`); this is what the local builds, the tests
+ * that quote printed text and the System-1 research read.
  *
  *   pnpm assets:download [--output=<dir>]     (default: open-optcg-assets/)
- *   open-optcg-assets                         (double-clicked: asks for a folder)
  *
  * writes `<dir>/printed-text.json` (the text of every card the engine knows)
- * and `<dir>/art/<card number>.png` (one image per card). Then, in the app:
- * home screen, "Load asset folder", pick `<dir>`. `pnpm assets:package` wraps
- * this file as the double-click executable -- see docs/asset-packs.md.
+ * and `<dir>/art/<card number>.png` (one image per card).
  *
  * Rerunning it into the same folder fetches only what is missing: an image
  * already on disk is never fetched again, and a folder that already holds
@@ -17,13 +16,10 @@
  * name and renamed, so an interrupted run never leaves a half image that a
  * later run would mistake for a finished one.
  *
- * The card list is one Apache host with no CDN in front of it, so the fetcher
- * below is what keeps a full run (about 60 list pages and 2,000 images) fast
- * without looking like an attack: a handful of requests in flight, more only
- * while every request succeeds, half as many and a pause for everyone the
- * moment the site pushes back, and `Retry-After` honoured when it is sent.
+ * Every request goes through `PoliteFetcher`
+ * (`fetch-reference/src/polite-fetcher.ts`), which keeps a full run (about 50
+ * list pages and 2,000 images) fast without looking like an attack.
  */
-import { randomInt } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
   mkdir,
@@ -34,182 +30,36 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
 import { cardRegistry } from "@one-piece-sim/cards";
 import { SEALED_LEADER } from "@one-piece-sim/decks";
-import { chooseFolder, showMessage } from "./assets-dialog.js";
 import { parseOfficialCards } from "./audit-cards/src/parse-cardlist.js";
-import { officialImageUrls } from "./download-deck-art.js";
+import {
+  officialImageUrls,
+  pageImageUrls,
+  type ArtUrl,
+} from "./fetch-reference/src/card-images.js";
+import {
+  forEachConcurrently,
+  PoliteFetcher,
+} from "./fetch-reference/src/polite-fetcher.js";
 import {
   BANDAI,
   CARDLIST_SERIES,
   cardlistUrl,
 } from "./fetch-reference/src/sources.js";
 
+export { pageImageUrls, PoliteFetcher };
+
 const USER_AGENT =
   "open-optcg-asset-downloader/0.2 (+https://github.com/daavoo/open-optcg)";
-/** Requests in flight at the start, and the most it will ever grow to. */
-const START_CONCURRENCY = 4;
+/** The most requests in flight, and so the width of every concurrent loop. */
 const MAX_CONCURRENCY = 8;
-const MAX_ATTEMPTS = 6;
-const REQUEST_TIMEOUT_MS = 60_000;
-const MAX_BACKOFF_MS = 60_000;
-/** A `Retry-After` longer than this is a block, not a pause; give up instead. */
-const MAX_RETRY_AFTER_MS = 5 * 60_000;
-/**
- * Statuses that mean "slow down" rather than "this does not exist": rate
- * limits, an overloaded server, and the 403 a web firewall answers with once
- * it has decided a client is too eager.
- */
-const THROTTLED = new Set([403, 408, 425, 429, 500, 502, 503, 504]);
 const IMAGE_EXTENSIONS = /\.(?:avif|gif|jpe?g|png|svg|webp)$/i;
 const PARTIAL_SUFFIX = ".part";
 const DEFAULT_FOLDER_NAME = "open-optcg-assets";
 
 type PrintedCard = { name: string; effect: string; trigger: string };
-
-const sleep = (ms: number) =>
-  new Promise<void>((done) => setTimeout(done, Math.max(0, ms)));
-
-class PermanentError extends Error {}
-
-/**
- * Every request goes through one of these, so the whole run shares one
- * concurrency budget and one view of whether the site is pushing back.
- * Additive increase, multiplicative decrease: one more request in flight
- * after each full window of successes, half as many after any failure.
- */
-export class PoliteFetcher {
-  private limit = START_CONCURRENCY;
-  private active = 0;
-  private successesAtLimit = 0;
-  private pausedUntil = 0;
-  private readonly waiting: (() => void)[] = [];
-
-  get concurrency(): number {
-    return this.limit;
-  }
-
-  private async acquire(): Promise<void> {
-    for (;;) {
-      const pause = this.pausedUntil - Date.now();
-      if (pause > 0) await sleep(pause);
-      else if (this.active < this.limit) {
-        this.active += 1;
-        return;
-      } else await new Promise<void>((wake) => this.waiting.push(wake));
-    }
-  }
-
-  private release(): void {
-    this.active -= 1;
-    this.wake();
-  }
-
-  private wake(): void {
-    const free = Math.max(1, this.limit - this.active);
-    for (const wake of this.waiting.splice(0, free)) wake();
-  }
-
-  private succeeded(): void {
-    this.successesAtLimit += 1;
-    if (
-      this.successesAtLimit >= this.limit * 2 &&
-      this.limit < MAX_CONCURRENCY
-    ) {
-      this.limit += 1;
-      this.successesAtLimit = 0;
-      this.wake();
-    }
-  }
-
-  private pushedBack(pauseMs: number): void {
-    this.limit = Math.max(1, Math.floor(this.limit / 2));
-    this.successesAtLimit = 0;
-    this.pausedUntil = Math.max(this.pausedUntil, Date.now() + pauseMs);
-  }
-
-  /** The body of `url`, retried until it arrives or plainly never will. */
-  async get(
-    url: string,
-    expectedType: "text/html" | "image/",
-  ): Promise<Buffer> {
-    let lastError: Error = new Error(url);
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-      const backoff =
-        Math.min(MAX_BACKOFF_MS, 1000 * 2 ** (attempt - 1)) + randomInt(1000);
-      let pause = backoff;
-      await this.acquire();
-      try {
-        const response = await fetch(url, {
-          headers: { "user-agent": USER_AGENT },
-          redirect: "follow",
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        });
-        if (response.ok) {
-          const type = response.headers.get("content-type") ?? "";
-          if (!type.startsWith(expectedType)) {
-            await response.body?.cancel();
-            throw new PermanentError(`unexpected content type ${type || "?"}`);
-          }
-          const body = Buffer.from(await response.arrayBuffer());
-          this.succeeded();
-          return body;
-        }
-        await response.body?.cancel();
-        if (!THROTTLED.has(response.status)) {
-          throw new PermanentError(`${response.status} ${response.statusText}`);
-        }
-        const retryAfter = retryAfterMs(response.headers.get("retry-after"));
-        if (retryAfter !== null && retryAfter > MAX_RETRY_AFTER_MS) {
-          throw new PermanentError(
-            `${response.status}: the site asked to wait ${Math.round(retryAfter / 60_000)} minutes; try again later`,
-          );
-        }
-        pause = Math.max(backoff, retryAfter ?? 0);
-        lastError = new Error(`${response.status} ${response.statusText}`);
-      } catch (error) {
-        if (error instanceof PermanentError) throw error;
-        lastError = error instanceof Error ? error : new Error(String(error));
-      } finally {
-        this.release();
-      }
-      // A timeout or a dropped connection is pushback too: an overloaded
-      // server sheds connections before it starts answering 503.
-      this.pushedBack(pause);
-      if (attempt < MAX_ATTEMPTS) await sleep(pause);
-    }
-    throw lastError;
-  }
-}
-
-function retryAfterMs(header: string | null): number | null {
-  if (!header) return null;
-  const seconds = Number(header);
-  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
-  const date = Date.parse(header);
-  return Number.isNaN(date) ? null : Math.max(0, date - Date.now());
-}
-
-/** Runs `worker` over `items` with every item started as soon as allowed. */
-async function forEachConcurrently<T>(
-  items: readonly T[],
-  worker: (item: T) => Promise<void>,
-): Promise<void> {
-  // The fetcher does the limiting; this only keeps the number of pending
-  // promises (and open file handles while writing) bounded.
-  let next = 0;
-  await Promise.all(
-    Array.from(
-      { length: Math.min(MAX_CONCURRENCY, items.length) },
-      async () => {
-        while (next < items.length) await worker(items[next++]!);
-      },
-    ),
-  );
-}
 
 /**
  * Every card a player can put in a deck, which is what the app can show --
@@ -217,39 +67,10 @@ async function forEachConcurrently<T>(
  * `packages/cards/src/sealed-promo.ts`), so its text and art have no Bandai
  * source to come from.
  */
-function wantedCards(): string[] {
+export function wantedCards(): string[] {
   return [...cardRegistry.keys()]
     .filter((number) => !number.startsWith("FIX-") && number !== SEALED_LEADER)
     .sort((left, right) => left.localeCompare(right));
-}
-
-interface ArtUrl {
-  url: string;
-  /** The base printing rather than a parallel or reprint (`_p1`, `_r1`). */
-  base: boolean;
-}
-
-/**
- * Card art URLs on one list page, by card number. A page lists a card's
- * parallel and reprint art (`OP12-090_r1.png`) beside or instead of the base
- * printing; the base wins where both are there, else the first variant.
- */
-export function pageImageUrls(
-  html: string,
-  pageUrl: string,
-  into = new Map<string, ArtUrl>(),
-): Map<string, ArtUrl> {
-  const pattern =
-    /data-src=["']([^"']*\/card\/((?:[A-Z]{1,5}\d{0,2}|P)-\d{3})(_[A-Za-z0-9-]+)?\.png(?:\?[^"']*)?)["']/g;
-  for (const [, path, cardNumber, variant] of html.matchAll(pattern)) {
-    const known = into.get(cardNumber!);
-    if (known && (known.base || variant)) continue;
-    into.set(cardNumber!, {
-      url: new URL(path!, pageUrl).href,
-      base: !variant,
-    });
-  }
-  return into;
 }
 
 interface CardList {
@@ -266,17 +87,18 @@ async function readCardList(
 ): Promise<CardList> {
   const pages = new Map<string, string>();
   const failedPages: string[] = [];
-  await forEachConcurrently(CARDLIST_SERIES, async ([slug, series]) => {
-    try {
-      pages.set(
-        slug,
-        (await fetcher.get(cardlistUrl(series), "text/html")).toString("utf8"),
-      );
-    } catch (error) {
-      failedPages.push(slug);
-      log(`  could not read the ${slug} list: ${message(error)}`);
-    }
-  });
+  await forEachConcurrently(
+    CARDLIST_SERIES,
+    MAX_CONCURRENCY,
+    async ([slug, series]) => {
+      try {
+        pages.set(slug, await fetcher.text(cardlistUrl(series)));
+      } catch (error) {
+        failedPages.push(slug);
+        log(`  could not read the ${slug} list: ${message(error)}`);
+      }
+    },
+  );
   const text: Record<string, PrintedCard> = {};
   const images = new Map<string, ArtUrl>();
   // Series order, not arrival order: a card printed in more than one series
@@ -394,7 +216,10 @@ export async function downloadAssets(
     return report;
   }
 
-  const fetcher = new PoliteFetcher();
+  const fetcher = new PoliteFetcher({
+    max: MAX_CONCURRENCY,
+    headers: { "user-agent": USER_AGENT },
+  });
   log(`Reading Bandai's card list (${CARDLIST_SERIES.length} pages)…`);
   const list = await readCardList(fetcher, new Set(wanted), log);
   Object.assign(text, list.text);
@@ -410,7 +235,7 @@ export async function downloadAssets(
       "…",
   );
   const progress = progressLine(missingArt.length, () => fetcher.concurrency);
-  await forEachConcurrently(missingArt, async (card) => {
+  await forEachConcurrently(missingArt, MAX_CONCURRENCY, async (card) => {
     try {
       const url =
         list.images.get(card)?.url ?? (await searchImageUrl(fetcher, card));
@@ -439,7 +264,7 @@ async function searchImageUrl(
   const page = new URL("/cardlist/", BANDAI);
   page.searchParams.set("search", "true");
   page.searchParams.set("freewords", card);
-  const html = (await fetcher.get(page.href, "text/html")).toString("utf8");
+  const html = await fetcher.text(page.href);
   const path = officialImageUrls(html, card)[0];
   if (!path) throw new Error("not on Bandai's card list");
   return new URL(path, page).href;
@@ -471,109 +296,37 @@ function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** Whether this process is the packaged, double-clicked executable. */
-async function isStandalone(): Promise<boolean> {
-  try {
-    const sea = (await import("node:sea")) as { isSea?: () => boolean };
-    return sea.isSea?.() ?? false;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * The folder to fill, given the one the player picked. Their own pick when it
- * is empty or already a pack; otherwise a fresh `open-optcg-assets` inside
- * it, so choosing Downloads does not scatter two thousand images across it.
- */
-async function packFolder(picked: string): Promise<string> {
-  if (!existsSync(picked)) return picked;
-  const entries = (await readdir(picked)).filter(
-    (name) => !name.startsWith("."),
-  );
-  const isPack =
-    entries.length === 0 ||
-    entries.includes("printed-text.json") ||
-    entries.includes("art");
-  return isPack ? picked : join(picked, DEFAULT_FOLDER_NAME);
-}
-
-async function askForFolder(): Promise<string | null> {
-  const downloads = join(homedir(), "Downloads");
-  const startIn = existsSync(downloads) ? downloads : homedir();
-  const choice = await chooseFolder(
-    "Choose the folder to download the One Piece card art and text into",
-    startIn,
-  );
-  if (choice.kind === "chosen") return packFolder(choice.path);
-  if (choice.kind === "cancelled") return null;
-  const fallback = join(startIn, DEFAULT_FOLDER_NAME);
-  if (!process.stdin.isTTY) return fallback;
-  const prompt = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const answer = (
-    await prompt.question(`Folder to download into [${fallback}]: `)
-  ).trim();
-  prompt.close();
-  return answer ? packFolder(resolve(answer)) : fallback;
-}
-
 export async function main(args: readonly string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
     console.log(
-      "Usage: open-optcg-assets [--output=<dir>]\n" +
-        "       (from a checkout: pnpm assets:download, same flag)\n\n" +
+      "Usage: pnpm assets:download [--output=<dir>]\n\n" +
         "Downloads the printed text and card art the Open OPTCG app ships without,\n" +
-        "from Bandai's card list, into <dir>:\n" +
+        `from Bandai's card list, into <dir> (default ${DEFAULT_FOLDER_NAME}/):\n` +
         "  <dir>/printed-text.json  the printed text of every card the engine knows\n" +
         "  <dir>/art/               one image per card\n\n" +
-        "Run without --output, the downloaded executable asks for the folder. Run\n" +
-        "again into the same folder to fetch only what is missing. Then open the app,\n" +
-        'choose "Load asset folder" on the home screen, and pick <dir>.',
+        "Run again into the same folder to fetch only what is missing.",
     );
     return;
   }
   const outputArg = args.find((arg) => arg.startsWith("--output="));
-  const interactive = !outputArg && (await isStandalone());
-  const output = outputArg
-    ? resolve(outputArg.slice("--output=".length))
-    : interactive
-      ? await askForFolder()
-      : resolve(DEFAULT_FOLDER_NAME);
-  if (!output) {
-    console.log("No folder chosen; nothing downloaded.");
-    return;
-  }
+  const output = resolve(
+    outputArg ? outputArg.slice("--output=".length) : DEFAULT_FOLDER_NAME,
+  );
   console.log(`Downloading Open OPTCG card text and art into ${output}`);
-  try {
-    const report = await downloadAssets(output);
-    const failed =
-      report.failed.length === 0
-        ? ""
-        : `\n\n${report.failed.length} image${report.failed.length === 1 ? "" : "s"} could not be downloaded (${report.failed.slice(0, 10).join(", ")}${report.failed.length > 10 ? ", …" : ""}). Run this again later to fetch just those.`;
-    const summary =
-      `Printed text for ${report.textCards} cards; ` +
-      `${report.downloaded} image${report.downloaded === 1 ? "" : "s"} downloaded, ${report.alreadyThere} already there.` +
-      failed +
-      `\n\nIn the app, choose "Load asset folder" and pick:\n${output}`;
-    console.log(`\n${summary}`);
-    if (report.failed.length > 0) process.exitCode = 1;
-    if (interactive) await showMessage("Open OPTCG card assets", summary);
-  } catch (error) {
-    if (interactive) {
-      await showMessage(
-        "Open OPTCG card assets",
-        `The download stopped: ${message(error)}\n\nRun it again to continue where it left off.`,
-        true,
-      );
-    }
-    throw error;
-  }
+  const report = await downloadAssets(output);
+  const failed =
+    report.failed.length === 0
+      ? ""
+      : `\n\n${report.failed.length} image${report.failed.length === 1 ? "" : "s"} could not be downloaded (${report.failed.slice(0, 10).join(", ")}${report.failed.length > 10 ? ", …" : ""}). Run this again later to fetch just those.`;
+  const summary =
+    `Printed text for ${report.textCards} cards; ` +
+    `${report.downloaded} image${report.downloaded === 1 ? "" : "s"} downloaded, ${report.alreadyThere} already there.` +
+    failed +
+    `\n\nIn the app, choose "Load asset folder" and pick:\n${output}`;
+  console.log(`\n${summary}`);
+  if (report.failed.length > 0) process.exitCode = 1;
 }
 
-// No top-level await: the packaged executable bundles this file as CommonJS.
 const invokedDirectly =
   process.argv[1] !== undefined &&
   /download-assets\.(?:ts|js|cjs)$/.test(process.argv[1]);

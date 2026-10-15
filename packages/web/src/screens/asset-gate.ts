@@ -1,4 +1,5 @@
 import { escapeHtml } from "../card-text.js";
+import { bookmarklet } from "../get-cards-bookmarklet.js";
 import { icon } from "../icons.js";
 import * as footer from "./footer.js";
 
@@ -8,13 +9,13 @@ import * as footer from "./footer.js";
  * The app ships with neither -- both are Bandai's, and the project distributes
  * only its own work -- and it is not played without them: until a pack is in,
  * this screen is the whole app (see `assetsReady()` in ../assets.ts). The
- * player runs the asset downloader, which fills a folder from Bandai's card
- * list, and hands that folder to the page.
+ * player runs the "Get cards" bookmark on Bandai's card list
+ * (../get-cards-bookmarklet.ts), which saves the pack as a folder or a zip,
+ * and hands that to the page.
  *
- * One way to hand it over per device, not a choice of two: a browser that can
- * pick a folder is offered the folder, which is exactly what the downloader
- * wrote. A phone or tablet cannot pick a folder, so there -- and only there --
- * the control takes a zip of it instead.
+ * A browser that can pick a folder is offered the folder and the zip, since
+ * the bookmark saves a zip wherever it cannot write a folder. A phone or
+ * tablet cannot pick a folder, so there the control takes only the zip.
  *
  * The same status line and control are printed in the Configure dialog once a
  * pack is in, which is where a newer one is loaded after a new set.
@@ -37,7 +38,7 @@ export interface AssetGateContext {
 // external `href` at all, which `tools/build-web.ts` enforces.
 const ASSET_PACK_DOCS_URL =
   "https://github.com/daavoo/open-optcg/blob/main/docs/asset-packs.md";
-const DOWNLOADER_URL = "https://github.com/daavoo/open-optcg/releases/latest";
+const BANDAI_CARDLIST_URL = "https://en.onepiece-cardgame.com/cardlist/";
 
 /**
  * Whether the folder picker is worth offering here.
@@ -69,23 +70,31 @@ function renderStatus(ctx: AssetGateContext): string {
     ${notice ? `<p class="home-assets-notice">${escapeHtml(notice)}</p>` : ""}`;
 }
 
+const ZIP_CONTROL = `<label class="home-assets-load">
+      ${icon("package-open", "")}<span>Load asset pack (.zip)</span>
+      <input type="file" data-asset-zip accept=".zip,application/zip,application/x-zip-compressed" hidden />
+    </label>`;
+
+/**
+ * The folder where one can be picked, and the zip everywhere: the "Get cards"
+ * bookmark saves a zip in every browser that cannot write a folder, desktop
+ * Firefox and Safari among them.
+ */
 function renderControl(ctx: AssetGateContext): string {
   return ctx.folderPicker
     ? `<label class="home-assets-load">
       ${icon("folder-open", "")}<span>Load asset folder</span>
       <input type="file" data-asset-folder webkitdirectory multiple hidden />
-    </label>`
-    : `<label class="home-assets-load">
-      ${icon("package-open", "")}<span>Load asset pack (.zip)</span>
-      <input type="file" data-asset-zip accept=".zip,application/zip,application/x-zip-compressed" hidden />
-    </label>`;
+    </label>
+    ${ZIP_CONTROL}`
+    : ZIP_CONTROL;
 }
 
 /** The whole app until a pack is in. */
 export function render(ctx: AssetGateContext): string {
   const load = ctx.folderPicker
-    ? "Choose <strong>Load asset folder</strong> below and pick the folder it filled."
-    : "On the computer, zip the folder it filled and move the zip to this device. Then choose <strong>Load asset pack (.zip)</strong> below and pick it.";
+    ? "Back here, choose <strong>Load asset folder</strong> or <strong>Load asset pack (.zip)</strong> below and pick what it saved."
+    : "Bookmarks are awkward on a phone or tablet, so do the steps above on a computer, choosing <strong>Download as a zip</strong>, and move the zip to this device. Then choose <strong>Load asset pack (.zip)</strong> below and pick it.";
   return `
     <main class="setup-shell home-shell asset-gate">
       <header class="setup-topbar">
@@ -98,7 +107,8 @@ export function render(ctx: AssetGateContext): string {
         <h1>Load the card art and text</h1>
         <p>Open OPTCG ships without card images and printed card text, because they belong to Bandai. You download them yourself, from Bandai's own card list, once.</p>
         <ol>
-          <li>Get the asset downloader for your computer and run it. It asks where to save the cards. <button class="home-assets-help" type="button" data-asset-downloader>Get the downloader</button></li>
+          <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em></li>
+          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards into a folder or a zip; keep that tab open until it says it is done.</li>
           <li>${load}</li>
         </ol>
         <p>The browser keeps them for your next visit. Nothing is uploaded anywhere.</p>
@@ -137,9 +147,23 @@ export function bindControls(ctx: AssetGateContext): void {
         if (files.length > 0) void ctx.loadAssets(files);
       });
     });
+  // Set here, not in the markup, for the same reason as the URLs above. The
+  // link is for dragging to the bookmarks bar; clicked on this page it would
+  // run against the wrong site, so a click says what to do instead. Its own
+  // text is left alone: that text becomes the bookmark's name.
+  document.querySelectorAll<HTMLElement>("[data-get-cards]").forEach((link) => {
+    link.setAttribute("href", bookmarklet());
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      link
+        .closest("li")
+        ?.querySelector<HTMLElement>("[data-get-cards-hint]")
+        ?.removeAttribute("hidden");
+    });
+  });
   const opens: readonly [string, string][] = [
     ["[data-asset-help]", ASSET_PACK_DOCS_URL],
-    ["[data-asset-downloader]", DOWNLOADER_URL],
+    ["[data-bandai-cardlist]", BANDAI_CARDLIST_URL],
   ];
   for (const [selector, url] of opens) {
     document.querySelectorAll<HTMLElement>(selector).forEach((button) => {
