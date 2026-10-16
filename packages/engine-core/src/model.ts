@@ -376,6 +376,16 @@ export interface PlayerState {
    */
   leaderCannotRefreshUntilTurn?: number;
   /**
+   * The turn on which this player's deck last stood at 0 cards, recorded only
+   * under a Leader that defers the deck-out loss (OP15-022 Brook).
+   *
+   * That Leader loses at the end of the turn in which the deck *became* 0, and
+   * Bandai rules a deck refilled later in the same turn still loses (OP15-022
+   * Q1), so the end-of-turn check cannot read the deck's size alone.
+   * Optional, so every other game serializes and hashes as before.
+   */
+  deckEmptiedOnTurn?: number;
+  /**
    * The turn through which this player's Leader cannot attack at all --
    * OP06-023 Arlong names "your opponent's rested Leader" and locks it out of
    * attacking until the end of its controller's next turn.
