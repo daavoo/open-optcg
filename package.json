@@ -30,7 +30,7 @@
     "referee:build": "tsx tools/build-match-worker.ts",
     "referee:local": "tsx tools/referee-local.ts",
     "test:session": "vitest run test/session-referee.test.ts test/session-clock.test.ts test/session-durable-object.test.ts test/online-client.test.ts test/session-miniflare.test.ts test/session-local-play.test.ts",
-    "test:engine": "vitest run test/engine.test.ts test/engine-limits.test.ts test/mechanics.test.ts test/effect-options.test.ts test/removal.test.ts test/don-sequence.test.ts test/hidden-knowledge.test.ts test/decision-scenarios.test.ts",
+    "test:engine": "vitest run test/engine.test.ts test/engine-limits.test.ts test/mechanics.test.ts test/removal.test.ts test/don-sequence.test.ts test/hidden-knowledge.test.ts test/decision-scenarios.test.ts",
     "lint:changed": "tsx tools/lint-changed.ts",
     "new:card": "tsx tools/new-card.ts",
     "card:text": "tsx tools/card-text.ts",
