@@ -164,7 +164,10 @@ export const op09MainMechanics: SetMechanics = {
       },
     ],
     [
-      // OP09-058 Special Muggy Ball: the Buggy bounce.
+      // OP09-058 Special Muggy Ball: the Buggy bounce. Bandai's OP09-058
+      // ruling has the opponent pick which of their own Characters goes back,
+      // so the choice is theirs -- and it is 1, not up to 1, because a pick
+      // the opponent could decline would never be made.
       "OP09-058",
       {
         cost: 2,
@@ -178,8 +181,9 @@ export const op09MainMechanics: SetMechanics = {
               maxCost: 6,
             },
             bind: "op09-muggy-bounce",
-            min: 0,
+            min: 1,
             max: 1,
+            chooser: "opponent",
             effect: {
               kind: "move",
               binding: "op09-muggy-bounce",
