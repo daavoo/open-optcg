@@ -1113,6 +1113,12 @@ export type PublicEvent =
       type: "event-activated";
       playerId: PlayerId;
       cardNumber: string;
+      /**
+       * Another card's effect used this Event's `[Main]` (EB03-031 Reiju): the
+       * effect resolved, but the Event was not activated, so no "when you
+       * activate an Event" clause answers it.
+       */
+      mainOnly?: true;
     }
   /**
    * An ability that fired on its own: a Leader's or a Character's automatic

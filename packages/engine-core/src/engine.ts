@@ -39,6 +39,7 @@ import {
 } from "@one-piece-sim/protocol";
 import {
   applyMechanicReactions,
+  getMechanicSignalInvocations,
   leaderReactionSpent,
 } from "./card-mechanics.js";
 import { ACTION_HANDLERS, type ActionHandler } from "./actions/index.js";
@@ -71,7 +72,11 @@ import {
   effectiveCost,
   resolveDeckTopKnowledge,
 } from "./queries.js";
-import { drainPendingContinuations, mechanicPendingEffect } from "./effects.js";
+import {
+  drainPendingContinuations,
+  mechanicPendingEffect,
+  queuePendingContinuations,
+} from "./effects.js";
 import type {
   BoardCard,
   GameAction,
@@ -481,6 +486,9 @@ export function applyOfferedAction(
   const activations: { playerId: PlayerId }[] = [];
   for (const event of events) {
     if (event.type !== "event-activated") continue;
+    // Only the Event's [Main] was used, by another card's effect: not an Event
+    // activation (EB03-031#1), though the history still shows it resolving.
+    if (event.mainOnly === true) continue;
     recordEventActivation(
       state,
       event.playerId,
@@ -491,20 +499,27 @@ export function applyOfferedAction(
   // "When you activate an Event" (OP10-003 Sugar's Leader) and "[printed text omitted -- pnpm card:text OP10-003]" (OP11-102 Camie). Raised here, from the event
   // stream, for the same reason the recording above is: all ten activation sites
   // converge on it, and a watcher wired at each of them would drift.
-  if (activations.length > 0) {
-    const reacted = applyMechanicReactions(
+  const activationSignals = activations.map((activation) => ({
+    kind: "event-activated" as const,
+    playerId: activation.playerId,
+  }));
+  if (activations.length > 0 && state.pendingEffect) {
+    // The Event is still resolving -- it stopped to ask for a target or a
+    // payment -- so its watchers wait their turn behind it. Run now, one that
+    // needs an answer of its own had nowhere to put it and was lost: OP15-119
+    // Monkey.D.Luffy never revealed against an Event that chose a target.
+    // `drainPendingContinuations` runs them once the Event settles, and hands
+    // each to its controller.
+    queuePendingContinuations(
       state,
-      activations.map((activation) => ({
-        kind: "event-activated" as const,
-        playerId: activation.playerId,
-      })),
-      db,
+      getMechanicSignalInvocations(state, activationSignals),
     );
+  } else if (activations.length > 0) {
+    const reacted = applyMechanicReactions(state, activationSignals, db);
     events.push(...reacted.events);
-    // A watcher that needs an answer takes the pending slot, but never over the
-    // top of one the action itself left behind: the Event's own resolution comes
-    // first, and the watcher is offered when that settles.
-    if (reacted.pending && !state.pendingEffect) {
+    // The Event has settled, so a watcher that needs an answer takes the
+    // pending slot.
+    if (reacted.pending) {
       state.pendingEffect = mechanicPendingEffect(
         {
           context: reacted.pending.execution.context,

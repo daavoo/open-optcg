@@ -2467,6 +2467,7 @@ export function continueExecution(
         type: "event-activated",
         playerId,
         cardNumber: eventCard.cardNumber,
+        ...(effect.mainOnly === true ? { mainOnly: true as const } : {}),
       });
       if (!entry) continue;
       // The Event's own printed costs still apply; only its cost line is waived.

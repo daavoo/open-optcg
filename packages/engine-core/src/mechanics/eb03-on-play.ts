@@ -566,7 +566,11 @@ export const eb03OnPlayMechanics: SetMechanics = {
             bind: "eb03-reiju-event",
             min: 0,
             max: 1,
-            effect: { kind: "activate-event", binding: "eb03-reiju-event" },
+            effect: {
+              kind: "activate-event",
+              binding: "eb03-reiju-event",
+              mainOnly: true,
+            },
           },
         }),
       },

@@ -528,11 +528,12 @@ export const eb03MainMechanics: SetMechanics = {
       //
       // The DON!! it sets active is its own controller's, and the rest that
       // follows spans the opponent's DON!! and their small bodies in one printed
-      // "up to 1" -- the same node EB03-012 uses, with a wider `match`.
+      // "up to 1" -- the same node EB03-012 uses, with a wider `match`. Both
+      // halves are "up to", so a cost area with no rested DON!! does not gate
+      // the activation: the rest still lands (EB03-061#1 Q&A).
       "EB03-061",
       {
         oncePerTurn: true,
-        requires: { restedDon: 1 },
         program: {
           effect: {
             kind: "sequence",
@@ -608,9 +609,9 @@ export const eb03MainMechanics: SetMechanics = {
       // DON!! and their board is pure GERMA. Two DON!! arrive *rested*, so the
       // turn it is cast is not the turn it is spent.
       //
-      // `every-character-matches` is vacuously true on an empty board, which is
-      // the reading the printed "you only have Characters with…" invites -- a
-      // player with no Characters has none that break the condition.
+      // The all-GERMA board condition needs at least one Character on the
+      // field (EB03-038#1 Q&A): `every-character-matches` is vacuously true on
+      // an empty board, so the count beside it is what rules that board out.
       "EB03-038",
       {
         cost: 1,
@@ -622,6 +623,13 @@ export const eb03MainMechanics: SetMechanics = {
               kind: "all-of",
               conditions: [
                 { kind: "field-don-versus", player: "self", operator: "lte" },
+                {
+                  kind: "selector-count",
+                  player: "self",
+                  selector: { zone: "board", category: "character" },
+                  operator: "gte",
+                  value: 1,
+                },
                 {
                   kind: "every-character-matches",
                   player: "self",

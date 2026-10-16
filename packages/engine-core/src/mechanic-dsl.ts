@@ -2176,7 +2176,18 @@ export type MechanicEffect =
       expiresAfterTurns: number;
     }
   | { kind: "extra-turn"; player: PlayerRef }
-  | { kind: "activate-event"; binding: string };
+  | {
+      kind: "activate-event";
+      binding: string;
+      /**
+       * The clause uses the Event's `[Main]` effect rather than activating the
+       * Event -- EB03-031 Vinsmoke Reiju's "activate the [Main] effect of an
+       * Event card in your trash". Bandai's EB-03 Q&A (EB03-031#1) rules that
+       * this is not activating an Event, so nothing that counts or watches Event
+       * activations sees it.
+       */
+      mainOnly?: true;
+    };
 
 export interface MechanicProgram {
   effect: MechanicEffect;
