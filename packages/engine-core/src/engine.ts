@@ -469,6 +469,15 @@ export function applyOfferedAction(
   const handler = ACTION_HANDLERS[action.type] as ActionHandler<
     GameAction["type"]
   >;
+  // An Event whose [Trigger] resolves out of the Life area has not been
+  // activated as an Event: Bandai's OP10-003#2 ruling denies Sugar's "when you
+  // activate an Event" off one. The hand-written Trigger paths still report
+  // the card in the event stream for the log, so it is told apart here, by the
+  // card the Trigger step was holding when the action started.
+  const triggeredEvent =
+    action.type === "resolve-trigger"
+      ? state.pendingTrigger?.card.cardNumber
+      : undefined;
   handler({ state, events, activePlayer, action, offered, db });
   // OP15-022 Brook's loss belongs to the turn the deck *became* 0, even if a
   // card is put back under it later that turn (OP15-022 Q1), so the moment is
@@ -489,6 +498,8 @@ export function applyOfferedAction(
     // Only the Event's [Main] was used, by another card's effect: not an Event
     // activation (EB03-031#1), though the history still shows it resolving.
     if (event.mainOnly === true) continue;
+    // Nor is an Event resolving as a [Trigger] (OP10-003#2).
+    if (event.cardNumber === triggeredEvent) continue;
     recordEventActivation(
       state,
       event.playerId,
