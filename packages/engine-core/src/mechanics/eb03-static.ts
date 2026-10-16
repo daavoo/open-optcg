@@ -3,6 +3,7 @@
  * into power, cost and keyword queries. A clause with no timing marker lives
  * here; one with a marker is a program in this set's other modules.
  */
+import { storedBasePower } from "../base-power.js";
 import {
   leaderHasType,
   leaderMulticolored,
@@ -15,9 +16,11 @@ export const eb03StaticAbilities: readonly StaticAbility[] = [
   //
   // A 3-cost 2000 body that defends like a 6000 one, and the condition is the
   // deck's own restraint: the buff switches off the moment a big Character
-  // lands beside it. Printed power is what the gate reads, so attached DON!!
-  // and a turn's buffs do not talk it out of its own clause -- and 004 itself
-  // is 2000, so it never disqualifies itself.
+  // lands beside it. Base power is what the gate reads, so attached DON!!
+  // and a turn's buffs do not talk it out of its own clause, while a "base
+  // power becomes" effect does -- OP06-009 Shuraiya copying a 7000 Leader
+  // counts (EB03-004#1 Q&A). 004 itself is 2000, so it never disqualifies
+  // itself.
   {
     cardNumber: "EB03-004",
     scope: "self",
@@ -28,7 +31,10 @@ export const eb03StaticAbilities: readonly StaticAbility[] = [
         if (turnPlayer(context) === context.playerId) return 0;
         if (!leaderMulticolored(context)) return 0;
         const big = context.state.players[context.playerId].board.some(
-          (card) => (context.db.require(card.cardNumber).power ?? 0) >= 6000,
+          (card) =>
+            (storedBasePower(card.basePowerOverrides, context.state.turn) ??
+              context.db.require(card.cardNumber).power ??
+              0) >= 6000,
         );
         return big ? 0 : 4000;
       },
