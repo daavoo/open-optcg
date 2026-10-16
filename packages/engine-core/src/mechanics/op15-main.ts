@@ -1046,36 +1046,60 @@ export const op15MainMechanics: SetMechanics = {
                   kind: "sequence",
                   effects: [
                     {
-                      kind: "choose",
-                      selector: { player: "self", zone: "hand" },
-                      bind: "op15-fire-fist-cost",
-                      min: 2,
-                      max: 2,
-                      effect: {
-                        kind: "sequence",
-                        effects: [
-                          {
-                            kind: "move",
-                            binding: "op15-fire-fist-cost",
-                            to: { player: "self", zone: "trash" },
-                          },
-                          {
-                            kind: "choose",
-                            selector: {
-                              player: "opponent",
-                              zone: "board",
-                              category: "character",
-                              maxCurrentPower: 0,
+                      // "As much as possible" (OP15-020#1): one card in hand is
+                      // still trashed, but the K.O. needs both.
+                      kind: "if",
+                      condition: {
+                        kind: "selector-count",
+                        player: "self",
+                        selector: { zone: "hand" },
+                        operator: "gte",
+                        value: 2,
+                      },
+                      then: {
+                        kind: "choose",
+                        selector: { player: "self", zone: "hand" },
+                        bind: "op15-fire-fist-cost",
+                        min: 2,
+                        max: 2,
+                        effect: {
+                          kind: "sequence",
+                          effects: [
+                            {
+                              kind: "move",
+                              binding: "op15-fire-fist-cost",
+                              to: { player: "self", zone: "trash" },
                             },
-                            bind: "op15-fire-fist-ko",
-                            min: 0,
-                            max: 1,
-                            effect: {
-                              kind: "knock-out",
-                              binding: "op15-fire-fist-ko",
+                            {
+                              kind: "choose",
+                              selector: {
+                                player: "opponent",
+                                zone: "board",
+                                category: "character",
+                                maxCurrentPower: 0,
+                              },
+                              bind: "op15-fire-fist-ko",
+                              min: 0,
+                              max: 1,
+                              effect: {
+                                kind: "knock-out",
+                                binding: "op15-fire-fist-ko",
+                              },
                             },
-                          },
-                        ],
+                          ],
+                        },
+                      },
+                      else: {
+                        kind: "choose",
+                        selector: { player: "self", zone: "hand" },
+                        bind: "op15-fire-fist-cost",
+                        min: 1,
+                        max: 1,
+                        effect: {
+                          kind: "move",
+                          binding: "op15-fire-fist-cost",
+                          to: { player: "self", zone: "trash" },
+                        },
                       },
                     },
                   ],

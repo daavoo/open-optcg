@@ -671,38 +671,28 @@ describe("FAQ OP15-002 Lucy (Leader)", () => {
 });
 
 describe("FAQ OP15-020 Fire Fist", () => {
-  // The engine offers the optional trash and then resolves it as nothing: the
-  // `choose` asks for exactly 2 cards, so with 1 in hand no card is trashed.
-  // The ruling lets the player trash the 1 card it has (without the K.O.).
-  // Not fixed here because the shape is the format's: every optional
-  // discard-N-then-payoff clause is written as an exact-N
-  // choice, and doing as much as possible of an unpayable non-cost is a
-  // decision for all of them at once, and for the pilots that would then be
-  // offered a discard that buys nothing.
-  it.fails(
-    "OP15-020#1: with one card in hand, one may be trashed but nothing is K.O.'d",
-    () => {
-      const game = table("faq-op15-020-1")
-        .withHand("p1", [
-          instance("fire-fist", "OP15-020"),
-          instance("last", "ST32-005"),
-        ])
-        .withBoard("p2", [character("victim", "ST32-004")])
-        .build();
+  // Fire Fist trashes as much as it can: the one card goes, the K.O. does not.
+  it("OP15-020#1: with one card in hand, one may be trashed but nothing is K.O.'d", () => {
+    const game = table("faq-op15-020-1")
+      .withHand("p1", [
+        instance("fire-fist", "OP15-020"),
+        instance("last", "ST32-005"),
+      ])
+      .withBoard("p2", [character("victim", "ST32-004")])
+      .build();
 
-      game.play({ type: "activate-main", sourceCardNumber: "OP15-020" });
-      game.play({ type: "resolve-effect", optionId: "victim" });
-      // The −8000 put the victim at 0 or less; the K.O. is what is at stake.
-      expect(currentPower(game.state, "p2", "victim")).toBeLessThanOrEqual(0);
-      expect(effectOptions(game)).toContain("apply");
-      game.play({ type: "resolve-effect", optionId: "apply" });
-      game.play({ type: "resolve-effect", optionId: "last" });
-      settle(game);
+    game.play({ type: "activate-main", sourceCardNumber: "OP15-020" });
+    game.play({ type: "resolve-effect", optionId: "victim" });
+    // The −8000 put the victim at 0 or less; the K.O. is what is at stake.
+    expect(currentPower(game.state, "p2", "victim")).toBeLessThanOrEqual(0);
+    expect(effectOptions(game)).toContain("apply");
+    game.play({ type: "resolve-effect", optionId: "apply" });
+    game.play({ type: "resolve-effect", optionId: "last" });
+    settle(game);
 
-      expect(ids(game.state.players.p1.trash)).toContain("last");
-      expect(ids(game.state.players.p2.board)).toEqual(["victim"]);
-    },
-  );
+    expect(ids(game.state.players.p1.trash)).toContain("last");
+    expect(ids(game.state.players.p2.board)).toEqual(["victim"]);
+  });
 });
 
 describe("FAQ OP15-021 Just Watch Me, Ace!!!", () => {
