@@ -1352,8 +1352,10 @@ describe("EB02-030 And That's When Somebody Makes Fun of Their Friend's Dream!!!
 
     game.play({ type: "activate-counter-event", eventInstanceId: "event" });
 
+    // It covers the Characters on the field now, and no later arrival --
+    // Bandai's Q&A EB02-030#1, pinned in `test/faq-eb01-eb02.test.ts`.
     expect(game.state.players.p1.installedReplacements).toEqual([
-      { cardNumber: "EB02-030", expiresAtTurn: 12 },
+      { cardNumber: "EB02-030", expiresAtTurn: 12, protects: ["wall"] },
     ]);
     // It is not a Counter: the battle's own numbers are untouched.
     expect(game.state.activeAttack?.counterPower).toBe(0);

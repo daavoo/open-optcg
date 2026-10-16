@@ -909,11 +909,26 @@ export function continueExecution(
       // nothing else would show it, and this one is shown twice over already:
       // the Event's own `event-activated` says it was played, and the
       // protection itself arrives as a replacement offer the defender answers.
+      //
+      // The Characters covered are the ones on the field now (see
+      // `installedReplacements`), so a second copy adds the bodies that have
+      // arrived since rather than replacing the first copy's list.
+      const earlier = (player.installedReplacements ?? []).find(
+        (entry) =>
+          entry.cardNumber === effect.cardNumber &&
+          entry.expiresAtTurn >= state.turn,
+      );
+      const protects = [
+        ...new Set([
+          ...(earlier?.protects ?? []),
+          ...player.board.map((card) => card.instanceId),
+        ]),
+      ];
       player.installedReplacements = [
         ...(player.installedReplacements ?? []).filter(
           (entry) => entry.cardNumber !== effect.cardNumber,
         ),
-        { cardNumber: effect.cardNumber, expiresAtTurn },
+        { cardNumber: effect.cardNumber, expiresAtTurn, protects },
       ];
       continue;
     }

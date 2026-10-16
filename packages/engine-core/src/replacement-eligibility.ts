@@ -97,7 +97,11 @@ export function eligibleReplacements(
     // pseudo-card is the same shape the Leader's is, and the id is what the
     // once-per-turn key and the option id are made of.
     ...(state.players[targetPlayerId].installedReplacements ?? [])
-      .filter((entry) => entry.expiresAtTurn >= state.turn)
+      .filter(
+        (entry) =>
+          entry.expiresAtTurn >= state.turn &&
+          (entry.protects?.includes(target.instanceId) ?? true),
+      )
       .map(
         (entry) =>
           ({

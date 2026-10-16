@@ -480,6 +480,17 @@ export interface PlayerState {
   installedReplacements?: readonly {
     cardNumber: string;
     expiresAtTurn: number;
+    /**
+     * The Characters on the player's field when the booking was made, by
+     * instance. The permission reaches those and no others: Bandai's Q&A
+     * (EB02-030#1) rules that a Character played after the Counter resolved
+     * is not covered, the usual reading of an effect that names "your
+     * Characters" -- it applies to the ones there when it resolves.
+     *
+     * Absent on a booking saved before the field existed, which reads as
+     * covering every Character, the reading such a game was played under.
+     */
+    protects?: readonly string[];
   }[];
   /**
    * A printed-cost floor on `cannotPlayCharactersUntilTurn` -- "[printed text omitted -- pnpm card:text OP17-092]" (OP12-030
