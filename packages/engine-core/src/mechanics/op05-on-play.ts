@@ -281,7 +281,10 @@ export const op05OnPlayMechanics: SetMechanics = {
     ],
     [
       // OP05-056 X.Barrels: another of the controller's own Characters under the
-      // deck buys a card. Nested, so an empty board buys nothing.
+      // deck buys a card. Nested, so an empty board buys nothing. The move is
+      // the cost, so a Character a replacement keeps on the field (OP05-100
+      // Enel) pays nothing and buys nothing -- Bandai's OP05-100#2 ruling --
+      // and the draw waits for the card to reach the deck.
       "OP05-056",
       {
         effect: {
@@ -305,7 +308,17 @@ export const op05OnPlayMechanics: SetMechanics = {
                   binding: "op05-barrels-cost",
                   to: { player: "owner", zone: "deck", position: "bottom" },
                 },
-                { kind: "draw", player: "self", count: 1 },
+                {
+                  kind: "if",
+                  condition: {
+                    kind: "selector-count",
+                    player: "self",
+                    selector: { zone: "deck", binding: "op05-barrels-cost" },
+                    operator: "gte",
+                    value: 1,
+                  },
+                  then: { kind: "draw", player: "self", count: 1 },
+                },
               ],
             },
           },
