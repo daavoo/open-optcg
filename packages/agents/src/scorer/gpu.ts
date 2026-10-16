@@ -226,8 +226,17 @@ fn main(@builtin(global_invocation_id) g: vec3<u32>) {
   out[g.x] = 0.5 * v * (1.0 + erf(v / 1.4142135)) * wi[t * 2u * dims.n + dims.n + j];
 }`;
 
+interface GpuAdapter {
+  requestDevice(): Promise<GpuDevice>;
+  /** Where the spec first put it, and where an older browser reports it. */
+  isFallbackAdapter?: boolean;
+  info?: { isFallbackAdapter?: boolean };
+}
+
 interface Gpu {
-  requestAdapter(): Promise<{ requestDevice(): Promise<GpuDevice> } | null>;
+  requestAdapter(options?: {
+    powerPreference?: "low-power" | "high-performance";
+  }): Promise<GpuAdapter | null>;
 }
 
 /**
@@ -257,16 +266,34 @@ export async function mapRead(
   }
 }
 
-/** A WebGPU device, or null where the platform has none. */
+/**
+ * A WebGPU device, or null where the platform has none.
+ *
+ * A fallback adapter counts as none. It is the browser's software renderer
+ * (Chrome's SwiftShader, offered when hardware acceleration is off or the GPU
+ * is blocklisted), which runs the shaders on the CPU: every simulator worker
+ * would then share the CPU through it, and a run is far slower than the same
+ * workers scoring with `CompactModel.score` directly. The high-performance preference picks the
+ * discrete GPU on a machine with two.
+ */
 export async function requestGpuDevice(): Promise<GpuDevice | null> {
   const gpu = (globalThis.navigator as { gpu?: Gpu } | undefined)?.gpu;
   if (!gpu) return null;
   try {
-    const adapter = await gpu.requestAdapter();
-    return adapter ? await adapter.requestDevice() : null;
+    const adapter = await gpu.requestAdapter({
+      powerPreference: "high-performance",
+    });
+    if (!adapter || isFallback(adapter)) return null;
+    return await adapter.requestDevice();
   } catch {
     return null;
   }
+}
+
+function isFallback(adapter: GpuAdapter): boolean {
+  return (
+    (adapter.info?.isFallbackAdapter ?? adapter.isFallbackAdapter) === true
+  );
 }
 
 export class GpuEncoder {
