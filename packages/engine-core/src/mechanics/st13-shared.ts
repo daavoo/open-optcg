@@ -83,8 +83,7 @@ export const readLifeAndBankOne = (bind: string): MechanicEffect => ({
  * One card each, identical but for the name, and the whole reason the deck
  * spends its turns putting 5-cost brothers onto Life face-up: this is how they
  * come back off it, for no DON!! at all. The body trashes itself as the cost,
- * so `trashedNotKoed` keeps its own `[On K.O.]` -- it has none, but the flag is
- * what says the printed word is trash rather than K.O.
+ * a `move` rather than a `knock-out`: the printed word is trash.
  *
  * The reveal is mandatory and the play is not, which is the printed shape: a
  * miss still shows the opponent the top of your Life, and that is the price of
@@ -103,7 +102,6 @@ export const revealLifeAndPlayBrother = (
         kind: "move",
         binding: sourceBinding,
         to: { player: "owner", zone: "trash" },
-        trashedNotKoed: true,
       },
       { kind: "look-at", player: "self", count: 1, bind, zone: "life" },
       { kind: "reveal", binding: bind },

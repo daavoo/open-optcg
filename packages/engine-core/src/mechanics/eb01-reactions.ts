@@ -23,7 +23,7 @@ export const eb01ReactionRules: readonly ReactionRule[] = [
     // it worth a slot in a deck that trades.
     cardNumber: "EB01-047",
     controller: "board",
-    signal: { kind: "card-moved", from: "board", to: "trash" },
+    signal: { kind: "card-moved", from: "board", to: "trash", ko: true },
     ownTurn: false,
     oncePerTurn: true,
     program: { effect: drawOneTrashOne },

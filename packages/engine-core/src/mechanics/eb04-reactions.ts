@@ -65,6 +65,7 @@ export const eb04ReactionRules: readonly ReactionRule[] = [
       kind: "card-moved",
       from: "board",
       to: "trash",
+      ko: true,
       movedOwner: "opponent",
     },
     ownTurn: true,

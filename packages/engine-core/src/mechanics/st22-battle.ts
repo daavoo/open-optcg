@@ -17,9 +17,6 @@ export const st22BattleMechanics: SetMechanics = {
       // ST22-002 Izo: the body itself pays for a filter -- a card drawn and one
       // put under the deck. No `[Once Per Turn]` and none needed: the cost is
       // the Character, so it is once per copy by construction.
-      //
-      // `trashedNotKoed`, because the printed word is trash: a cost paid with
-      // the source's own body is not a K.O.
       "ST22-002",
       {
         oncePerTurn: false,
@@ -33,7 +30,6 @@ export const st22BattleMechanics: SetMechanics = {
                   kind: "move",
                   binding: SOURCE_BINDING,
                   to: { player: "self", zone: "trash" },
-                  trashedNotKoed: true,
                 },
                 drawThenBottom(1, "st22-izo-bottom"),
               ],

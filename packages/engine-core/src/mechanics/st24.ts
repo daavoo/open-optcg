@@ -93,7 +93,6 @@ export const st24Mechanics: SetMechanics = {
                   kind: "move",
                   binding: SOURCE_BINDING,
                   to: { player: "self", zone: "trash" },
-                  trashedNotKoed: true,
                 },
                 { kind: "activate-don", player: "self", count: 1 },
               ],

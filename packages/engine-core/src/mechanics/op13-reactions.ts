@@ -29,6 +29,7 @@ export const op13ReactionRules: readonly ReactionRule[] = [
       kind: "card-moved",
       from: "board",
       to: "trash",
+      ko: true,
       movedOwner: "self",
       movedMinPower: 6000,
     },

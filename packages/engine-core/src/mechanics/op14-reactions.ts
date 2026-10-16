@@ -25,8 +25,8 @@ export const op14ReactionRules: readonly ReactionRule[] = [
     // OP14-041 Boa Hancock (Leader), second clause: "[printed text omitted -- pnpm card:text OP14-041]"
     //
     // A Life-strip paid for by losing a body, which is why the Kuja package is
-    // full of Characters that come back off a Trigger. `to: "trash"` is what
-    // makes this a K.O. rather than any exit from the board -- the printed text
+    // full of Characters that come back off a Trigger. `ko` is what makes this a
+    // K.O. rather than any exit from the board, or a trash -- the printed text
     // says K.O.'d, unlike OP16-041 Buggy's "removed from the field" above.
     cardNumber: "OP14-041",
     controller: "leader",
@@ -34,6 +34,7 @@ export const op14ReactionRules: readonly ReactionRule[] = [
       kind: "card-moved",
       from: "board",
       to: "trash",
+      ko: true,
       movedOwner: "self",
       movedAnyOfTypes: ["Amazon Lily", "Kuja Pirates"],
       movedMinPower: 5000,

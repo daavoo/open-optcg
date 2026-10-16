@@ -659,11 +659,9 @@ export function getMechanicSignalInvocations(
       includeOnKo &&
       signal.kind === "card-moved" &&
       signal.from === "board" &&
-      signal.to === "trash" &&
-      // A Character the printed clause *trashed* was not K.O.'d, so its own
-      // `[On K.O.]` stays where it is. Only a cost paid with the source's own
-      // body sets this; see `trashedNotKoed` on the `move` node.
-      signal.trashedNotKoed !== true
+      // Only a K.O. -- a Character an effect trashed keeps its `[On K.O.]`
+      // where it is. See `ko` on the signal.
+      signal.ko === true
     ) {
       const program = getOnKoMechanicProgram(signal.card.cardNumber);
       if (program) {
@@ -749,6 +747,7 @@ export function getMechanicSignalInvocations(
           if (
             signal.from !== rule.signal.from ||
             (rule.signal.to !== undefined && signal.to !== rule.signal.to) ||
+            (rule.signal.ko === true && signal.ko !== true) ||
             (rule.signal.movedOwner === "self" &&
               signal.ownerId !== playerId) ||
             (rule.signal.movedOwner === "opponent" &&

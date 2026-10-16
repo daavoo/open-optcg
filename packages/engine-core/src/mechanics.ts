@@ -2079,9 +2079,6 @@ export function continueExecution(
           to: effect.to.zone,
           sourceCardNumber: execution.context.source.cardNumber,
           sourcePlayerId: execution.context.sourcePlayerId,
-          ...(effect.trashedNotKoed === true
-            ? { trashedNotKoed: true as const }
-            : {}),
         });
         events.push({
           type: "card-moved",
@@ -2830,6 +2827,7 @@ export function continueExecution(
           ownerId,
           from: "board",
           to: "trash",
+          ko: true,
           sourceCardNumber: execution.context.source.cardNumber,
           sourcePlayerId: execution.context.sourcePlayerId,
         });
@@ -2864,6 +2862,7 @@ export function continueExecution(
         ownerId: stageOwnerId,
         from: "board",
         to: "trash",
+        ko: true,
       });
       // Reuses `character-ko` rather than adding a new protocol event kind
       // for the format's one Stage removal: every consumer of the event

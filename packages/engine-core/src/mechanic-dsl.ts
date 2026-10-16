@@ -1176,17 +1176,6 @@ export type MechanicEffect =
       faceUp?: boolean;
       rested?: boolean;
       /**
-       * A Character moved from the board to the trash where the printed word
-       * is trash and not K.O.: "You may trash this Character: <effect>", a
-       * cost paid with the source's own body, or an effect that trashes an
-       * opponent's Character outright.
-       *
-       * Sets `trashedNotKoed` on the signal, so the moved card's own
-       * `[On K.O.]` is not dispatched. Without it a `move` from the board to
-       * the trash is read as a K.O.
-       */
-      trashedNotKoed?: true;
-      /**
        * Internal: skip the "removed from the field" replacement offer.
        *
        * Set only on the node the replacement prompt itself queues for the
@@ -2460,18 +2449,16 @@ export type MechanicSignal =
        */
       byLeaderAttack?: true;
       /**
-       * Whether the printed clause that moved the card said *trash* rather than
-       * K.O. -- ST24-002 Kid & Killer and ST27-002 Catarina Devon, both of
-       * which pay for their ability with their own body.
+       * The card left the board because it was K.O.'d -- by battle or by a
+       * `knock-out` -- rather than moved by an effect that trashes it.
        *
-       * A Character trashed by an effect was not K.O.'d, so its own
-       * `[On K.O.]` must not fire; this signal is the only place the two are
-       * still distinguishable, because by the time the dispatcher sees it the
-       * board entry is gone. Absent everywhere else, which keeps the reading
-       * every earlier `move` to the trash has: the pool writes a K.O. that way
-       * too, and those clauses do mean a K.O.
+       * Both land in the trash, and by the time a watcher sees the signal the
+       * board entry is gone, so this is the only place the two can still be
+       * told apart. Bandai's rules Q&A (Keywords 7) and OP-09 Q&A (OP09-009#1)
+       * rule that a trashed Character was not K.O.'d: its own `[On K.O.]` and
+       * every "when a Character is K.O.'d" watcher stay silent.
        */
-      trashedNotKoed?: true;
+      ko?: true;
     }
   | {
       kind: "card-played";
