@@ -361,9 +361,9 @@ export const op13MainMechanics: SetMechanics = {
     [
       // OP13-102 Edison: "[printed text omitted -- pnpm card:text OP13-102]"
       //
-      // Only the draw is behind the Life comparison; the rest is not, which is
-      // what the sentence break says. Its `[Trigger]` is the same pair without the
-      // gate.
+      // The Life comparison gates the draw and the rest after it alike: Bandai's
+      // OP-13 Q&A (OP13-102#1) has neither happen when it fails. Its `[Trigger]`
+      // is the same pair without the gate.
       "OP13-102",
       {
         oncePerTurn: false,
@@ -385,9 +385,14 @@ export const op13MainMechanics: SetMechanics = {
                     player: "self",
                     operator: "lte",
                   },
-                  then: { kind: "draw", player: "self", count: 1 },
+                  then: {
+                    kind: "sequence",
+                    effects: [
+                      { kind: "draw", player: "self", count: 1 },
+                      restOpponentUpToCost(3, "op13-edison-rest"),
+                    ],
+                  },
                 },
-                restOpponentUpToCost(3, "op13-edison-rest"),
               ],
             },
           },
