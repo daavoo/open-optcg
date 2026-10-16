@@ -8,8 +8,32 @@
  *
  * Pure: a record in, a value out, so it can be unit-tested without a match.
  */
+import type { PlayerId } from "@one-piece-sim/protocol";
 import { parseExchange } from "./diagnostics.js";
-import type { LlmDebugRecord } from "./llm-settings.js";
+
+/**
+ * One model call a trace carries. The app pilots no LLM seat; these come only
+ * from a trace an evaluation tool wrote (`pnpm matchup:llm`), loaded to read
+ * its calls beside the moves they chose.
+ */
+export interface LlmDebugRecord {
+  timestamp: string;
+  turn: number;
+  player: PlayerId;
+  actionId?: string;
+  error?: string;
+  reasoning?: string;
+  rawExchange?: { request: unknown; response: unknown };
+  payloadSource?: "exact" | "normalized";
+  /**
+   * The 1-based index of the action this call was deciding: the key the match
+   * history joins a call onto the step it produced. A failed call carries the
+   * index it was asked about, so it is read next to the move that was made
+   * instead. Absent only on a trace exported before the two were shown
+   * together.
+   */
+  actionCount?: number;
+}
 
 /** The part of a call worth reading beside the move it produced. */
 export interface LlmCallSummary {

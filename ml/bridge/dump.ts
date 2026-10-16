@@ -47,8 +47,7 @@ const [shardIndex, shardCount] = values.shard.split("/").map(Number) as [
   number,
 ];
 const games = Number(values.games);
-const out =
-  values.out ?? `ml/data/corpus/shard-${shardIndex}.jsonl.gz`;
+const out = values.out ?? `ml/data/corpus/shard-${shardIndex}.jsonl.gz`;
 
 const pairs: [string, string][] = [];
 for (const p1 of TRAINING_DECK_IDS)

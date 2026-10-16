@@ -27,7 +27,6 @@ function stateFor(
     message: "",
     deckName: "My deck",
     savedDeckId: null,
-    dossier: null,
     catalogScrollTop: 0,
     stage: "edit",
     leaderDialogOpen: false,
@@ -220,51 +219,6 @@ describe("deck editor screen render", () => {
     state.message = "Official deck loaded.";
     const html = render(state, stubContext());
     expect(html).toContain("Official deck loaded.");
-  });
-});
-
-describe("the plan the AI opponent pilots a saved deck with", () => {
-  const ST31 = "(Red) Monkey.D.Luffy - Starter Deck 31";
-  const ST32 = "(Green) Roronoa Zoro - Starter Deck 32";
-
-  /** The option element for one deck id, as the save dialog renders it. */
-  function option(html: string, deckId: string): string {
-    const match = new RegExp(
-      `<option value="${deckId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>`,
-    ).exec(html);
-    return match?.[0] ?? "";
-  }
-
-  it("preselects the deck that shares this list's Leader", () => {
-    // The whole point of the default: a home-brew ST31 is piloted by ST31's
-    // plan without the player having to know the control is there.
-    const html = render(stateFor(), stubContext());
-    expect(option(html, ST31)).toContain("selected");
-    expect(option(html, ST32)).not.toContain("selected");
-  });
-
-  it("offers every other shipped deck's plan, and no plan at all", () => {
-    const html = render(stateFor(), stubContext());
-    expect(html).toContain('<optgroup label="Same Leader">');
-    expect(option(html, ST32)).toBeTruthy();
-    expect(html).toContain('<option value="" >');
-  });
-
-  it("marks the pick the player made rather than the Leader's own", () => {
-    const state = stateFor();
-    state.dossier = ST32;
-    const html = render(state, stubContext());
-    expect(option(html, ST32)).toContain("selected");
-    expect(option(html, ST31)).not.toContain("selected");
-  });
-
-  it("says the heuristics opponent needs no such choice", () => {
-    // A player who reads the control as "how the AI plays my deck" would
-    // otherwise expect it to change the built-in opponent too, which resolves
-    // its policy through the Leader card and never reads a dossier.
-    expect(render(stateFor(), stubContext())).toContain(
-      "Only the LLM opponent reads this",
-    );
   });
 });
 

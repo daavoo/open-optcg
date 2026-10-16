@@ -3,7 +3,7 @@
  * build the store without importing the whole board.
  */
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
-import type { LlmDebugRecord } from "../llm-settings.js";
+import type { LlmDebugRecord } from "../battle-llm-debug.js";
 import type { ReplayState } from "../replay.js";
 import type { SimulationState } from "../simulate.js";
 
@@ -30,8 +30,6 @@ export interface AiResult {
   id: number;
   actionId?: string;
   error?: string;
-  reasoning?: string;
-  rawExchange?: LlmDebugRecord["rawExchange"];
 }
 
 /** The match/board view's state, reset whenever a match begins or ends. */
@@ -53,7 +51,7 @@ export interface BattleState {
    * to acknowledge.
    *
    * The request goes out as soon as the opponent's action lands rather than
-   * when the modal is dismissed, so an LLM's thinking time overlaps with the
+   * when the modal is dismissed, so the agent's thinking time overlaps with the
    * reading time. The answer parks here until the modal is acknowledged, so
    * the board still never moves under a notice the player has not read.
    * Nothing else can act in that window -- the modal replaces the command
@@ -64,6 +62,7 @@ export interface BattleState {
   prefetchedAiResult: AiResult | null;
   workerSequence: number;
   agentSession: number;
+  /** Model calls carried by an imported trace; see `LlmDebugRecord`. */
   llmDebugRecords: LlmDebugRecord[];
   mainSelection: MainSelection | null;
   /**

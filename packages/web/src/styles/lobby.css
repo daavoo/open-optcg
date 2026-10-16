@@ -151,8 +151,8 @@
 /* The lobby's dialogs: the deck picker and the matchup settings.
 
    Both wear the shared dialog grammar above. What they add is a head with a
-   close button, because unlike the LLM dialog they are opened to browse rather
-   than to fill in, and closing is the common exit. */
+   close button, because they are opened to browse rather than to fill in, and
+   closing is the common exit. */
 .app-dialog-head {
   display: flex;
   align-items: baseline;

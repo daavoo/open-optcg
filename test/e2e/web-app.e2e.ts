@@ -674,37 +674,22 @@ test("a turn's failed calls are listed newest first, before any step", async ({
   );
 });
 
-test("standalone artifact keeps LLM credentials out of browser storage", async ({
+test("the standalone artifact offers the in-browser pilots only", async ({
   page,
 }) => {
   await openSetup(page);
 
-  // The standalone artifact cannot reach the local proxy, so Heuristics stays
-  // the pilot. The LLM choice is offered but inert: its card says so, and
-  // picking it moves the choice back to Heuristics and opens the setup docs
-  // rather than starting a match it cannot run.
+  // A build without a model pack has one pilot to offer, and no LLM.
   await openMatchupConfig(page);
   await expect(page.locator("#p2-controller")).toHaveValue("rules");
-  await expect(
-    page.locator('[data-controller="llm"] .controller-card-note'),
-  ).toContainText("run locally");
-  await expect(page.locator('[data-controller-hint="llm"]')).toContainText(
-    "setup docs",
-  );
-  const docsPage = page.waitForEvent("popup");
-  await page.locator('[data-controller="llm"]').click();
-  expect((await docsPage).url()).toContain("docs/llm-opponents.md");
-  await expect(page.locator("#p2-controller")).toHaveValue("rules");
   await expect(page.locator('[data-controller="rules"]')).toHaveClass(/picked/);
-  await expect(page.locator("#llm-settings-panel")).toHaveCount(0);
-  await expect(page.locator("#llm-api-key")).toHaveCount(0);
+  await expect(page.locator('[data-controller="llm"]')).toHaveCount(0);
   await closeMatchupConfig(page);
   const opponentDeckColumn = page.locator('.deck-column[data-seat="p2"]');
   await expect(opponentDeckColumn.locator(".deck-select-preview")).toHaveCount(
     1,
   );
-  // The opponent's grid is not narrowed here: rules can pilot any deck, and
-  // the player can build one for it.
+  // The opponent's grid offers every deck, and the player can build one for it.
   await expect(
     page.locator(
       '#p2-deck-picker [data-pick-deck][data-deck-id="(Blue) Kuzan - Starter Deck 33"]',
@@ -953,12 +938,6 @@ test("deck editor validates, exports, and starts a custom deck @art", async ({
   // The name is asked for on save, and it starts empty rather than guessing.
   await expect(page.locator("#deck-name-dialog")).toBeVisible();
   await expect(page.locator("#editor-deck-name")).toHaveValue("");
-  // The plan the LLM opponent would pilot it under is the opposite: it has a
-  // sensible answer -- this list's Leader is ST31's -- so it arrives answered,
-  // and the deck is selectable as the LLM opponent without anyone touching it.
-  await expect(page.locator("#editor-deck-dossier")).toHaveValue(
-    "(Red) Monkey.D.Luffy - Starter Deck 31",
-  );
   await page.locator("#confirm-deck-name").click();
   await expect(page.locator("#deck-name-dialog")).toContainText("name");
   await page.locator("#editor-deck-name").fill("My Red Deck");

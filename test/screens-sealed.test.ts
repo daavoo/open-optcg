@@ -18,14 +18,6 @@ import {
 
 function stubContext(overrides: Partial<SealedContext> = {}): SealedContext {
   return {
-    llmUnreachable: () => false,
-    llmReady: () => true,
-    llmAvailable: () => true,
-    llmUnavailableMessage: () => "unavailable",
-    refreshLlmCapability: async () => {},
-    redirectToLlmDocsIfUnreachable: () => false,
-    renderLlmStatus: () => "",
-    bindLlmSettings: () => {},
     renderCardDetailDialog: () => "",
     bindCardDetailDialog: () => {},
     renderImportDialog: () => "",
@@ -126,9 +118,7 @@ describe("sealed screen render", () => {
 
   /**
    * The strongest pilot the build can actually offer, which is the reasoning
-   * the 1v1 lobby's default already followed. The learned policy used to be
-   * reachable as a default only in the sealed-only build; it is worth more than
-   * that, since it beats the heuristic agent about 77% of the time.
+   * the 1v1 lobby's default follows.
    */
   describe("the opponent a fresh run defaults to", () => {
     const opened = (ctx: Partial<SealedContext>) => {
@@ -138,49 +128,39 @@ describe("sealed screen render", () => {
       return state.run!.opponentController;
     };
 
-    it("is the LLM wherever it can run at all", () => {
-      expect(
-        opened({
-          llmAvailable: () => true,
-          scorerAvailable: () => true,
-        }),
-      ).toBe("llm");
+    it("is the learned model where the build carries one", () => {
+      expect(opened({ scorerAvailable: () => true })).toBe("scorer");
     });
 
-    it("falls to the learned model where the LLM cannot be reached", () => {
-      expect(
-        opened({
-          llmAvailable: () => false,
-          scorerAvailable: () => true,
-        }),
-      ).toBe("scorer");
-    });
-
-    it("falls to the rules agent where this build ships no policy", () => {
-      expect(
-        opened({
-          llmAvailable: () => false,
-          scorerAvailable: () => false,
-        }),
-      ).toBe("rules");
+    it("falls to the rules agent where this build ships no model", () => {
+      expect(opened({ scorerAvailable: () => false })).toBe("rules");
     });
   });
 
-  it("re-answers a run's pilot with the strongest one left when the LLM goes", () => {
-    // A run can begin while the capability probe is still in flight, so the
-    // demotion has to land where a fresh run would rather than skipping the
-    // learned model on its way to the heuristic agent.
+  it("falls back to the rules agent when the learned model never arrives", () => {
+    // The hosted page fetches the model after it draws, so a run can begin on
+    // the learned model and then lose it.
     const state = runningState();
-    state.run!.opponentController = "llm";
+    state.run!.opponentController = "scorer";
     normalizeOpponentController(
       state,
-      stubContext({
-        llmUnreachable: () => true,
-        llmAvailable: () => false,
-        scorerAvailable: () => true,
-      }),
+      stubContext({ scorerAvailable: () => false }),
     );
-    expect(state.run!.opponentController).toBe("scorer");
+    expect(state.run!.opponentController).toBe("rules");
+  });
+
+  it("offers the learned model beside Heuristics, and no LLM", () => {
+    const state = runningState();
+    state.run!.opponentController = "scorer";
+    const html = renderBuilder(
+      state,
+      stubContext({ scorerAvailable: () => true }),
+    );
+    expect(html).toContain(
+      '<option value="scorer" selected>Learned model</option>',
+    );
+    expect(html).toContain('<option value="rules" ');
+    expect(html).not.toContain('value="llm"');
   });
 
   it("shows an inline message when one is set", () => {

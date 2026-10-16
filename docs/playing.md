@@ -18,10 +18,10 @@ right, and three controls on the hub between them.
   ST31 to ST36 structure decks, an upgraded ST31 list, and OP-16 and OP-12
   tournament lists. **Custom deck** opens the deck editor for either seat.
 - **Configure matchup** (the top cell of the hub) holds the rest:
-  - **Opponent controller**: **Heuristics**, the built-in deck policies, or
-    **LLM**, which needs `pnpm web:serve` from a checkout and an API key
-    (see [LLM opponents](llm-opponents.md)). You always pilot your
-    own seat.
+  - **Opponent controller**: the **Learned model**, a small neural network
+    trained by self-play and the default where the page has one, or
+    **Heuristics**, the built-in deck policies. You always pilot your own
+    seat.
   - **Starting player**: you, the opponent, or decided by the seed.
   - **Seed**: every shuffle, random choice and turn order comes from this
     string. Reuse a seed to replay the same game. Swap the two decks and keep
@@ -44,8 +44,6 @@ In the top bar:
 - **Pause AI** stops the opponent so you can study the board.
 - **Match history** is the full event log, newest first. Click any entry to
   rewind the game to that point, which is how you undo and try another line.
-  Against an LLM, each step also shows the action the model picked and its
-  reasoning.
 - **Export trace** saves the match as one file (see below).
 
 The power shown on a card is its current power. The rules panel (the eye tab on
@@ -153,14 +151,14 @@ pnpm play
 ```
 
 Prompts for both decks, a controller for each seat (human, the deck's rules
-agent, an LLM, or two trivial baselines), a seed, and an optional trace path.
+agent, or two trivial baselines), a seed, and an optional trace path.
 You pick actions by number. `q` quits.
 
 ```sh
 pnpm play:sealed
 ```
 
-Sealed against an LLM opponent. `--set=OP15` picks the expansion; the default
+Sealed against the rules agent. `--set=OP15` picks the expansion; the default
 is the newest.
 
 Output is coloured when the terminal is interactive and plain when redirected.

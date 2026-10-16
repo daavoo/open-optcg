@@ -4790,52 +4790,19 @@ export function createBattleScreen(
         agentKey: `${state.agentSession}:${observation.gameId}:${player}:${controller}`,
         controller,
         deckId: ctx.match.game?.config[player === "p1" ? "p1Deck" : "p2Deck"],
-        opponentDeckId:
-          ctx.match.game?.config[player === "p1" ? "p2Deck" : "p1Deck"],
-        dossierDeckId:
-          ctx.match.game?.config[player === "p1" ? "p1Dossier" : "p2Dossier"],
-        opponentDossierDeckId:
-          ctx.match.game?.config[player === "p1" ? "p2Dossier" : "p1Dossier"],
         deckManifest:
           ctx.match.game?.config[
             player === "p1" ? "p1CustomDeck" : "p2CustomDeck"
           ],
-        opponentDeckManifest:
-          ctx.match.game?.config[
-            player === "p1" ? "p2CustomDeck" : "p1CustomDeck"
-          ],
-        llmProxyUrl: new URL("/api/llm/complete", location.href).href,
         seed: ctx.match.game?.config.seed,
         observation,
       });
     }, delay);
   }
 
-  /**
-   * The index the next action will take, which a model call is recorded against
-   * before that action is applied. See {@link LlmDebugRecord.actionCount}.
-   */
-  function pendingActionCount(): number {
-    return (ctx.match.game?.trace().checkpoints.length ?? 0) + 1;
-  }
-
   /** Play a worker answer, or report why the AI stopped. Always re-renders. */
   function applyAiResult(result: AiResult): void {
     if (result.error) {
-      if (ctx.match.game) {
-        state.llmDebugRecords.push({
-          timestamp: new Date().toISOString(),
-          turn: ctx.match.game.activeObservation.turn,
-          player: ctx.match.game.activeObservation.activePlayer,
-          // The call is recorded before its action is applied, so the action it
-          // was deciding is the one after every checkpoint so far. That index is
-          // what puts the call under its own step in the history.
-          actionCount: pendingActionCount(),
-          error: result.error,
-          ...(result.reasoning ? { reasoning: result.reasoning } : {}),
-          ...(result.rawExchange ? { rawExchange: result.rawExchange } : {}),
-        });
-      }
       state.aiPaused = true;
       // The strip must not go on showing a game in progress once the seat
       // driving it has stopped.
@@ -4843,17 +4810,6 @@ export function createBattleScreen(
       window.alert(`Local AI stopped: ${result.error}`);
       renderGame();
       return;
-    }
-    if (result.actionId && result.rawExchange && ctx.match.game) {
-      state.llmDebugRecords.push({
-        timestamp: new Date().toISOString(),
-        turn: ctx.match.game.activeObservation.turn,
-        player: ctx.match.game.activeObservation.activePlayer,
-        actionCount: pendingActionCount(),
-        actionId: result.actionId,
-        ...(result.reasoning ? { reasoning: result.reasoning } : {}),
-        rawExchange: result.rawExchange,
-      });
     }
     if (result.actionId) performAction(result.actionId);
     else renderGame();

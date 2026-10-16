@@ -3,7 +3,7 @@ import {
   callSummary,
   hasNormalizedPayloads,
 } from "../packages/web/src/battle-llm-debug.js";
-import type { LlmDebugRecord } from "../packages/web/src/llm-settings.js";
+import type { LlmDebugRecord } from "../packages/web/src/battle-llm-debug.js";
 
 function record(overrides: Partial<LlmDebugRecord> = {}): LlmDebugRecord {
   return {

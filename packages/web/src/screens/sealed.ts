@@ -70,22 +70,9 @@ export interface SealedState {
   catalogScrollTop: number;
 }
 
-/** The pieces this screen shares with the rest of the app: LLM capability
-    (sealed offers the same LLM opponent setting the constructed lobby does),
-    the shared dialogs, and navigation and match-launch it does not own. */
+/** The pieces this screen shares with the rest of the app: the shared
+    dialogs, and navigation and match-launch it does not own. */
 export interface SealedContext {
-  llmUnreachable(): boolean;
-  /** Whether a match can actually start against an LLM: proxy reachable and
-      the server started with a key. Not configurable from here -- see
-      ../llm-settings.ts. */
-  llmReady(): boolean;
-  llmAvailable(): boolean;
-  llmUnavailableMessage(): string;
-  refreshLlmCapability(): Promise<void>;
-  redirectToLlmDocsIfUnreachable(selectId: string): boolean;
-  /** A read-only line reporting what the server was started with. */
-  renderLlmStatus(visible: boolean): string;
-  bindLlmSettings(): void;
   renderCardDetailDialog(): string;
   bindCardDetailDialog(rerender: () => void): void;
   renderImportDialog(): string;
@@ -290,9 +277,8 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
  * from the one a fresh run gets.
  */
 export function strongestPilot(
-  ctx: Pick<SealedContext, "llmAvailable" | "scorerAvailable">,
+  ctx: Pick<SealedContext, "scorerAvailable">,
 ): Exclude<ControllerKind, "human"> {
-  if (ctx.llmAvailable()) return "llm";
   return ctx.scorerAvailable() ? "scorer" : "rules";
 }
 
@@ -365,22 +351,14 @@ function startRunFromImport(
 }
 
 /** Corrects a run's opponent controller if it names one this build can't
-    offer (LLM unreachable, no learned policy shipped) -- called before
-    every render, since either can change after the run began. */
+    offer -- called before every render, since a learned model fetched after
+    the page drew can fail to arrive after the run began. */
 export function normalizeOpponentController(
   state: SealedState,
   ctx: SealedContext,
 ): void {
   if (!state.run) return;
-  // Back to the strongest pilot that is left, not straight to the heuristic
-  // agent: a build without an LLM may still ship the learned policy, and this
-  // has to land where a fresh run would.
-  if (ctx.llmUnreachable() && state.run.opponentController === "llm")
-    state.run.opponentController = strongestPilot(ctx);
-  if (
-    !ctx.scorerAvailable() &&
-    state.run.opponentController === "scorer"
-  )
+  if (!ctx.scorerAvailable() && state.run.opponentController === "scorer")
     state.run.opponentController = "rules";
 }
 
@@ -440,10 +418,8 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
               ? `<option value="scorer" ${run.opponentController === "scorer" ? "selected" : ""}>Learned model</option>`
               : ""
           }
-          <option value="llm" ${run.opponentController === "llm" ? "selected" : ""}>${ctx.llmUnreachable() ? "LLM (You need to run it locally, this opens setup docs)" : "LLM"}</option>
         </select>
       </label>
-      ${ctx.renderLlmStatus(run.opponentController === "llm")}
       ${packNote("Opponent's pool", run.opponentPacksOpened)}
       <button class="primary wide" id="sealed-start" ${validation.errors.length ? "disabled" : ""}>${icon("play", "Start match")}Start match</button>
       ${state.message ? `<p class="editor-message">${escapeHtml(state.message)}</p>` : ""}
@@ -461,7 +437,6 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
 }
 
 export function bindBuilder(state: SealedState, ctx: SealedContext): void {
-  ctx.bindLlmSettings();
   document
     .querySelector("#sealed-builder-back")
     ?.addEventListener("click", () => {
@@ -480,11 +455,6 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
     ctx.rerender();
   });
   document.querySelector("#p2-controller")?.addEventListener("change", () => {
-    if (ctx.redirectToLlmDocsIfUnreachable("p2-controller")) {
-      if (state.run) state.run.opponentController = "rules";
-      ctx.rerender();
-      return;
-    }
     if (state.run) {
       state.run.opponentController = valueOf("p2-controller") as Exclude<
         ControllerKind,
@@ -531,23 +501,13 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
       });
     });
   document.querySelector("#sealed-start")?.addEventListener("click", () => {
-    void startMatch(state, ctx);
+    startMatch(state, ctx);
   });
 }
 
-export async function startMatch(
-  state: SealedState,
-  ctx: SealedContext,
-): Promise<void> {
+export function startMatch(state: SealedState, ctx: SealedContext): void {
   if (!state.run) return;
   const run = state.run;
-  if (run.opponentController === "llm" && !ctx.llmReady()) {
-    await ctx.refreshLlmCapability();
-  }
-  if (run.opponentController === "llm" && !ctx.llmReady()) {
-    window.alert(ctx.llmUnavailableMessage());
-    return;
-  }
   if (validateSealedDeck({ cards: run.deck }, run.pool).errors.length) return;
   const p1 = sealedDeckManifest({ cards: run.deck }, run.pool);
   const opponentDeck = autoBuildSealedDeckGrape(run.opponentPool);

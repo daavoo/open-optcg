@@ -1,8 +1,6 @@
-import { DOSSIER_DECK_IDS } from "@one-piece-sim/agents/llm-dossiers";
 import {
   deckManifests,
   SEALED_LEADER,
-  SELECTABLE_DECK_IDS,
   type DeckManifest,
 } from "@one-piece-sim/decks";
 import type { PlayerId } from "@one-piece-sim/protocol";
@@ -16,13 +14,10 @@ import {
   toggleAppDialog,
   type ObservedPowerDetails,
 } from "./dialogs.js";
-import * as llmSettings from "./llm-settings.js";
-import type { LlmSettingsContext, LlmSettingsState } from "./llm-settings.js";
 import { valueOfOptional } from "./dom.js";
 import {
   deckLabel,
   deckLeaderName,
-  dossierDeckIdFor,
   leaderColors,
   type SavedDeck,
 } from "./deck-labels.js";
@@ -46,10 +41,7 @@ import {
   loadBuiltInPrintedText,
   restoreCachedAssets,
 } from "./assets.js";
-import {
-  loadedPrintedTextPack,
-  onPrintedTextChange,
-} from "@one-piece-sim/cards";
+import { onPrintedTextChange } from "@one-piece-sim/cards";
 import * as analyticsScreen from "./screens/analytics.js";
 import type { AnalyticsContext, AnalyticsState } from "./screens/analytics.js";
 import * as editorScreen from "./screens/editor.js";
@@ -100,8 +92,7 @@ const app: HTMLDivElement = appElement;
  * - This file's `Store` holds only what two or more screens touch, or what
  *   names the single source of truth for what is on screen: the live match,
  *   the AI worker, the saved decks, the two lobby deck picks (analytics shows
- *   the same selects), LLM capability (sealed reports it too), and the shared
- *   card-detail and import dialog state.
+ *   the same selects), and the shared card-detail and import dialog state.
  *
  * - Each screen's own state is a slice defined by that screen, not here:
  *   BattleState in screens/battle-state.ts, EditorState in screens/editor.ts,
@@ -115,22 +106,8 @@ const app: HTMLDivElement = appElement;
  * ---------------------------------------------------------------------------
  */
 
-// LlmCapability and LlmDebugRecord moved to ./llm-settings.js
 // AiResult, MainSelection and BattleState moved to ./screens/battle-state.js
 
-const llmDeps: LlmSettingsContext = {
-  onCapabilityChanged: () => {
-    // Only the constructed lobby has anything to re-sync: its opponent deck
-    // select narrows to dossier decks when the LLM seat is picked. The
-    // lobby's own form is the one to re-sync, so require it.
-    if (document.querySelector("#setup-form"))
-      setupScreen.updateControllerUi(setupDeps);
-  },
-};
-
-function llmUnreachable(): boolean {
-  return llmSettings.unreachable(store.llm);
-}
 /**
  * Named decks the user saved from the deck editor, keyed by their `CUSTOM-`
  * id. Every save is written to localStorage, so a deck outlives the session
@@ -158,7 +135,6 @@ function loadSavedDecks(): Record<string, SavedDeck> {
       const entry = value as {
         name?: unknown;
         deck?: unknown;
-        dossier?: unknown;
       };
       if (typeof entry.name !== "string") continue;
       const deck = entry.deck;
@@ -178,12 +154,6 @@ function loadSavedDecks(): Record<string, SavedDeck> {
       decks[id] = {
         name: entry.name,
         deck: manifest as DeckManifest,
-        // Left absent, not defaulted, when storage holds no pick: absent means
-        // "follow the Leader", which is what a deck saved before this choice
-        // existed should keep doing.
-        ...(typeof entry.dossier === "string"
-          ? { dossier: entry.dossier }
-          : {}),
       };
     }
     return decks;
@@ -225,9 +195,6 @@ function deleteSavedDeck(deckId: string): void {
       store.setupDecks[seat] = DEFAULT_SETUP_DECKS[seat];
     }
   }
-  if (store.lastRulesOpponentDeck === deckId) {
-    store.lastRulesOpponentDeck = null;
-  }
   analyticsScreen.forgetSimulated(
     store.analytics,
     (game) => game.firstDeck === deckId || game.secondDeck === deckId,
@@ -248,24 +215,6 @@ function nextCustomDeckId(): string {
     // Ignore: the id still works for this session.
   }
   return id;
-}
-
-/**
- * The decks the LLM seat can pilot, which the opponent deck picker narrows to
- * whenever the LLM is the opponent controller.
- *
- * The shipped decks with a curated strategy dossier, plus every deck the
- * player saved that borrows one -- a home-brew ST31 is piloted by ST31's plan
- * (see {@link dossierDeckIdFor}). Computed per call rather than once at load:
- * saving or deleting a deck changes the answer.
- */
-function llmPilotableDeckIds(): readonly string[] {
-  return [
-    ...SELECTABLE_DECK_IDS.filter((deckId) => DOSSIER_DECK_IDS.has(deckId)),
-    ...Object.keys(store.savedDecks).filter((deckId) =>
-      dossierDeckIdFor(deckId, store.savedDecks),
-    ),
-  ];
 }
 
 // Sealed mode's SealedRun and state live in ./screens/sealed.js
@@ -293,13 +242,6 @@ interface Store {
   worker: Worker;
   savedDecks: Record<string, SavedDeck>;
   setupDecks: Record<PlayerId, string>;
-  /** Whether an LLM opponent can run, probed from the server. Read-only from
-      the browser's side -- credentials and model come from the server's
-      environment or its CLI flags, never from a page. */
-  llm: LlmSettingsState;
-  /** The opponent deck that was picked while Heuristics piloted, restored
-      if the player switches the controller back off LLM. */
-  lastRulesOpponentDeck: string | null;
   /** Who plays each seat in a local match. Two agents is a match to watch;
       two people is one screen passed between them. */
   seatPilots: Record<PlayerId, SeatPilot>;
@@ -342,8 +284,6 @@ const store: Store = {
   savedDecks: loadSavedDecks(),
   setupDecks: { ...DEFAULT_SETUP_DECKS },
   online: initialOnlineState(serverOrigin()),
-  llm: llmSettings.initialState(),
-  lastRulesOpponentDeck: null,
   seatPilots: { p1: "you", p2: "ai" },
   cardDetailCard: null,
   cardDetailInstance: null,
@@ -360,7 +300,6 @@ const store: Store = {
     message: "",
     deckName: "",
     savedDeckId: null,
-    dossier: null,
     catalogScrollTop: 0,
     stage: "edit",
     leaderDialogOpen: false,
@@ -625,8 +564,7 @@ const homeDeps: HomeContext = {
       id: "1v1",
       icon: "swords",
       title: "1v1 match",
-      blurb:
-        "Pick two decks, choose an opponent (heuristics or LLM), and play a full match.",
+      blurb: "Pick two decks, choose an opponent, and play a full match.",
       art: true,
       open: () => {
         showSetup();
@@ -709,35 +647,11 @@ const setupDeps: SetupContext = {
   savedDecks: store.savedDecks,
   setupDecks: store.setupDecks,
   online: onlineDeps,
-  llmPilotableDeckIds,
-  // A box rather than a bare field: the screen both reads and clears this, and
-  // it has to outlive its own re-render, so it cannot be a local.
-  lastRulesOpponentDeck: {
-    get value() {
-      return store.lastRulesOpponentDeck;
-    },
-    set value(next: string | null) {
-      store.lastRulesOpponentDeck = next;
-    },
-  },
   seatPilots: store.seatPilots,
   refreshLobby: () => {
     renderSetup();
   },
-  llmAvailable: () => store.llm.capability?.available !== false,
   scorerAvailable: learnedModelAvailable,
-  llmReady: () => llmSettings.ready(store.llm),
-  llmProbePending: () => store.llm.capability === null,
-  llmUnavailableMessage: () => llmSettings.unavailableMessage(store.llm),
-  refreshLlmCapability: () => llmSettings.refreshCapability(store.llm, llmDeps),
-  redirectToLlmDocsIfUnreachable: (selectId, fallback) =>
-    llmSettings.redirectToDocsIfUnreachable(store.llm, selectId, fallback),
-  renderLlmStatus: (visible) =>
-    llmSettings.renderStatus(store.llm, visible, { hostSaves: true }),
-  saveLlmSettings: () => llmSettings.saveIfChanged(store.llm, llmDeps),
-  bindLlmSettings: () => {
-    llmSettings.bindSettings(store.llm, llmDeps);
-  },
   randomSeed,
   applyTheme,
   beginMatch,
@@ -961,10 +875,6 @@ function openDeckEditor(target: PlayerId, basedOn?: string): void {
     ? { leader: manifest.leader, cards: { ...manifest.cards } }
     : { leader: "", cards: {} };
   store.editor.savedDeckId = saved && basedOn ? basedOn : null;
-  // Null, not the saved deck's own pick, whenever that deck had none: null is
-  // "follow the Leader", and a deck saved before the choice existed -- or a
-  // preset opened to build from -- should keep doing exactly that.
-  store.editor.dossier = saved?.dossier ?? null;
   // Named only when the deck already has a name of its own. A copy of a preset,
   // like a deck from scratch, is named in the save dialog.
   store.editor.deckName = saved?.name ?? "";
@@ -988,22 +898,11 @@ function openDeckEditor(target: PlayerId, basedOn?: string): void {
    Sealed mode
 
    The page itself lives in ./screens/sealed.ts; this is the wiring that
-   gives it the store slice it owns plus the shared pieces (LLM capability,
-   the shared dialogs, match launch, navigation) it does not.
+   gives it the store slice it owns plus the shared pieces (the shared
+   dialogs, match launch, navigation) it does not.
    ------------------------------------------------------------------------ */
 
 const sealedDeps: SealedContext = {
-  llmUnreachable,
-  llmReady: () => llmSettings.ready(store.llm),
-  llmAvailable: () => store.llm.capability?.available !== false,
-  llmUnavailableMessage: () => llmSettings.unavailableMessage(store.llm),
-  refreshLlmCapability: () => llmSettings.refreshCapability(store.llm, llmDeps),
-  redirectToLlmDocsIfUnreachable: (selectId) =>
-    llmSettings.redirectToDocsIfUnreachable(store.llm, selectId),
-  renderLlmStatus: (visible) => llmSettings.renderStatus(store.llm, visible),
-  bindLlmSettings: () => {
-    llmSettings.bindSettings(store.llm, llmDeps);
-  },
   renderCardDetailDialog: (powerDetails?: ObservedPowerDetails) =>
     renderCardDetailDialog(store, powerDetails),
   bindCardDetailDialog: (rerender) => {
@@ -1331,32 +1230,9 @@ document.addEventListener("keydown", (event) => {
   renderGame();
 });
 
-/**
- * Hands the loaded pack to the AI worker, which cannot read one for itself.
- *
- * A worker is a separate realm, so the text this thread loaded is not text it
- * holds: an LLM seat builds its own deck list there, from the manifest, and
- * without this it went out as names and stats -- while the engine, on this
- * thread, put the words of every *visible* card in the same prompt. The seat
- * read its opponent's cards and not its own.
- *
- * Posted on every change rather than with each decision: the pack is the whole
- * card pool, the decisions are hundreds a match, and `LlmAgent` renders its
- * deck list once when it is constructed. Worker messages are delivered in
- * order, so a pack loaded before the match starts is in place before the first
- * decision asks for it.
- */
-function postPrintedText(): void {
-  const printedText = loadedPrintedTextPack();
-  if (Object.keys(printedText).length === 0) return;
-  store.worker.postMessage({ printedText });
-}
-
 // Text arriving mid-match -- a pack loaded in another tab, or restored late --
-// changes what every open card popup and Counter chip should say, and is text
-// the worker's agents have to be told about.
+// changes what every open card popup and Counter chip should say.
 onPrintedTextChange(() => {
-  postPrintedText();
   if (store.game) renderGame();
 });
 

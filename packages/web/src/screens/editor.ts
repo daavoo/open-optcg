@@ -10,11 +10,7 @@ import {
   type DeckAnalytics,
   type EditableDeck,
 } from "../deck-editor.js";
-import { deckDisplayName, type SavedDeck } from "../deck-labels.js";
-import {
-  DOSSIER_DECK_IDS,
-  dossierDeckIdsForLeader,
-} from "@one-piece-sim/agents/llm-dossiers";
+import type { SavedDeck } from "../deck-labels.js";
 import {
   bindCatalogFilters,
   catalogFilterIsEmpty,
@@ -56,13 +52,6 @@ export interface EditorState {
   deckName: string;
   /** The saved deck this editor session is editing, if it already exists. */
   savedDeckId: string | null;
-  /**
-   * The shipped deck whose dossier the LLM opponent should pilot this list
-   * with, as the save dialog currently has it. Null while the player has not
-   * touched the control, which is not the same as "none": null follows the
-   * Leader, and the empty string is an explicit no dossier.
-   */
-  dossier: string | null;
   catalogScrollTop: number;
   /** Whether the Leader grid is open over the editor, to change the Leader
       of a deck that already has one. A deck with none is asked through
@@ -472,7 +461,6 @@ function startFromBase(state: EditorState, ctx: EditorContext, deckId: string) {
   };
   state.savedDeckId = null;
   state.deckName = "";
-  state.dossier = null;
   state.stage = "edit";
 }
 
@@ -498,14 +486,12 @@ function renderLeaderDialog(state: EditorState): string {
 }
 
 /**
- * The save dialog: the one place a deck is named, and the one place it is
- * told which plan the AI pilots it under.
+ * The save dialog: the one place a deck is named.
  *
  * Naming is part of saving, not part of building, and it has no sensible
  * default -- the Leader's name was one, and it made every deck of that Leader
  * indistinguishable in the picker. So the name is asked for at the moment it is
- * needed, empty, with the save button behind it. The dossier is the opposite
- * case: it does have a sensible default, so it is offered already answered.
+ * needed, empty, with the save button behind it.
  */
 function renderNameDialog(state: EditorState): string {
   const replacing =
@@ -520,55 +506,12 @@ function renderNameDialog(state: EditorState): string {
       <label>Deck name
         <input id="editor-deck-name" value="${escapeHtml(state.deckName)}" maxlength="40" placeholder="e.g. Red Rush" spellcheck="false" autocomplete="off" />
       </label>
-      ${renderDossierSelect(state)}
       ${state.nameMessage ? `<p class="app-dialog-message">${escapeHtml(state.nameMessage)}</p>` : ""}
       <div class="app-dialog-actions">
         <button class="primary" type="submit" id="confirm-deck-name">${icon("save", "Save this deck")}<span id="confirm-deck-name-label">${replacing ? "Replace deck" : "Save deck"}</span></button>
       </div>
     </form>
   </div>`;
-}
-
-/**
- * Which shipped deck's strategy dossier the LLM opponent pilots this list
- * with.
- *
- * The engine's own heuristics need no such choice -- a rules seat resolves its
- * policy through the Leader card, so a home-brew ST31 already plays ST31's
- * rules. Only the LLM reads a per-deck dossier, and a deck the player built has
- * none: nothing could have written one for a list that did not exist when the
- * app was built. Borrowing one is what makes a saved deck selectable as the LLM
- * opponent at all.
- *
- * The decks sharing this list's Leader come first and one of them is
- * preselected, because that is almost always the honest answer. The rest are
- * offered below it rather than hidden: a list can be a known archetype under a
- * different Leader, and the player knows their own deck better than its Leader
- * does. "No plan" is last, and is what a Leader no shipped deck plays defaults
- * to -- the LLM will not be offered the deck, which is where this started.
- */
-function renderDossierSelect(state: EditorState): string {
-  const leader = state.deck?.leader ?? "";
-  const matching = dossierDeckIdsForLeader(leader);
-  const selected = state.dossier ?? defaultDossier(leader);
-  const option = (deckId: string, label: string) =>
-    `<option value="${escapeHtml(deckId)}" ${deckId === selected ? "selected" : ""}>${escapeHtml(label)}</option>`;
-  const others = [...DOSSIER_DECK_IDS].filter(
-    (deckId) => !matching.includes(deckId),
-  );
-  return `<label>AI opponent plays it as
-      <select id="editor-deck-dossier">
-        ${matching.length ? `<optgroup label="Same Leader">${matching.map((deckId) => option(deckId, deckDisplayName(deckId))).join("")}</optgroup>` : ""}
-        <optgroup label="Other decks">${others.map((deckId) => option(deckId, deckDisplayName(deckId))).join("")}</optgroup>
-        ${option("", "No plan -- not offered to the LLM opponent")}
-      </select>
-    </label>
-    <p class="app-dialog-note">Only the LLM opponent reads this. The built-in heuristics already play your deck by its Leader.</p>`;
-}
-
-/** The dossier a list is saved with when nobody says otherwise. */
-function defaultDossier(leader: string): string {
-  return dossierDeckIdsForLeader(leader)[0] ?? "";
 }
 
 function close(state: EditorState, ctx: EditorContext): void {
@@ -691,11 +634,6 @@ export function bind(state: EditorState, ctx: EditorContext): void {
             ? "Replace deck"
             : "Save deck";
     });
-  document
-    .querySelector("#editor-deck-dossier")
-    ?.addEventListener("change", (event) => {
-      state.dossier = (event.currentTarget as HTMLSelectElement).value;
-    });
   document.querySelector("#cancel-deck-name")?.addEventListener("click", () => {
     state.nameDialogOpen = false;
     state.nameMessage = "";
@@ -751,17 +689,9 @@ function saveDeck(state: EditorState, ctx: EditorContext): void {
   }
   const deckId =
     target.kind === "replace" ? target.deckId : ctx.nextCustomDeckId();
-  // Only an answer that differs from the Leader's own is written down. Storing
-  // the default too would freeze it: a deck saved today would keep pointing at
-  // whichever list was that Leader's first dossier when it was saved, rather
-  // than following the Leader as a later build re-answers the question.
-  const dossier = state.dossier;
   ctx.savedDecks[deckId] = {
     name,
     deck: toManifest(state.deck, deckId),
-    ...(dossier !== null && dossier !== defaultDossier(state.deck.leader)
-      ? { dossier }
-      : {}),
   };
   ctx.persistSavedDecks();
   state.savedDeckId = deckId;

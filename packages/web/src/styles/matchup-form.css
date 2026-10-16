@@ -2,7 +2,7 @@
    MATCHUP FORM
    The body of the 1v1 setup card: two deck columns either side of a crease,
    the match options under them, and the note about who is piloting the
-   opponent -- including the LLM settings panel that note opens.
+   opponent.
    ========================================================================= */
 .deck-columns {
   display: grid;
@@ -131,7 +131,7 @@ textarea:hover {
   background: color-mix(in srgb, var(--ember) 7%, var(--menu-card));
 }
 /* `display: grid` above would otherwise beat the browser's own rule for the
-   attribute, and the callout would stay on with the LLM piloting. */
+   attribute, and the callout would stay on when it should be hidden. */
 .pilot-callout[hidden] {
   display: none;
 }
@@ -161,10 +161,7 @@ textarea:hover {
   color: var(--ember-deep);
 }
 /* Who pilots the opponent, chosen inside the opponent's own column -- next to
-   the deck it applies to rather than in a row underneath both seats. Its
-   read-only status line sits under it: the LLM's model and key come from the
-   server's environment or CLI flags, never from this page, so there is nothing
-   to configure here -- only to report. */
+   the deck it applies to rather than in a row underneath both seats. */
 .deck-column-controller {
   margin-top: 0.25rem;
 }
@@ -173,99 +170,4 @@ textarea:hover {
    otherwise repaint a hidden element. */
 [hidden] {
   display: none !important;
-}
-.llm-status-line {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--menu-muted, var(--menu-ink));
-}
-/* Blocked reads as a caution, not an error: Heuristics is still there, so
-   nothing is actually broken -- the LLM seat just cannot be picked. */
-.llm-status-line.blocked::before {
-  content: "⚠ ";
-}
-.llm-status-line.ready::before {
-  content: "✓ ";
-}
-/* A probe still in flight gets no mark at all: it is not an outcome. */
-.llm-status-line.probing {
-  opacity: 0.7;
-}
-
-/* The status line and the fields that change it, stacked as one block under
-   the controller choice. They used to be a caption and a button that opened a
-   second modal on top of the first; the fields are inline instead, so what the
-   reader has to fill in is in the dialog they are already in. */
-.llm-settings-row {
-  display: grid;
-  gap: 0.5rem;
-}
-.llm-panel {
-  display: grid;
-  gap: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--editor-border, var(--menu-border));
-}
-.llm-panel-lede,
-.llm-panel-hint,
-.llm-panel-message {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--editor-muted, var(--menu-muted));
-}
-.llm-panel-hint .text-button {
-  padding: 0;
-  font-size: 0.72rem;
-}
-/* A save that failed is the only thing worth colouring here: everything else
-   in the panel is instruction, not outcome. */
-.llm-panel-message {
-  color: var(--flag);
-  font-weight: 600;
-}
-.llm-panel-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-}
-.llm-panel-actions .secondary {
-  padding: 0.55rem 1rem;
-}
-.llm-panel label {
-  display: grid;
-  gap: 0.3rem;
-  font-size: 0.78rem;
-  color: var(--editor-muted, var(--menu-muted));
-}
-.llm-panel label[hidden] {
-  display: none;
-}
-/* The panel sits on the dialog's paper, where the app-wide (dark) button
-   colours are all but invisible. These are the `.menu-card` treatments, which
-   are written for exactly this background. */
-.llm-panel .secondary:not(.action-button) {
-  border-color: var(--editor-border, var(--menu-border));
-  background: var(--editor-field, var(--menu-field));
-  color: var(--editor-ink, var(--menu-ink));
-}
-.llm-panel .secondary:not(.action-button):hover {
-  border-color: var(--ember);
-  background: var(--editor-paper, var(--menu-card));
-}
-.llm-panel .text-button {
-  color: var(--editor-muted, var(--menu-muted));
-  text-decoration: underline;
-}
-.llm-panel .text-button:hover {
-  color: var(--ember-deep);
-}
-.llm-panel input,
-.llm-panel select {
-  width: 100%;
-  border-color: var(--editor-border, var(--menu-border));
-  background: var(--editor-field, var(--menu-field));
-  color: var(--editor-ink, var(--menu-ink));
 }
