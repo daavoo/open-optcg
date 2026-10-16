@@ -58,9 +58,10 @@ export function render(ctx: AssetGateContext): string {
       </header>
       <section class="asset-gate-panel" aria-label="Card text and art">
         <h1>Load the card art and text</h1>
-        <p>Open OPTCG ships without card images and printed card text, because they belong to Bandai. You download them yourself, from Bandai's own card list, once.</p>
         <ol>
-          <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em></li>
+          <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em>
+            <span class="asset-gate-aside">No bookmarks bar? Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> on a Mac) to show it. Can't drag? <button class="home-assets-help" type="button" data-copy-bookmarklet>Copy the bookmark</button>, add a new bookmark and paste it as the address (URL). <span data-copy-status aria-live="polite"></span></span>
+            <textarea class="asset-gate-code" data-bookmarklet-code readonly rows="3" hidden aria-label="The Get cards bookmark: copy this and paste it as a bookmark's address"></textarea></li>
           <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards as a zip. That takes a few minutes: you can switch to other tabs meanwhile. If that tab is closed, run the bookmark again and it carries on where it stopped.</li>
           <li>Back here, choose <strong>Load asset pack (.zip)</strong> below and pick that zip.</li>
         </ol>
@@ -113,6 +114,35 @@ export function bindControls(ctx: AssetGateContext): void {
         ?.removeAttribute("hidden");
     });
   });
+  // A page cannot create a bookmark itself (no browser offers that any
+  // more), so where dragging is not possible the player makes one and pastes
+  // the code in. Where the clipboard is refused, the code is shown selected
+  // for copying by hand.
+  document
+    .querySelectorAll<HTMLElement>("[data-copy-bookmarklet]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const item = button.closest("li");
+        const status = item?.querySelector<HTMLElement>("[data-copy-status]");
+        const code = item?.querySelector<HTMLTextAreaElement>(
+          "[data-bookmarklet-code]",
+        );
+        const showCode = () => {
+          if (!code) return;
+          code.value = bookmarklet();
+          code.hidden = false;
+          code.select();
+          if (status) status.textContent = "Copy the code below instead.";
+        };
+        // Inside the promise, so a page with no clipboard at all (one served
+        // over plain http) lands in the same fallback as a refusal.
+        Promise.resolve()
+          .then(() => navigator.clipboard.writeText(bookmarklet()))
+          .then(() => {
+            if (status) status.textContent = "Copied.";
+          }, showCode);
+      });
+    });
   // Opened in script rather than an `<a href>`, for the same reason.
   document
     .querySelectorAll<HTMLElement>("[data-bandai-cardlist]")

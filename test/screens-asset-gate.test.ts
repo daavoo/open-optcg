@@ -32,6 +32,15 @@ describe("asset gate", () => {
     expect(html).not.toMatch(/href=["'](?!#)/);
   });
 
+  it("offers a way round dragging: the key that shows the bar, and a copy", () => {
+    const html = render(ctx());
+    expect(html).toContain("Shift</kbd>+<kbd>B</kbd>");
+    expect(html).toContain("data-copy-bookmarklet");
+    // The code itself is only filled in, and shown, when the clipboard fails.
+    expect(html).toMatch(/<textarea[^>]*data-bookmarklet-code[^>]*hidden/);
+    expect(html).not.toContain("javascript:");
+  });
+
   it("is a page of its own, with nothing to play on it", () => {
     const html = render(ctx());
     expect(html).toContain("Load the card art and text");
