@@ -99,8 +99,10 @@ pnpm standings:check       # are the two committed deck-standings CSVs current
 pnpm standings --group X   # rewrite one division only: featured or starter
 ```
 
-The whole suite is ~90s -- most of it the two whole-format simulations, which
-play every deck pairing. Prefer running it over reasoning about whether a change
+The whole suite is ~80s -- most of it the whole-format sweeps, which play every
+deck pairing. The effect-option sweep is split over twelve
+`effect-options-NN.test.ts` files so the workers share it; Vitest runs one
+file's tests serially. Prefer running it over reasoning about whether a change
 is safe; use the narrower commands above for a tight loop.
 
 ## Playbooks
