@@ -2838,25 +2838,31 @@ export function continueExecution(
           const targetName = db.require(threatened.cardNumber).name;
           const koBind = `${effect.binding}-ko-${instanceId}`;
           execution.bindings[koBind] = [instanceId];
+          // A prevention (OP10-118) leaves its controller no K.O. to pick.
+          const prevented = eligible.some(({ entry }) => entry.mandatory);
           return {
             pending: {
               kind: "choice",
               execution,
               chooserPlayerId: ownerId,
               branches: [
-                {
-                  id: `ko:${instanceId}`,
-                  label: `K.O. ${targetName}`,
-                  effect: thenRest(
-                    {
-                      kind: "knock-out",
-                      binding: koBind,
-                      skipReplacements: true,
-                    },
-                    `${effect.binding}-after-replacement`,
-                    remaining,
-                  ),
-                },
+                ...(prevented
+                  ? []
+                  : [
+                      {
+                        id: `ko:${instanceId}`,
+                        label: `K.O. ${targetName}`,
+                        effect: thenRest(
+                          {
+                            kind: "knock-out",
+                            binding: koBind,
+                            skipReplacements: true,
+                          },
+                          `${effect.binding}-after-replacement`,
+                          remaining,
+                        ),
+                      },
+                    ]),
                 ...eligible.map(({ protector, entry }) => {
                   const bind = `${effect.binding}-replace-${protector.instanceId}`;
                   execution.bindings[bind] = [protector.instanceId];

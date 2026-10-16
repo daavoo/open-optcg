@@ -59,6 +59,8 @@ export function knockOut(
 export interface ReplacementOption {
   optionId: string;
   summary: string;
+  /** A prevention, not a "you may": the K.O. is not on offer beside it. */
+  mandatory?: true;
 }
 
 const isSlash = (cardNumber: string, db: CardDatabase): boolean =>

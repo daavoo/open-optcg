@@ -58,6 +58,7 @@ export const op10ReplacementMechanics: SetMechanics = {
         oncePerTurn: true,
         label: "Prevent the K.O.",
         cost: { kind: "none" },
+        mandatory: true,
       },
     ],
     [

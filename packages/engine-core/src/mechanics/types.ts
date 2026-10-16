@@ -529,6 +529,13 @@ export interface ReplacementProgram {
   /** Whether the printed text carries `[Once Per Turn]`. */
   oncePerTurn: boolean;
   /**
+   * Whether the printed text is a prevention rather than a "you may": the
+   * controller is not offered the K.O. instead. OP10-118 Monkey.D.Luffy is the
+   * one, and Bandai's OP10-118#1 ruling is that its first K.O. by an opponent's
+   * effect in a turn cannot be allowed through.
+   */
+  mandatory?: true;
+  /**
    * DON!! that must be given to the protected player's Leader -- OP05-001
    * Sabo's `[DON!! x1]`, the first replacement in the pool printed on a Leader
    * behind a DON!! gate. Read by `eligibleReplacements`, so an unpaid Leader

@@ -1928,6 +1928,13 @@ function computeEffectOptions(
     ];
   }
   if (effect.kind === "replacement-choice") {
+    // A prevention (OP10-118) is not declined: nothing lets the K.O. through.
+    if (effect.options.some((option) => option.mandatory)) {
+      return effect.options.map(({ optionId, summary }) => ({
+        optionId,
+        summary,
+      }));
+    }
     return [
       ...effect.options,
       {
