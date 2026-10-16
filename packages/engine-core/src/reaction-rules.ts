@@ -207,6 +207,16 @@ export interface ReactionRule {
    * them, so the gate is per source rather than per player.
    */
   sourceAttachedDon?: number;
+  /**
+   * A `card-moved` off the board also fires the clause when the card that
+   * moved is this one, though it is no longer on the field to watch.
+   *
+   * EB01-047 Laboon's "when a Character is K.O.'d" is the first: Bandai's Q&A
+   * (EB01-047#1) rules that it answers its own K.O. Opt-in because the other
+   * board watchers name Characters other than themselves, or are not about a
+   * card leaving at all.
+   */
+  answersOwnExit?: true;
   program: MechanicProgram;
 }
 

@@ -21,11 +21,15 @@ export const eb01ReactionRules: readonly ReactionRule[] = [
     // printed sentence carries none of them: a 2-drop that draws off *any*
     // Character dying, on either side and on either turn, which is what makes
     // it worth a slot in a deck that trades.
+    //
+    // `answersOwnExit`: Laboon is a Character too, and Bandai's Q&A
+    // (EB01-047#1) rules that its own K.O. fires the clause.
     cardNumber: "EB01-047",
     controller: "board",
     signal: { kind: "card-moved", from: "board", to: "trash", ko: true },
     ownTurn: false,
     oncePerTurn: true,
+    answersOwnExit: true,
     program: { effect: drawOneTrashOne },
   },
 ];

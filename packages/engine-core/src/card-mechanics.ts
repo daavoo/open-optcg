@@ -711,7 +711,7 @@ export function getMechanicSignalInvocations(
         // A board-scoped rule dispatches once per copy on the field, with that
         // copy as the source; a Leader-scoped one has exactly one source and it
         // is in no zone. Both are checked before the shared gates below.
-        const sources =
+        const sources: CardInstance[] =
           rule.controller === "leader"
             ? state.players[playerId].leaderCardNumber === rule.cardNumber
               ? [
@@ -728,6 +728,21 @@ export function getMechanicSignalInvocations(
               : state.players[playerId].board.filter(
                   (card) => card.cardNumber === rule.cardNumber,
                 );
+        // The reacting card itself just left the board -- see
+        // `answersOwnExit`. It is a source of its own, dispatched from where it
+        // went rather than from the field it watched.
+        const exited =
+          rule.answersOwnExit === true &&
+          signal.kind === "card-moved" &&
+          signal.from === "board" &&
+          signal.ownerId === playerId &&
+          signal.card.cardNumber === rule.cardNumber &&
+          !sources.some(
+            (source) => source.instanceId === signal.card.instanceId,
+          )
+            ? signal.card
+            : undefined;
+        if (exited) sources.push(exited);
         if (
           signal.kind !== rule.signal.kind ||
           sources.length === 0 ||
@@ -899,6 +914,7 @@ export function getMechanicSignalInvocations(
             program: rule.program,
             automatic: true,
             ...(rule.oncePerTurn ? { spendsOncePerTurn: true as const } : {}),
+            ...(source === exited ? { answersOwnExit: true as const } : {}),
           });
         }
         if (rule.oncePerTurn) state.oncePerTurn.push(key);
@@ -1007,6 +1023,7 @@ function leftFieldBeforeActivating(
 ): boolean {
   if (invocation.onField !== true) {
     if (!("program" in invocation) || !invocation.automatic) return false;
+    if (invocation.answersOwnExit) return false;
     if (!isFieldReaction(invocation)) return false;
   }
   const player = state.players[invocation.context.sourcePlayerId];
