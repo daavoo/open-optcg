@@ -124,7 +124,10 @@ export function applyResolveTrigger({
     if (!trigger.resume) state.activeAttack = null;
     state.pendingTrigger = null;
     state.phase = resume.phase;
-    state.activePlayer = trigger.playerId;
+    // The Trigger's first decision may belong to its owner's opponent: OP17-117
+    // Maser Saber asks them whether to trash 3 cards (Bandai's OP-17 Q&A,
+    // OP17-117#1), so control goes to whoever the pending effect names.
+    state.activePlayer = triggered.pending?.playerId ?? trigger.playerId;
     state.pendingEffect = triggered.pending;
     if (triggered.pending) {
       state.pendingEffectResume = {
