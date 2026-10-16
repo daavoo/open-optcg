@@ -259,6 +259,7 @@ export function resolveBadMannersCounter({
   effect,
   optionId,
 }: EffectContext<"bad-manners-counter">): PublicEvent[] {
+  if (optionId === "skip") return [];
   if (!effect.eligibleInstanceIds.includes(optionId)) {
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
   }

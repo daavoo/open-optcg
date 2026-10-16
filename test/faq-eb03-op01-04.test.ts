@@ -793,15 +793,9 @@ function declineTheTrash(game: Game): void {
   game.play({ type: "resolve-effect", optionId: decline });
 }
 
-// The three trash-a-card-for-+3000 Counter Events below share one disagreement.
-// The engine offers the Event only while another card is in hand to pay with,
-// and once it is played the trash is compulsory -- a `bad-manners-counter`
-// pending with only hand cards on it (OP02-068, OP04-016), or a `min: 1` choose
-// after the +3000 has already been added (OP03-072). Bandai lets the defender
-// play the Event and keep the card, getting no power for it. That decline is a
-// strictly worse line than passing the Counter step, which is why the engine
-// does not offer it; adding it is a change to what every agent is asked, so
-// these stay recorded rather than fixed.
+// The three trash-a-card-for-+3000 Counter Events below can be played with the
+// trash declined, and then nothing gains power. Eleven registered cards print
+// the same clause; the family test after OP-04 holds every one of them to it.
 describe("FAQ OP-02", () => {
   it("OP02-068#1: the [Trigger] can return its owner's own Character", () => {
     // Yes -- the return reaches any cheap Character, its owner's own included.
@@ -823,49 +817,36 @@ describe("FAQ OP-02", () => {
     expect(ids(game.state.players.p1.hand)).toContain("own");
   });
 
-  it.fails(
-    "OP02-068#2: the [Counter] can be played with the trash declined, giving no power",
-    () => {
-      // Yes -- and then no card gains the +3000.
-      // Engine: the trash is compulsory once the Event is played (see above).
-      const game = counterStep("faq-op02-068-2", "OP02-068");
-      declineTheTrash(game);
+  it("OP02-068#2: the [Counter] can be played with the trash declined, giving no power", () => {
+    // Yes -- and then no card gains the +3000.
+    const game = counterStep("faq-op02-068-2", "OP02-068");
+    declineTheTrash(game);
 
-      expect(game.state.activeAttack?.counterPower).toBe(0);
-      expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
-    },
-  );
+    expect(game.state.activeAttack?.counterPower).toBe(0);
+    expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
+  });
 });
 
 describe("FAQ OP-03", () => {
-  it.fails(
-    "OP03-072#1: the [Counter] can be played with the trash declined, giving no power",
-    () => {
-      // Yes -- and then no card gains the +3000.
-      // Engine: the +3000 lands as the Event is played and the trash that
-      // follows is a `min: 1` choose (see above).
-      const game = counterStep("faq-op03-072-1", "OP03-072");
-      declineTheTrash(game);
+  it("OP03-072#1: the [Counter] can be played with the trash declined, giving no power", () => {
+    // Yes -- and then no card gains the +3000.
+    const game = counterStep("faq-op03-072-1", "OP03-072");
+    declineTheTrash(game);
 
-      expect(game.state.activeAttack?.counterPower).toBe(0);
-      expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
-    },
-  );
+    expect(game.state.activeAttack?.counterPower).toBe(0);
+    expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
+  });
 });
 
 describe("FAQ OP-04", () => {
-  it.fails(
-    "OP04-016#1: the [Counter] can be played with the trash declined, giving no power",
-    () => {
-      // Yes -- and then no card gains the +3000.
-      // Engine: the trash is compulsory once the Event is played (see above).
-      const game = counterStep("faq-op04-016-1", "OP04-016");
-      declineTheTrash(game);
+  it("OP04-016#1: the [Counter] can be played with the trash declined, giving no power", () => {
+    // Yes -- and then no card gains the +3000.
+    const game = counterStep("faq-op04-016-1", "OP04-016");
+    declineTheTrash(game);
 
-      expect(game.state.activeAttack?.counterPower).toBe(0);
-      expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
-    },
-  );
+    expect(game.state.activeAttack?.counterPower).toBe(0);
+    expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
+  });
 
   it("OP04-083#1: a Character played after Sabo's [On Play] can still be K.O.'d by effects", () => {
     // No protection for it -- the clause covers the Characters on the field
@@ -899,4 +880,65 @@ describe("FAQ OP-04", () => {
     expect(ids(game.state.players.p1.trash)).toContain("late");
     expect(ids(game.state.players.p1.board)).toEqual(["sabo"]);
   });
+});
+
+describe("every [Counter] that may trash a hand card for power", () => {
+  // The same printed clause on eleven cards, written three ways in the engine:
+  // the Bad Manners prompt, `trashForBattlePower`, and hand-written programs.
+  // EB04-029 asks for a [Sanji], so it is held to the decline alone.
+  const PAY_3000 = [
+    "OP02-068",
+    "OP03-072",
+    "OP04-016",
+    "OP05-037",
+    "OP06-115",
+    "OP13-076",
+    "OP15-096",
+    "OP16-020",
+    "OP17-038",
+    "OP17-076",
+  ];
+
+  for (const cardNumber of [...PAY_3000, "EB04-029"]) {
+    it(`${cardNumber}: declining the trash keeps the card and adds no power`, () => {
+      const game = counterStep(
+        `faq-counter-family-decline-${cardNumber}`,
+        cardNumber,
+      );
+      declineTheTrash(game);
+
+      expect(game.state.activeAttack?.counterPower).toBe(0);
+      expect(ids(game.state.players.p1.hand)).toEqual(["spare"]);
+    });
+  }
+
+  for (const cardNumber of PAY_3000) {
+    it(`${cardNumber}: paying the trash adds +3000`, () => {
+      const game = counterStep(
+        `faq-counter-family-pay-${cardNumber}`,
+        cardNumber,
+      );
+      game.play({ type: "activate-counter-event", eventInstanceId: "event" });
+      while (game.state.pendingEffect) {
+        const options = effectOptions(game, "p1");
+        game.play({
+          type: "resolve-effect",
+          optionId: options.includes("spare")
+            ? "spare"
+            : options.includes("apply")
+              ? "apply"
+              : options.includes("p1-leader")
+                ? "p1-leader"
+                : options[0],
+        });
+      }
+
+      expect(ids(game.state.players.p1.hand)).toEqual([]);
+      expect(
+        (game.state.activeAttack?.counterPower ?? 0) +
+          currentPower(game.state, "p1", "p1-leader", false) -
+          5000,
+      ).toBe(3000);
+    });
+  }
 });

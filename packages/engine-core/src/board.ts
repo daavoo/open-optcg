@@ -172,7 +172,6 @@ export function counterEventPower(
       : 2_000;
   }
   if (cardNumber === "OP12-057" || cardNumber === "OP07-056") return 4_000;
-  if (cardNumber === "OP13-076") return 3_000;
   // OP11-079 pays out on a guess about the opponent's hand, so there is no
   // number to promise before it resolves.
   if (cardNumber === "OP11-079") return undefined;
@@ -232,8 +231,8 @@ export function counterEventPower(
   }
   const program = getCounterEventProgram(cardNumber);
   if (!program) {
-    // The `bad-manners-counter` fallback in effects.ts, which is where OP04-016
-    // and OP02-068 land once their discard is paid.
+    // The `bad-manners-counter` fallback in effects.ts, which is where OP04-016,
+    // OP02-068 and OP13-076 land once their discard is paid.
     return 3_000;
   }
   if (program.powerWhen) {
@@ -411,7 +410,30 @@ function resolvedProgramPower(
           )
         : 0;
     }
-    case "optional":
+    case "optional": {
+      // "You may trash N cards from your hand: +X" (`trashForBattlePower`):
+      // the player pays when the hand can, which is the whole point of
+      // playing the Event for its power, and gets nothing when it cannot. The
+      // Event has already left the hand in `state` (see the caller).
+      const inner = effect.effect;
+      if (
+        inner.kind === "choose" &&
+        inner.selector.player === "self" &&
+        inner.selector.zone === "hand" &&
+        (inner.chooser === undefined || inner.chooser === "self")
+      ) {
+        if (state.players[playerId].hand.length < inner.min) return 0;
+        return resolvedProgramPower(
+          inner.effect,
+          state,
+          playerId,
+          cardNumber,
+          participant,
+          db,
+        );
+      }
+      return undefined;
+    }
     case "select":
     case "choose":
     case "choice":

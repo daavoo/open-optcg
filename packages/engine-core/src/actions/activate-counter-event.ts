@@ -94,26 +94,6 @@ export function applyActivateCounterEvent({
     ) {
       events.push(...drawCards(state, activePlayer, 1, eventCard.cardNumber));
     }
-  } else if (eventCard.cardNumber === "OP13-076") {
-    state.pendingEffect = {
-      kind: "navy-discard",
-      playerId: activePlayer,
-      sourceCardNumber: eventCard.cardNumber,
-      sourceInstanceId: eventCard.instanceId,
-      eligibleInstanceIds: player.hand.map((card) => card.instanceId),
-      remaining: 1,
-      optional: false,
-      after: { kind: "none" },
-      resumePhase: "counter",
-      resumePlayerId: activePlayer,
-    };
-    state.activeAttack.counterPower += 3_000;
-    events.push({
-      type: "counter-used",
-      playerId: activePlayer,
-      cardNumber: eventCard.cardNumber,
-      power: 3_000,
-    });
   } else if (eventCard.cardNumber === "OP07-056") {
     player.restedDon.push(...player.activeDon.splice(0, 1));
     state.pendingEffect = {
@@ -201,6 +181,9 @@ export function applyActivateCounterEvent({
       }
     }
   } else {
+    // OP02-068, OP04-016 and OP13-076: "you may trash 1 card from your hand:
+    // +3000". The power is bought by the trash, inside the prompt, and the
+    // prompt can decline it.
     state.pendingEffect = {
       kind: "bad-manners-counter",
       playerId: activePlayer,

@@ -9,7 +9,7 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { donMinus, payFromHand } from "./shared.js";
+import { donMinus, payFromHand, trashForBattlePower } from "./shared.js";
 import {
   costDebuff,
   koCostAtMost,
@@ -91,25 +91,15 @@ export const op05BattleMechanics: SetMechanics = {
     ],
     [
       // OP05-037 Because the Side of Justice Will Be Whichever Side Wins!! (0):
-      // a hand card for +3000. The card is the whole price, so `trashFromHand`
-      // gates the offer and the program pays it; declining would be a Counter
-      // that does nothing, which nobody casts.
+      // a hand card for +3000. The trash may be declined, and then nothing
+      // gains power, so the power is inside the paid program, not on the entry.
+      // `trashFromHand` keeps the offer to a hand that can pay.
       "OP05-037",
       {
         cost: 0,
         trashFromHand: 1,
-        power: 3_000,
-        program: {
-          effect: payFromHand(
-            { player: "self", zone: "hand" },
-            "op05-justice-cost",
-            1,
-            {
-              kind: "sequence",
-              effects: [],
-            },
-          ),
-        },
+        power: 0,
+        program: trashForBattlePower(3000, "op05-justice-cost"),
       },
     ],
     [

@@ -905,11 +905,12 @@ describe("ST31 rules", () => {
       ),
     );
     expect(state.pendingEffect?.kind).toBe("bad-manners-counter");
+    // The one hand card, and the decline the printed "you may" allows.
     expect(
-      getLegalActions(state, state.activePlayer).filter(
-        (action) => action.type === "resolve-effect",
-      ),
-    ).toHaveLength(1);
+      getLegalActions(state, state.activePlayer)
+        .filter((action) => action.type === "resolve-effect")
+        .map((action) => ("optionId" in action ? action.optionId : "")),
+    ).toEqual(["discard", "skip"]);
     const resolve = requireAction(
       state,
       (action) =>

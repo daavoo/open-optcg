@@ -7,28 +7,23 @@
  * text for any card here is `pnpm card:text <CARD>`. Once the set comes in
  * whole, these rows move into its per-window `op03-*.ts` modules.
  */
-import { payFromHand } from "./shared.js";
+import { trashForBattlePower } from "./shared.js";
 import { type SetMechanics } from "./registry.js";
 
 export const op03Mechanics: SetMechanics = {
   counterEvent: [
     [
       // OP03-072 Gum-Gum Jet Gatling (0): a hand card for +3000, the same
-      // clause as OP05-037 and read the same way -- the card is the whole
-      // price, so `trashFromHand` gates the offer and the program pays it.
+      // clause as OP05-037 and read the same way. The trash may be declined,
+      // and then nothing gains power (OP03-072#1 Q&A), so the power is inside
+      // the paid program; `trashFromHand` keeps the offer to a hand that can
+      // pay.
       "OP03-072",
       {
         cost: 0,
         trashFromHand: 1,
-        power: 3_000,
-        program: {
-          effect: payFromHand(
-            { player: "self", zone: "hand" },
-            "op03-jet-gatling-cost",
-            1,
-            { kind: "sequence", effects: [] },
-          ),
-        },
+        power: 0,
+        program: trashForBattlePower(3000, "op03-jet-gatling-cost"),
       },
     ],
   ],
