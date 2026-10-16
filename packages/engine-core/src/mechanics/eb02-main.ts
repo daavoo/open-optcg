@@ -398,9 +398,10 @@ export const eb02MainMechanics: SetMechanics = {
       // through the opponent's next turn, which is a Leader defending at 6000.
       //
       // `every-character-matches` is the printed "if the only Characters on your
-      // field are {Straw Hat Crew} type": vacuously true on an empty board,
-      // which is the reading -- the clause bans off-type bodies, it does not
-      // demand on-type ones.
+      // field are {Straw Hat Crew} type", and it needs at least one of them:
+      // Bandai's Q&A (EB02-010#1) rules that on an empty board the DON!! −2 is
+      // paid and nothing else happens, so the vacuous reading is closed off
+      // with a count.
       //
       // Both halves sit inside the gate. `requires.fieldDon` is what keeps the
       // `[Once Per Turn]` from being spent on a cost that cannot be paid.
@@ -412,9 +413,21 @@ export const eb02MainMechanics: SetMechanics = {
           effect: donMinus(2, {
             kind: "if",
             condition: {
-              kind: "every-character-matches",
-              player: "self",
-              selector: { zone: "board", type: "Straw Hat Crew" },
+              kind: "all-of",
+              conditions: [
+                {
+                  kind: "selector-count",
+                  player: "self",
+                  selector: { zone: "board", category: "character" },
+                  operator: "gte",
+                  value: 1,
+                },
+                {
+                  kind: "every-character-matches",
+                  player: "self",
+                  selector: { zone: "board", type: "Straw Hat Crew" },
+                },
+              ],
             },
             then: {
               kind: "sequence",

@@ -521,6 +521,8 @@ describe("EB02-010 Monkey.D.Luffy (Leader)", () => {
   it("returns two DON!! to set two active and buffs itself into the next turn", () => {
     const game = table("eb02-010-activate")
       .withLeader("p1", "EB02-010")
+      // EB02-017 Nami is {Straw Hat Crew}, so the "only" condition holds.
+      .withBoard("p1", [character("nami", "EB02-017")])
       .withDon("p1", { active: 4, rested: 4 })
       .build();
 
@@ -554,7 +556,9 @@ describe("EB02-010 Monkey.D.Luffy (Leader)", () => {
     expect(currentPower(game.state, "p1", "p1-leader")).toBe(5_000);
   });
 
-  it("pays out on an empty board, which the printed 'only' reads as true", () => {
+  it("pays the cost and does nothing on an empty board", () => {
+    // Bandai's Q&A EB02-010#1: with no Characters the DON!! −2 is paid and
+    // nothing else happens. See `test/faq-eb01-eb02.test.ts`.
     const game = table("eb02-010-empty-board")
       .withLeader("p1", "EB02-010")
       .withDon("p1", { active: 4, rested: 4 })
@@ -564,7 +568,7 @@ describe("EB02-010 Monkey.D.Luffy (Leader)", () => {
     applyOptional(game);
     settle(game);
 
-    expect(currentPower(game.state, "p1", "p1-leader")).toBe(6_000);
+    expect(currentPower(game.state, "p1", "p1-leader")).toBe(5_000);
   });
 });
 
