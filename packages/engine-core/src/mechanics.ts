@@ -2728,7 +2728,44 @@ export function continueExecution(
       }
       continue;
     }
-    for (const [index, instanceId] of instanceIds.entries()) {
+    // One effect K.O.ing several Characters K.O.s them at once, so a protector
+    // that is itself among the targets can still pay for another of them:
+    // Bandai's OP10-032#2 ruling lets an active Tashigi rest to save a green
+    // Character K.O.'d alongside it, and Tashigi is still K.O.'d. Taken in
+    // chosen order, a protector picked first would be gone before the other
+    // target was asked about, so the targets with a replacement on offer are
+    // asked about before the ones without; each group keeps its chosen order.
+    const koOrder = (() => {
+      if (effect.skipReplacements || instanceIds.length < 2) return instanceIds;
+      const offered = instanceIds.filter((instanceId) => {
+        const ownerId = (["p1", "p2"] as const).find((candidate) =>
+          state.players[candidate].board.some(
+            (card) => card.instanceId === instanceId,
+          ),
+        );
+        const threatened = ownerId
+          ? state.players[ownerId].board.find(
+              (card) => card.instanceId === instanceId,
+            )
+          : undefined;
+        return (
+          ownerId !== undefined &&
+          threatened !== undefined &&
+          eligibleReplacements(
+            state,
+            execution.context.sourcePlayerId,
+            ownerId,
+            threatened,
+            db,
+          ).length > 0
+        );
+      });
+      return [
+        ...offered,
+        ...instanceIds.filter((instanceId) => !offered.includes(instanceId)),
+      ];
+    })();
+    for (const [index, instanceId] of koOrder.entries()) {
       const ownerId = (["p1", "p2"] as const).find((candidate) =>
         state.players[candidate].board.some(
           (card) => card.instanceId === instanceId,
@@ -2782,7 +2819,7 @@ export function continueExecution(
           // into this loop -- and because what is left of them depends on the
           // answer: one accepted replacement saves every other target it
           // protects (see `replacementCoveredTargets`).
-          const remaining = instanceIds.slice(index + 1);
+          const remaining = koOrder.slice(index + 1);
           const thenRest = (
             effectNow: MechanicEffect,
             restBind: string,
