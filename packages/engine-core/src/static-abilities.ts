@@ -343,7 +343,12 @@ export function costOf(
   const temporary = ((card as BoardCard).costModifiers ?? [])
     .filter((modifier) => modifier.expiresAtTurn >= state.turn)
     .reduce((total, modifier) => total + modifier.amount, 0);
-  return printed + temporary + staticCostDelta(state, playerId, card, db);
+  // Bandai's rules Q&A (Basic Rules): "When a Character's cost falls below 0,
+  // it is treated as 0." A "cost of 0" filter has to see a card pushed to −2.
+  return Math.max(
+    0,
+    printed + temporary + staticCostDelta(state, playerId, card, db),
+  );
 }
 
 /**
