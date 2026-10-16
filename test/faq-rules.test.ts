@@ -20,8 +20,9 @@ import {
  * Source: https://en.onepiece-cardgame.com/pdf/qa_rules.pdf (the "rules" row
  * of https://en.onepiece-cardgame.com/rules/faq/, revision 2025-02-28). Each
  * test name opens with the category Bandai files the question under and its
- * position in that PDF, so a ruling is found in the source by counting rows,
- * and quotes the answer it pins. A question the engine has no decision for
+ * position in that PDF, so a ruling is found in the source by counting rows.
+ * Comments paraphrase the ruling and the cards rather than quoting them: the
+ * repository holds none of Bandai's text. A question the engine has no decision for
  * (the deck and the Leader are placed in one `createGame`, a webcam
  * procedure) is listed in `NOT_ENGINE_QUESTIONS` with the reason rather than
  * left silently out.
@@ -95,8 +96,7 @@ describe("Bandai rules Q&A: Basic Rules", () => {
   it.fails(
     "Basic 2: the top card of the deck becomes the bottom Life card",
     () => {
-      // "Place the card at the top of your deck so that it is at the bottom of
-      // your Life cards."
+      // The ruling: the deck's top card goes to the bottom of Life.
       const unkept = scenario()
         .decks("FIXTURE-RED", "FIXTURE-BLUE")
         .seed("faq-life-order")
@@ -230,8 +230,7 @@ describe("Bandai rules Q&A: Basic Rules", () => {
   });
 
   it("Basic 10: a cost reduction does not follow a Character back to its owner's hand", () => {
-    // "When a Character subject to some effects is moved from one area to
-    // another, it loses the effects it was subject to in the original area."
+    // The ruling: a card that changes zone sheds the effects it was under.
     const game = table("faq-cost-leaves-zone")
       .withBoard("p2", [character("bounced", "FIX-002")])
       .withHand("p1", [
@@ -255,9 +254,9 @@ describe("Bandai rules Q&A: Basic Rules", () => {
   });
 
   it('Basic 11: a type including "XX" is met by "Former XX"', () => {
-    // OP08-049 Speed Jil: "If the revealed card's type includes 'Whitebeard
-    // Pirates', this Character gains [Rush]". PRB02-008 Marco is {Former
-    // Whitebeard Pirates}.
+    // OP08-049 Speed Jil gains [Rush] when the card it reveals has a type
+    // including {Whitebeard Pirates}; PRB02-008 Marco is {Former Whitebeard
+    // Pirates}.
     const game = table("faq-type-includes-former")
       .withHand("p1", [instance("jil", "OP08-049")])
       .withDeckTop("p1", [instance("marco", "PRB02-008")])
@@ -274,7 +273,7 @@ describe("Bandai rules Q&A: Basic Rules", () => {
   });
 
   it("Basic 12: a 0-cost card can be used with no DON!! in the cost area", () => {
-    // OP15-074 Varie's [Main] is "DON!! −1:", which a given DON!! can pay
+    // OP15-074 Varie's [Main] costs DON!! −1, which a given DON!! can pay
     // (Keywords 2), and its effect asks for an [Enel] Leader -- OP05-098,
     // which keeps the ten-card DON!! deck. With every DON!! on the Leader the Event's 0 is the
     // whole price of using it and the cost area holds nothing.
@@ -397,9 +396,9 @@ describe("Bandai rules Q&A: Keywords", () => {
   it.fails(
     "Keywords 4: a Counter can raise a card that is not being attacked, for the battle",
     () => {
-      // "Yes, you can. However, the effect will end at the end of the current
-      // battle." The rules give a Character card's Counter to "your Leader or
-      // Character", not to the defender alone.
+      // The ruling: yes, for the rest of the battle -- a Character card's
+      // Counter may go to any of your Leader or Characters, not only the
+      // defender.
       const game = table("faq-counter-other-target")
         .withBoard("p1", [character("attacker", "FIX-002")])
         .withGivenDon("p1", "attacker", 2)
@@ -463,7 +462,7 @@ describe("Bandai rules Q&A: Basic Rules, battle", () => {
 
 describe("Bandai rules Q&A: Keywords, DON!!", () => {
   it("Keywords 1: a [DON!! x2] clause still applies with 3 DON!! given", () => {
-    // ST28-002 Izo: "[DON!! x2] This Character gains [Blocker]."
+    // ST28-002 Izo gains [Blocker] at [DON!! x2].
     const game = table("faq-don-x-more")
       .withBoard("p1", [character("izo", "ST28-002")])
       .withGivenDon("p1", "izo", 3)
@@ -473,7 +472,7 @@ describe("Bandai rules Q&A: Keywords, DON!!", () => {
   });
 
   it("Keywords 2: DON!! −N can return DON!! given to the Leader", () => {
-    // OP15-074 Varie: "[Main] DON!! −1: If your Leader is [Enel], ...".
+    // OP15-074 Varie's [Main] costs DON!! −1 and wants an [Enel] Leader.
     const game = table("faq-don-minus-given")
       .withLeader("p1", "OP05-098")
       .withHand("p1", [instance("varie", "OP15-074")])
@@ -509,7 +508,7 @@ describe("Bandai rules Q&A: Keywords, timing", () => {
   });
 
   it("Keywords 7: trashing a Character to make room for a sixth is not a K.O.", () => {
-    // OP05-046 Dalmatian: "[On K.O.] Draw 1 card ...".
+    // OP05-046 Dalmatian draws on [On K.O.].
     const game = table("faq-overflow-not-ko")
       .withBoard("p1", [
         character("dalmatian", "OP05-046"),
@@ -547,8 +546,8 @@ describe("Bandai rules Q&A: Keywords, timing", () => {
   });
 
   it("Keywords 9: same-name cards each use their own [Once Per Turn]", () => {
-    // ST23-005 Yasopp: "[Activate: Main] [Once Per Turn] Give up to 1 rested
-    // DON!! card to your Leader or 1 of your Characters."
+    // ST23-005 Yasopp's [Activate: Main] is [Once Per Turn] and gives a
+    // rested DON!!.
     const game = table("faq-once-per-turn-same-name")
       .withBoard("p1", [
         character("yasopp-1", "ST23-005"),
@@ -577,7 +576,7 @@ describe("Bandai rules Q&A: Keywords, timing", () => {
   });
 
   it("Keywords 10: an [On Play] without a cost always resolves", () => {
-    // OP16-055 Mr.2.Bon.Kurei: "[On Play] Draw 1 card."
+    // OP16-055 Mr.2.Bon.Kurei's [On Play] draws with no cost.
     const game = table("faq-on-play-mandatory")
       .withHand("p1", [instance("bon", "OP16-055")])
       .withDeckTop("p1", copies(3, "FIX-001", "deck"))
@@ -590,7 +589,7 @@ describe("Bandai rules Q&A: Keywords, timing", () => {
   });
 
   it("Keywords 10: an [On Play] with a cost can be played without paying it", () => {
-    // ST33-003 Smoker: "[On Play] You may trash 1 card from your hand: ...".
+    // ST33-003 Smoker's [On Play] has an optional hand-trash cost.
     const game = table("faq-on-play-optional-cost")
       .withHand("p1", [
         instance("smoker", "ST33-003"),
@@ -617,8 +616,7 @@ describe("Bandai rules Q&A: Keywords, timing", () => {
   });
 
   it("Keywords 11: [When Attacking] fires only for the card that prints it", () => {
-    // OP10-045 Cavendish: "[When Attacking] [Once Per Turn] Draw 2 cards and
-    // trash 1 card from your hand."
+    // OP10-045 Cavendish draws and discards on [When Attacking].
     const game = table("faq-when-attacking-own")
       .withBoard("p1", [
         character("cavendish", "OP10-045"),
@@ -809,8 +807,7 @@ describe("Bandai rules Q&A: Keyword Effects, damage", () => {
   });
 
   it("Keyword Effects 11: a Life card moved by an effect does not offer its [Trigger]", () => {
-    // OP06-017 Meteor-Strike of Love: "[Main]/[Counter] You may add 1 card
-    // from the top of your Life cards to your hand: ...".
+    // OP06-017 Meteor-Strike of Love's cost moves the top Life card to hand.
     const game = table("faq-trigger-only-on-damage")
       .withHand("p1", [instance("meteor", "OP06-017")])
       .withLife("p1", [instance("pierre", "OP09-110"), ...lifeCards("p1", 1)])
@@ -874,7 +871,7 @@ describe("Bandai rules Q&A: Basic Rules, effects", () => {
   });
 
   it("Basic 18: an effect can be used when its target is not there, and does nothing", () => {
-    // "Yes, you can. However, nothing will happen in that case."
+    // The ruling: yes, and nothing happens.
     const game = table("faq-no-target")
       .withHand("p1", copies(1, "OP13-020", "fist"))
       .build();
@@ -888,9 +885,8 @@ describe("Bandai rules Q&A: Basic Rules, effects", () => {
   });
 
   it('Basic 19: a "during this turn" effect outlasts the card that made it', () => {
-    // OP05-081 One-Legged Toy Soldier: "[Activate: Main] You may trash this
-    // Character: Give up to 1 of your opponent's Characters −3 cost during
-    // this turn."
+    // OP05-081 One-Legged Toy Soldier trashes itself to give an opposing
+    // Character −3 cost for the turn.
     const game = table("faq-during-this-turn")
       .withBoard("p1", [character("soldier", "OP05-081")])
       .withBoard("p2", [character("target", "FIX-002")])
@@ -921,9 +917,9 @@ describe("Bandai rules Q&A: Basic Rules, effects", () => {
   });
 
   it('Basic 20: an Event\'s [Trigger] is not "activating an Event"', () => {
-    // OP10-003 Sugar: "[Opponent's Turn] [Once Per Turn] When you activate an
-    // Event, add up to 1 DON!! card from your DON!! deck and set it as active."
-    // ST30-015's [Trigger] is used off the damage; the Leader stays silent.
+    // OP10-003 Sugar's Leader adds a DON!! on the opponent's turn when its
+    // player activates an Event. ST30-015's [Trigger] is used off the
+    // damage, and the Leader must stay silent.
     const game = table("faq-trigger-is-not-activation")
       .withLeader("p2", "OP10-003")
       .withDonDeck("p2", 2)
@@ -948,9 +944,8 @@ describe("Bandai rules Q&A: Basic Rules, effects", () => {
   });
 
   it("Basic 22: a card placed on an empty Life area becomes the Life card, face-down", () => {
-    // OP15-113 Roronoa Zoro: "[On Play] You may trash 1 card from your hand:
-    // Add up to 1 card from the top of your deck to the top of your Life
-    // cards."
+    // OP15-113 Roronoa Zoro's [On Play] pays a hand trash to put the top
+    // card of the deck on top of Life.
     const game = table("faq-life-from-empty")
       .withHand("p1", [
         instance("zoro", "OP15-113"),
@@ -1028,9 +1023,8 @@ describe("Bandai rules Q&A: Basic Rules, effects", () => {
   });
 
   it("Advanced 1 and 2: a Life card looked at goes back to its owner's Life", () => {
-    // OP06-099 Aisa: "[On Play] Look at up to 1 card from the top of your or
-    // your opponent's Life cards and place it at the top or bottom of the
-    // Life cards."
+    // OP06-099 Aisa looks at the top card of either player's Life and puts
+    // it on the top or bottom.
     const game = table("faq-life-look-owner")
       .withHand("p1", [instance("aisa", "OP06-099")])
       .withLife("p1", lifeCards("p1", 2))
@@ -1056,9 +1050,9 @@ describe("Bandai rules Q&A: Basic Rules, effects", () => {
   });
 
   it("Basic 26 and Advanced 7: given DON!! cannot pay a cost that rests DON!! in the cost area", () => {
-    // OP05-029 Donquixote Doflamingo: "[On Your Opponent's Attack] [Once Per
-    // Turn] ➀ (You may rest the specified number of DON!! cards in your cost
-    // area.): ...". Every p2 DON!! is given to its Leader, so ➀ is unpayable.
+    // OP05-029 Donquixote Doflamingo's [On Your Opponent's Attack] costs ➀,
+    // a DON!! rested in the cost area. Every p2 DON!! is given to its
+    // Leader, so ➀ is unpayable.
     const game = table("faq-given-don-cannot-rest")
       .withBoard("p1", [character("attacker", "FIX-002")])
       .withGivenDon("p1", "attacker", 2)
@@ -1114,9 +1108,9 @@ describe("Bandai rules Q&A: Keyword Effects, attack timing", () => {
 
 describe('Bandai rules Q&A: Advanced Rules, "cannot be rested"', () => {
   /**
-   * OP13-032 Nico Robin: "[On Play] Up to 1 of your opponent's Characters with
-   * a cost of 8 or less cannot be rested until the end of your opponent's next
-   * End Phase." Played on p1's turn against p2's `locked`.
+   * OP13-032 Nico Robin's [On Play] bars an opposing Character from being
+   * rested through the opponent's next turn. Played on p1's turn against
+   * p2's `locked`.
    */
   const lockedBy = (seed: string, locked: ReturnType<typeof character>) => {
     const game = table(seed)
@@ -1153,8 +1147,8 @@ describe('Bandai rules Q&A: Advanced Rules, "cannot be rested"', () => {
       character("ideo", "OP04-077"),
     );
 
-    // OP12-029 Shimotsuki Kouzaburou: "[On Play] Rest up to 1 of your
-    // opponent's Characters with a cost of ...".
+    // OP12-029 Shimotsuki Kouzaburou's [On Play] rests a cheap opposing
+    // Character.
     game.play({ type: "play-card", cardNumber: "OP12-029" });
     while (game.state.pendingEffect) {
       game.play((action) => action.type === "resolve-effect");
@@ -1182,7 +1176,7 @@ describe('Bandai rules Q&A: Advanced Rules, "cannot be rested"', () => {
   });
 
   it('Advanced 9: a Character that cannot be rested cannot pay "You may rest this Character"', () => {
-    // OP11-034 Hatchan: "[Activate: Main] You may rest this Character: ...".
+    // OP11-034 Hatchan's [Activate: Main] costs resting itself.
     const game = lockedBy(
       "faq-unrestable-activate",
       character("hatchan", "OP11-034"),
