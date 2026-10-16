@@ -633,7 +633,7 @@ describe("FAQ OP-01", () => {
     });
 
     it("OP01-016#2: with nothing to add, every looked-at card goes to the bottom", () => {
-      // You place them all at the bottom of the deck in any order.
+      // Every card looked at goes under the deck, in an order the player picks.
       const game = namiLooks("faq-op01-016-2", [
         ...copies(5, "FIX-001", "deck"),
         instance("sixth", "FIX-002"),
@@ -784,7 +784,7 @@ function declineTheTrash(game: Game): void {
 // these stay recorded rather than fixed.
 describe("FAQ OP-02", () => {
   it("OP02-068#1: the [Trigger] can return its owner's own Character", () => {
-    // Yes -- the clause names any Character with a cost of 2 or less.
+    // Yes -- the return reaches any cheap Character, its owner's own included.
     const game = theirTurn("faq-op02-068-1")
       .withBoard("p1", [character("own", "FIX-001")])
       .withBoard("p2", [character("attacker", "OP06-007")])
@@ -870,8 +870,8 @@ describe("FAQ OP-04", () => {
     game.pass();
     expect(game.state.activePlayer).toBe("p2");
 
-    // OP06-007 Shanks: [On Play] K.O. up to 1 of the opponent's Characters
-    // with 10000 power or less.
+    // OP06-007 Shanks: its [On Play] K.O.s one opposing Character up to
+    // 10000 power, which FIX-002 is well within.
     game.play({ type: "play-card", cardNumber: "OP06-007" });
     game.play({ type: "resolve-effect", optionId: "late" });
     settle(game);
