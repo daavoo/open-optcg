@@ -228,6 +228,38 @@ describe("OP11-004 Kujyaku", () => {
     expect(ids(game.state.players.p1.trash)).toEqual(["kujyaku"]);
     expect(currentPower(game.state, "p1", "hibari")).toBe(6000);
   });
+
+  // The trash is the price, so Kujyaku is gone before the +1000 picks its
+  // target: alone on the board it was reported live because it counted itself.
+  it("reports the activation as selecting nothing when it is alone", () => {
+    const game = table("op11-004-activate-alone")
+      .withBoard("p1", [character("kujyaku", "OP11-004", { playedTurn: 1 })])
+      .build();
+
+    const offer = getLegalActions(game.state, "p1").find(
+      (action) =>
+        action.type === "activate-main" &&
+        action.sourceCardNumber === "OP11-004",
+    );
+    expect(offer).toMatchObject({ selectsNothing: true });
+  });
+
+  it("reports the activation as live beside another Character", () => {
+    const game = table("op11-004-activate-partner")
+      .withBoard("p1", [
+        character("kujyaku", "OP11-004", { playedTurn: 1 }),
+        character("hibari", "EB03-008", { playedTurn: 1 }),
+      ])
+      .build();
+
+    const offer = getLegalActions(game.state, "p1").find(
+      (action) =>
+        action.type === "activate-main" &&
+        action.sourceCardNumber === "OP11-004",
+    );
+    expect(offer).toBeDefined();
+    expect(offer).not.toHaveProperty("selectsNothing");
+  });
 });
 
 describe("OP11-008 Doll", () => {

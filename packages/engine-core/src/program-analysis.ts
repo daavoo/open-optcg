@@ -10,6 +10,7 @@ import {
   type BattleParticipant,
   battleTargetMatches,
   type CardSelector,
+  type CardZone,
   type MechanicContext,
   type MechanicEffect,
   type MechanicProgram,
@@ -20,7 +21,7 @@ import {
   selectCards,
   stepIsPriceOnly,
 } from "./mechanic-conditions.js";
-import { resolvePlayer } from "./mechanics.js";
+import { resolvePlayer, SOURCE_BINDING } from "./mechanics.js";
 
 /**
  * Card numbers with a "when this Character becomes rested" clause, injected at
@@ -39,12 +40,47 @@ export function registerWhenRestedCards(cards: ReadonlySet<string>): void {
   whenRestedCards = cards;
 }
 
+/**
+ * Where the source went when a price step earlier in the same sequence took it
+ * off the field, so the selections after it stop counting it.
+ *
+ * The walk is static: it reads the board as it is when the action is offered,
+ * and the source is on it then. OP11-004 Kujyaku prints "You may trash this
+ * Character: Up to 1 of your Characters gains +1000 power"; alone on the board
+ * it would count itself as the +1000's one candidate, though the trash it pays
+ * leaves nothing for the +1000 to land on.
+ */
+interface Departed {
+  instanceId: string;
+  zone: CardZone;
+}
+
+/** Selected cards less a source a price has already moved off the field. */
+function remaining(
+  state: GameState,
+  context: MechanicContext,
+  selector: CardSelector,
+  bindings: Record<string, string[]>,
+  db: CardDatabase,
+  departed: Departed | undefined,
+): number {
+  const cards = selectCards(state, context, selector, bindings, db);
+  if (!departed) return cards.length;
+  // A selector reading the zone the source moved to can still find it there
+  // ("trash this: play a card from your trash"), so it keeps its candidate.
+  const zones: readonly CardZone[] =
+    typeof selector.zone === "string" ? [selector.zone] : selector.zone;
+  if (zones.includes(departed.zone)) return cards.length;
+  return cards.filter((card) => card.instanceId !== departed.instanceId).length;
+}
+
 export function effectSelectsNothing(
   state: GameState,
   context: MechanicContext,
   effect: MechanicEffect,
   bindings: Record<string, string[]>,
   db: CardDatabase,
+  departed?: Departed,
 ): boolean {
   switch (effect.kind) {
     case "choose": {
@@ -52,20 +88,21 @@ export function effectSelectsNothing(
       // same as one with no candidates: OP01-055's "rest 2 of your
       // Characters" with one Character on the board rests nothing and draws
       // nothing, though the Event still leaves the hand.
-      const candidates = selectCards(
+      const candidates = remaining(
         state,
         context,
         effect.selector,
         bindings,
         db,
-      ).length;
+        departed,
+      );
       return candidates === 0 || candidates < effect.min;
     }
     case "select":
       // The inner effect hangs off the binding this node makes, so with no
       // candidate to bind it never runs and there is nothing to recurse into.
       return (
-        selectCards(state, context, effect.selector, bindings, db).length === 0
+        remaining(state, context, effect.selector, bindings, db, departed) === 0
       );
     case "pick-from-hand":
       // `choose`'s reading over a hand: an empty one binds nothing.
@@ -91,18 +128,37 @@ export function effectSelectsNothing(
       // with no `else` is inert for a stronger reason than an empty selection.
       // Recursing into every non-price step reaches both without a second
       // unwrapping rule that could drift from the one below.
-      const payoffs = effect.effects.filter(
-        (step) => !stepIsPriceOnly(context, step),
-      );
-      return (
-        payoffs.length > 0 &&
-        payoffs.every((step) =>
-          effectSelectsNothing(state, context, step, bindings, db),
-        )
-      );
+      //
+      // Steps are read in order so a price that takes the source off the field
+      // is seen by every payoff after it: see `Departed`.
+      let left = departed;
+      let payoffs = 0;
+      for (const step of effect.effects) {
+        if (stepIsPriceOnly(context, step)) {
+          if (step.kind === "move" && step.binding === SOURCE_BINDING) {
+            left = {
+              instanceId: context.source.instanceId,
+              zone: step.to.zone,
+            };
+          }
+          continue;
+        }
+        payoffs += 1;
+        if (!effectSelectsNothing(state, context, step, bindings, db, left)) {
+          return false;
+        }
+      }
+      return payoffs > 0;
     }
     case "optional":
-      return effectSelectsNothing(state, context, effect.effect, bindings, db);
+      return effectSelectsNothing(
+        state,
+        context,
+        effect.effect,
+        bindings,
+        db,
+        departed,
+      );
     case "choice":
       // Every branch is offered whenever the node is reached, so the node is
       // inert only if there is nothing behind any of them. A branch with no
@@ -111,7 +167,14 @@ export function effectSelectsNothing(
       return effect.branches.every(
         (branch) =>
           branch.effect === undefined ||
-          effectSelectsNothing(state, context, branch.effect, bindings, db),
+          effectSelectsNothing(
+            state,
+            context,
+            branch.effect,
+            bindings,
+            db,
+            departed,
+          ),
       );
     case "if": {
       // Only the branch that will actually be taken matters. A false condition
@@ -129,7 +192,7 @@ export function effectSelectsNothing(
         : effect.else;
       return (
         taken === undefined ||
-        effectSelectsNothing(state, context, taken, bindings, db)
+        effectSelectsNothing(state, context, taken, bindings, db, departed)
       );
     }
     default:
