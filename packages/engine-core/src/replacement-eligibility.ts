@@ -260,10 +260,14 @@ export function eligibleReplacements(
     ) {
       continue;
     }
-    // Turning a Life card face-up needs one that is face-down.
+    // The card turned is the top one, so the top must be face-down: a face-up
+    // top card cannot pay even with face-down cards under it (ST29-008#1). The
+    // payment's own selector reads only the top card, so an offer made on any
+    // face-down card lower down would be a replacement nothing pays for.
+    const topLife = state.players[targetPlayerId].life[0];
     if (
       entry.cost.kind === "turn-life-face-up" &&
-      !state.players[targetPlayerId].life.some((card) => card.faceUp !== true)
+      (topLife === undefined || topLife.faceUp === true)
     ) {
       continue;
     }
