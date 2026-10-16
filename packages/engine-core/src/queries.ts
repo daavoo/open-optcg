@@ -221,6 +221,28 @@ export function isRested(state: GameState, card: CardInstance): boolean {
 }
 
 /**
+ * Power the card being attacked holds for the battle in progress.
+ *
+ * A Counter, and every "+N power during this battle" the defender plays, is
+ * kept on the attack as `counterPower` rather than on the card, so
+ * `currentPower` does not see it. It is still that card's power while the
+ * battle lasts: a 4000 Countered to 5000 is a Character with 5000 power when
+ * it would be K.O.'d (Bandai's OP05-001#1 ruling on Sabo's Leader).
+ */
+function defendingCounterPower(
+  state: GameState,
+  playerId: PlayerId,
+  instanceId: string,
+): number {
+  const attack = state.activeAttack;
+  return attack &&
+    playerId === attack.defenderPlayerId &&
+    instanceId === attack.targetInstanceId
+    ? attack.counterPower
+    : 0;
+}
+
+/**
  * A Leader has no printed cost, so a cost bound never restricts one.
  *
  * "Rest up to 1 of your opponent's Leader or Character cards with a cost of 3
@@ -261,7 +283,7 @@ export function canBeTargeted(
           card.instanceId,
           donPowerApplies(state, playerId),
           db,
-        )
+        ) + defendingCounterPower(state, playerId, card.instanceId)
       : (definition.power ?? 0);
   // Base power, not printed: a "base power becomes N" effect or layer moves a
   // card into or out of a "base power N or less" bound (OP17-112 Q&A). Lazy,
