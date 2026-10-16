@@ -580,15 +580,17 @@ export const op10MainMechanics: SetMechanics = {
       // OP10-087 Tony Tony.Chopper: "[printed text omitted -- pnpm card:text OP10-087]"
       //
       // The card leaves their hand, so they pick it -- `chooser: "opponent"`,
-      // the rule for anything discarded out of a hand.
+      // the rule for anything discarded out of a hand. The self-mill hangs off
+      // the same hand-size gate: Bandai's OP10-087#1 ruling is that against a
+      // hand of 4 or fewer the deck is not trashed either.
       "OP10-087",
       {
         oncePerTurn: false,
         requires: { sourceActive: true },
-        program: restSelfAndDressrosaLeaderOrStage("op10-chopper-cost", {
-          kind: "sequence",
-          effects: [opponentDiscardsAtFive("op10-chopper-discard"), millTwo],
-        }),
+        program: restSelfAndDressrosaLeaderOrStage(
+          "op10-chopper-cost",
+          opponentDiscardsAtFive("op10-chopper-discard", millTwo),
+        ),
       },
     ],
     [
