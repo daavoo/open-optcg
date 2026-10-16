@@ -766,8 +766,10 @@ export const op09OnPlayMechanics: SetMechanics = {
     ],
     [
       // OP09-103 Koala: Life pays for a free Revolutionary Army body, and the
-      // draw is conditional on that body actually landing -- so it is nested in
-      // the play's own `choose` rather than sequenced after it.
+      // draw is conditional on that body actually landing. A `choose` that
+      // picks nothing still runs its effect, so the draw also asks whether the
+      // bound card reached the board: choosing no body draws nothing (Bandai's
+      // OP09-103 ruling).
       "OP09-103",
       lifeToHandCost({
         kind: "choose",
@@ -785,7 +787,17 @@ export const op09OnPlayMechanics: SetMechanics = {
           kind: "sequence",
           effects: [
             { kind: "play", binding: "op09-koala-play" },
-            { kind: "draw", player: "self", count: 1 },
+            {
+              kind: "if",
+              condition: {
+                kind: "selector-count",
+                player: "self",
+                selector: { zone: "board", binding: "op09-koala-play" },
+                operator: "gte",
+                value: 1,
+              },
+              then: { kind: "draw", player: "self", count: 1 },
+            },
           ],
         },
       }),
