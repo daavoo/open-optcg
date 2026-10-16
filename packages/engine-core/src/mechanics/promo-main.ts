@@ -345,7 +345,6 @@ export const promoMainMechanics: SetMechanics = {
                   kind: "move",
                   binding: SOURCE_BINDING,
                   to: { player: "self", zone: "trash" },
-                  trashedNotKoed: true,
                 },
                 sortFiveDeep("p068-sort").effect,
               ],

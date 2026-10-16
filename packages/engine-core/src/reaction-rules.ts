@@ -44,6 +44,12 @@ export interface ReactionRule {
          */
         to?: "trash" | "hand";
         /**
+         * Only a K.O.: "when a Character is K.O.'d" (EB01-047, EB04-044,
+         * OP13-002, OP14-041). `to: "trash"` alone also matches a Character
+         * an effect trashes, which is not a K.O.
+         */
+        ko?: true;
+        /**
          * A type the *moving effect's* card must carry -- "by your {Navy} type
          * card's effect" (OP12-040). Every other filter here is about the card
          * that moved; this one is about what moved it, and the signal carries

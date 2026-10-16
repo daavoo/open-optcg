@@ -680,6 +680,7 @@ export function createOnKoResult(
         ownerId: playerId,
         from: "board",
         to: "trash",
+        ko: true,
       },
     ],
     false,

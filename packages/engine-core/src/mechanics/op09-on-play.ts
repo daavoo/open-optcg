@@ -76,9 +76,8 @@ export const op09OnPlayMechanics: SetMechanics = {
     ],
     [
       // OP09-009 Benn.Beckman: trashes rather than K.O.s, so nothing keyed on a
-      // K.O. fires -- a `move` to the owner's trash, not `knock-out`, and
-      // `trashedNotKoed` so the trashed Character's own [On K.O.] stays put
-      // (Bandai's OP09-009 ruling).
+      // K.O. fires -- a `move` to the owner's trash, not `knock-out` (Bandai's
+      // OP09-009 ruling).
       "OP09-009",
       {
         effect: {
@@ -96,7 +95,6 @@ export const op09OnPlayMechanics: SetMechanics = {
             kind: "move",
             binding: "op09-beckman-trash",
             to: { player: "owner", zone: "trash" },
-            trashedNotKoed: true,
           },
         },
       },

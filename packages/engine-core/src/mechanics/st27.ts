@@ -147,7 +147,6 @@ export const st27Mechanics: SetMechanics = {
                   kind: "move",
                   binding: SOURCE_BINDING,
                   to: { player: "self", zone: "trash" },
-                  trashedNotKoed: true,
                 },
                 ifBlackbeardLeader(costDebuff(1, "st27-devon-cost")),
               ],
