@@ -1161,6 +1161,43 @@ export function cardBasePower(
 }
 
 /**
+ * The base power a card had as it left the field, read off the board entry it
+ * left behind.
+ *
+ * `cardBasePower` reads printed power for anything off the board, which is
+ * right for a card sitting in the trash and wrong for "when your Character
+ * with N base power is K.O.'d": that clause asks what the Character *was*.
+ * Bandai's OP14-053 Q&A is the ruling -- OP14-053 Vista K.O.'d while its base
+ * power copies a 6000 Leader is a 6000-base Character to OP13-002 Ace. The
+ * entry keeps its stored setters, and a card's own `set-base` layers are read
+ * against it as they would be on the field; an entry that was never on the
+ * board carries neither and so reads its printed power.
+ */
+export function departedCardBasePower(
+  state: GameState,
+  playerId: PlayerId,
+  card: CardInstance,
+  db: CardDatabase = cards,
+): number | undefined {
+  const printed = db.require(card.cardNumber).power ?? undefined;
+  const override =
+    "basePowerOverrides" in card
+      ? storedBasePower((card as BoardCard).basePowerOverrides, state.turn)
+      : undefined;
+  const base = override ?? printed;
+  if (base === undefined) return undefined;
+  return staticBasePower(
+    state,
+    playerId,
+    card,
+    false,
+    base,
+    db,
+    override !== undefined,
+  );
+}
+
+/**
  * The `set-base` layer alone: what `staticPower` starts its `add`s from. See
  * `staticPowerContributions` for `baseIsSet`.
  */

@@ -67,7 +67,11 @@ export interface ReactionRule {
          * A disjunction of types, for "[printed text omitted -- pnpm card:text OP13-078]" -- OP14-041 Boa Hancock's Leader.
          */
         movedAnyOfTypes?: readonly string[];
-        /** A printed-power floor on the moved card, for the same clause. */
+        /**
+         * A base-power floor on the moved card, for the same clause. A card
+         * leaving the field is measured as it stood there -- see
+         * `departedCardBasePower`.
+         */
         movedMinPower?: number;
         /**
          * Whose card moved. `"self"` is the reacting card's own controller;
