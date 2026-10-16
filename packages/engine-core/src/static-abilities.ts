@@ -998,6 +998,35 @@ export function staticCostDelta(
   );
 }
 
+/**
+ * The static cost contribution of the abilities `include` admits, for a cost
+ * layer whose own condition reads the cost the *other* layers leave: OP10-042
+ * Usopp's "+1 to cost 2 or more" cannot ask `costOf` without asking itself.
+ */
+export function staticCostDeltaWhere(
+  state: GameState,
+  playerId: PlayerId,
+  card: CardInstance,
+  db: CardDatabase,
+  include: (ability: StaticAbility) => boolean,
+): number {
+  const context: AbilityContext = {
+    state,
+    playerId,
+    card,
+    isLeader: false,
+    db,
+  };
+  return abilitiesFor(context).reduce(
+    (total, ability) =>
+      total +
+      (include(ability) && selfCostReads(ability, context)
+        ? (ability.cost?.(context) ?? 0)
+        : 0),
+    0,
+  );
+}
+
 /** One static ability's net effect on a card's power, for UI breakdowns. */
 export interface StaticPowerContribution {
   cardNumber: string;
