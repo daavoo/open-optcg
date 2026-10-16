@@ -120,7 +120,7 @@ jobs:
       # to upload after playing its games. The cache is this repository's own
       # (10 GB, evicted oldest first), and the key is unique to the run attempt,
       # so a re-run never reads an earlier attempt's games.
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         with:
           path: standings-shards/${{ matrix.shard }}.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
@@ -139,42 +139,42 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # One restore per shard: a cache entry restores by exact key, and a shard
       # that never saved fails here by name rather than reaching the merge.
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/0.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-0
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/1.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-1
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/2.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-2
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/3.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-3
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/4.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-4
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/5.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-5
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/6.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-6
           fail-on-cache-miss: true
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: standings-shards/7.json
           key: standings-shard-${{ github.run_id }}-${{ github.run_attempt }}-7
