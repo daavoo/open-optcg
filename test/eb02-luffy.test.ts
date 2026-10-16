@@ -71,6 +71,7 @@ describe("OP03-072 Gum-Gum Jet Gatling", () => {
     });
     game.pass();
     game.play({ type: "activate-counter-event", cardNumber: "OP03-072" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "filler" });
 
     expect(game.state.activeAttack?.counterPower).toBe(3_000);

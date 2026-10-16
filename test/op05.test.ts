@@ -1357,6 +1357,7 @@ describe("OP05-037 Because the Side of Justice Will Be Whichever Side Wins!!", (
     });
     game.pass();
     game.play({ type: "activate-counter-event", cardNumber: "OP05-037" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "filler" });
     expect(game.state.activeAttack?.counterPower).toBe(3_000);
     expect(game.state.players.p1.hand).toHaveLength(0);

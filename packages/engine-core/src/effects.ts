@@ -1779,7 +1779,7 @@ function computeEffectOptions(
   }
   if (effect.kind === "bad-manners-counter") {
     const seenCardNumbers = new Set<string>();
-    return effect.eligibleInstanceIds.flatMap((optionId) => {
+    const discards = effect.eligibleInstanceIds.flatMap((optionId) => {
       const card = state.players[effect.playerId].hand.find(
         (candidate) => candidate.instanceId === optionId,
       );
@@ -1794,6 +1794,12 @@ function computeEffectOptions(
         },
       ];
     });
+    // "You may trash": the Event can be played and the trash declined, and
+    // then nothing gains power (OP02-068#2, OP04-016#1, OP13-076).
+    return [
+      ...discards,
+      { optionId: "skip", summary: "Trash nothing: no card gains +3000" },
+    ];
   }
   if (effect.kind === "draw-trash") {
     return state.players[effect.playerId].hand.map((card) => ({
