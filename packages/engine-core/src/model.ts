@@ -556,7 +556,9 @@ export interface PlayerState {
    * which sets all ten DON!! active and then bars spending them).
    *
    * Wider than `cannotPlayCharactersUntilTurn`: Events and Stages are barred
-   * too, and so is a play an effect makes out of hand.
+   * too. Only paying a card's own cost is barred -- Bandai's OP-13 Q&A
+   * (OP13-028#1) lets an effect still play a Character out of hand, and names
+   * activating an Event for its cost as barred.
    */
   cannotPlayFromHandUntilTurn?: number;
   /**

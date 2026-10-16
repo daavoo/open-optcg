@@ -88,6 +88,9 @@ export function handOffers(
       : 0;
     if (
       eventProgram &&
+      // OP13-028 Shanks bars activating an Event for its cost along with
+      // playing a card for its cost (Bandai's OP-13 Q&A, OP13-028#1).
+      (player.cannotPlayFromHandUntilTurn ?? -1) < state.turn &&
       player.activeDon.length >= eventCostInDon + (eventProgram.restDon ?? 0) &&
       fieldDonCount(state, playerId) >= (eventProgram.donMinus ?? 0) &&
       // The Event itself is on its way out of the hand, so it cannot pay for
