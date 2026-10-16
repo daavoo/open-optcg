@@ -243,7 +243,8 @@ Plays every ordered pair of the six format decks (3,600 games at 100 seeds,
 about two minutes) and writes the report to
 `packages/web/src/analytics-baseline.json`. It stays the format six rather than
 the whole field because 16x16 at that seed count is hours. The app does not
-read it: its Simulate matchup page plays the two lobby decks on demand.
+read it: its Simulate matchup page plays the two lobby decks on demand,
+reached by pressing play with AI on both seats.
 
 ## Writing a deck policy
 

@@ -1,5 +1,10 @@
 import type { PlayerId } from "@one-piece-sim/protocol";
 import { escapeHtml } from "../card-text.js";
+import {
+  DEFAULT_RUN_GAMES,
+  RUN_GAME_OPTIONS,
+  type RunGames,
+} from "./analytics.js";
 import type { ControllerKind, MatchConfig } from "../controller.js";
 import type { OnlineState } from "../online.js";
 import { dossierDeckIdFor, type SavedDeck } from "../deck-labels.js";
@@ -106,8 +111,9 @@ export interface SetupContext {
     render(): { above: string; settings: string };
     bind(): void;
   };
-  /** Opens the matchup analytics page on the two decks this form has picked. */
-  analyzeMatchup(): void;
+  /** Opens the matchup analytics page on the two decks this form has picked,
+      already playing `games` of them. */
+  simulateMatchup(games: RunGames): void;
   /** Opens the deck editor for `target`. With `basedOn`, that deck is loaded
       to read or to build from; without it, the editor starts empty. */
   editDeck(target: PlayerId, basedOn?: string): void;
@@ -136,26 +142,22 @@ function fixedControllerField(id: string, kind: ControllerKind): string {
 /**
  * A seat's heading, which is also the choice of who plays it.
  *
- * The two words are the heading rather than a control under it: "Player one ·
- * You" is what the column is, and a separate pill saying the same thing sat
- * between the heading and the deck, against a card the heading is centred
- * over. So the heading says it, and the word that is not in force is dimmed
- * rather than boxed -- the choice is legible at a glance and costs the
- * drawing nothing.
+ * The heading is nothing but the choice: which side of the seam a deck sits
+ * on already says whose it is, so the two words carry the column on their
+ * own, lettered like the versus mark between them. The word that is not in
+ * force is dimmed rather than boxed -- the choice is legible at a glance and
+ * costs the drawing nothing.
  *
- * Either seat takes either answer. Two agents is a match to watch; two people
- * is one screen passed between them.
+ * Either seat takes either answer. Two agents is a match to watch or a run to
+ * simulate; two people is one screen passed between them.
  */
-function renderSeatHeading(
-  seat: PlayerId,
-  name: string,
-  pilot: SeatPilot,
-): string {
+function renderSeatHeading(seat: PlayerId, pilot: SeatPilot): string {
+  const side = seat === "p1" ? "left" : "right";
   const option = (value: SeatPilot, label: string, title: string): string =>
     `<button class="seat-pilot-option${pilot === value ? " picked" : ""}" type="button" data-seat-pilot="${seat}" data-pilot="${value}" aria-pressed="${String(pilot === value)}" title="${escapeHtml(title)}">${escapeHtml(label)}</button>`;
-  return `<p class="deck-column-label seat-heading">${escapeHtml(name)} ·
-    <span class="seat-pilot" role="group" aria-label="Who plays ${escapeHtml(name)}">
-      ${option("you", "You", `Play ${name} yourself`)}<span class="seat-pilot-slash" aria-hidden="true">/</span>${option("ai", "AI", `Let an agent play ${name}`)}
+  return `<p class="deck-column-label seat-heading">
+    <span class="seat-pilot" role="group" aria-label="Who plays the ${side} deck">
+      ${option("you", "You", `Play the ${side} deck yourself`)}<span class="seat-pilot-slash" aria-hidden="true">/</span>${option("ai", "AI", `Let an agent play the ${side} deck`)}
     </span>
   </p>`;
 }
@@ -188,12 +190,12 @@ export function render(ctx: SetupContext): string {
         <form class="setup-form lobby-form" id="setup-form">
           <div class="deck-columns lobby-columns">
             <div class="deck-column" data-seat="p1">
-              ${renderSeatHeading("p1", "Player one", pilots.p1)}
+              ${renderSeatHeading("p1", pilots.p1)}
               ${deckChoiceButton(ctx.savedDecks, "p1", ctx.setupDecks.p1)}
             </div>
             ${renderSeam()}
             <div class="deck-column" data-seat="p2">
-              ${renderSeatHeading("p2", "Player two", pilots.p2)}
+              ${renderSeatHeading("p2", pilots.p2)}
               ${deckChoiceButton(ctx.savedDecks, "p2", ctx.setupDecks.p2)}
             </div>
           </div>
@@ -208,6 +210,7 @@ export function render(ctx: SetupContext): string {
       ${renderOpponentPicker(ctx, llmSelected)}
       ${renderMatchupDialog(ctx, pilots, llmSelected, llmDisabled, landing.settings)}
       ${renderTraceChoiceDialog()}
+      ${simulating ? renderAgentsChoiceDialog() : ""}
     </main>`;
 }
 
@@ -237,6 +240,33 @@ function renderTraceChoiceDialog(): string {
 }
 
 /**
+ * What two agents are for: one game to watch, or a run of them to read the
+ * pairing from.
+ *
+ * Asked when the play cell is pressed rather than offered as a cell of its
+ * own, because both answers start from the same two decks and the same two
+ * agents -- the difference is how many games, and whether anyone looks at
+ * them one by one.
+ */
+function renderAgentsChoiceDialog(): string {
+  const games = DEFAULT_RUN_GAMES;
+  const size = (option: RunGames): string =>
+    `<button class="run-size-option${option === games ? " picked" : ""}" type="button" data-simulate-size="${option}" aria-pressed="${String(option === games)}">${option}</button>`;
+  return `<div class="app-dialog-backdrop" id="agents-choice" hidden>
+    <div class="app-dialog agents-choice" role="dialog" aria-modal="true" aria-labelledby="agents-choice-title">
+      <h2 id="agents-choice-title">AI vs AI</h2>
+      <div class="trace-choice-options">
+        <button class="secondary" type="button" id="agents-watch">${icon("eye", "")}Watch 1 game</button>
+        <button class="primary" type="button" id="agents-simulate" data-games="${games}">${icon("chart-column", "")}<span>Simulate ${games} games</span></button>
+      </div>
+      <p class="agents-choice-size">Games to simulate <span class="run-size" role="group" aria-label="Games to simulate">${RUN_GAME_OPTIONS.map(size).join("")}</span></p>
+      <p class="muted agents-choice-note">Watching plays one game on the board, both hands face up. Simulating plays the pairing in the background and reports who wins it and which cards carried it.</p>
+      <button class="text-button" type="button" data-close-dialog="agents-choice">Cancel</button>
+    </div>
+  </div>`;
+}
+
+/**
  * The seam between the two seats.
  *
  * A painted mark rather than type, and the one piece of the page that says what
@@ -251,19 +281,18 @@ function renderSeam(): string {
 /**
  * The lobby's controls, as the same honeycomb the board wears, in the same
  * place: a cluster at the middle of the right edge, three cells hanging off the
- * mark's left faces and a fourth, the matchup simulation, laid against
- * Configure's left face.
+ * mark's left faces.
  *
  * The board is what a player sees for the rest of the session, so the lobby
  * puts its controls where the board keeps them -- configure on the upper
  * diagonal, the command on the flat face, the trace cell on the lower one --
- * and starting a match is the command cell, printed with words the way End turn
- * is. The mark is the middle cell and is not a button: the lobby has no topbar,
- * so there is nowhere for a second mark to go.
+ * and starting a match is the command cell. The mark is the middle cell and is
+ * not a button: the lobby has no topbar, so there is nowhere for a second mark
+ * to go.
  *
- * The simulation cell sits beside Configure because both are about the pairing
- * rather than about starting a game: it plays the two picked decks against each
- * other on the analytics page, and the board has no cell there to match.
+ * Simulating the pairing has no cell: it is one of the two things a match
+ * between two agents can be, so it is asked for when the play cell is pressed
+ * with AI on both seats.
  */
 function renderHub(startCell: string): string {
   return `<div class="lobby-hub board-hub" role="group" aria-label="Match controls">
@@ -271,7 +300,6 @@ function renderHub(startCell: string): string {
     <button class="hub-face hub-configure" type="button" id="open-matchup-config" title="Configure matchup">${icon("settings", "Configure matchup")}</button>
     ${startCell}
     <button class="hub-face hub-load hub-trace" type="button" id="load-trace" title="Load match from trace">${icon("file-up", "Load match from trace")}</button>
-    <button class="hub-face hub-analytics" type="button" id="open-analytics" title="Simulate matchup">${icon("chart-column", "Simulate matchup")}</button>
   </div>`;
 }
 
@@ -290,13 +318,14 @@ function renderStartControls(
   simulating: boolean,
 ): { cell: string; below: string } {
   const { state } = ctx.online;
-  // Words rather than an icon, and a wrapper so the cell sits on the mark's
-  // flat face the way the board's End turn does (`.hub-command`, shell.css).
-  const cell = (label: string, attrs: string): string =>
-    `<span class="hub-command"><button class="hub-face hub-play" title="${escapeHtml(label)}" ${attrs}>${escapeHtml(label)}</button></span>`;
+  // One word on the cell, the title saying what pressing it does, and a
+  // wrapper so the cell sits on the mark's flat face the way the board's End
+  // turn does (`.hub-command`, shell.css).
+  const cell = (word: string, label: string, attrs: string): string =>
+    `<span class="hub-command"><button class="hub-face hub-play" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" ${attrs}>${escapeHtml(word)}</button></span>`;
   if (state.connecting) {
     return {
-      cell: cell("Joining", 'type="button" disabled'),
+      cell: cell("Wait", "Joining", 'type="button" disabled'),
       below: `<div class="ai-status"><span></span>${state.connecting === "connecting" ? "Joining the match…" : "Waiting for your opponent to sit down…"}</div>`,
     };
   }
@@ -306,12 +335,14 @@ function renderStartControls(
     ? `<button class="primary wide" type="button" id="online-rejoin">${icon("play", "Rejoin your match")}Rejoin your match</button>
     <p class="muted small">Your clock is still running in it.</p>`
     : "";
-  // The command says what pressing it does, and with nobody at the table it
-  // does not start a match anyone is in. Two words either way: the cell is a
-  // hexagon the width of five capitals, and it sets a label by wrapping it --
-  // one long word runs off the side of the cluster instead.
+  // The title says what pressing it does: with nobody at the table it does not
+  // start a match anyone is in, it asks what two agents are to do.
   return {
-    cell: cell(simulating ? "Watch AI" : "Start match", 'type="submit"'),
+    cell: cell(
+      "Play",
+      simulating ? "AI vs AI" : "Start match",
+      'type="submit"',
+    ),
     below: `${rejoin}${state.error ? `<p class="trace-payload-warning">${escapeHtml(state.error)}</p>` : ""}`,
   };
 }
@@ -381,8 +412,8 @@ function renderMatchupDialog(
       <label>Starting player
         <select id="starting-player">
           <option value="random">Seeded random</option>
-          <option value="p1">Player one</option>
-          <option value="p2">Player two</option>
+          <option value="p1">Left deck</option>
+          <option value="p2">Right deck</option>
         </select>
       </label>
       <label>Seed
@@ -621,8 +652,20 @@ export function dossierFields(
   return dossier && dossier !== deckId ? { [`${seat}Dossier`]: dossier } : {};
 }
 
-async function startFromForm(ctx: SetupContext, event: Event): Promise<void> {
+/**
+ * Pressing play. Two agents are asked what they are for first -- one game to
+ * watch, or a run to simulate -- and anything else starts at once.
+ */
+function submitForm(ctx: SetupContext, event: Event): void {
   event.preventDefault();
+  if (ctx.seatPilots.p1 === "ai" && ctx.seatPilots.p2 === "ai") {
+    toggleAppDialog("agents-choice", true);
+    return;
+  }
+  void startFromForm(ctx);
+}
+
+async function startFromForm(ctx: SetupContext): Promise<void> {
   if (valueOf("p2-controller") === "llm" && !ctx.llmReady()) {
     await ctx.refreshLlmCapability();
   }
@@ -658,11 +701,40 @@ async function startFromForm(ctx: SetupContext, event: Event): Promise<void> {
 export function bind(ctx: SetupContext): void {
   footer.bind();
   document.querySelector("#setup-form")?.addEventListener("submit", (event) => {
-    void startFromForm(ctx, event);
+    submitForm(ctx, event);
   });
   ctx.bindTraceImport("#load-trace", "#trace-input");
-  document.querySelector("#open-analytics")?.addEventListener("click", () => {
-    ctx.analyzeMatchup();
+  document.querySelector("#agents-watch")?.addEventListener("click", () => {
+    toggleAppDialog("agents-choice", false);
+    void startFromForm(ctx);
+  });
+  const simulate = document.querySelector<HTMLElement>("#agents-simulate");
+  // The size is patched in place rather than repainted: it is a choice inside
+  // an open dialog, and a repaint of the lobby would close it.
+  document
+    .querySelectorAll<HTMLElement>("[data-simulate-size]")
+    .forEach((option) => {
+      option.addEventListener("click", () => {
+        const games = option.dataset.simulateSize ?? "";
+        document
+          .querySelectorAll<HTMLElement>("[data-simulate-size]")
+          .forEach((other) => {
+            const picked = other === option;
+            other.classList.toggle("picked", picked);
+            other.setAttribute("aria-pressed", String(picked));
+          });
+        if (!simulate) return;
+        simulate.dataset.games = games;
+        const label = simulate.querySelector("span:not(.sr-only)");
+        if (label) label.textContent = `Simulate ${games} games`;
+      });
+    });
+  simulate?.addEventListener("click", () => {
+    const games = Number(simulate.dataset.games);
+    const picked = RUN_GAME_OPTIONS.find((value) => value === games);
+    if (picked === undefined) return;
+    toggleAppDialog("agents-choice", false);
+    ctx.simulateMatchup(picked);
   });
   document.querySelector("#online-rejoin")?.addEventListener("click", () => {
     ctx.online.rejoin();

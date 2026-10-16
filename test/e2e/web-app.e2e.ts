@@ -100,6 +100,18 @@ async function pickDeck(
   await expect(page.locator(`#${seat}-deck-picker`)).toBeHidden();
 }
 
+/** Hand both seats to agents and ask the play cell for a run of `games`. */
+async function simulateFromTheLobby(page: Page, games: number): Promise<void> {
+  await page.locator('[data-seat-pilot="p1"][data-pilot="ai"]').click();
+  await page.locator('[data-seat-pilot="p2"][data-pilot="ai"]').click();
+  await page.getByRole("button", { name: "AI vs AI", exact: true }).click();
+  await page.locator(`[data-simulate-size="${games}"]`).click();
+  await page.getByRole("button", { name: `Simulate ${games} games` }).click();
+  await expect(
+    page.getByRole("heading", { name: "Simulate matchup" }),
+  ).toBeVisible();
+}
+
 /** Open the matchup dialog, where the pilot, the starting player and the seed
     live. Left open: the caller closes it, or reads from it. */
 async function openMatchupConfig(page: Page): Promise<void> {
@@ -708,14 +720,14 @@ test("standalone artifact keeps LLM credentials out of browser storage", async (
   );
 });
 
-test("the deck picker opens on Meta, and each shelf filters on its own", async ({
+test("the deck picker opens on Community, and each shelf filters on its own", async ({
   page,
 }) => {
   await openSetup(page);
   await page.locator('[data-open-picker="p1"]').click();
   const picker = page.locator("#p1-deck-picker");
   await expect(picker.getByRole("tab", { selected: true })).toContainText(
-    "Meta",
+    "Community",
   );
   const starters = picker.locator("#p1-deck-shelf-starter");
   await expect(starters).toBeHidden();
@@ -735,8 +747,8 @@ test("the deck picker opens on Meta, and each shelf filters on its own", async (
   await expect(starters.locator(".deck-tile-wrap:visible")).toHaveCount(0);
   await expect(starters.locator(".deck-picker-empty")).toBeVisible();
 
-  // The Meta shelf kept its own, empty, filter.
-  await picker.getByRole("tab", { name: /Meta/ }).click();
+  // The Community shelf kept its own, empty, filter.
+  await picker.getByRole("tab", { name: /Community/ }).click();
   await expect(
     picker.locator("#p1-deck-shelf-meta .deck-tile-wrap:visible"),
   ).not.toHaveCount(0);
@@ -2863,14 +2875,15 @@ test("a stacked hand keeps its size, its column and its distance", async ({
   );
 });
 
-/* The matchup page opens from the lobby's simulation cell, on the two decks
-   the lobby has picked, and shows nothing until a run has finished. */
-test("the simulation cell opens on the lobby's decks, with nothing run yet @art", async ({
+/* The matchup page opens from the lobby's AI-vs-AI choice, on the two decks
+   the lobby has picked, already running and showing nothing until the run has
+   finished. */
+test("simulating from the lobby opens on the lobby's decks, with nothing shown yet @art", async ({
   page,
 }) => {
   await openSetup(page);
   await pickDeck(page, "p1", "(Purple) Charlotte Katakuri - Starter Deck 34");
-  await page.getByRole("button", { name: "Simulate matchup" }).click();
+  await simulateFromTheLobby(page, 100);
 
   await expect(
     page.getByRole("heading", { name: "Simulate matchup" }),
@@ -2884,31 +2897,21 @@ test("the simulation cell opens on the lobby's decks, with nothing run yet @art"
   ).toHaveCount(2);
   // The lobby's decks, not a second pair of pickers.
   await expect(page.locator(".matchup-shell select")).toHaveCount(0);
+  await expect(page.locator(".run-progress")).toBeVisible();
   await expect(page.locator(".matchup-verdict")).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Run 100 games" }),
-  ).toBeVisible();
 
   await page.locator("#analytics-back").click();
   await expect(page.locator("#setup-form")).toBeVisible();
 });
 
-test("the lobby's simulation cell plays the games it was asked for, then shows them", async ({
+test("the lobby's AI-vs-AI choice plays the games it was asked for, then shows them", async ({
   page,
 }) => {
   test.setTimeout(120_000);
   await openSetup(page);
   await pickDeck(page, "p1", "(Purple) Enel - Official Feature Deck");
   await pickDeck(page, "p2", "(Blue/Yellow) Nami - Official Feature Deck");
-  await page.getByRole("button", { name: "Simulate matchup" }).click();
-
-  // The size picker renames the button, and the default is the quick run.
-  await page.locator('[data-run-games="250"]').click();
-  await expect(
-    page.getByRole("button", { name: "Run 250 games" }),
-  ).toBeVisible();
-  await page.locator('[data-run-games="100"]').click();
-  await page.getByRole("button", { name: "Run 100 games" }).click();
+  await simulateFromTheLobby(page, 100);
   // Only the bar while it runs: a result drawn after one turn order would
   // change once the other came in.
   await expect(page.locator(".run-progress")).toBeVisible();

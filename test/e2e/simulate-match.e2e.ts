@@ -30,7 +30,8 @@ async function watchASimulation(page: Page): Promise<void> {
   await page.locator("#seed").fill("simulate-e2e");
   await page.locator("#starting-player").selectOption("p1");
   await page.locator("#matchup-config [data-close-dialog]").last().click();
-  await page.getByRole("button", { name: "Watch AI", exact: true }).click();
+  await page.getByRole("button", { name: "AI vs AI", exact: true }).click();
+  await page.locator("#agents-watch").click();
   await expect(page.locator(".simulate-bar")).toBeVisible();
   await page.locator("#simulate-play").click();
   await expect(page.locator("#simulate-play")).toHaveAttribute(
@@ -66,10 +67,10 @@ test("a seat's heading is the choice of who plays it, and says what that starts"
 
   // Yours until you say otherwise: the command starts a match you are in.
   // The slash is spaced by the stylesheet rather than by text, so the heading
-  // reads "Player one · You / AI" and says "You/AI".
-  await expect(page.locator('.deck-column[data-seat="p1"]')).toContainText(
-    "Player one · You/AI",
-  );
+  // reads "You / AI" and says "You/AI".
+  await expect(
+    page.locator('.deck-column[data-seat="p1"] .seat-heading'),
+  ).toHaveText("You/AI");
   await expect(
     page.getByRole("button", { name: "Start match", exact: true }),
   ).toBeVisible();
@@ -84,7 +85,7 @@ test("a seat's heading is the choice of who plays it, and says what that starts"
     page.locator('[data-seat-pilot="p1"][data-pilot="you"]'),
   ).toHaveAttribute("aria-pressed", "false");
   await expect(
-    page.getByRole("button", { name: "Watch AI", exact: true }),
+    page.getByRole("button", { name: "AI vs AI", exact: true }),
   ).toBeVisible();
 
   // And back: the seat is returned along with the word on the cell.
@@ -256,7 +257,8 @@ test("a simulation plays itself to a finish, with nothing thrown over the board"
   await page.locator("#seed").fill("match-f27275158584c9c5");
   await page.locator("#starting-player").selectOption("p1");
   await page.locator("#matchup-config [data-close-dialog]").last().click();
-  await page.getByRole("button", { name: "Watch AI", exact: true }).click();
+  await page.getByRole("button", { name: "AI vs AI", exact: true }).click();
+  await page.locator("#agents-watch").click();
   await expect(page.locator(".simulate-bar")).toBeVisible();
   await page.locator("#simulate-pace").click();
   await expect(page.locator("#simulate-pace")).toHaveText("2x");

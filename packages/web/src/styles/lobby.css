@@ -643,46 +643,83 @@
      crosses the drawing's bright sky. */
   text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
 }
-/* Who plays the seat, said in the heading rather than under it.
+/* Who plays the seat, as the whole heading, lettered like the versus mark
+ * between the two columns: heavy white capitals with a thick ink outline,
+ * leaning into the seam, over a ragged stroke of the same ink. The mark is
+ * the one piece of display type on the page, and the two answers either side
+ * of it read as the same hand.
  *
- * The two answers are set in the heading's own mono capitals and inherit its
- * colour, so the line reads as one sentence -- "player one · you / ai" -- and
- * not as a control that has been parked on top of the drawing. Which one is in
- * force is carried by weight and opacity alone: a box or a fill here would be
- * a second pill above the two Leader cards, which is the thing this replaced.
- *
- * The dimmed word is still a button, and says so on hover and on focus. At
- * 0.5 it stays legible against the bright sky the heading crosses, which is
- * what the shadow above is for. */
+ * Which one is in force is carried by size and opacity: the other word stays
+ * a button, smaller and dimmed, and lifts on hover and on focus. The slash is
+ * punctuation, not a choice, and is not read out. */
+.lobby-form .seat-heading {
+  color: #ffffff;
+  font: 800 italic clamp(1.6rem, 4.2vw, 2.6rem) / 1 var(--font-display);
+  letter-spacing: 0.02em;
+  text-shadow: none;
+}
+.lobby-form .seat-pilot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1em;
+  transform: rotate(-4deg);
+}
 .lobby-form .seat-pilot-option {
-  padding: 0;
+  position: relative;
+  padding: 0.12em 0.32em 0.16em;
   border: 0;
   background: none;
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
-  text-transform: inherit;
-  opacity: 0.5;
+  text-transform: uppercase;
+  /* The outline is drawn behind the fill so the stroke thickens the letter
+     outward, as the brush does on the mark, rather than eating into it. */
+  -webkit-text-stroke: 0.14em #0a0a0b;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 3px 8px rgba(10, 10, 11, 0.55));
+  font-size: 0.62em;
+  opacity: 0.55;
   cursor: pointer;
   transition:
     opacity 120ms ease,
-    text-shadow 120ms ease;
+    font-size 120ms ease;
 }
+/* The ink stroke behind the word in force: a skewed slab with torn ends, so
+   the white letters stand on black the way the mark's do. */
 .lobby-form .seat-pilot-option.picked {
+  font-size: 1em;
   opacity: 1;
-  /* A glow rather than an underline: the heading sits over a drawing, and a
-     rule under one word of it reads as an artefact of the picture. */
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+}
+.lobby-form .seat-pilot-option.picked::before {
+  content: "";
+  position: absolute;
+  inset: 18% -6% 8% -10%;
+  z-index: -1;
+  background: #0a0a0b;
+  transform: skewX(-14deg);
+  clip-path: polygon(
+    4% 18%,
+    22% 4%,
+    58% 10%,
+    96% 0,
+    100% 46%,
+    92% 88%,
+    64% 96%,
+    30% 100%,
+    0 84%,
+    7% 52%
+  );
 }
 .lobby-form .seat-pilot-option:hover,
 .lobby-form .seat-pilot-option:focus-visible {
   opacity: 1;
 }
-/* The slash is punctuation, not a choice, so it is dimmer than either word and
-   is not read out. */
 .lobby-form .seat-pilot-slash {
-  margin: 0 0.15em;
-  opacity: 0.3;
+  color: #0a0a0b;
+  font-size: 0.7em;
+  -webkit-text-stroke: 0;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.7));
 }
 .lobby-form .deck-choice-button {
   color: var(--parchment);
@@ -788,13 +825,6 @@
   --hub-dx: calc(var(--hub-w) * -0.5 * var(--hub-lap));
   --hub-dy: calc(var(--hub-h) * -0.75 * var(--hub-lap));
 }
-/* The one cell the board has no counterpart for, so it takes a face no board
-   cell uses: Configure's left one, which is also a honeycomb neighbour of the
-   command cell below it. */
-.lobby-hub .hub-analytics {
-  --hub-dx: calc(var(--hub-w) * -1.5 * var(--hub-lap));
-  --hub-dy: calc(var(--hub-h) * -0.75 * var(--hub-lap));
-}
 /* The mark is a span here, not the way home -- there is no topbar mark on this
    page -- so it neither invites a pointer nor lights under one. */
 .lobby-hub .hub-brand {
@@ -814,51 +844,68 @@
 .lobby-hub .hub-brand:hover {
   filter: drop-shadow(0 7px 20px rgba(0, 0, 0, 0.62));
 }
-/* Paper cells, not the board's graphite.
-
-   On the board the cluster is chrome laid over a game in progress and keeps out
-   of the way; here it is the page's only set of controls, standing on a grey
-   drawing with two cards for company. White is what reads as "these are the
-   things to press" against that -- and it leaves the mark in the middle the one
-   coloured object on the page, which is the right way round for a lobby. The
-   rim goes to full white under the pointer, so the cell still lights the way
-   every cell in the app does. */
+/* Ink cells with white glyphs, lettered like the seat headings and the
+   versus mark: black and white is the page's one palette for the things on
+   it, and it leaves the mark in the middle the one coloured object, which is
+   the right way round for a lobby. The rim is a white hairline so a black cell
+   still has an edge against the drawing's dark ink, and it goes to full white
+   under the pointer, so the cell lights the way every cell in the app does. */
 .lobby-hub .hub-face {
   background: rgba(255, 255, 255, 0.55);
-  color: #16151a;
+  color: #ffffff;
 }
 .lobby-hub .hub-face::before {
-  background: var(--parchment);
+  background: #0a0a0b;
 }
 .lobby-hub .hub-face:hover,
 .lobby-hub .hub-face:focus-visible {
   background: #ffffff;
-  /* The shared rule takes the ink white with the rim, which on paper is a cell
-     with nothing in it. */
-  color: #16151a;
+  color: #ffffff;
 }
 .lobby-hub .hub-face:hover::before,
 .lobby-hub .hub-face:focus-visible::before {
-  background: #ffffff;
+  background: #1f1e22;
 }
-/* Start is the command cell, printed the way End turn is: the cell's own type,
-   no pill inside it, and the words wrapping across the hexagon. Its colour is
-   every other cell's -- position is what says which cell begins the match. */
+/* Start is the command cell, and the one cell that begins anything, so it
+   says so in a word, set in the seat headings' heavy italic capitals. Its
+   colour is every other cell's -- position and the word say which cell it
+   is. */
 .lobby-hub .hub-play {
-  padding: 0 12%;
-  font: 700 clamp(0.5rem, 1.3vw, 0.6rem) / 1.25 var(--font-display);
+  font: 800 italic clamp(0.8rem, 1.6vw, 1rem) / 1 var(--font-display);
   letter-spacing: 0.04em;
-  text-align: center;
   text-transform: uppercase;
 }
 /* Nothing to press -- an online seat still connecting -- so the cell
-   goes quiet the way the board's Waiting cell does: the paper greys and the
-   words go with it. */
+   goes quiet the way the board's Waiting cell does: the rim and the glyph
+   fade into the ink. */
 .lobby-hub .hub-play[disabled] {
-  background: rgba(255, 255, 255, 0.28);
-  color: #6b6257;
+  background: rgba(255, 255, 255, 0.22);
+  color: #6b6a70;
   cursor: default;
 }
 .lobby-hub .hub-play[disabled]::before {
-  background: #cdc7bb;
+  background: #0a0a0b;
+}
+
+/* What two agents are for: the two answers side by side (the trace dialog's
+   pair, `.trace-choice-options`), and under them how many games the second
+   one plays -- the analytics page's own size control. */
+.agents-choice-size {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.78rem;
+  /* The size control draws from the menu tokens, which on the dialog's paper
+     are the paper's inks rather than the dark lobby's. */
+  --menu-border: #ddd8cc;
+  --menu-field: rgba(255, 255, 255, 0.7);
+  --menu-ink: #221f1a;
+  --menu-muted: #6d675d;
+  --menu-card: #faf8f3;
+  color: var(--menu-muted);
+}
+.agents-choice-note {
+  font-size: 0.78rem;
 }

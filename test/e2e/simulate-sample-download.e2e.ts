@@ -20,12 +20,12 @@ test("a finished run downloads its sample games as traces the lobby loads", asyn
   test.setTimeout(120_000);
   await page.goto(appUrl);
   await expect(page.locator("#setup-form")).toBeVisible();
-  await page.getByRole("button", { name: "Simulate matchup" }).click();
+  await page.locator('[data-seat-pilot="p1"][data-pilot="ai"]').click();
+  await page.getByRole("button", { name: "AI vs AI", exact: true }).click();
+  await page.getByRole("button", { name: "Simulate 100 games" }).click();
 
   // Nothing to download until a run has finished.
   await expect(page.locator("#sim-sample")).toHaveCount(0);
-  await page.locator('[data-run-games="100"]').click();
-  await page.locator("#sim-run").click();
   await expect(page.locator(".matchup-verdict")).toBeVisible({
     timeout: 90_000,
   });

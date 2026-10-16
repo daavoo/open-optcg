@@ -58,7 +58,7 @@ function stubContext(overrides: Partial<SetupContext> = {}): SetupContext {
     applyTheme: () => {},
     beginMatch: () => {},
     bindTraceImport: () => {},
-    analyzeMatchup: () => {},
+    simulateMatchup: () => {},
     editDeck: () => {},
     deleteDeck: () => {},
     ...overrides,
@@ -98,15 +98,13 @@ describe("setup screen render", () => {
     expect(html.indexOf('class="hub-face hub-play"')).toBeLessThan(
       html.indexOf("hub-load hub-trace"),
     );
-    // The fourth cell is the way into the matchup simulation; it has no
-    // counterpart on the board, so it comes last.
-    expect(html.indexOf("hub-load hub-trace")).toBeLessThan(
-      html.indexOf('class="hub-face hub-analytics"'),
-    );
-    expect(html).toMatch(/id="open-analytics" title="Simulate matchup">/);
-    // Start is the command cell: words on the flat face, the way End turn is.
+    // Three cells, as on the board: simulating the pairing is asked for from
+    // the play cell, not offered as a cell of its own.
+    expect(html).not.toContain("hub-analytics");
+    expect(html).not.toContain('id="open-analytics"');
+    // Start is the command cell: one word, named by what it does.
     expect(html).toContain(
-      '<span class="hub-command"><button class="hub-face hub-play" title="Start match" type="submit">Start match</button></span>',
+      '<span class="hub-command"><button class="hub-face hub-play" title="Start match" aria-label="Start match" type="submit">Play</button></span>',
     );
     expect(html).not.toContain("pilot-callout");
     expect(html).not.toContain("built-in heuristics");
@@ -321,6 +319,9 @@ describe("who plays each seat", () => {
 
   it("makes each heading the choice, with one word in force", () => {
     const html = render(stubContext());
+    // The heading is the choice alone: the seats carry no name.
+    expect(html).not.toContain("Player one");
+    expect(html).not.toContain("Player two");
     expect(html).toContain('data-seat-pilot="p1"');
     expect(html).toContain('data-seat-pilot="p2"');
     // Yours by default, and theirs an agent's.
@@ -332,16 +333,26 @@ describe("who plays each seat", () => {
     );
   });
 
-  it("hands both seats to agents, and says the cell starts a simulation", () => {
+  it("hands both seats to agents, and asks what they are for", () => {
     const html = render(withPilots("ai", "ai"));
     // The config is assembled from these fields on submit, so they are what
     // decides whether anybody is playing -- not the heading that wrote them.
     expect(html).toContain(
       '<input type="hidden" id="p1-controller" value="rules" />',
     );
-    expect(html).toContain(
-      '<span class="hub-command"><button class="hub-face hub-play" title="Watch AI" type="submit">Watch AI</button></span>',
-    );
+    expect(html).toContain('class="hub-face hub-play" title="AI vs AI"');
+    // One game to watch, or a run at one of the analytics page's sizes.
+    expect(html).toContain('id="agents-choice"');
+    expect(html).toContain('id="agents-watch"');
+    expect(html).toContain('id="agents-simulate" data-games="100"');
+    for (const games of [100, 250, 500]) {
+      expect(html).toContain(`data-simulate-size="${games}"`);
+    }
+  });
+
+  it("asks nothing when a person holds a seat", () => {
+    expect(render(withPilots("you", "ai"))).not.toContain('id="agents-choice"');
+    expect(render(withPilots("ai", "you"))).not.toContain('id="agents-choice"');
   });
 
   it("plays player one's agent seat with the learned model where the build has one", () => {
@@ -367,9 +378,7 @@ describe("who plays each seat", () => {
       '<input type="hidden" id="p2-controller" value="human" />',
     );
     expect(html).not.toContain('data-controller="llm"');
-    expect(html).toContain(
-      '<span class="hub-command"><button class="hub-face hub-play" title="Start match" type="submit">Start match</button></span>',
-    );
+    expect(html).toContain('class="hub-face hub-play" title="Start match"');
   });
 
   it("keeps a seat with an agent in it out of the LLM's deck list", () => {
@@ -395,7 +404,7 @@ describe("the lobby's online seat", () => {
     for (const html of [withServer, without]) {
       expect(html).not.toContain("data-opponent-kind");
       expect(html).not.toContain('id="online-find"');
-      expect(html).toContain("Player two ·");
+      expect(html).toContain('aria-label="Who plays the right deck"');
     }
   });
 
@@ -414,7 +423,9 @@ describe("the lobby's online seat", () => {
       }),
     );
     expect(html).toContain('id="online-rejoin"');
-    expect(html).toContain('title="Start match" type="submit"');
+    expect(html).toContain(
+      'title="Start match" aria-label="Start match" type="submit"',
+    );
   });
 
   it("holds the start button while a seat is still connecting", () => {
@@ -429,7 +440,9 @@ describe("the lobby's online seat", () => {
         },
       }),
     );
-    expect(html).toMatch(/title="Joining" type="button" disabled/);
+    expect(html).toMatch(
+      /title="Joining" aria-label="Joining" type="button" disabled/,
+    );
     expect(html).toContain("Waiting for your opponent to sit down…");
   });
 });

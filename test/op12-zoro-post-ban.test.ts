@@ -18,7 +18,7 @@ const LIST = "(Green) Roronoa Zoro - OP17 Post-Ban List";
 const OPPONENT = "(Red) Monkey.D.Luffy - Starter Deck 31";
 
 describe("the Green Zoro OP17 post-ban list", () => {
-  it("is a legal 50 under the OP12-020 Leader, shelved under Meta", () => {
+  it("is a legal 50 under the OP12-020 Leader, shelved under Community", () => {
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(deckManifests[LIST]?.leader).toBe("OP12-020");
     expect(deckShelf(LIST)).toBe("tournament");

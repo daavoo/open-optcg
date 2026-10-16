@@ -77,7 +77,7 @@ export function deckManifestFor(
  * Championship 26-27 S1" -- which is the longest suffix any shelf has, and on
  * a tile it crowds out the Leader name appended after it. "Place" and
  * "Championship" are the two words in it that tell no two lists apart: on the
- * Meta shelf an ordinal is a placing, so the short form keeps the
+ * Community shelf an ordinal is a placing, so the short form keeps the
  * placing and the event and drops the rest.
  */
 export function deckDisplayName(deckId: string): string {
