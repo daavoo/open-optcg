@@ -1782,21 +1782,16 @@ describe("OP06-043 Aramaki", () => {
     expect(activationOffered(game, "OP06-043")).toBe(false);
   });
 
-  it("pays nothing when no cheap body is on either board", () => {
+  it("is not offered when no cheap body is on either board", () => {
     const game = table("op06-043-no-target")
       .bareTable()
       .withBoard("p1", [character("aramaki", "OP06-043")])
       .withHand("p1", [instance("fodder", "ST32-004")])
       .build();
 
-    game.play({ type: "activate-main", summary: "OP06-043" });
-    applyOptional(game);
-    game.play({ type: "resolve-effect", optionId: "fodder" });
-    settleDeclining(game);
-
-    // Both payments are mandatory once taken: with nothing to bury the clause
-    // cannot be paid for and the power never lands.
-    expect(currentPower(game.state, "p1", "aramaki")).toBe(8_000);
+    // The bury is part of the cost, and a cost that cannot be paid cannot be
+    // activated (Q&A OP06-043#1): no hand card spent for nothing.
+    expect(activationOffered(game, "OP06-043")).toBe(false);
   });
 });
 

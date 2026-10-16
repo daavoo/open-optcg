@@ -842,49 +842,64 @@ export const op06MainMechanics: SetMechanics = {
       // +3000, which turns an 8000 Blocker into a body that trades up.
       //
       // Both payments are mandatory once the clause is taken, so the `choose`
-      // that names the buried Character is `min: 1` -- with nothing cheap on
-      // either board the clause cannot be paid for at all, and the `choose`
-      // then skips rather than handing over the power for one card.
+      // that names the buried Character is `min: 1`. A cost that cannot be paid
+      // cannot be activated (Q&A OP06-043#1), so the outer `if` withholds the
+      // offer while neither field holds a cheap enough Character -- rather than
+      // taking the hand card and spending the turn's use for nothing.
       "OP06-043",
       {
         oncePerTurn: true,
         requires: { handCards: 1 },
         program: {
           effect: {
-            kind: "optional",
-            effect: payFromHand(
-              { player: "self", zone: "hand" },
-              "op06-aramaki-cost",
-              1,
-              {
-                kind: "choose",
-                selector: {
-                  player: "either",
-                  zone: "board",
-                  category: "character",
-                  maxCost: 2,
+            kind: "if",
+            condition: {
+              kind: "selector-count",
+              player: "either",
+              selector: { zone: "board", category: "character", maxCost: 2 },
+              operator: "gte",
+              value: 1,
+            },
+            then: {
+              kind: "optional",
+              effect: payFromHand(
+                { player: "self", zone: "hand" },
+                "op06-aramaki-cost",
+                1,
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "either",
+                    zone: "board",
+                    category: "character",
+                    maxCost: 2,
+                  },
+                  bind: "op06-aramaki-bury",
+                  min: 1,
+                  max: 1,
+                  effect: {
+                    kind: "sequence",
+                    effects: [
+                      {
+                        kind: "move",
+                        binding: "op06-aramaki-bury",
+                        to: {
+                          player: "owner",
+                          zone: "deck",
+                          position: "bottom",
+                        },
+                      },
+                      {
+                        kind: "modify-power",
+                        binding: SOURCE_BINDING,
+                        amount: 3_000,
+                        expiresAfterTurns: 0,
+                      },
+                    ],
+                  },
                 },
-                bind: "op06-aramaki-bury",
-                min: 1,
-                max: 1,
-                effect: {
-                  kind: "sequence",
-                  effects: [
-                    {
-                      kind: "move",
-                      binding: "op06-aramaki-bury",
-                      to: { player: "owner", zone: "deck", position: "bottom" },
-                    },
-                    {
-                      kind: "modify-power",
-                      binding: SOURCE_BINDING,
-                      amount: 3_000,
-                      expiresAfterTurns: 0,
-                    },
-                  ],
-                },
-              },
-            ),
+              ),
+            },
           },
         },
       },
