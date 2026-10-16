@@ -743,3 +743,13 @@ export const restOrKoCostAtMost = (
     },
   ],
 });
+
+/**
+ * A `[Trigger]` that activates its card's `[On Play]`: the same program,
+ * marked so that a negation of [On Play] effects reaches it too (see
+ * `MechanicProgram.runsOnPlay`).
+ */
+export const asOnPlayTrigger = (program: MechanicProgram): MechanicProgram => ({
+  ...program,
+  runsOnPlay: true,
+});

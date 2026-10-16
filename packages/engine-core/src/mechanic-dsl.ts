@@ -2180,6 +2180,14 @@ export type MechanicEffect =
 
 export interface MechanicProgram {
   effect: MechanicEffect;
+  /**
+   * A `[Trigger]` that runs its card's own `[On Play]` -- seven cards print
+   * that, from OP06-013 to OP14-108. Bandai's OP-09 Q&A (OP09-081#1) rules it
+   * is still an [On Play] effect: while the owner's [On Play] effects are
+   * negated, the Trigger can be activated and does nothing. Set through
+   * `asOnPlayTrigger`, read by `createTriggerResult`.
+   */
+  runsOnPlay?: true;
 }
 
 export interface MechanicProgramInvocation {

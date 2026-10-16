@@ -548,42 +548,35 @@ describe("FAQ OP-09: Purple", () => {
 });
 
 describe("FAQ OP-09: Black", () => {
-  // Engine disagrees: a Trigger that runs the card's own [On Play] is
-  // dispatched as a Trigger program, which never asks whether that player's
-  // [On Play] effects are negated -- so Nami's cost is paid out of hand and
-  // its K.O. offered. Fixing it means teaching the Trigger dispatch which
-  // Triggers re-run an [On Play], across the seven cards in six sets that
-  // print one, and keeping the inert Trigger on offer so the card is trashed.
-  it.fails(
-    "OP09-081#1: a negated [On Play] can still be chosen as the [Trigger], does nothing, and the card is trashed",
-    () => {
-      // p1 negates p2's [On Play] effects, then hits p2's OP08-106 Nami Life
-      // card, whose Trigger runs its [On Play].
-      const game = table("faq-op09-081-1")
-        .withLeader("p1", BLACKBEARD_LEADER)
-        .withHand("p1", [instance("pitch", "FIX-001")])
-        .withLife("p2", [instance("nami", "OP08-106")])
-        .withHand("p2", [instance("trigger-card", "OP09-097")])
-        .withBoard("p2", [character("target", "FIX-001")])
-        .build();
+  // OP09-081#1 is fixed in the Trigger dispatch, for all seven cards whose
+  // Trigger runs their own [On Play] (`MechanicProgram.runsOnPlay`).
+  it("OP09-081#1: a negated [On Play] can still be chosen as the [Trigger], does nothing, and the card is trashed", () => {
+    // p1 negates p2's [On Play] effects, then hits p2's OP08-106 Nami Life
+    // card, whose Trigger runs its [On Play].
+    const game = table("faq-op09-081-1")
+      .withLeader("p1", BLACKBEARD_LEADER)
+      .withHand("p1", [instance("pitch", "FIX-001")])
+      .withLife("p2", [instance("nami", "OP08-106")])
+      .withHand("p2", [instance("trigger-card", "OP09-097")])
+      .withBoard("p2", [character("target", "FIX-001")])
+      .build();
 
-      game.play({ type: "activate-main", optionId: "mechanic-main:p1-leader" });
-      apply(game);
-      game.play({ type: "resolve-effect", optionId: "pitch" });
-      attack(game, "p1-leader", "p2-leader");
-      while (
-        !game.legalActions().some((action) => action.type === "resolve-trigger")
-      ) {
-        game.pass();
-      }
-      game.play({ type: "resolve-trigger", summary: "Activate Trigger" });
-      settle(game);
+    game.play({ type: "activate-main", optionId: "mechanic-main:p1-leader" });
+    apply(game);
+    game.play({ type: "resolve-effect", optionId: "pitch" });
+    attack(game, "p1-leader", "p2-leader");
+    while (
+      !game.legalActions().some((action) => action.type === "resolve-trigger")
+    ) {
+      game.pass();
+    }
+    game.play({ type: "resolve-trigger", summary: "Activate Trigger" });
+    settle(game);
 
-      expect(ids(game.state.players.p2.trash)).toContain("nami");
-      expect(onBoard(game, "p2", "target")).toBeDefined();
-      expect(ids(game.state.players.p2.hand)).toEqual(["trigger-card"]);
-    },
-  );
+    expect(ids(game.state.players.p2.trash)).toContain("nami");
+    expect(onBoard(game, "p2", "target")).toBeDefined();
+    expect(ids(game.state.players.p2.hand)).toEqual(["trigger-card"]);
+  });
 
   it("OP09-081#2: an [On Play] Character in a Teach deck is played with its [On Play] negated", () => {
     const game = table("faq-op09-081-2")

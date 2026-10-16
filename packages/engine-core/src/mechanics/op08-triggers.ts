@@ -8,7 +8,7 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { payFromHand } from "./shared.js";
+import { asOnPlayTrigger, payFromHand } from "./shared.js";
 import {
   donMinusOne,
   koCostAtMost,
@@ -301,7 +301,7 @@ export const op08TriggerMechanics: SetMechanics = {
     [
       // OP08-106 Nami: the printed "activate this card's [On Play] effect".
       "OP08-106",
-      onPlayProgram("OP08-106"),
+      asOnPlayTrigger(onPlayProgram("OP08-106")),
     ],
     [
       // OP08-111 S-Hawk's sibling and the rest of the Seraphim: a body out of
@@ -317,7 +317,7 @@ export const op08TriggerMechanics: SetMechanics = {
     [
       // OP08-112 S-Snake: the printed "activate this card's [On Play] effect".
       "OP08-112",
-      snakeAttackLock,
+      asOnPlayTrigger(snakeAttackLock),
     ],
     [
       // OP08-117 Burn Blade: a Life card into the hand and a card back on top

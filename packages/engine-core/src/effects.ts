@@ -818,6 +818,23 @@ export function createTriggerResult(
 ): OnPlayResult {
   const mechanicProgram = getTriggerMechanicProgram(source.cardNumber);
   if (!mechanicProgram) return { pending: null, events: [] };
+  // A Trigger that runs the card's [On Play] is an [On Play] effect, so a
+  // negation of those empties it (OP09-081#1); the "when a [Trigger]
+  // activates" watchers still answer, because it was activated.
+  if (mechanicProgram.runsOnPlay && onPlayEffectsNegated(state, playerId, db)) {
+    const dispatched = dispatchMechanicInvocations(state, [...reactions], db);
+    return {
+      pending:
+        dispatched.pending && dispatched.invocation
+          ? mechanicPendingEffect(
+              dispatched.invocation,
+              dispatched.pending,
+              dispatched.continuations,
+            )
+          : null,
+      events: dispatched.events,
+    };
+  }
   const invocation = {
     context: { sourcePlayerId: playerId, source },
     program: mechanicProgram,

@@ -8,7 +8,12 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { donMinusOrMore, lifeToHandCost, payFromHand } from "./shared.js";
+import {
+  asOnPlayTrigger,
+  donMinusOrMore,
+  lifeToHandCost,
+  payFromHand,
+} from "./shared.js";
 import { threeRestedCharacters, twoRestedCharacters } from "./op09-shared.js";
 import { op09MainMechanics } from "./op09-main.js";
 import { op09OnPlayMechanics } from "./op09-on-play.js";
@@ -180,7 +185,7 @@ export const op09TriggerMechanics: SetMechanics = {
     ["OP09-100", playIfBehind("Revolutionary Army")],
     ["OP09-108", playIfBehind("Revolutionary Army")],
     ["OP09-114", playIfBehind()],
-    ["OP09-102", onPlayProgram("OP09-102")],
+    ["OP09-102", asOnPlayTrigger(onPlayProgram("OP09-102"))],
     [
       // OP09-104 Sabo: the Trigger pays out only off a two-colour Leader, which
       // in this set is the Robin deck and the Luffy deck.

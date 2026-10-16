@@ -6,7 +6,7 @@ import { type SetMechanics } from "./registry.js";
 import { op11EventPrograms } from "./op11-main.js";
 import { op11OnPlayMechanics } from "./op11-on-play.js";
 import { playFromHand } from "./op08-shared.js";
-import { payFromHand } from "./shared.js";
+import { asOnPlayTrigger, payFromHand } from "./shared.js";
 
 /** "Rest up to 1 of your opponent's Characters with a cost of N or less." */
 const restOpponentUpToCost = (cost: number, bind: string): MechanicEffect => ({
@@ -321,7 +321,7 @@ export const op11TriggerMechanics: SetMechanics = {
     [
       // OP11-075 Jaguar.D.Saul: "[printed text omitted -- pnpm card:text OP11-075]"
       "OP11-075",
-      saulOnPlay,
+      asOnPlayTrigger(saulOnPlay),
     ],
     [
       // OP11-098 Blue Hole: "[printed text omitted -- pnpm card:text OP11-098]"

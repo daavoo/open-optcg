@@ -7,7 +7,7 @@ import { op13EventPrograms, restOpponentUpToCost } from "./op13-main.js";
 import { op13OnPlayMechanics } from "./op13-on-play.js";
 import { snakeShotEffect } from "./op13-battle.js";
 import { filmOrStrawHatLeader, setDonActive } from "./op13-shared.js";
-import { payFromHand } from "./shared.js";
+import { asOnPlayTrigger, payFromHand } from "./shared.js";
 
 /** "Draw 1 card." -- the Trigger four OP13 Events share. */
 const drawOne: MechanicEffect = { kind: "draw", player: "self", count: 1 };
@@ -310,7 +310,7 @@ export const op13TriggerMechanics: SetMechanics = {
       // program, two dispatch points -- read back out of the `[On Play]` table
       // rather than restated.
       "OP13-113",
-      lilithOnPlay,
+      asOnPlayTrigger(lilithOnPlay),
     ],
     [
       // OP13-114 S-Snake: "[printed text omitted -- pnpm card:text OP13-114]"
