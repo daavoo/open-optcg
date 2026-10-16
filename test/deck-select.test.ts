@@ -98,8 +98,8 @@ describe("deleting a saved deck from the picker", () => {
   });
 
   it("offers none at all where the seat cannot play a deck of the player's own", () => {
-    // The LLM seat pilots only decks it has a dossier for, so its grid lists
-    // no saved deck to delete and reaches nothing that could edit one.
+    // A grid narrowed to a fixed list lists no saved deck to delete and
+    // reaches nothing that could edit one.
     const html = deckPickerDialog(savedDecks, "p2", "Opponent deck", KID_ST36, {
       deckIds: [KID_ST36],
       offerBuilder: false,
@@ -292,9 +292,9 @@ describe("the shelves the picker groups decks into", () => {
     expect(html).not.toContain('<optgroup label="Your decks"></optgroup>');
   });
 
-  it("keeps a dossier list's saved decks on the player's own shelf", () => {
-    // The LLM seat is handed an explicit list that can name a saved deck; it
-    // is still the player's deck, and belongs where their decks are.
+  it("keeps a narrowed list's saved decks on the player's own shelf", () => {
+    // An explicit list can name a saved deck; it is still the player's deck,
+    // and belongs where their decks are.
     const html = deckPickerDialog(savedDecks, "p2", "Opponent deck", KID_ST36, {
       deckIds: ["CUSTOM-1", KID_ST36],
       offerBuilder: false,

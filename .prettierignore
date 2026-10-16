@@ -3,9 +3,6 @@
 node_modules/
 dist/
 coverage/
-ml/.venv/
-ml/bridge/action-table.json
-ml/python/checkpoints/
 playwright-report/
 test-results/
 local-art/
@@ -26,9 +23,6 @@ analysis/*.json
 *.trace.json
 pnpm-lock.yaml
 dist-tsc/
-ml/python/.mypy_cache/
-ml/python/.ruff_cache/
-ml/python/__pycache__/
 
 # Agent worktrees: whole extra checkouts of this repo, under `.claude/worktrees/`
 # where the tooling writes them and under `worktrees/` where one made by hand
@@ -41,7 +35,7 @@ worktrees/
 
 # Throwaway probe scripts, ignored in `.gitignore` (which this file disables).
 .scratch/
-research/system1/data/
-research/system1/checkpoints/
-research/system1/.venv/
+ml/data/
+ml/checkpoints/
+ml/.venv/
 packages/web/src/scorer-model.json

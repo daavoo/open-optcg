@@ -76,11 +76,8 @@ export function loadedPrintedTextCount(): number {
 /**
  * Every text this process holds, in the shape {@link loadPrintedText} takes.
  *
- * For handing the text across a process boundary: the browser loads a pack on
- * the main thread, and the worker that builds an LLM seat's prompt is a
- * separate realm with its own empty copy of this module. Without this the two
- * disagree -- the engine's `cardFacts` carry text and the seat's own deck list
- * does not.
+ * For handing the text across a realm boundary, where the other side has its
+ * own empty copy of this module, and for a test to restore what it replaced.
  */
 export function loadedPrintedTextPack(): Record<string, PrintedText> {
   return Object.fromEntries(loaded);

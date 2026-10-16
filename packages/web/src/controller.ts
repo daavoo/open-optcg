@@ -16,10 +16,14 @@ import type {
 export type ControllerKind =
   | "human"
   | "rules"
+  /**
+   * An LLM seat. The app never starts one: the kind is here because a trace
+   * written by the LLM evaluation tools (`pnpm matchup:llm`) names it, and
+   * such a trace still loads to be watched back.
+   */
   | "llm"
   | "random"
   | "first"
-  | "learned"
   /** The System-1 scorer running in the worker. See `@one-piece-sim/agents/scorer`. */
   | "scorer"
   /**
@@ -38,13 +42,9 @@ export interface MatchConfig {
   p2CustomDeck?: DeckManifest;
   /**
    * The deck whose strategy dossier an LLM seat is piloted with, when that is
-   * not the deck it is playing.
-   *
-   * Only a deck the player built ever sets one -- it has no dossier of its own
-   * and borrows a shipped deck's. Recorded here rather than looked up from
-   * saved decks at the moment of the call so that a trace names what the model
-   * was actually told: the deck it borrowed from can be renamed, re-saved or
-   * deleted afterwards, and the file still says which plan played the game.
+   * not the deck it is playing. Only the LLM evaluation tools set one, for a
+   * list that has no dossier of its own; recorded in the config so that a
+   * trace names what the model was actually told.
    */
   p1Dossier?: string;
   p2Dossier?: string;

@@ -7,9 +7,9 @@ export default tseslint.config(
   // the typed-lint project service intermittently resolved types through those
   // stale `.d.ts` files instead of the sources, and `pnpm lint` failed roughly
   // one run in three with "a type that cannot be resolved".
-  // `ml/.venv` is the Python training virtualenv. Several of its packages ship
-  // bundled browser JS (torch's model_dump viewer, for one), which lints as
-  // thousands of errors in code nobody here wrote or maintains.
+  // `ml/.venv` is the Python training virtualenv. Packages in it can ship
+  // bundled browser JS, which lints as thousands of errors in code nobody here
+  // wrote or maintains.
   // `.claude/worktrees` and `worktrees` both hold agent worktrees: whole extra
   // checkouts of this repo. Git ignores them per-machine
   // (`.git/info/exclude`), which eslint does not read, and linting a few dozen
@@ -25,7 +25,6 @@ export default tseslint.config(
       "dist-tsc/**",
       "node_modules/**",
       "ml/.venv/**",
-      "research/system1/.venv/**",
       ".claude/worktrees/**",
       "worktrees/**",
       ".scratch/**",

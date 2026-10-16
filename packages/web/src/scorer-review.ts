@@ -1,7 +1,7 @@
 /**
  * Reviewing a replayed game for misplays, and saving what the reviewer said.
  *
- * A trace written by the System-1 trainer (`research/system1/sys1/traces.py`)
+ * A trace written by the System-1 trainer (`ml/sys1/traces.py`)
  * carries, on every decision its model made, the probability the model gave
  * each option it was offered and its estimate of its own chance to win. The
  * replay shows those beside the move, and whoever is watching can flag a

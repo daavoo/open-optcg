@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { GameService, type Plan } from "@one-piece-sim/engine-core";
+import { GameService } from "@one-piece-sim/engine-core";
 import type {
   GameObservation,
   LegalAction,
@@ -14,7 +14,6 @@ import {
   St35RulesAgent,
   St36RulesAgent,
 } from "@one-piece-sim/agents/local";
-import { LlmAgent } from "@one-piece-sim/agents/llm";
 import {
   createAgent,
   type FormatDeckId,
@@ -23,14 +22,10 @@ import {
 import { FORMAT_DECK_IDS, resolveDeck } from "@one-piece-sim/decks";
 import { chooseHumanAction } from "./human-seat.js";
 import { TraceRecorder, type TraceController } from "./trace.js";
-import { defaultLlmLogPath, LlmJsonlRecorder } from "./llm-jsonl.js";
 
 interface MatchController {
   kind: ControllerKind;
-  reasoning?: () => string | undefined;
   decision?: () => { reasons: string[] } | undefined;
-  /** Lookahead for the decision about to be made, when the seat can use one. */
-  usePlanner?: (plan: Plan) => void;
   chooseAction(
     observation: GameObservation,
     prompt: ReturnType<typeof createInterface>,
@@ -44,7 +39,6 @@ const deckOptions: Array<{ label: string; value: FormatDeckId }> =
 const controllerOptions: Array<{ label: string; value: ControllerKind }> = [
   { label: "Human", value: "human" },
   { label: "Rules agent (deck-specific)", value: "rules" },
-  { label: "LLM", value: "llm" },
   { label: "First legal action agent", value: "first" },
   { label: "Seeded random agent", value: "random" },
 ];
@@ -69,10 +63,7 @@ async function select<T>(
 function makeController(
   kind: ControllerKind,
   deckId: FormatDeckId,
-  opponentDeckId: FormatDeckId,
   seed: string,
-  recorder: LlmJsonlRecorder | undefined,
-  playerId: PlayerId,
 ): MatchController {
   if (kind === "human") {
     return {
@@ -80,28 +71,7 @@ function makeController(
       chooseAction: chooseHumanAction,
     };
   }
-  const agent = createAgent(
-    kind,
-    deckId,
-    opponentDeckId,
-    seed,
-    recorder,
-    playerId,
-  );
-  if (agent instanceof LlmAgent) {
-    return {
-      kind,
-      async chooseAction(observation) {
-        return agent.chooseAction(observation);
-      },
-      usePlanner(plan) {
-        agent.usePlanner(plan);
-      },
-      reasoning() {
-        return agent.lastReasoning;
-      },
-    };
-  }
+  const agent = createAgent(kind, deckId, seed);
   if (
     agent instanceof St31RulesAgent ||
     agent instanceof St32RulesAgent ||
@@ -129,10 +99,7 @@ function makeController(
 }
 
 function traceController(kind: ControllerKind): TraceController {
-  if (kind === "human" || kind === "llm") {
-    return kind === "llm" ? "llm-agent" : "human";
-  }
-  return "rules-agent";
+  return kind === "human" ? "human" : "rules-agent";
 }
 
 const prompt = createInterface({ input, output });
@@ -150,35 +117,14 @@ try {
     (await prompt.question("\nSeed [interactive-match]: ")).trim() ||
     "interactive-match";
   const tracePath = (await prompt.question("Trace JSON path [none]: ")).trim();
-  const llmLogPath =
-    process.env.LLM_LOG_PATH || (tracePath ? defaultLlmLogPath(tracePath) : "");
-  const hasLlmController = p1Kind === "llm" || p2Kind === "llm";
-  const llmRecorder =
-    hasLlmController && llmLogPath
-      ? new LlmJsonlRecorder(llmLogPath)
-      : undefined;
 
   const labels: Record<PlayerId, string> = {
     p1: `${p1Deck} (P1)`,
     p2: `${p2Deck} (P2)`,
   };
   const controllers: Record<PlayerId, MatchController> = {
-    p1: makeController(
-      p1Kind,
-      p1Deck,
-      p2Deck,
-      `${seed}:p1-agent`,
-      llmRecorder,
-      "p1",
-    ),
-    p2: makeController(
-      p2Kind,
-      p2Deck,
-      p1Deck,
-      `${seed}:p2-agent`,
-      llmRecorder,
-      "p2",
-    ),
+    p1: makeController(p1Kind, p1Deck, `${seed}:p1-agent`),
+    p2: makeController(p2Kind, p2Deck, `${seed}:p2-agent`),
   };
   trace = tracePath
     ? new TraceRecorder(tracePath, seed, { p1: p1Deck, p2: p2Deck })
@@ -194,7 +140,6 @@ try {
   console.log(
     `\nStarting ${p1Deck} (${p1Kind}) vs ${p2Deck} (${p2Kind})${trace ? `; trace: ${trace.filePath}` : ""}`,
   );
-  if (llmRecorder) console.log(`LLM JSONL: ${llmRecorder.filePath}`);
 
   while (observation.phase !== "finished" && !quit) {
     const controller = controllers[observation.activePlayer];
@@ -202,9 +147,6 @@ try {
       observation.phase === "block" &&
       observation.legalActions.length === 1 &&
       observation.legalActions[0]?.type === "pass";
-    controller.usePlanner?.(
-      service.plannerFor(observation.gameId, observation.activePlayer),
-    );
     const action = forcedPass
       ? observation.legalActions[0]!
       : await controller.chooseAction(observation, prompt, labels);
@@ -220,8 +162,6 @@ try {
       console.log(
         `\n${labels[observation.activePlayer]} ${controller.kind}: ${action.summary}`,
       );
-      const reasoning = controller.reasoning?.();
-      if (reasoning) console.log(`  Reasoning summary: ${reasoning}`);
     }
     trace?.setController(
       forcedPass ? "automatic" : traceController(controller.kind),

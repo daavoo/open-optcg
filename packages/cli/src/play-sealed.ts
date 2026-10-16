@@ -1,14 +1,14 @@
 /**
- * Human-vs-LLM playtest of a sealed matchup, from the terminal.
+ * Human-vs-rules-agent playtest of a sealed matchup, from the terminal.
  *
  * `--set=<code>` picks the expansion, defaulting to the newest.
  *
  * Opens two independently-seeded pools -- one per seat -- auto-builds a legal
  * 40-card deck from each with `autoBuildSealedDeck`, and plays a real game
- * with the human at P1 and an LLM at P2 under the Rainbow Luffy wildcard
- * Leader both seats share in sealed. The engine, sealed core, and LLM
- * plumbing all already existed (browser sealed mode uses the same three),
- * so this script is wiring, not new capability.
+ * with the human at P1 and the rules agent at P2 under the Rainbow Luffy
+ * wildcard Leader both seats share in sealed. The engine, sealed core, and
+ * agent all already existed (browser sealed mode uses the same three), so
+ * this script is wiring, not new capability.
  *
  * Each pool escalates its pack count past the seeded 6 (matching
  * `openSealedPool` in `packages/web/src/sealed-mode.ts`) only if OP17 card
@@ -17,15 +17,13 @@
  * than imported across the cli/web package boundary for one small function.
  *
  * Usage:
- *   LLM_MODEL=... tsx packages/cli/src/play-sealed.ts [seed] [--trace path]
+ *   tsx packages/cli/src/play-sealed.ts [seed] [--trace path]
  */
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { GameService, reorderAction } from "@one-piece-sim/engine-core";
 import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
-import { LlmAgent } from "@one-piece-sim/agents/llm";
-import { createChatClient } from "@one-piece-sim/agents/chat-client";
-import { llmMatchContext } from "@one-piece-sim/agents/llm-dossiers";
+import { RegistryRulesAgent } from "@one-piece-sim/agents/local";
 import {
   autoBuildSealedDeck,
   openPacks,
@@ -39,10 +37,6 @@ import {
   resolveDeck,
 } from "@one-piece-sim/decks";
 import { TraceRecorder } from "./trace.js";
-import { defaultLlmLogPath, LlmJsonlRecorder } from "./llm-jsonl.js";
-import { loadDotEnv } from "../../../tools/load-env.js";
-
-loadDotEnv();
 
 const PACK_COUNT_ESCALATION: readonly number[] = [
   SEALED_PACK_COUNT,
@@ -119,7 +113,7 @@ function printObservation(observation: GameObservation): void {
   );
   console.log(`  ${formatBoard(observation.self.board)}`);
   console.log(
-    `LLM opponent: Life ${observation.opponent.lifeCount} | Hand ${observation.opponent.handCount} | Deck ${observation.opponent.deckCount} | Active DON!! ${observation.opponent.activeDon}`,
+    `Opponent: Life ${observation.opponent.lifeCount} | Hand ${observation.opponent.handCount} | Deck ${observation.opponent.deckCount} | Active DON!! ${observation.opponent.activeDon}`,
   );
   console.log(
     `  Leader: ${observation.opponent.leader.name} [${observation.opponent.leader.cardNumber}] ${observation.opponent.leader.currentPower} power ${observation.opponent.leader.rested ? "rested" : "active"} DON!! x${observation.opponent.leader.attachedDon}`,
@@ -204,15 +198,12 @@ async function chooseOrder(
 
 const { seed, expansion, tracePath } = parseArguments(process.argv.slice(2));
 
-const model = process.env.LLM_MODEL;
-if (!model) throw new Error("LLM_MODEL is required to play against an LLM.");
-
 const p1Seat = openSeatPool(`${seed}:p1`, expansion);
 const p2Seat = openSeatPool(`${seed}:p2`, expansion);
 console.log(`Sealed expansion: ${expansion}`);
 for (const [label, seat] of [
   ["You", p1Seat],
-  ["LLM opponent", p2Seat],
+  ["Opponent", p2Seat],
 ] as const) {
   const note =
     seat.packsOpened > SEALED_PACK_COUNT
@@ -231,19 +222,7 @@ const p2Deck = sealedDeckManifest(
 );
 
 const trace = tracePath ? new TraceRecorder(tracePath, seed) : null;
-const llmLogPath =
-  process.env.LLM_LOG_PATH ||
-  (tracePath ? defaultLlmLogPath(tracePath) : undefined);
-const llmRecorder = llmLogPath ? new LlmJsonlRecorder(llmLogPath) : undefined;
-
-const client = createChatClient({
-  model,
-  sessionLabel: "open-optcg:sealed-playtest:p2",
-});
-const llmAgent = new LlmAgent(
-  llmRecorder ? llmRecorder.wrap(client, "p2", model) : client,
-  llmMatchContext(SEALED_LEADER, p2Deck, SEALED_LEADER, p1Deck),
-);
+const opponent = new RegistryRulesAgent(SEALED_LEADER);
 
 const service = new GameService({ callbacks: trace ? [trace] : [] });
 let observation = service.create({
@@ -253,7 +232,6 @@ let observation = service.create({
 });
 trace?.setInitialObservation(observation);
 if (trace) console.log(`Writing playtest trace to ${trace.filePath}`);
-if (llmRecorder) console.log(`Writing LLM JSONL to ${llmRecorder.filePath}`);
 
 const prompt = createInterface({ input, output });
 let quit = false;
@@ -276,25 +254,19 @@ try {
       );
       continue;
     }
-    if (observation.activePlayer === "p2") {
-      llmAgent.usePlanner(service.plannerFor(observation.gameId, "p2"));
-    }
     const action =
       observation.activePlayer === "p1"
         ? await chooseHumanAction(observation, prompt)
-        : await llmAgent.chooseAction(observation);
+        : await opponent.chooseAction(observation);
     if (!action) {
       quit = true;
       continue;
     }
     if (observation.activePlayer === "p2") {
-      console.log(`\nLLM opponent: ${action.summary}`);
-      if (llmAgent.lastReasoning) {
-        console.log(`  Reasoning: ${llmAgent.lastReasoning}`);
-      }
+      console.log(`\nOpponent: ${action.summary}`);
     }
     trace?.setController(
-      observation.activePlayer === "p1" ? "human" : "llm-agent",
+      observation.activePlayer === "p1" ? "human" : "rules-agent",
     );
     observation = service.act(
       observation.gameId,
@@ -311,6 +283,6 @@ if (quit) {
   console.log("Playtest ended.");
 } else {
   console.log(
-    `\nGame over: ${observation.winner === "p1" ? "You" : "LLM opponent"} wins by ${observation.resultReason}.`,
+    `\nGame over: ${observation.winner === "p1" ? "You" : "Opponent"} wins by ${observation.resultReason}.`,
   );
 }

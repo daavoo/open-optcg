@@ -1,268 +1,265 @@
-# Learned opponents (experimental)
+# The learned opponent: System-1 scorer
 
-A third kind of opponent alongside the rules policies and the LLM agent: a small
-neural policy trained by self-play against the engine. This is a research
-sidecar, not part of the app — nothing here is needed to play, build, or test
-Open OPTCG.
+A learned opponent in the shape of the non-autoregressive "System 1" decision
+models: an encoder reads the position once and scores every legal action in
+one forward pass, and the answer is a probability over the engine's
+`legalActions` -- never text, never an illegal move. It trains on Apple silicon
+with [MLX](https://github.com/ml-explore/mlx) and plays inside the single-file
+browser app, on WebGPU where the browser has it.
 
-It works end to end. A pointer-policy agent trained with MaskablePPO beats the
-shipped `RegistryRulesAgent` at 60% (ST31 vs ST32, ~1.4M steps, ~10 minutes on
-CPU), and 77% on OP17 sealed with the deck mirrored to both seats so the result
-measures piloting rather than pool luck. Closing that gap against the rules
-agents was the point.
+It is the app's default opponent where a build carries a model pack. The
+training side is not part of the app, the build or the test suite; the
+in-browser seat lives in `packages/agents/src/scorer/` and is covered by the
+suite.
 
-The trained sealed policy can be exported into the browser build as a **Learned
-model** opponent (see below).
-
-## Architecture
+## Shape
 
 ```
-Python trainer  ──NDJSON over stdio──▶  Node engine process
-  MaskablePPO                            ml/bridge/rl-server.ts
-  Gymnasium / PettingZoo env             ├── encode.ts  (features + action rows)
-                                         └── GameService (unmodified)
+engine (Node or the browser)                scorer
+  observe() ──► scorer/render.ts ─ text ─►   Ettin encoder (ModernBERT)
+  legalActions    state + one line             [CLS] state [SEP] a1 a2 … aK
+  − dominated     per action                   each action sees state + itself
+    (dominance.ts)                             ──► one logit per action, a value
 ```
 
-The engine is not reimplemented in Python. Two things make the bridge cheap
-enough to train over:
+- **Rendering** (`packages/agents/src/scorer/render.ts`). A decision is a short
+  state and one line per legal action, built from `observe()` alone, so hidden
+  information is withheld by the engine. Every card is a `[[CARD-NUMBER]]`
+  placeholder, never its printed text, and about 220 tokens a decision. A
+  corpus, a checkpoint and a model pack each record the render version they
+  were written in (`RENDER_VERSION`), and only the current one is supported:
+  one written in another is refused, never misread. Bump it whenever the text
+  for a decision changes.
+- **Cards** (`sys1/text.py`). Each placeholder becomes one token whose embedding
+  is that card's vector: the backbone's encoding of the card's facts -- plus
+  its printed text with `--text pack` -- projected, plus a learned per-card
+  embedding. Text encodings are refreshed every few hundred steps rather than
+  recomputed per batch, which would cost more tokens than the batch.
+- **Order invariance** (`sys1/model.py`). An action's positions restart where the
+  state ends, and its attention is limited to the state and to its own tokens, so
+  each probability is a function of (state, action) alone and reordering the
+  legal list changes nothing. `sys1/parity.py` checks this and checks the MLX
+  encoder against `transformers`.
+- **Dominated actions** (`packages/agents/src/scorer/dominance.ts`). Moves that
+  are provably worse than passing are removed before the model sees the list,
+  in play and in training. Today that is two rules: a Character attack that
+  cannot land and triggers nothing, and a Character Counter that cannot save
+  the battle even with every other Counter on offer (steps aside whenever a
+  [Counter] Event is offered). `bridge/attack-audit.ts` checks the attack rule
+  against the engine by declaring every candidate on a copy of the state
+  (`sys1.audit_attacks`); the Counter rule has no such audit yet.
 
-- **Encode on the Node side.** A raw `GameObservation` is ~23 KB of JSON. The
-  bridge instead sends an ~849-float global vector plus one feature row per legal
-  action, so the training budget does not go into `json.loads`.
-- **Fast-forward the opponent inside Node.** When a rules agent holds the other
-  seat, the server runs it in-process and returns only when the learner is to
-  move. That removes about half the IPC, and the policy trains against the exact
-  agent the rest of the repo benchmarks.
-
-Measured: ~2,000 learner-steps/sec including IPC, against 4,052 raw
-engine-actions/sec in-process.
-
-The default head is a **pointer policy**: the observation is the global state
-vector plus one row per legal action (111 floats: action type, engine-computed
-combat arithmetic, card identity), padded to 24 slots, and softmax runs over the
-legal slots only. Decisions have a mean of 3.7 legal actions and a measured max of
-15, so this is a ~4-way choice rather than a classification over a frozen table
-where 99.7% of the logits are masked. New cards need no table regeneration.
-`--policy flat` keeps the older fixed 2,044-key action table for A/B measurement;
-the pointer head wins.
-
-`optcg_env.py` is a PettingZoo AEC env rather than a parallel one because the
-engine is strictly sequential — it hands the seat to the defender mid-turn for
-blocks and counters, so modelling a turn as simultaneous moves would be wrong.
-
-## Running it
+## Setup
 
 ```sh
-pnpm rl:action-table --seeds 20 --sealed-seeds 150   # writes ml/bridge/action-table.json
-
-python3 -m venv ml/.venv
-ml/.venv/bin/pip install numpy gymnasium pettingzoo torch sb3-contrib
-
-cd ml/python
-../.venv/bin/python train.py --timesteps 200000 --deck ST31 --opponent-deck ST32
-
-# OP17 sealed instead of a fixed matchup: a fresh random pool per episode,
-# auto-built and mirrored to both seats.
-../.venv/bin/python train.py --sealed --timesteps 2000000 --num-envs 8 \
-  --max-minutes 28 --patience 6
-
-# Self-play against a frozen snapshot of an earlier checkpoint.
-../.venv/bin/python train.py --sealed --opponent self \
-  --frozen-checkpoint checkpoints/op17-sealed-ppo
+cd ml
+uv venv --python 3.12 .venv && uv sync --all-groups
+pnpm exec tsx ml/bridge/cards.ts   # from the repo root: card facts
 ```
 
-Each `--num-envs` runs its own Node engine process, so they are genuinely
-parallel. `--max-minutes` and `--patience` stop a run once the eval win rate
-plateaus instead of spending the whole budget. `rebenchmark_sealed.py` and
-`rebenchmark_selfplay.py` re-measure a checkpoint against the rules agent or
-against a frozen checkpoint.
+`data/`, `checkpoints/` and `.venv` are gitignored (they may also be symlinks,
+e.g. to a worktree holding a run in progress). `--text pack` trains on the
+card text in the local asset pack; `--text none` on card facts alone.
 
-The default device is `cpu` and should stay there: the GPU wins the batch math
-and loses the game, because the per-step numpy↔Metal ping-pong (~600 µs) dwarfs
-both the forward pass and the engine step (~490 µs). `--device mps` exists for
-when the policy is large enough to amortize that.
+## The training run
 
-Rebuild the action table whenever card behaviour or `encode.ts` changes, and
-run `pnpm rl:card-index` after a set import.
-`rl-server.ts` refuses to start when the table's `observationSize` disagrees with
-what `encode.ts` currently produces, because a checkpoint read against a shifted
-feature layout produces nonsense rather than an error.
-
-Verified on Python 3.14 with gymnasium 1.3.0, pettingzoo 1.27.0, torch 2.13.0,
-sb3-contrib 2.9.0.
-
-## Results
-
-| Opponent                                                        | Policy  | Steps               | Win rate                  | Wall clock      |
-| --------------------------------------------------------------- | ------- | ------------------- | ------------------------- | --------------- |
-| `SeededRandomAgent`                                             | flat    | 60k                 | 42% → **100%**            | 80s, CPU        |
-| `RegistryRulesAgent` (ST32)                                     | flat    | 30k                 | 0% → 1%                   | ~40s, CPU       |
-| `RegistryRulesAgent` (ST32)                                     | pointer | 1.43M               | → **60%**                 | ~10 min, 8 envs |
-| `RegistryRulesAgent(SEALED_LEADER)`, OP17 sealed, mirrored deck | pointer | 440k, early-stopped | → **77%** (200-game eval) | ~4m45s, 8 envs  |
-
-For calibration, the rules agent beats the random agent 20–0. Read these with the
-noise in mind: 50-game evals bounce 30–66% on a hidden-information game, which is
-why the headline numbers use 200-game evals and why `--eval-episodes` defaults to 200.
-
-## The token policy (roadmap stages 1 and 2)
-
-`--policy token` is the second generation of the sidecar, implementing stages
-1 and 2 of [docs/ai-roadmap.md](../docs/ai-roadmap.md). It changes the
-representation, the critic, the opponents and the plumbing; the algorithm is
-still masked PPO.
-
-```
-Python trainer  ──NDJSON, one line per vector step──▶  N Node engine processes
-  MagnetMaskablePPO                                      ml/bridge/rl-server.ts
-  TokenActorCriticPolicy                                 ├── tokens.ts      (card tokens, action pointers,
-  BridgeVecEnv + OpponentPool                            │                   privileged critic tokens)
-                                                         ├── card-table.ts  (append-only card index)
-                                                         └── encode.ts      (the flat encoding, unchanged)
-```
-
-**Cards as tokens.** A position is a set of card tokens rather than bags over
-a frozen vocabulary: one token per card instance the viewer can see, carrying
-its zone, owner, live state (rested, attached DON!!, current power and cost,
-keywords in force) and a row in `card-index.ts`, an append-only table over
-every registered card. The row indexes a learned embedding _and_ a table of
-derived printed facts (`cardFeatures`: category, stats, colours, attribute,
-keywords, `[DON!! xN]`, clause markers, the boolean fields of `CardRules`),
-shipped once with the spec. So a card the policy never trained on arrives
-described, and a new set appends rows instead of renumbering columns.
-`pnpm rl:card-index` appends the registry's new cards; `test/rl-tokens.test.ts`
-fails when the table is stale, and every checkpoint records the table's
-fingerprint and refuses to load against a different one.
-
-**Actions as pointers.** A legal action is (type, the engine's combat
-arithmetic, option shape) plus up to two references into the token list --
-attacker and target, the hand card played, the DON!! target -- and the row of
-the card it names when that card is in no visible zone (a search result). The
-policy scores an action from the encoded tokens it points at, so "attack
-_that_ with _this_" is read off the two cards' states rather than off a
-one-hot of their identities. The opponent's hand and face-down Life are
-tokens too, with the identity row set to _unknown_.
-
-**An asymmetric critic.** The server also emits _privileged_ tokens read from
-the true `GameState`: the opponent's hand with identities, both Life stacks
-face-up, the next three cards of each deck. Only the critic reads them, only
-during training. The actor's encoding is a function of `observe()`'s
-projection alone, and `test/rl-tokens.test.ts` holds that rearranging the
-hidden zones moves the privileged tokens and nothing the actor sees. Hidden
-information is enforced at play exactly as before; what changes is that the
-value target knows whether the Counter is in hand.
-
-**An opponent pool with PFSP.** Each episode draws its opponent from a pool
--- the deck's rules agent (played inside Node), the random agent, and
-snapshots of the learner saved every `--snapshot-every` steps (played from
-Python, batched) -- weighted by `(1 - win rate)^2`, AlphaStar's "hard"
-prioritised fictitious self-play. The rules agents stay in the curriculum for
-as long as they win; a solved snapshot is rarely drawn. The per-opponent
-record is printed at every eval.
-
-**A magnet.** `MagnetMaskablePPO` adds a KL penalty from the policy to an
-exponential moving average of itself (`--magnet-coef`, `--magnet-tau`), the
-regularisation from magnetic mirror descent; `--magnet-coef 0` is plain
-MaskablePPO.
-
-**Diverse starts.** `--start-turn-max N` starts some episodes at a turn the
-rules agents played both seats to, so mid-game boards are seen early.
-
-**Plumbing.** `BridgeVecEnv` holds every environment in `--engines` Node
-processes (default: cores minus one), sends each process its whole batch as
-one `step_all` line and reads the replies once, so the pipe is paid per
-vector step per process rather than per environment. `--sealed-expansion any`
-draws a pool from every supported expansion per episode.
+One command runs every step with the current settings, resuming where it
+stopped:
 
 ```sh
-cd ml/python
-../.venv/bin/python train.py --policy token --timesteps 2000000 --num-envs 32 \
-  --engines 7 --pool rules,snapshots --snapshot-every 100000 \
-  --start-turn-max 6 --magnet-coef 0.05 --out checkpoints/st31-token
-../.venv/bin/python train.py --policy token --sealed --sealed-expansion any \
-  --deck all --opponent-deck all --timesteps 2000000 --num-envs 32
+.venv/bin/python -m sys1.pipeline --name run2 --text none
 ```
 
-Measured on a 4-core container, ST31 vs ST32, the rules agent as opponent,
-16 environments over 3 engine processes: 630 learner steps/s from the
-environments (the rules agent's own thinking is most of that), a 5 ms policy
-forward for the batch of 16, and 0.75 s per 256-sample minibatch of training
-for the default 409k-parameter model (d=96, two layers, four heads). One
-2,048-step rollout plus its update is about 12 s, so a 2M-step run is an
-afternoon on this box and less on a laptop with more cores. Decisions with
-more legal actions than `--num-slots` (32) were 0.2% of the smoke run.
+| step | what                                                     | module / script        | time (M5 Pro) |
+| ---- | -------------------------------------------------------- | ---------------------- | ------------- |
+| 1    | rules agent vs rules agent, every deck pairing, rendered | `bridge/dump.ts`       | ~3 min        |
+| 2    | tokenise to flat `.npz` corpora                          | `sys1.data`            | ~3 min        |
+| 3    | behaviour cloning warm start, a third of a pass          | `sys1.train_bc`        | ~35 min       |
+| 4    | PPO against the rules agents, stops at a plateau         | `sys1.ppo`             | ~1 h          |
+| 5    | PPO with half the games against snapshots                | `sys1.ppo --self-play` | ~1 h          |
+| 6    | 1,240 paired games on untouched seeds                    | `sys1.evaluate`        | ~2 min        |
+| 7    | export the in-browser model pack                         | `sys1.export_web`      | ~2 min        |
 
-Not measured yet, and the roadmap's stage gates are exactly this: whether the
-token policy matches the flat policy's 60% and 77% within noise, and whether it
-plays an unseen sealed expansion above the random agent. The smoke runs here
-only prove the loop -- train, snapshot, pool, eval, save, resume -- end to end.
+Steps 3-5 are estimates: the checkpoint in use was trained before the
+current defaults (one full behaviour-cloning pass, about 1 h 45 min; fixed
+iteration counts in steps 4 and 5, about 1 h 30 min and 1 h 45 min at the
+iteration speed of the time). The defaults below have not yet been through a
+full run.
 
-Not implemented from stage 2: two-seat self-play into one rollout buffer
-(SB3's on-policy loop assumes one seat per environment, so the learner still
-faces snapshots rather than its live self), and episode starts from the trace
-corpus (`--start-turn-max` plays the rules agents forward instead).
+### What each step does, and its settings
 
-## Playing against a checkpoint in the browser
+1. **Corpus.** 30,000 games by default, walking every ordered pair of distinct
+   selectable decks, with every real decision (two or more legal actions)
+   written as rendered text plus the rules agent's choice and the result.
+   About 30,000 decisions a second across 10-12 Node processes.
+2. **Tokenise.** Each shard becomes uint16 token ids and card rows, about 4M
+   decisions in a few GB.
+3. **Behaviour cloning** (`--epochs 0.3`). Cross-entropy on the rules agent's
+   choice plus the game result for the value head. Agreement with the teacher on
+   held-out games rises fast and then flattens (83% by 10k steps, 92% by 40k,
+   95.5% after the full pass); RL takes over from well before the end.
+4. **PPO against the rules agents.** A separate collector process keeps 384
+   games in flight, starting a new one as each ends, and hands over every
+   24,576 decisions from finished games; games still running carry on into
+   the next batch. It loads each update between steps, so a game can span
+   weight versions: each decision keeps the probability its own version gave
+   it, and decisions more than 2 updates old are not trained on. Each batch
+   gets one KL-bounded pass (64k-token minibatches, lr 5e-6, target KL 0.02).
+   The value head learns without moving the backbone. Every 25 iterations
+   the candidate and the checkpoint in `best/` (at first, the starting
+   checkpoint) each play the same 1,240 paired games against the rules
+   agents, on seeds no earlier evaluation used. The candidate replaces the
+   best when it wins more of those games (the difference is read per
+   seat-swapped pair, so a game the decks decide cancels), unless it clearly
+   loses to it head to head -- a sequential test between 40% and 50% on
+   featured pairings that stops once decided, which would mean it gained on
+   the rules agents by exploiting them. Head to head is a veto rather than a
+   bar, because 25 iterations of real progress win only about 52-55%
+   against the checkpoint before. Every candidate that beat the best is
+   also kept as `iter-NNNN/` for `sys1.ladder`. The run stops when the
+   rollouts stop gaining: the win rate against the rules agents over the
+   last 50 iterations (about 18,000 games) against the 50 before, once a
+   one-sided 95% bound puts the gain below 1 point, or at 300 iterations.
+   Each rollout game is weighted towards uniform distinct pairings, so
+   `--mirror` and `--matchups` change what the run trains on, not what the
+   stop rule measures. The rollouts sample where the evaluations play
+   greedily; each evaluation logs the gap between the two (`sample_gap`).
+5. **Self-play.** The same, with half the games against a pool of 4 frozen
+   snapshots refreshed every 10 iterations, and the other half against the
+   rules agents so it keeps beating them.
+6. **Test.** 1,240 paired games on the `test` seeds, which nothing is
+   compared or selected on. Report this number, not the in-training
+   evaluation, which picked the checkpoint. Seeds are free, so a question
+   asked of several checkpoints -- which is better -- gets seeds of its own
+   rather than the `test` ones.
+7. **Export.** Float16 weights, only the embedding rows the renderer can produce
+   (about 2,900 of 50,368), card vectors precomputed: about 14 MB.
 
-The sealed pointer policy is two small `tanh` MLPs, small enough to hand-port to
-TypeScript rather than ship an ONNX runtime into a "no server, no account" static
-HTML file:
+### Playing it
 
 ```sh
-cd ml/python
-../.venv/bin/python export_web_policy.py \
-  checkpoints/op17-sealed-ppo.zip \
-  ../../packages/web/src/learned-sealed-policy.json
-pnpm web:build
+cp checkpoints/<run>-scorer-model.json ../packages/web/src/scorer-model.json
+pnpm web:build            # or --with-art for a personal copy with card images
 ```
 
-`export_web_policy.py` drops the critic and writes the actor's weights as JSON.
-`packages/agents/src/learned-sealed-agent.ts` ports the forward pass, reusing
-`ml/bridge/encode.ts` directly — the weights are only meaningful against the exact
-feature layout they were trained on. The build inlines the JSON into the Web
-Worker bundle, so the page needs no network fetch. Play is greedy rather than
-sampled, so it is at least as strong as the reported win rate. If the JSON is
-absent the build still succeeds and the sealed opponent select simply does not
-offer "Learned model". Where no LLM opponent can be reached -- the hosted page,
-or the artifact opened from disk -- a fresh sealed run defaults to this
-checkpoint rather than to the rules agent.
+The build inlines the pack into the worker and the match setup offers a
+"Learned model" opponent, the default when present. The pack is gitignored;
+`pnpm model:fetch` downloads the published one instead. To play from a Python
+checkpoint over the local match server instead:
+`pnpm exec tsx ml/bridge/play.ts`.
 
-## Why not AlphaZero, MuZero, or RLCard
+### Publishing it
 
-**AlphaZero's MCTS searches the true game state.** Here the opponent's hand, both
-deck orders and face-down Life are hidden, and the engine enforces that in
-`observe()`. A search over the true state searches what the agent is not entitled
-to know; a search over the observation searches a state that is not Markov. The
-principled fixes are the CFR family or IS-MCTS, not vanilla AlphaZero.
+The published model is the newest GitHub release whose tag starts with
+`model-`, carrying the pack as `scorer-model.json` and any deck adapters over it
+as `scorer-adapter-<deck>.json`. The hosted page's build (`pages.yml`) runs
+`pnpm model:fetch` and redeploys whenever a release is published. It builds
+with `--external-model`, which publishes the pack and adapters beside the page
+as `learned-model.json` rather than inlining them: the page draws first, fetches
+the model after, and keeps it in Cache Storage under its content hash, so a new
+release is fetched once and the old copy dropped
+(`packages/web/src/learned-model.ts`). A plain `pnpm web:build` still inlines it.
 
-**MuZero learns a dynamics model because it has no simulator.** This repo _is_ a
-simulator: deterministic, seeded, replayable, hidden-information-safe. Training a
-network to approximate a model you can call exactly is spending compute to
-reconstruct what you already have. If search is wanted later, run it against the
-real engine.
+```sh
+mkdir -p /tmp/model && cp checkpoints/<run>-scorer-model.json /tmp/model/scorer-model.json
+gh release create model-<run> /tmp/model/scorer-model.json \
+  --title "Learned model: <run>" --notes "..."
+```
 
-**RLCard is dormant** — no release since April 2023. The stack here is PettingZoo,
-Gymnasium and `sb3-contrib` MaskablePPO instead. OpenSpiel is the serious
-alternative and the only actively maintained library with tested NFSP and Deep
-CFR; it is a worse fit for a TypeScript engine, because its headline CFR
-algorithms need `State.clone()` and cheap tree traversal, which over a subprocess
-boundary means serializing full game state at every node.
+`gh` names an asset after the file (a `#` suffix is only a display label), and
+those names are what `tools/fetch-model.ts` looks for.
 
-That leaves masked policy-gradient self-play, which does not converge to a Nash
-equilibrium — nothing at this compute budget does — but clears the bar that matters
-here on a laptop.
+## Using the Mac
 
-## Where this could go
+- **MLX, not PyTorch MPS.** MLX drives the M5 GPU's neural accelerators, which
+  run bf16 matrix multiplies at about 30 TFLOPS on an M5 Pro. The encoder is
+  written in MLX so the scorer can use per-token positions and arbitrary masks,
+  which no MLX encoder library exposes.
+- **One compiled step per batch shape.** Batches are padded to a fixed set of
+  length and option buckets, so `mx.compile` builds a few dozen fused step
+  variants once and reuses them. A compiled function that reads the model must
+  declare `inputs=[model.state]`, or it bakes in the weights of its first trace.
+- **bf16 compute, float32 master weights.** Adam steps a float32 copy; a bf16
+  weight cannot resolve a 1e-5 update.
+- **CPU for the engine, GPU for the model.** `sys1/env.py` spreads games over
+  several Node processes, which play the rules agents' seats in-process and
+  take forced moves themselves, so the GPU only sees real decisions.
+- **Tokenise where the text is made.** The Node workers send token ids and card
+  rows (`bridge/decision-tokens.ts`), not text, so the Python process that
+  drives the GPU never tokenises during play. `bridge/bpe.ts` reproduces the
+  reference tokenizer exactly; `bridge/bpe-parity.ts` checks it.
+- **Pad as little as possible at inference.** Rollouts score a few hundred
+  decisions at a time; chunks are length-sorted and padded to a multiple of 16
+  rows, because the forward pass costs its padded tokens.
 
-[docs/ai-roadmap.md](../docs/ai-roadmap.md) is the staged plan: measurement
-first, then cards as tokens, an asymmetric critic and an opponent pool, then
-determinized search at decision time, then shipping. The three items below are
-the short version.
+Measured on an M5 Pro (20-core GPU, 48 GB), 16k-token batches:
 
-1. **More steps.** The policy still looks like it is improving at 2M.
-2. **Card embeddings.** The observation is one-hot bags over the card vocabulary;
-   embedding card text (`llm-dossiers.ts` already produces it) would shrink the
-   observation and give the pointer head dense features.
-3. **Longer self-play ladders** from the frozen-snapshot tooling above.
+| backbone  | params | train decisions/s | forward decisions/s |
+| --------- | -----: | ----------------: | ------------------: |
+| ettin-17m |  17.5M |              ~610 |               ~3700 |
+| ettin-32m |  33.1M |              ~290 |               ~1480 |
+| ettin-68m |  70.0M |               ~93 |                ~563 |
 
-The evaluation target stays the existing one: win rate against the rules agents,
-comparable to what `deck:benchmark` and `analytics:baseline` already report.
+In the browser the same 17m model takes about 65 ms a decision on WebGPU and
+several seconds on the CPU fallback.
+
+## Results so far
+
+Win rate against the rules agents from 1,240 paired, seat-swapped games on
+the `holdout` seeds (`sys1.evaluate --seed holdout`), over the
+whole catalog and over featured-vs-featured pairings only (`--decks
+featured`); ettin-17m, trained with `--text pack` by `sys1.pipeline`:
+
+| checkpoint                                       | all pairings | featured only |
+| ------------------------------------------------ | -----------: | ------------: |
+| behaviour cloning, 30k rules-vs-rules games      |        0.442 |         0.435 |
+| + PPO against the rules agents, 200 iterations   |        0.667 |         0.685 |
+| + self-play, 150 iterations (`checkpoints/play`) |        0.683 |         0.696 |
+
+Each is ± 0.026. With wasted Counters pruned as well the last is 0.689 on the
+same games. These figures predate the `test` seeds, and the `holdout`
+seeds have since been used to compare checkpoints, so they are no longer
+untouched. The model's edge over the rules agents piloting the same deck in
+the same games (`--baseline`) is about +0.16 on featured decks and +0.25 on
+starters.
+
+## Reviewing its games
+
+A person can flag the scorer's misplays and train on them:
+
+1. `sys1.evaluate <checkpoint> --traces data/traces/<name>` writes every game
+   the checkpoint lost as a trace the app replays, each of its decisions
+   carrying the probability it gave every option and its own win estimate.
+   `index.json` lists each game's steepest falls in that estimate, the moves
+   its own judgement says turned the game: the ones worth reviewing first.
+2. In the app, load a trace and choose **Watch it back**. The strip beside
+   the board shows the move about to be played and the model's view of it;
+   **Flag this move** records the move the reviewer would have made (or only
+   that this one was wrong), and **Hide their hand** draws the far hand face
+   down, as the model saw it. **Download flags** saves them all.
+3. `pnpm exec tsx ml/bridge/feedback.ts <flags.jsonl ...> --out
+data/feedback.jsonl` rebuilds each flagged position from the file and
+   renders it as the trainer does.
+4. `sys1.ppo --feedback data/feedback.jsonl` trains on every flag after every
+   update: a pairwise preference for the reviewer's move over the flagged one,
+   measured against the starting checkpoint's, or a push away from the
+   flagged move when no alternative was named. `feedback_agree` in the log is
+   the share of flags whose preferred move the policy now ranks higher.
+   The flags' steps are outside PPO's KL bound, so a few flags at a high
+   `--feedback-weight` move the policy quickly: start at 1 and watch
+   `approx_kl`.
+
+## Tools
+
+| command                   | what it answers                                                         |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `sys1.stats`              | token budget of a corpus                                                |
+| `sys1.bench`              | train and forward throughput per backbone on this machine               |
+| `sys1.parity`             | MLX encoder vs `transformers`, and order invariance                     |
+| `sys1.evaluate`           | paired win rate vs the rules agents, per deck                           |
+| `sys1.evaluate --against` | paired win rate of one checkpoint against another                       |
+| `sys1.ladder`             | Elo ratings and a win-rate matrix over checkpoints and the rules agents |
+| `sys1.audit_attacks`      | doomed attacks chosen, and the dominance rule's false alarms            |
+| `bridge/parity-web.ts`    | the TypeScript/WebGPU scorer vs the MLX model it came from              |
+| `bridge/bpe-parity.ts`    | the Node tokenizer vs the reference, over corpus text                   |
+| `bridge/server.ts`        | stepped games over stdio for the Python trainer                         |

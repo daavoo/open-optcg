@@ -43,15 +43,15 @@ packages/cards/printed-text.json
 # ignored for the same reason.
 open-optcg-assets/
 
-# System-1 research: rendered decision corpora, card tables and checkpoints.
+# System-1 training (ml/): rendered decision corpora, card tables and checkpoints.
 # Rendered text carries no printed text, but a checkpoint trained on the local
 # pack does, so none of it is committed.
-research/system1/data
-research/system1/checkpoints
-research/system1/.venv
-research/system1/**/__pycache__/
+ml/data
+ml/checkpoints
+ml/.venv
+ml/**/__pycache__/
 
-# The in-browser scorer's model pack (research/system1/sys1/export_web.py). One
+# The in-browser scorer's model pack (ml/sys1/export_web.py). One
 # trained with the local text pack carries Bandai's words in its weights, so no
 # pack is committed; a build inlines one only when it is present.
 packages/web/src/scorer-model.json

@@ -1,6 +1,6 @@
 /**
  * The small scorer's forward pass: `CompactScorer` in
- * research/system1/sys1/compact.py.
+ * ml/sys1/compact.py.
  *
  * About 4.5M parameters over ~33 tokens -- one global token, one per visible
  * card, one per offered option (`compact.ts`) -- through four pre-norm

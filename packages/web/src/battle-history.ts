@@ -54,10 +54,10 @@ import {
   callSummary,
   hasNormalizedPayloads,
   type LlmCallSummary,
+  type LlmDebugRecord,
 } from "./battle-llm-debug.js";
 import { escapeHtml } from "./card-text.js";
 import { icon } from "./icons.js";
-import type { LlmDebugRecord } from "./llm-settings.js";
 
 /**
  * One logged step, and the action it belongs to.

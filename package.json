@@ -20,7 +20,6 @@
     "get-cards:build": "tsx tools/build-get-cards.ts",
     "model:fetch": "tsx tools/fetch-model.ts",
     "web:build:server": "tsx tools/build-web.ts --match-server",
-    "web:serve": "tsx tools/serve-web-cli.ts",
     "jsonl": "tsx packages/cli/src/jsonl.ts",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "verify:browser": "pnpm browser:check && pnpm browser:parity && pnpm fixtures:check && pnpm web:e2e",
@@ -82,10 +81,7 @@
     "otari:down": "tsx tools/otari-local.ts down",
     "otari:status": "tsx tools/otari-local.ts status",
     "otari:key": "tsx tools/otari-local.ts key",
-    "otari:env": "tsx tools/otari-local.ts env",
-    "rl:action-table": "tsx ml/bridge/build-action-table.ts",
-    "rl:card-index": "tsx ml/bridge/build-card-index.ts",
-    "rl:server": "tsx ml/bridge/rl-server.ts"
+    "otari:env": "tsx tools/otari-local.ts env"
   },
   "dependencies": {
     "zod": "^4.5.4"

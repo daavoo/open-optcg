@@ -19,12 +19,12 @@ packages/engine-core   the rules kernel: state, legal actions, effects, replay
 packages/protocol      shared types and the JSONL process API schema
 packages/cards         card records and their derived rules (per-set modules); no printed text
 packages/decks         deck manifests, sealed pools, deck provenance
-packages/agents        AI opponents: rules policies and the LLM agent
+packages/agents        AI opponents: rules policies, the learned model, an LLM agent for evaluation only
 packages/referee       online 1v1: referee and match host, reached by seat links
 packages/web           the browser app (built into one HTML file)
 packages/cli           terminal play
 tools/                 build, data fetching, simulation and analysis scripts
-ml/                    an experimental reinforcement-learning sidecar (Python)
+ml/                    the learned opponent's training (System-1 scorer, Python/MLX)
 test/                  the suite; card tests mirror the coverage gates
 test/support/          the scenario builder every new test should use
 ```

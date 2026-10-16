@@ -98,7 +98,7 @@ function reportEnv(key: string): void {
       `  export GATEWAY_API_KEY=${key}`,
       "  export LLM_MODEL=openai:gpt-5-mini   # models are provider-prefixed here",
       "",
-      "  pnpm web:serve   # or pnpm play, pnpm matchup:llm",
+      "  pnpm matchup:llm   # or pnpm trace:shadow",
       "",
       "Unset OPENAI_API_KEY in that shell, or set LLM_PROVIDER=otari, so the",
       "gateway transport is selected rather than a direct provider call.",

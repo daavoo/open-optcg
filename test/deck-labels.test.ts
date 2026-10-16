@@ -8,7 +8,6 @@ import {
   deckLeaderLine,
   deckLeaderName,
   deckManifestFor,
-  dossierDeckIdFor,
   leaderColors,
   type SavedDeck,
 } from "../packages/web/src/deck-labels.js";
@@ -109,48 +108,5 @@ describe("deck labels", () => {
     );
     expect(primary).toBeTruthy();
     expect(secondary).toBeTruthy();
-  });
-});
-
-describe("the dossier a deck is piloted with", () => {
-  const ST31 = "(Red) Monkey.D.Luffy - Starter Deck 31";
-  const ST32 = "(Green) Roronoa Zoro - Starter Deck 32";
-
-  it("answers a shipped deck with itself", () => {
-    expect(dossierDeckIdFor(ST31, {})).toBe(ST31);
-  });
-
-  it("follows the Leader for a deck saved with no pick of its own", () => {
-    // The case this feature exists for: a home-brew ST31 is piloted by ST31's
-    // plan, and nobody had to say so -- including a deck saved before the
-    // choice existed at all.
-    expect(dossierDeckIdFor("CUSTOM-1", savedDecks)).toBe(ST31);
-  });
-
-  it("honours a pick that disagrees with the Leader", () => {
-    const picked: Record<string, SavedDeck> = {
-      "CUSTOM-1": { ...savedDecks["CUSTOM-1"]!, dossier: ST32 },
-    };
-    expect(dossierDeckIdFor("CUSTOM-1", picked)).toBe(ST32);
-  });
-
-  it("resolves nothing for a pick this build no longer ships", () => {
-    // Withdrawing a dossier must leave the deck unpilotable rather than
-    // pointing the LLM seat at a plan that is not there.
-    const stale: Record<string, SavedDeck> = {
-      "CUSTOM-1": { ...savedDecks["CUSTOM-1"]!, dossier: "(Red) Gone - Deck" },
-    };
-    expect(dossierDeckIdFor("CUSTOM-1", stale)).toBeUndefined();
-  });
-
-  it("resolves nothing for an explicit no-plan pick", () => {
-    const none: Record<string, SavedDeck> = {
-      "CUSTOM-1": { ...savedDecks["CUSTOM-1"]!, dossier: "" },
-    };
-    expect(dossierDeckIdFor("CUSTOM-1", none)).toBeUndefined();
-  });
-
-  it("resolves nothing for a deck that is not there", () => {
-    expect(dossierDeckIdFor("CUSTOM-gone", {})).toBeUndefined();
   });
 });

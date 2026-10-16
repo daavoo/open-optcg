@@ -1,6 +1,6 @@
 """Record a list's games against every target deck as bridge traces, for card-usage.ts and trace-text.ts.
 
-    cd research/system1 && .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/record_traces.py \
+    cd ml && .venv/bin/python ../.claude/skills/evaluate-deck-list/scripts/record_traces.py \
         mon --pilot checkpoints/lora-mon-cards/final --opponent-pilot checkpoints/v4-ppo/final \
         --against checkpoints/lora-eval/mon/targets2.txt --seeds 32 --out checkpoints/mon-traces
 """

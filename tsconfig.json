@@ -42,7 +42,6 @@
     "test/**/*.ts",
     "tools/**/*.ts",
     "ml/**/*.ts",
-    "research/**/*.ts",
     "vitest.config.ts"
   ],
   "exclude": ["dist", "dist-tsc", "node_modules"]

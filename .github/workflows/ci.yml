@@ -92,19 +92,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
-
-  python:
-    name: ml sidecar (ruff + mypy)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ml/python
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      # Lint only, so the job does not pull ~1 GB of torch wheels: the mypy
-      # config falls back to `Any` for the RL stack when it is absent, which is
-      # what it does with the untyped stack installed anyway.
-      - run: uvx ruff@0.14.4 format --check .
-      - run: uvx ruff@0.14.4 check .
-      - run: uvx mypy@1.18.2 .

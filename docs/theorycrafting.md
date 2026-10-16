@@ -201,26 +201,8 @@ pnpm trace:compare --file=exported-match.jsonl
 ```
 
 Replays a match exported from the browser and asks the rules agent what it
-would have chosen at every decision, so you can see where a human or an LLM
-diverged from the policy.
-
-```sh
-pnpm trace:shadow --file=exported-match.jsonl --seat=p2
-pnpm trace:shadow --file=exported.jsonl --revisions=196 --repeat=20
-pnpm trace:shadow --file=exported.jsonl --revisions=196 --recorded-context=true
-```
-
-The same replay, asking an LLM what it would have played at one seat's
-decisions, with its reasoning. Every recorded action is still applied, so the
-model answers the positions that actually arose. Needs `LLM_API` and a key.
-Each answer is reported whole (a DON!! allocation is "attach N times, then
-attack", and N is usually the question).
-
-The model is not deterministic, so one answer on one position is not a
-measurement; `--repeat` asks many times. `--recorded-context=true` re-sends the
-exact request the trace recorded instead of asking afresh, which separates "the
-prompt never says this" from "the conversation had already decided it".
-`--model=` and `--effort=` change one arm without touching `.env`.
+would have chosen at every decision, so you can see where a human diverged
+from the policy.
 
 ## Sealed
 

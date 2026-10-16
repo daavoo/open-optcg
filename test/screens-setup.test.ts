@@ -1,24 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { deckManifests } from "@one-piece-sim/decks";
 import {
-  dossierFields,
   render,
   type SeatPilot,
   type SetupContext,
 } from "../packages/web/src/screens/setup.js";
-import type { SavedDeck } from "../packages/web/src/deck-labels.js";
 import { initialOnlineState } from "../packages/web/src/online.js";
 
 /** The chosen pilot's card, matched inside one tag so the sibling card's
     `data-controller` cannot satisfy it. */
-function pickedCard(kind: "rules" | "llm"): RegExp {
+function pickedCard(kind: "rules" | "scorer"): RegExp {
   return new RegExp(
     `class="controller-card picked"\\s+type="button"\\s+data-controller="${kind}"`,
   );
 }
 
 function stubContext(overrides: Partial<SetupContext> = {}): SetupContext {
-  let lastRules: string | null = null;
   return {
     savedDecks: {},
     online: {
@@ -29,31 +26,9 @@ function stubContext(overrides: Partial<SetupContext> = {}): SetupContext {
       p1: "(Red) Monkey.D.Luffy - Starter Deck 31",
       p2: "(Yellow) Eustass Kid - Starter Deck 36",
     },
-    llmPilotableDeckIds: () => [
-      "(Red) Monkey.D.Luffy - Starter Deck 31",
-      "(Yellow) Eustass Kid - Starter Deck 36",
-    ],
-    lastRulesOpponentDeck: {
-      get value() {
-        return lastRules;
-      },
-      set value(next: string | null) {
-        lastRules = next;
-      },
-    },
     seatPilots: { p1: "you", p2: "ai" },
     refreshLobby: () => {},
-    llmAvailable: () => true,
     scorerAvailable: () => false,
-    llmReady: () => true,
-    llmProbePending: () => false,
-    llmUnavailableMessage: () => "unavailable",
-    refreshLlmCapability: async () => {},
-    redirectToLlmDocsIfUnreachable: () => false,
-    renderLlmStatus: (visible) =>
-      `<div id="llm-settings-row" ${visible ? "" : "hidden"}><p id="llm-status">status</p></div>`,
-    bindLlmSettings: () => {},
-    saveLlmSettings: async () => {},
     randomSeed: () => "match-fixed-seed",
     applyTheme: () => {},
     beginMatch: () => {},
@@ -84,7 +59,7 @@ describe("setup screen render", () => {
   });
 
   it("prints the versus mark between the Leaders and the board's own hub", () => {
-    const html = render(stubContext({ llmAvailable: () => false }));
+    const html = render(stubContext());
     // The seam between the two seats is the versus mark; the controls are the
     // board's cluster, in the board's own order -- configure, the command
     // cell, the trace cell. The paper and the callout are gone.
@@ -149,27 +124,34 @@ describe("setup screen render", () => {
     expect(html).not.toContain('data-lucide="home"');
   });
 
-  it("defaults the opponent to the LLM when it can run", () => {
-    const html = render(stubContext());
-    expect(html).toContain('id="p2-controller" value="llm"');
-    expect(html).toMatch(pickedCard("llm"));
+  it("defaults the opponent to the learned model, with Heuristics beside it", () => {
+    const html = render(stubContext({ scorerAvailable: () => true }));
+    expect(html).toContain('id="p2-controller" value="scorer"');
+    expect(html).toMatch(pickedCard("scorer"));
     expect(html).not.toMatch(pickedCard("rules"));
+    expect(html).toContain('data-controller="rules"');
   });
 
-  it("states what each pilot costs, rather than naming it in a dropdown", () => {
-    // The two differences a player chooses on: one is fast, deterministic and
-    // hosted; the other plays better and has to be run locally with a key.
+  it("offers Heuristics alone in a build without the learned model", () => {
     const html = render(stubContext());
+    expect(html).toContain('id="p2-controller" value="rules"');
+    expect(html).toMatch(pickedCard("rules"));
+    expect(html).not.toContain('data-controller="scorer"');
+  });
+
+  it("says what each pilot is like, rather than naming it in a dropdown", () => {
+    const html = render(stubContext({ scorerAvailable: () => true }));
     expect(html).not.toContain('<select id="p2-controller"');
-    expect(html).toMatch(/Deterministic and fast[^<]*standalone file/);
-    expect(html).toMatch(/stronger opponent[^<]*your own API key/);
+    expect(html).toMatch(/neural network trained by self-play/);
+    expect(html).toMatch(/deterministic, fast/);
+    expect(html).not.toContain('data-controller="llm"');
   });
 
   it("puts the builder in your picker, first, and the pilot in the dialog", () => {
     const html = render(stubContext());
-    // One empty slot for the whole lobby, and it is a tile in the grid rather
-    // than a button on the form.
-    expect(html.match(/deck-tile-builder/g)).toHaveLength(1);
+    // One empty slot per seat's grid, and it is a tile in the grid rather than
+    // a button on the form.
+    expect(html.match(/deck-tile-builder/g)).toHaveLength(2);
     expect(html).toContain('data-edit-deck="p1"');
     expect(html).toContain("Build and save your own deck");
     // Every finished deck can be opened in the editor from its own tile: to
@@ -188,57 +170,6 @@ describe("setup screen render", () => {
     expect(html).not.toContain("Matchup analytics");
   });
 
-  it("offers no builder for a seat the LLM pilots, since it cannot play one", () => {
-    const html = render(stubContext());
-    const opponentPicker = html.slice(html.indexOf('id="p2-deck-picker"'));
-    expect(opponentPicker).not.toContain("data-edit-deck");
-    // And only the decks the LLM can actually pilot.
-    expect(opponentPicker).toContain(
-      'data-deck-id="(Red) Monkey.D.Luffy - Starter Deck 31"',
-    );
-    expect(opponentPicker).not.toContain(
-      'data-deck-id="(Blue) Kuzan - Starter Deck 33"',
-    );
-  });
-
-  it("falls back to Heuristics, and offers the docs, when the LLM cannot run", () => {
-    const html = render(stubContext({ llmAvailable: () => false }));
-    // The hint rides on the LLM card; the Heuristics card is the one chosen.
-    expect(html).toContain("opens the setup docs");
-    expect(html).toContain('id="p2-controller" value="rules"');
-    expect(html).toMatch(pickedCard("rules"));
-    expect(html).not.toMatch(pickedCard("llm"));
-    expect(html).not.toMatch(/data-edit-deck="p2"[^>]*hidden/);
-  });
-
-  it("narrows the opponent deck to a pilotable one when the LLM is selected", () => {
-    const ctx = stubContext({
-      setupDecks: {
-        p1: "(Red) Monkey.D.Luffy - Starter Deck 31",
-        p2: "(Blue) Kuzan - Starter Deck 33",
-      },
-      llmPilotableDeckIds: () => [
-        "(Red) Monkey.D.Luffy - Starter Deck 31",
-        "(Yellow) Eustass Kid - Starter Deck 36",
-      ],
-    });
-    render(ctx);
-    // The pick is outside the pilotable list, so rendering corrects it rather
-    // than offering a deck the LLM seat cannot pilot.
-    expect(ctx.setupDecks.p2).toBe("(Red) Monkey.D.Luffy - Starter Deck 31");
-  });
-
-  it("leaves a pilotable opponent deck alone", () => {
-    const ctx = stubContext({
-      setupDecks: {
-        p1: "(Red) Monkey.D.Luffy - Starter Deck 31",
-        p2: "(Yellow) Eustass Kid - Starter Deck 36",
-      },
-    });
-    render(ctx);
-    expect(ctx.setupDecks.p2).toBe("(Yellow) Eustass Kid - Starter Deck 36");
-  });
-
   it("lists a saved deck by name alongside the format decks", () => {
     const html = render(
       stubContext({
@@ -248,66 +179,15 @@ describe("setup screen render", () => {
             deck: deckManifests["(Red) Monkey.D.Luffy - Starter Deck 31"]!,
           },
         },
-        // Saved decks only appear when the seat is not narrowed to dossiers.
-        llmAvailable: () => false,
       }),
     );
     expect(html).toContain("My Zoro deck");
   });
 
   it("names the in-browser pilot Heuristics, not an AI of its own", () => {
-    const html = render(stubContext({ llmAvailable: () => false }));
+    const html = render(stubContext());
     expect(html).toContain(">Heuristics</span>");
     expect(html).not.toContain("Rules AI");
-  });
-
-  it("shows the LLM status row only while the LLM seat is selected", () => {
-    expect(render(stubContext())).toMatch(/id="llm-settings-row"\s*>/);
-    expect(render(stubContext({ llmAvailable: () => false }))).toMatch(
-      /id="llm-settings-row" hidden/,
-    );
-  });
-});
-
-describe("a deck the player built, piloted by the LLM", () => {
-  const ST31 = "(Red) Monkey.D.Luffy - Starter Deck 31";
-  const KID_ST36 = "(Yellow) Eustass Kid - Starter Deck 36";
-  const myST31: Record<string, SavedDeck> = {
-    "CUSTOM-1": { name: "MyST31", deck: deckManifests[ST31]! },
-  };
-
-  it("offers it in the opponent grid once the pilotable list carries it", () => {
-    // The list is the app's answer, not this screen's: the screen's part is to
-    // render a saved deck in the LLM grid the same way it renders a shipped
-    // one, which it used to be unable to do at all.
-    const html = render(
-      stubContext({
-        savedDecks: myST31,
-        setupDecks: { p1: KID_ST36, p2: "CUSTOM-1" },
-        llmPilotableDeckIds: () => [ST31, "CUSTOM-1"],
-      }),
-    );
-    expect(html).toContain('data-pick-deck="p2" data-deck-id="CUSTOM-1"');
-    expect(html).toContain("MyST31 · Monkey.D.Luffy");
-  });
-
-  it("records the borrowed dossier in the match config", () => {
-    expect(dossierFields("p2", "CUSTOM-1", myST31)).toEqual({
-      p2Dossier: ST31,
-    });
-  });
-
-  it("records nothing for a deck that is its own dossier", () => {
-    // Otherwise every config -- and every trace -- carries a field saying only
-    // what its deck id already said.
-    expect(dossierFields("p1", ST31, myST31)).toEqual({});
-  });
-
-  it("records nothing for a deck that borrows none", () => {
-    const none: Record<string, SavedDeck> = {
-      "CUSTOM-1": { ...myST31["CUSTOM-1"]!, dossier: "" },
-    };
-    expect(dossierFields("p2", "CUSTOM-1", none)).toEqual({});
   });
 });
 
@@ -365,29 +245,19 @@ describe("who plays each seat", () => {
     expect(html).toContain(
       '<input type="hidden" id="p1-controller" value="scorer" />',
     );
-    // The learned model replaces Heuristics as the browser pilot.
-    expect(html).toContain('data-controller="scorer"');
-    expect(html).not.toContain('data-controller="rules"');
+    // The learned model is the opponent's default pilot too.
+    expect(html).toMatch(pickedCard("scorer"));
   });
 
   it("lets the second seat be yours too, and drops its pilot choice", () => {
     const html = render(withPilots("you", "you"));
     // Two people at one screen: there is no agent in the match, so the pilot
-    // cards and the LLM's status line have nothing to say about it.
+    // cards have nothing to say about it.
     expect(html).toContain(
       '<input type="hidden" id="p2-controller" value="human" />',
     );
-    expect(html).not.toContain('data-controller="llm"');
+    expect(html).not.toContain('data-controller="rules"');
     expect(html).toContain('class="hub-face hub-play" title="Start match"');
-  });
-
-  it("keeps a seat with an agent in it out of the LLM's deck list", () => {
-    // The LLM seat plays only the decks it has a dossier for, and that
-    // narrowing is the LLM's -- a seat that is a person's must not inherit it.
-    const ctx = withPilots("you", "you");
-    ctx.setupDecks.p2 = "(Green) Roronoa Zoro - Starter Deck 32";
-    render(ctx);
-    expect(ctx.setupDecks.p2).toBe("(Green) Roronoa Zoro - Starter Deck 32");
   });
 });
 

@@ -16,15 +16,8 @@ declare const __BUILT_IN_PRINTED_TEXT__: Readonly<
  */
 declare const __MATCH_SERVER__: string;
 /**
- * True when the build inlined a trained OP17 sealed policy into the worker
- * (`ml/python/export_web_policy.py` output present at build time). Only
- * gates whether the "Learned model" sealed opponent option is offered; the
- * weights themselves live in the worker bundle, not here.
- */
-declare const __LEARNED_SEALED_POLICY_AVAILABLE__: boolean;
-/**
  * True when the build inlined a System-1 scorer model pack into the worker
- * (`research/system1/sys1/export_web.py` output at
+ * (`ml/sys1/export_web.py` output at
  * `packages/web/src/scorer-model.json`). Gates the "Learned model" opponent
  * card on the match setup screen.
  */

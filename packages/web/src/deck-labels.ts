@@ -6,51 +6,12 @@ import {
   starterDeckNumber,
   type DeckManifest,
 } from "@one-piece-sim/decks";
-import {
-  DOSSIER_DECK_IDS,
-  dossierDeckIdsForLeader,
-} from "@one-piece-sim/agents/llm-dossiers";
 import { escapeHtml } from "./card-text.js";
 
 /** A deck the user saved from the deck editor, keyed by its `CUSTOM-` id. */
 export interface SavedDeck {
   name: string;
   deck: DeckManifest;
-  /**
-   * The shipped deck whose strategy dossier the LLM should pilot this list
-   * with, chosen in the save dialog. Absent on a deck saved before the choice
-   * existed, and on one whose Leader no shipped deck plays; see
-   * {@link dossierDeckIdFor} for what happens then.
-   */
-  dossier?: string;
-}
-
-/**
- * The deck whose dossier the LLM seat reads when it is handed this one.
- *
- * A shipped deck answers with itself. A deck the player built has no dossier
- * and never can -- nothing could write one for a list that did not exist when
- * the app was built -- so it borrows one: the deck it was saved against, or,
- * for a deck saved before that was asked, whichever shipped deck plays the
- * same Leader. A home-brew ST31 is piloted by ST31's plan without anyone
- * having to say so, which is the case the fallback exists for.
- *
- * Undefined means no dossier could be found, and so that the LLM seat cannot
- * be set to this deck at all -- the gate {@link DOSSIER_DECK_IDS} always was.
- */
-export function dossierDeckIdFor(
-  deckId: string,
-  savedDecks: Record<string, SavedDeck>,
-): string | undefined {
-  if (DOSSIER_DECK_IDS.has(deckId)) return deckId;
-  const saved = savedDecks[deckId];
-  if (!saved) return undefined;
-  // A stored pick is honoured only while that deck still ships one: a build
-  // that drops a dossier must not leave a saved deck pointing at nothing.
-  if (saved.dossier !== undefined) {
-    return DOSSIER_DECK_IDS.has(saved.dossier) ? saved.dossier : undefined;
-  }
-  return dossierDeckIdsForLeader(saved.deck.leader)[0];
 }
 
 /** Whose deck colours a mat half or a chip: the leader's own, falling back to

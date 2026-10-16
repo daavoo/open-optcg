@@ -7,7 +7,7 @@ import {
 } from "./analytics.js";
 import type { ControllerKind, MatchConfig } from "../controller.js";
 import type { OnlineState } from "../online.js";
-import { dossierDeckIdFor, type SavedDeck } from "../deck-labels.js";
+import type { SavedDeck } from "../deck-labels.js";
 import {
   bindDeckPickerShelves,
   deckChoiceButton,
@@ -15,16 +15,14 @@ import {
 } from "../deck-select.js";
 import { bindAppDialogDismissal, toggleAppDialog } from "../dialogs.js";
 import { hydrateIcons, icon } from "../icons.js";
-import { LLM_UNREACHABLE_HINT } from "../llm-settings.js";
-import { valueOf, valueOfOptional } from "../dom.js";
+import { valueOf } from "../dom.js";
 import * as footer from "./footer.js";
 
 /**
  * The 1v1 lobby: two decks, who pilots the opponent, and the seed.
  *
  * It owns no state of its own -- the deck picks live in the root store
- * because the analytics page shows the same two selects, and the LLM
- * capability lives there because sealed reports it too. What is local to this
+ * because the analytics page shows the same two selects. What is local to this
  * screen is entirely in the DOM (the seed field, the starting-player select),
  * read back on submit.
  */
@@ -68,30 +66,8 @@ export interface SetupContext {
       headings, the opponent's pilot card and the word on the start cell -- so
       it is a repaint rather than four elements patched in place. */
   refreshLobby(): void;
-  /** The decks the LLM seat can pilot: those with a curated dossier, and the
-      decks the player saved that borrow one. Asked each time rather than held,
-      because saving or deleting a deck changes the answer. */
-  llmPilotableDeckIds(): readonly string[];
-  /** The opponent deck picked while Heuristics piloted, restored if the
-      player switches the controller back off LLM. Read and written here. */
-  lastRulesOpponentDeck: { value: string | null };
-
-  llmAvailable(): boolean;
   /** Whether this build carries the learned scorer, see `__SCORER_AVAILABLE__`. */
   scorerAvailable(): boolean;
-  llmReady(): boolean;
-  llmProbePending(): boolean;
-  llmUnavailableMessage(): string;
-  refreshLlmCapability(): Promise<void>;
-  /** Sends a pick of the unreachable LLM to its docs, leaving `fallback` picked. */
-  redirectToLlmDocsIfUnreachable(selectId: string, fallback?: string): boolean;
-  /** The status line and, where a key can be stored, the fields that change
-      it -- rendered inside the matchup dialog, beside the pilot choice. */
-  renderLlmStatus(visible: boolean): string;
-  bindLlmSettings(): void;
-  /** Commit whatever was typed into the LLM fields. The matchup dialog has no
-      Save of its own: Done is the save. */
-  saveLlmSettings(): Promise<void>;
 
   randomSeed(): string;
   applyTheme(): void;
@@ -124,9 +100,8 @@ export interface SetupContext {
 
 /**
  * The agent a seat gets when nobody picked another: the learned model
- * wherever the build carries one -- the strongest pilot that runs in the
- * browser, and then the only one offered beside the LLM -- and Heuristics in
- * a build without it, where it is the only browser pilot there is.
+ * wherever the build carries one, as the strongest pilot there is, and
+ * Heuristics in a build without it.
  */
 function browserAgent(ctx: SetupContext): ControllerKind {
   return ctx.scorerAvailable() ? "scorer" : "rules";
@@ -163,20 +138,7 @@ function renderSeatHeading(seat: PlayerId, pilot: SeatPilot): string {
 }
 
 export function render(ctx: SetupContext): string {
-  /* The LLM is the default opponent pilot whenever it can work at all. A
-     build with no local proxy behind it -- the hosted demo, the standalone
-     artifact -- keeps Heuristics as the default and locks the LLM choice; it
-     is known-unavailable before the first render rather than after a failed
-     probe, so the default is never one the reader has to undo. */
-  const llmDisabled = !ctx.llmAvailable();
   const pilots = ctx.seatPilots;
-  // Across a table from yourself there is no pilot to choose for the second
-  // seat, so the LLM's availability stops deciding anything on this form.
-  const llmSelected = !llmDisabled && pilots.p2 === "ai";
-  const p2Choices = llmSelected ? ctx.llmPilotableDeckIds() : undefined;
-  if (p2Choices && !p2Choices.includes(ctx.setupDecks.p2)) {
-    ctx.setupDecks.p2 = p2Choices[0]!;
-  }
   const landing = ctx.landing?.render() ?? {
     above: "",
     settings: "",
@@ -207,8 +169,8 @@ export function render(ctx: SetupContext): string {
       </div>
       ${footer.render()}
       ${renderOwnPicker(ctx)}
-      ${renderOpponentPicker(ctx, llmSelected)}
-      ${renderMatchupDialog(ctx, pilots, llmSelected, llmDisabled, landing.settings)}
+      ${renderOpponentPicker(ctx)}
+      ${renderMatchupDialog(ctx, pilots, landing.settings)}
       ${renderTraceChoiceDialog()}
       ${simulating ? renderAgentsChoiceDialog() : ""}
     </main>`;
@@ -359,24 +321,15 @@ function renderOwnPicker(ctx: SetupContext): string {
   );
 }
 
-/**
- * The opponent's picker, narrowed to what its pilot can play.
- *
- * Split out because it is re-rendered on its own whenever the controller
- * changes: the LLM seat plays only the decks it has a dossier for, and a grid
- * still offering the rest would offer a deck the seat cannot be set to. A deck
- * the player saved is in that grid when it borrows a dossier, so the list is
- * asked for rather than fixed.
- */
-function renderOpponentPicker(ctx: SetupContext, llmPilots: boolean): string {
+/** The opponent's picker, re-rendered on its own when a deck goes away. */
+function renderOpponentPicker(ctx: SetupContext): string {
   return deckPickerDialog(
     ctx.savedDecks,
     "p2",
     "Opponent deck",
     ctx.setupDecks.p2,
     {
-      ...(llmPilots ? { deckIds: ctx.llmPilotableDeckIds() } : {}),
-      offerBuilder: !llmPilots,
+      offerBuilder: true,
     },
   );
 }
@@ -393,8 +346,6 @@ function renderOpponentPicker(ctx: SetupContext, llmPilots: boolean): string {
 function renderMatchupDialog(
   ctx: SetupContext,
   pilots: Record<PlayerId, SeatPilot>,
-  llmSelected: boolean,
-  llmDisabled: boolean,
   /** The asset pack, as a setting: what the landing page hands this dialog. */
   assets: string,
 ): string {
@@ -406,7 +357,7 @@ function renderMatchupDialog(
       </div>
       ${
         pilots.p2 === "ai"
-          ? `${renderControllerChoice(llmSelected, llmDisabled, ctx.scorerAvailable())}${ctx.renderLlmStatus(llmSelected)}`
+          ? renderControllerChoice(ctx.scorerAvailable())
           : fixedControllerField("p2-controller", "human")
       }
       <label>Starting player
@@ -428,29 +379,19 @@ function renderMatchupDialog(
 }
 
 /**
- * Who pilots the opponent, as two cards rather than a dropdown.
- *
- * The two pilots differ in more ways than a dropdown can say, and the
- * differences are exactly what a player needs before choosing: Heuristics is
- * deterministic, fast and available in the hosted build, while the LLM plays
- * better and needs the app run locally with an API key. A `<select>` shows one
- * of them at a time and neither of those facts.
+ * Who pilots the opponent, as cards rather than a dropdown, so each pilot can
+ * say what it is like to play against before it is chosen.
  *
  * The hidden input is what keeps the rest of the screen unchanged: the submit
- * handler, `updateControllerUi` and `redirectToDocsIfUnreachable` all read
- * `#p2-controller` by id and only ever touch its `value`, so the control below
- * them can be anything that carries one. Cards therefore cost no plumbing and
- * `sealed.ts`, which still uses a select of the same id, keeps working.
+ * handler and `updateControllerUi` read `#p2-controller` by id and only ever
+ * touch its `value`, so the control below them can be anything that carries
+ * one. `sealed.ts`, which uses a select of the same id, keeps working.
+ *
+ * Heuristics stays on offer beside the learned model as the gentler opponent;
+ * a build without a model pack offers it alone.
  */
-function renderControllerChoice(
-  llmSelected: boolean,
-  llmDisabled: boolean,
-  scorerAvailable: boolean,
-): string {
-  // A build carries the learned model only when someone put a model pack in
-  // it to play against, and then it replaces Heuristics: the weaker browser
-  // pilot is offered only where there is no other.
-  const initial = llmSelected ? "llm" : scorerAvailable ? "scorer" : "rules";
+function renderControllerChoice(scorerAvailable: boolean): string {
+  const initial = scorerAvailable ? "scorer" : "rules";
   return `<fieldset class="controller-choice">
     <legend>Opponent controller</legend>
     <div class="controller-cards">
@@ -462,19 +403,13 @@ function renderControllerChoice(
               note: "A small neural network trained by self-play. Runs in the browser, on the GPU where there is one.",
               picked: initial === "scorer",
             })
-          : controllerCard({
-              kind: "rules",
-              title: "Heuristics",
-              note: "Deterministic and fast, and the less challenging of the two. Plays in the browser, so it works in the standalone file.",
-              picked: initial === "rules",
-            })
+          : ""
       }
       ${controllerCard({
-        kind: "llm",
-        title: "LLM",
-        note: "A stronger opponent, but slower and not deterministic. Needs the app run locally with your own API key.",
-        picked: llmSelected,
-        hint: llmDisabled ? LLM_UNREACHABLE_HINT : "",
+        kind: "rules",
+        title: "Heuristics",
+        note: "Hand-written rules: deterministic, fast, and the less challenging opponent.",
+        picked: initial === "rules",
       })}
     </div>
     <input type="hidden" id="p2-controller" value="${initial}" />
@@ -486,7 +421,6 @@ function controllerCard(card: {
   title: string;
   note: string;
   picked: boolean;
-  hint?: string;
 }): string {
   return `<button
       class="controller-card${card.picked ? " picked" : ""}"
@@ -496,7 +430,6 @@ function controllerCard(card: {
     >
       <span class="controller-card-title">${card.title}</span>
       <span class="controller-card-note">${card.note}</span>
-      <span class="controller-card-hint" data-controller-hint="${card.kind}">${card.hint ?? ""}</span>
     </button>`;
 }
 
@@ -509,33 +442,6 @@ function markController(kind: ControllerKind): void {
     card.classList.toggle("picked", picked);
     card.setAttribute("aria-pressed", String(picked));
   });
-}
-
-export function updateControllerUi(ctx: SetupContext): void {
-  // A pick the LLM can no longer honour is dropped rather than reported: this
-  // runs when the capability probe answers, and a probe that comes back
-  // blocked while "LLM" is picked would otherwise leave the reader to find out
-  // on Start match and go back into the dialog to fix it.
-  const picked = valueOfOptional("p2-controller") ?? browserAgent(ctx);
-  const controller =
-    picked === "llm" && !ctx.llmAvailable() ? browserAgent(ctx) : picked;
-  const llmSelected = controller === "llm";
-  markController(controller as ControllerKind);
-  const status = document.querySelector<HTMLElement>("#llm-settings-row");
-  if (status) status.hidden = !llmSelected;
-  if (!document.querySelector("#p2-deck")) return;
-  if (llmSelected) {
-    ctx.lastRulesOpponentDeck.value = ctx.setupDecks.p2;
-    const pilotable = ctx.llmPilotableDeckIds();
-    if (!pilotable.includes(ctx.setupDecks.p2)) {
-      ctx.setupDecks.p2 = pilotable[0]!;
-    }
-  } else if (ctx.lastRulesOpponentDeck.value) {
-    ctx.setupDecks.p2 = ctx.lastRulesOpponentDeck.value;
-    ctx.lastRulesOpponentDeck.value = null;
-  }
-  setDeck(ctx, "p2", ctx.setupDecks.p2);
-  refreshPicker(ctx, "p2");
 }
 
 /**
@@ -562,20 +468,14 @@ function setDeck(ctx: SetupContext, seat: PlayerId, deckId: string): void {
 }
 
 /**
- * Re-render one seat's grid and rebind it: the opponent's for whoever pilots
- * it, the player's own for whatever it still contains.
- *
- * The pilot is read back off the hidden field rather than passed, so a caller
- * that only knows a deck went away does not have to know who is piloting.
+ * Re-render one seat's grid and rebind it, for whatever it still contains.
  */
 function refreshPicker(ctx: SetupContext, seat: PlayerId): void {
   const picker = document.querySelector(`#${seat}-deck-picker`);
   if (!picker) return;
   const wasOpen = !picker.hasAttribute("hidden");
   picker.outerHTML =
-    seat === "p2"
-      ? renderOpponentPicker(ctx, valueOfOptional("p2-controller") === "llm")
-      : renderOwnPicker(ctx);
+    seat === "p2" ? renderOpponentPicker(ctx) : renderOwnPicker(ctx);
   bindPicker(ctx, seat);
   // `icon()` emits a placeholder that lucide swaps for an `<svg>`, and this
   // markup is new since the page was hydrated -- without this the re-rendered
@@ -634,25 +534,6 @@ function bindPicker(ctx: SetupContext, seat: PlayerId): void {
 }
 
 /**
- * The dossier a seat's deck borrows, as the match config field for it.
- *
- * Nothing for a shipped deck: it is its own dossier, and writing that into
- * every config would put a field in every trace that says only what `p1Deck`
- * already does.
- *
- * Exported for the test that this is what a match records, which is the point
- * of putting it in the config rather than looking it up per model call.
- */
-export function dossierFields(
-  seat: PlayerId,
-  deckId: string,
-  savedDecks: Record<string, SavedDeck>,
-): Partial<MatchConfig> {
-  const dossier = dossierDeckIdFor(deckId, savedDecks);
-  return dossier && dossier !== deckId ? { [`${seat}Dossier`]: dossier } : {};
-}
-
-/**
  * Pressing play. Two agents are asked what they are for first -- one game to
  * watch, or a run to simulate -- and anything else starts at once.
  */
@@ -662,24 +543,15 @@ function submitForm(ctx: SetupContext, event: Event): void {
     toggleAppDialog("agents-choice", true);
     return;
   }
-  void startFromForm(ctx);
+  startFromForm(ctx);
 }
 
-async function startFromForm(ctx: SetupContext): Promise<void> {
-  if (valueOf("p2-controller") === "llm" && !ctx.llmReady()) {
-    await ctx.refreshLlmCapability();
-  }
-  if (valueOf("p2-controller") === "llm" && !ctx.llmReady()) {
-    window.alert(ctx.llmUnavailableMessage());
-    return;
-  }
+function startFromForm(ctx: SetupContext): void {
   const p1Deck = valueOf("p1-deck");
   const p2Deck = valueOf("p2-deck");
   const config: MatchConfig = {
     p1Deck,
     p2Deck,
-    ...dossierFields("p1", p1Deck, ctx.savedDecks),
-    ...dossierFields("p2", p2Deck, ctx.savedDecks),
     ...(p1Deck.startsWith("CUSTOM-") && ctx.savedDecks[p1Deck]
       ? { p1CustomDeck: ctx.savedDecks[p1Deck].deck }
       : {}),
@@ -706,7 +578,7 @@ export function bind(ctx: SetupContext): void {
   ctx.bindTraceImport("#load-trace", "#trace-input");
   document.querySelector("#agents-watch")?.addEventListener("click", () => {
     toggleAppDialog("agents-choice", false);
-    void startFromForm(ctx);
+    startFromForm(ctx);
   });
   const simulate = document.querySelector<HTMLElement>("#agents-simulate");
   // The size is patched in place rather than repainted: it is a choice inside
@@ -755,16 +627,6 @@ export function bind(ctx: SetupContext): void {
       markController(
         (card.dataset.controller ?? browserAgent(ctx)) as ControllerKind,
       );
-      // The redirect resets the field to the browser pilot when the LLM cannot
-      // be reached, so the cards have to be marked again from what it left
-      // behind rather than from what was clicked.
-      if (
-        ctx.redirectToLlmDocsIfUnreachable("p2-controller", browserAgent(ctx))
-      ) {
-        markController(browserAgent(ctx));
-        return;
-      }
-      updateControllerUi(ctx);
     });
   });
   document
@@ -772,21 +634,11 @@ export function bind(ctx: SetupContext): void {
     ?.addEventListener("click", () => {
       toggleAppDialog("matchup-config", true);
     });
-  // Done is the dialog's save. The click also closes the dialog, through the
-  // generic `data-close-dialog` binding: the write is fire-and-forget, and the
-  // panel reports a failure the next time the dialog is opened, where a reader
-  // held on a closing dialog by a POST would not know what they were waiting
-  // for.
-  document.querySelector("#matchup-done")?.addEventListener("click", () => {
-    void ctx.saveLlmSettings();
-  });
   ctx.landing?.bind();
   for (const seat of ["p1", "p2"] as const) {
     bindDeckChoice(ctx, seat);
     bindPicker(ctx, seat);
   }
   bindAppDialogDismissal();
-  ctx.bindLlmSettings();
   ctx.applyTheme();
-  if (ctx.llmProbePending()) void ctx.refreshLlmCapability();
 }

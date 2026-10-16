@@ -28,8 +28,8 @@ import {
     this is — but the select still needs an accessible name. Saved decks join
     the format decks as options, named by what the user called them. When
     {@link deckIds} is given the select is limited to exactly those decks and
-    nothing is appended — the LLM seat only pilots decks it has a dossier for,
-    and the caller has already worked out which saved decks those are. */
+    nothing is appended: the caller has already worked out which saved decks
+    belong in it. */
 export function selectField(
   savedDecks: Record<string, SavedDeck>,
   id: string,
@@ -198,8 +198,7 @@ function deckGroups(
     starter: 3,
   } as const;
   for (const deckId of candidates) {
-    // A saved deck named in `candidates` -- the LLM seat's list is the decks it
-    // has a dossier for, saved ones included -- belongs with the player's own.
+    // A saved deck named in `candidates` belongs with the player's own.
     const shelf = savedDecks[deckId] ? 0 : byShelf[deckShelf(deckId)];
     shelves[shelf]!.deckIds.push(deckId);
   }
@@ -245,10 +244,9 @@ function deckFilterText(
  *
  * `offerBuilder` gates every way this grid reaches the deck editor -- the empty
  * slot, the pencil on each tile, and the bin on a deck of the player's own. It
- * is false for the LLM seat, whose grid is a fixed list of the decks that have
- * a dossier: a deck built from there could be one whose Leader borrows nothing,
- * and so one the seat could not then be set to. Managing saved decks belongs to
- * the player's own grid either way.
+ * is false for a grid that is a fixed list of `deckIds`, where a deck built
+ * from there could be one the list does not hold. Managing saved decks belongs
+ * to the player's own grid either way.
  */
 export function deckPickerDialog(
   savedDecks: Record<string, SavedDeck>,
@@ -299,8 +297,8 @@ export function deckPickerDialog(
   const ownShelf = ownContents
     ? `<section class="deck-picker-group" data-shelf-label="${escapeHtml(own!.label)}"><h3>${escapeHtml(own!.label)}</h3><div class="deck-picker-grid">${ownContents}</div></section>`
     : "";
-  // The shipped shelves are tabs. An empty one -- the LLM seat's list can
-  // leave a shelf with nothing on it -- gets no tab, and the grid opens on
+  // The shipped shelves are tabs. An empty one -- a narrowed `deckIds` list
+  // can leave a shelf with nothing on it -- gets no tab, and the grid opens on
   // Community, or on the first shelf left when Community is empty.
   const tabs = shipped.filter((group) => group.deckIds.length > 0);
   const tabId = (group: DeckGroup): string => `${seat}-deck-tab-${group.key}`;

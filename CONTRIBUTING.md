@@ -40,12 +40,12 @@ packages/engine-core   the rules engine: state, legal actions, effects, replay
 packages/protocol      shared types and the JSONL process API schema
 packages/cards         card records and their derived rules; no printed text
 packages/decks         deck manifests, sealed pools, deck provenance
-packages/agents        AI opponents: rules policies and the LLM agent
+packages/agents        AI opponents: rules policies, the learned model's seat, and the LLM agent kept for evaluation (docs/llm-evaluation.md)
 packages/referee       online 1v1: referee and match host, reached by seat links
 packages/web           the browser app (built into one HTML file)
 packages/cli           terminal play
 tools/                 build, data fetching, simulation and analysis scripts
-ml/                    an experimental reinforcement-learning sidecar
+ml/                    the learned opponent's training (System-1 scorer)
 test/                  the suite; card tests mirror the coverage gates
 ```
 
@@ -190,10 +190,7 @@ map of what exists and what is still missing.
 The game is the hosted page and nothing else: every push to `main` redeploys
 it. A GitHub release is only for the learned model: the newest `model-*`
 release's `scorer-model.json` is what the page inlines (see
-`research/system1/README.md`).
-`pnpm web:serve` is a checkout's way to play against an LLM: its loopback
-server keeps the key in `~/.open-optcg/llm.json` and the page only ever sees its
-last four characters.
+`ml/README.md`).
 
 ## Pull requests
 

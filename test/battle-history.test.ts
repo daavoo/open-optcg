@@ -7,7 +7,7 @@ import {
   type HistoryModel,
   type HistoryStep,
 } from "../packages/web/src/battle-history.js";
-import type { LlmDebugRecord } from "../packages/web/src/llm-settings.js";
+import type { LlmDebugRecord } from "../packages/web/src/battle-llm-debug.js";
 
 function step(event: PublicEvent, actionCount: number): HistoryStep {
   return { event, actionCount };

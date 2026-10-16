@@ -18,7 +18,7 @@ const config: MatchConfig = {
   startingPlayer: "random",
 };
 
-/** A trace as `research/system1/sys1/traces.py` writes one. */
+/** A trace as `ml/sys1/traces.py` writes one. */
 function trainerTrace(): string {
   const header = {
     kind: "header",

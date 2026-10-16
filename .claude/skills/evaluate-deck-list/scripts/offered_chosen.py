@@ -1,7 +1,7 @@
 """Can't or won't: how often the pilot takes a play or a block with given cards
 when the engine offers it, read off the decisions themselves (no traces needed).
 
-    cd research/system1 && .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/offered_chosen.py \
+    cd ml && .venv/bin/python ../.claude/skills/evaluate-deck-list/scripts/offered_chosen.py \
         mon OP17-062 OP08-119 --pilot checkpoints/lora-mon-cards/final --opponent-pilot checkpoints/v4-ppo/final \
         --against checkpoints/lora-eval/mon/targets2.txt --seeds 16
 

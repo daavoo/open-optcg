@@ -1,6 +1,6 @@
 """Paired list A/B: several lists of one deck, one pilot, the same seeds against every target deck.
 
-    cd research/system1 && .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/list_ab.py \
+    cd ml && .venv/bin/python ../.claude/skills/evaluate-deck-list/scripts/list_ab.py \
         --pilot checkpoints/lora-mon-cards/final --opponent-pilot checkpoints/v4-ppo/final \
         --against checkpoints/lora-eval/mon/targets2.txt --seeds 64 --variants /tmp/variants.json \
         mon mk-a mk-b

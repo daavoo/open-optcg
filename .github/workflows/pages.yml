@@ -44,7 +44,7 @@ jobs:
       # The learned opponent: the newest `model-*` release's pack, published
       # beside the page as learned-model.json rather than inlined, so the page
       # draws first and fetches it after (packages/web/src/learned-model.ts).
-      # See research/system1/README.md for publishing one.
+      # See ml/README.md for publishing one.
       - run: pnpm model:fetch
         env:
           GITHUB_TOKEN: ${{ github.token }}

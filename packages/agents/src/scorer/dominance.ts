@@ -6,7 +6,7 @@
  * the rules, not judgement, and a small model trained mostly by imitation and
  * win/loss reward can keep a rare mistake for a long time. Every entry needs a
  * dominance argument, and each is checked against the engine itself: the
- * attack rule by `research/system1/bridge/attack-audit.ts`, which declares
+ * attack rule by `ml/bridge/attack-audit.ts`, which declares
  * every candidate on a copy of the state and reports anything that fired, and
  * the rest by playing both answers in `test/scorer-dominance.test.ts`.
  */

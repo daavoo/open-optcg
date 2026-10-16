@@ -106,17 +106,6 @@
   line-height: 1.45;
   color: var(--editor-muted);
 }
-/* The blocked note, written by the capability probe. Empty when the LLM can
-   run, and an empty span must not leave a gap above the card's bottom edge. */
-.controller-card-hint {
-  font-size: 0.72rem;
-  line-height: 1.45;
-  font-weight: 600;
-  color: var(--flag);
-}
-.controller-card-hint:empty {
-  display: none;
-}
 .app-dialog input,
 .app-dialog select {
   width: 100%;

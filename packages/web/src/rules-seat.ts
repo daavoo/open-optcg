@@ -33,8 +33,7 @@ export function rulesSeatLeader(
   // manifest in `deckManifests`, but they all share `SEALED_LEADER` -- the
   // Leader identity the registry keys its sealed-specific modules (free-block,
   // Gloriosa) on, and the one this repo's sealed tooling
-  // (`sealed-heuristic-ab.ts`, `sealed-analysis.ts`) and the RL training run in
-  // `ml/` both benchmark against.
+  // (`sealed-heuristic-ab.ts`, `sealed-analysis.ts`) benchmarks against.
   if (deckId.startsWith("SEALED-")) return SEALED_LEADER;
   return (manifest ?? deckManifests[deckId])?.leader ?? null;
 }
