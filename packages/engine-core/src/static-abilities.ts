@@ -641,6 +641,14 @@ export function isRemovalImmune(
    * a `"ko"`-only immunity does not answer them.
    */
   removalKind: "ko" | "off-field" = "ko",
+  /**
+   * The copy of `sourceCardNumber` doing the removing, where the caller knows
+   * it. OP14-003 Capone"Gang"Bege reads that Character's *base* power, which a
+   * static layer or a stored setter can have moved off the printed figure
+   * (OP13-084 Ju Peter sets its Five Elders to 7000). Without it the printed
+   * power is all there is to read.
+   */
+  sourceInstanceId?: string,
 ): boolean {
   // OP14-079 Crocodile (Leader): "[printed text omitted -- pnpm card:text OP14-079]" A self-imposed ban, which is what
   // pays for the Leader's own −10 cost engine: Crocodile shrinks a Character
@@ -717,9 +725,18 @@ export function isRemovalImmune(
   // the answer to this 1-cost body is.
   if (card.cardNumber === "OP14-003" && sourceCardNumber !== undefined) {
     const source = db.get(sourceCardNumber);
+    const sourceOnBoard =
+      sourceInstanceId === undefined
+        ? undefined
+        : state.players[sourcePlayerId].board.find(
+            (candidate) => candidate.instanceId === sourceInstanceId,
+          );
+    const sourceBasePower = sourceOnBoard
+      ? cardBasePower(state, sourcePlayerId, sourceOnBoard, db)
+      : source?.power;
     if (
       source?.category === "character" &&
-      (source.power ?? Number.POSITIVE_INFINITY) <= 5000
+      (sourceBasePower ?? Number.POSITIVE_INFINITY) <= 5000
     ) {
       return true;
     }
