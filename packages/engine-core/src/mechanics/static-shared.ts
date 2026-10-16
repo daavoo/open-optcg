@@ -336,25 +336,22 @@ export const trashEventCountOf = (context: AbilityContext): number =>
 
 // --- negation ---------------------------------------------------------------
 
-/** "If you have a [X]" -- a Character on the controller's own board. */
-export function boardHasName(context: AbilityContext, name: string): boolean {
-  return context.state.players[context.playerId].board.some((card) =>
-    hasCardName(card.cardNumber, name),
-  );
-}
-
 /**
- * "If you have [X] on your field" -- the board *and* the Stage area.
+ * "If you have [X]" / "If you have [X] on your field" -- the Leader, the board
+ * and the Stage area.
  *
- * Wider than `boardHasName` because the printed phrase is wider: a Stage is on
- * its controller's field and is in no zone the board walk reaches. EB02-033
- * Klabautermann is the card that needs it, and for that card the Stage area is
- * the only half that can match.
+ * A Stage is on its controller's field and is in no zone the board walk
+ * reaches; EB02-033 Klabautermann's [Merry Go] is only ever a Stage. The
+ * Leader is on the field too, which matters for a Leader treated as having
+ * every card name: Bandai's Q&A rules that one satisfies both EB02-012
+ * Gaimon's [Sarfunkel] (EB02-012#1) and Klabautermann's [Merry Go]
+ * (EB02-033#1).
  */
 export function fieldHasName(context: AbilityContext, name: string): boolean {
   const player = context.state.players[context.playerId];
   return (
-    boardHasName(context, name) ||
+    hasCardName(player.leaderCardNumber, name) ||
+    player.board.some((card) => hasCardName(card.cardNumber, name)) ||
     (player.stage !== null && hasCardName(player.stage.cardNumber, name))
   );
 }
