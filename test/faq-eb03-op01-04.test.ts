@@ -369,41 +369,61 @@ describe("FAQ EB-03", () => {
     expect(options).not.toContain("small");
   });
 
-  // No registered card in the pool both reacts to its controller's own Event on
-  // their own turn and can sit beside a [Sanji] Leader (OP04-053 Page One, the
-  // ruling's example, is not registered), so the disagreement is visible only in
-  // the engine's record of what was activated this turn -- the record that
-  // OP15-002 Lucy's Event-this-turn condition reads.
-  it.fails(
-    "EB03-031#1: activating a trashed Event's [Main] through Reiju is not activating an Event",
-    () => {
-      // No -- using the Event's [Main] effect this way is not activating the
-      // Event card, so Event-activation watchers do not fire.
-      // Engine: the `activate-event` node (mechanics.ts) emits `event-activated`
-      // for the trashed card too, and `engine.ts` stamps
-      // `eventsActivatedOnTurn` and raises the `event-activated` reactions off
-      // that event, the same as for an Event played from hand. Telling the two
-      // apart needs a second public event or a flag on this one, which every
-      // consumer of the event stream (history, analytics, the scorer) reads.
-      const game = table("faq-eb03-031-1")
-        .withLeader("p1", "OP12-041")
-        .withHand("p1", [instance("reiju", "EB03-031")])
-        // OP05-077 Gamma Knife is a [Main] Event in the pool.
-        .withTrash("p1", [instance("spent", "OP05-077")])
-        .withBoard("p2", [character("target", "FIX-002")])
-        .build();
+  // Using an Event's [Main] through Reiju is not activating the Event: the
+  // record "an Event was activated this turn" stays empty (OP15-002 Lucy reads
+  // it), and an opposing OP15-119 Luffy, which answers every Event its
+  // opponent activates, stays silent. The hand-played control shows the same
+  // Luffy answering a real activation.
+  it("EB03-031#1: activating a trashed Event's [Main] through Reiju is not activating an Event", () => {
+    const game = table("faq-eb03-031-1")
+      .withLeader("p1", "OP12-041")
+      .withHand("p1", [instance("reiju", "EB03-031")])
+      // OP05-077 Gamma Knife is a [Main] Event in the pool.
+      .withTrash("p1", [instance("spent", "OP05-077")])
+      .withBoard("p2", [
+        character("target", "FIX-002"),
+        character("luffy", "OP15-119"),
+      ])
+      .withLife("p2", [instance("p2-life", "FIX-002")])
+      .build();
 
-      game.play({ type: "play-card", cardNumber: "EB03-031" });
-      apply(game);
-      if (effectOptions(game).includes("spent")) {
-        game.play({ type: "resolve-effect", optionId: "spent" });
-      }
-      settle(game);
-      expect(currentPower(game.state, "p2", "target")).toBeLessThan(4000);
+    game.play({ type: "play-card", cardNumber: "EB03-031" });
+    apply(game);
+    if (effectOptions(game).includes("spent")) {
+      game.play({ type: "resolve-effect", optionId: "spent" });
+    }
+    settle(game);
+    expect(currentPower(game.state, "p2", "target")).toBeLessThan(4000);
 
-      expect(game.state.eventsActivatedOnTurn?.p1).toBeUndefined();
-    },
-  );
+    expect(game.state.eventsActivatedOnTurn?.p1).toBeUndefined();
+    expect(currentPower(game.state, "p2", "luffy")).toBe(
+      currentPower(game.state, "p2", "luffy", false),
+    );
+    expect(
+      game.events.some(
+        (event) => event.type === "card-revealed" && event.playerId === "p2",
+      ),
+    ).toBe(false);
+  });
+
+  it("EB03-031#1 control: the same Event activated from hand wakes OP15-119", () => {
+    const game = table("faq-eb03-031-1-control")
+      .withHand("p1", [instance("knife", "OP05-077")])
+      .withBoard("p2", [
+        character("target", "FIX-002"),
+        character("luffy", "OP15-119"),
+      ])
+      .withLife("p2", [instance("p2-life", "FIX-002")])
+      .build();
+    const before = currentPower(game.state, "p2", "luffy");
+
+    game.play({ type: "activate-main", sourceCardNumber: "OP05-077" });
+    settle(game);
+
+    expect(game.state.eventsActivatedOnTurn?.p1).toBeDefined();
+    // FIX-002 on top of Life costs 2: +2000 for the turn.
+    expect(currentPower(game.state, "p2", "luffy")).toBe(before + 2000);
+  });
 
   describe("EB03-038 Thanks for the Treat", () => {
     it("EB03-038#1: with no Characters at all, the [Main] adds no DON!!", () => {
