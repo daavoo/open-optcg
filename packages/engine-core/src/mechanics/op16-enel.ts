@@ -488,7 +488,9 @@ export const op16EnelMechanics: SetMechanics = {
                 to: { player: "self", zone: "hand" },
               },
             },
-            { kind: "add-don", player: "self", count: 1, rested: false },
+            // The printed clause sets a DON!! already on the field active;
+            // it adds none from the DON!! deck, so the DON!! −1 stays paid.
+            { kind: "activate-don", player: "self", count: 1 },
           ],
         }),
       },
