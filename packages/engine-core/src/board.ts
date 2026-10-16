@@ -629,6 +629,22 @@ export function couldAttackThisTurn(
   );
 }
 
+/**
+ * Whether a "cannot be rested" effect holds `card` this turn.
+ *
+ * Bandai's rules Q&A (Advanced Rules) rules that such a Character can do
+ * nothing that requires resting it: attack, activate [Blocker], or pay an
+ * activation cost of resting itself.
+ * `canAttack` and `canBlock` read the field directly; the activation gates
+ * ask here, so the three cannot drift apart on what the lock means.
+ */
+export function restLocked(
+  state: GameState,
+  card: { instanceId: string; cannotRestUntilTurn?: number },
+): boolean {
+  return (card.cannotRestUntilTurn ?? -1) >= state.turn;
+}
+
 export function canBlock(
   state: GameState,
   playerId: PlayerId,

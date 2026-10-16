@@ -32,7 +32,7 @@ import {
   describeMechanicCondition,
 } from "./condition-text.js";
 import { fieldDonCount } from "./don.js";
-import { leaderInstanceId } from "./board.js";
+import { leaderInstanceId, restLocked } from "./board.js";
 import {
   SOURCE_BINDING,
   bareGateCondition,
@@ -140,6 +140,11 @@ function unmetRequirement(
         ? player.leaderRested
         : source.rested;
     if (requires.sourceActive && rested) return "this card to be active";
+    // `sourceActive` gates a cost the source pays by resting, which a
+    // "cannot be rested" effect forbids even on an active card.
+    if (requires.sourceActive && restLocked(state, source)) {
+      return "this card to be restable, which an effect has barred";
+    }
     if (requires.sourceRested && !rested) return "this card to be rested";
   }
   if (

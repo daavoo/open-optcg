@@ -2554,8 +2554,9 @@ describe("OP05-084 Saint Charlos and OP05-092 Saint Rosward", () => {
       ])
       .withBoard("p2", [character("wall", "ST32-004")])
       .build();
+    // Floored at 0: Bandai's rules Q&A, Basic Rules 9 (test/faq-rules.test.ts).
     expect(effectiveCost(court.state, "p2", board(court, "p2", "wall")!)).toBe(
-      -6,
+      0,
     );
 
     const mixed = table("op05-084-mixed")
@@ -2640,9 +2641,8 @@ describe("OP05-087 Hakuba", () => {
     game.play({ type: "resolve-effect", optionId: "fodder" });
     game.play({ type: "resolve-effect", optionId: "wall" });
     expect(board(game, "p1", "fodder")).toBeUndefined();
-    expect(effectiveCost(game.state, "p2", board(game, "p2", "wall")!)).toBe(
-      -1,
-    );
+    // Floored at 0: Bandai's rules Q&A, Basic Rules 9 (test/faq-rules.test.ts).
+    expect(effectiveCost(game.state, "p2", board(game, "p2", "wall")!)).toBe(0);
   });
 });
 
