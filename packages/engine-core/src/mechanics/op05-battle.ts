@@ -452,7 +452,10 @@ export const op05BattleMechanics: SetMechanics = {
     [
       // OP05-087 Hakuba: with a DON!! on it, one of the controller's other
       // Characters dies for −5 cost on an opposing one -- the Black deck's own
-      // bodies are the fuel. Nested: nothing to K.O., no debuff.
+      // bodies are the fuel. Nested: nothing to K.O., no debuff. The K.O. is
+      // the cost, so a Character that cannot be K.O.'d, or that a replacement
+      // keeps on the field, pays nothing and buys nothing (Bandai's OP05-087#1
+      // and #2): the debuff waits for the chosen card to reach the trash.
       "OP05-087",
       {
         effect: {
@@ -475,7 +478,17 @@ export const op05BattleMechanics: SetMechanics = {
                 kind: "sequence",
                 effects: [
                   { kind: "knock-out", binding: "op05-hakuba-cost" },
-                  costDebuff(5, "op05-hakuba-debuff"),
+                  {
+                    kind: "if",
+                    condition: {
+                      kind: "selector-count",
+                      player: "self",
+                      selector: { zone: "trash", binding: "op05-hakuba-cost" },
+                      operator: "gte",
+                      value: 1,
+                    },
+                    then: costDebuff(5, "op05-hakuba-debuff"),
+                  },
                 ],
               },
             },
