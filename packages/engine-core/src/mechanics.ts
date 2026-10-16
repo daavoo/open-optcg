@@ -2059,7 +2059,16 @@ export function continueExecution(
           // Face-down is the absence of the flag, the same representation
           // `addToLife` documents: writing `faceUp: false` would make a card put
           // into Life by an effect hash differently from one dealt at setup.
-          ...(effect.faceUp === true ? { faceUp: true } : {}),
+          // A card only rearranged within Life keeps its face unless the
+          // clause says otherwise: Bandai's OP10-116#2 ruling has a face-up
+          // Life card looked at and put back stay face-up.
+          ...(effect.faceUp === true ||
+          (effect.faceUp === undefined &&
+            from === "life" &&
+            effect.to.zone === "life" &&
+            card.faceUp === true)
+            ? { faceUp: true }
+            : {}),
           ...(effect.to.zone === "board"
             ? {
                 rested: effect.rested ?? false,
