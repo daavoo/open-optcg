@@ -80,7 +80,7 @@ describe("otari gateway chat client", () => {
 
     expect(captured).toHaveLength(1);
     const sent = captured[0]!;
-    expect(sent.url).toBe("https://api.otari.ai/v1/responses");
+    expect(sent.url).toBe("https://api.otari.ai/api/v1/responses");
     expect(sent.headers.Authorization).toBe("Bearer tk_test");
 
     // The strict schema is what keeps a malformed action ID from coming back,
@@ -137,7 +137,7 @@ describe("otari gateway chat client", () => {
     expect(response.reasoningSummary).toBe("Counter is cheaper.");
   });
 
-  it("does not send the duplicate camelCase keys the SDK adds", async () => {
+  it("sends no camelCase duplicate of a snake_case field", async () => {
     const { captured, fetch } = stubGateway(okReply);
 
     await new OtariChatClient({
@@ -151,8 +151,8 @@ describe("otari gateway chat client", () => {
 
     // The gateway validates with `extra="forbid"`, so one stray alias fails the
     // whole request: "1 validation error for ResponsesParams / promptCacheKey /
-    // Extra inputs are not permitted". Verified against a local gateway, where
-    // every request 502'd until these were stripped.
+    // Extra inputs are not permitted". Prompt caching rides on
+    // `prompt_cache_key`, so this pins the SDK's request shape.
     const keys = Object.keys(captured[0]!.body);
     expect(keys).toContain("prompt_cache_key");
     expect(keys).not.toContain("promptCacheKey");
@@ -184,9 +184,8 @@ describe("otari gateway chat client", () => {
           headers: { "content-type": "application/json" },
         }),
     );
-    // The gateway SDK reports every failure as the literal "[object Object]", so
-    // the class, the status, and the gateway's own words all have to be recovered
-    // here -- a benchmark that dies overnight is diagnosed from this string.
+    // The class, the status, and the gateway's own words all have to reach this
+    // string -- a benchmark that dies overnight is diagnosed from it.
     await expect(
       new OtariChatClient({
         model: "openai:gpt-5.6",

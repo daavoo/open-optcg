@@ -10,7 +10,7 @@
     "@one-piece-sim/engine-core": "workspace:*",
     "@one-piece-sim/protocol": "workspace:*",
     "fflate": "0.8.3",
-    "lucide": "^1.39.0"
+    "lucide": "^1.56.0"
   },
   "license": "MIT"
 }

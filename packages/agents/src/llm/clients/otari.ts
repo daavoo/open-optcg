@@ -76,129 +76,17 @@ function isTransientOtariError(error: unknown): boolean {
 }
 
 /**
- * Error bodies the gateway sent, keyed by the exact `Response` they came from.
- *
- * `@mozilla-ai/otari@0.4.0` builds its error message by interpolating the parsed
- * error body into a string, so every failure arrives as the literal
- * `"[object Object]"` and the body it was built from is already consumed --
- * `originalError.response.text()` throws `Body has already been read`. A run that
- * dies on a context-length error is then indistinguishable from one that dies on
- * a bad token.
- *
- * Since this client supplies the `fetch` the SDK uses, it can read a clone of
- * every failing response on the way past and file it under the `Response`
- * instance. The error the SDK throws carries that same instance on
- * `originalError`, so the lookup recovers the real message with no guessing about
- * which concurrent request it belonged to.
- */
-const gatewayErrorBodies = new WeakMap<Response, string>();
-
-const snakeToCamel = (key: string): string =>
-  key.replace(/_([a-z])/g, (_match, letter: string) => letter.toUpperCase());
-
-/**
- * Remove the duplicate camelCase keys the SDK adds to its own request body.
- *
- * `client.response()` runs the params through `ResponsesRequestFromJSON` (which
- * adds a camelCase alias beside each snake_case field) and then through the
- * generated `ToJSON` (which re-derives the snake_case field but leaves the alias
- * in place). Four aliases survive onto the wire: `promptCacheKey`,
- * `maxOutputTokens`, `previousResponseId`, and `topP`.
- *
- * The gateway validates against a pydantic model with `extra="forbid"`, so any
- * one of them fails the whole request:
- *
- *     1 validation error for ResponsesParams
- *     promptCacheKey
- *       Extra inputs are not permitted
- *
- * That makes `prompt_cache_key` unusable through this SDK, and prompt caching is
- * the difference between re-billing a whole game's history on every decision and
- * reading it back. Dropping any camelCase key that duplicates a snake_case
- * sibling fixes it without hardcoding the four names, so a future alias is
- * covered too. Remove once the SDK stops round-tripping its own params.
- */
-function withoutDuplicateAliases(body: string): string {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(body);
-  } catch {
-    return body;
-  }
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    return body;
-  }
-  const record = parsed as Record<string, unknown>;
-  // Only an alias derived from a key that is actually present gets dropped, so a
-  // caller who deliberately sent a camelCase field on its own keeps it.
-  const drop = new Set<string>();
-  for (const key of Object.keys(record)) {
-    const alias = snakeToCamel(key);
-    if (alias !== key && Object.hasOwn(record, alias)) drop.add(alias);
-  }
-  if (drop.size === 0) return body;
-  return JSON.stringify(
-    Object.fromEntries(
-      Object.entries(record).filter(([key]) => !drop.has(key)),
-    ),
-  );
-}
-
-/**
- * The transport seam: fixes the outgoing body, remembers incoming error bodies.
- *
- * Both jobs exist only because of `@mozilla-ai/otari@0.4.0` quirks; see
- * `withoutDuplicateAliases` and `gatewayErrorBodies` above.
- */
-function gatewayFetch(inner: typeof globalThis.fetch): typeof globalThis.fetch {
-  return async (input, init) => {
-    const patched =
-      init && typeof init.body === "string"
-        ? { ...init, body: withoutDuplicateAliases(init.body) }
-        : init;
-    const response = await inner(input, patched);
-    if (!response.ok) {
-      try {
-        gatewayErrorBodies.set(response, await response.clone().text());
-      } catch {
-        // A body that cannot be cloned is not worth failing the request over;
-        // the wrapper below still reports the class and status.
-      }
-    }
-    return response;
-  };
-}
-
-/** The gateway's own words for a failure, when they survived. */
-function gatewayErrorDetail(error: OtariError): string | undefined {
-  const response = (error as { originalError?: { response?: unknown } })
-    .originalError?.response;
-  const body =
-    response instanceof Response ? gatewayErrorBodies.get(response) : undefined;
-  if (!body) return undefined;
-  try {
-    const parsed: unknown = JSON.parse(body);
-    const record = parsed as {
-      error?: { message?: unknown } | null;
-      detail?: unknown;
-    };
-    const message = record.error?.message ?? record.detail;
-    return typeof message === "string" ? message : body;
-  } catch {
-    return body;
-  }
-}
-
-/**
- * Re-throw a gateway error with a message that says what happened.
- *
- * The class and `statusCode` are trustworthy even when the message is not, so
- * they are always reported; the recovered body is appended when available. The
- * original is kept as `cause` so nothing is lost.
+ * Re-throw a gateway error with a message that says what happened: the class,
+ * the status, and the gateway's own detail, which the SDK reads out of the
+ * error body into `message`. A context-length failure then reads differently
+ * from a bad token. The original is kept as `cause` so nothing is lost.
  */
 function describeGatewayError(error: unknown): unknown {
   if (!(error instanceof OtariError)) return error;
-  const detail = gatewayErrorDetail(error);
+  const detail =
+    error.message && error.message !== OtariError.defaultMessage
+      ? error.message
+      : undefined;
   const status = error.statusCode === undefined ? "" : ` ${error.statusCode}`;
   return Object.assign(
     new Error(
@@ -211,7 +99,7 @@ function describeGatewayError(error: unknown): unknown {
 /**
  * An `LlmChatClient` that reaches a model through the otari gateway.
  *
- * The gateway exposes the same `/v1/responses` contract this project already
+ * The gateway exposes the same Responses contract this project already
  * targets, so the request body and the result reader are shared verbatim with
  * `OpenAiChatClient` -- the reasoning-item replay, the explicit cache
  * breakpoints, and the strict `legal_action` schema that constrains `actionIds`
@@ -235,7 +123,7 @@ export class OtariChatClient implements LlmChatClient {
         : {}),
       ...(options.apiBase ? { apiBase: options.apiBase } : {}),
       ...(options.apiKey ? { apiKey: options.apiKey } : {}),
-      fetch: gatewayFetch(options.fetch ?? globalThis.fetch),
+      ...(options.fetch ? { fetch: options.fetch } : {}),
     });
     this.#model = options.model;
     this.#temperature = options.temperature;
