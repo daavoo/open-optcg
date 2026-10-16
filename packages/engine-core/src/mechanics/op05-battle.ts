@@ -558,28 +558,30 @@ export const op05BattleMechanics: SetMechanics = {
       },
     ],
     [
-      // OP05-047 Basil Hawkins: a card when it blocks with three or fewer in
-      // hand, and +1000 for the battle either way.
+      // OP05-047 Basil Hawkins: with three or fewer in hand when it blocks, a
+      // card and +1000 for the battle. The hand gate covers both halves --
+      // at four or more neither happens (Bandai's OP05-047#1) -- and is read
+      // once, on the block, not again in the Counter Step (OP05-047#2).
       "OP05-047",
       {
         oncePerTurn: false,
         program: {
           effect: {
-            kind: "sequence",
-            effects: [
-              {
-                kind: "if",
-                condition: {
-                  kind: "zone-count",
-                  player: "self",
-                  zone: "hand",
-                  operator: "lte",
-                  value: 3,
-                },
-                then: { kind: "draw", player: "self", count: 1 },
-              },
-              { kind: "battle-power", player: "self", amount: 1_000 },
-            ],
+            kind: "if",
+            condition: {
+              kind: "zone-count",
+              player: "self",
+              zone: "hand",
+              operator: "lte",
+              value: 3,
+            },
+            then: {
+              kind: "sequence",
+              effects: [
+                { kind: "draw", player: "self", count: 1 },
+                { kind: "battle-power", player: "self", amount: 1_000 },
+              ],
+            },
           },
         },
       },
