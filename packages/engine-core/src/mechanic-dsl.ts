@@ -1176,13 +1176,14 @@ export type MechanicEffect =
       faceUp?: boolean;
       rested?: boolean;
       /**
-       * "You may trash this Character: <effect>" -- a cost paid with the
-       * source's own body, where the printed word is trash and not K.O.
+       * A Character moved from the board to the trash where the printed word
+       * is trash and not K.O.: "You may trash this Character: <effect>", a
+       * cost paid with the source's own body, or an effect that trashes an
+       * opponent's Character outright.
        *
-       * Sets `trashedNotKoed` on the signal, so the card's own `[On K.O.]` is
-       * not dispatched off its own cost. Nothing else in the pool needs it:
-       * every earlier `move` from the board to the trash is a clause that does
-       * mean a K.O.
+       * Sets `trashedNotKoed` on the signal, so the moved card's own
+       * `[On K.O.]` is not dispatched. Without it a `move` from the board to
+       * the trash is read as a K.O.
        */
       trashedNotKoed?: true;
       /**
