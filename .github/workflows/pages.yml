@@ -58,7 +58,7 @@ jobs:
           cp dist/open-optcg.html site/index.html
           cp dist/get-cards.js site/get-cards.js
           if [ -f dist/learned-model.json ]; then cp dist/learned-model.json site/; fi
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
