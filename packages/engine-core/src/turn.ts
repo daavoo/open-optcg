@@ -447,7 +447,12 @@ export function endTurn(
   events: PublicEvent[],
   db: CardDatabase = defaultCardDatabase,
 ): void {
-  const playerId = state.activePlayer;
+  // The turn being ended is the turn player's, and it is re-entered after each
+  // end-of-turn choice -- which may have been the opponent's to answer
+  // (OP17-047 Shiki has them pick their own card), so control comes back to
+  // the turn player here before the next card is asked.
+  const playerId = state.turnPlayerId;
+  state.activePlayer = playerId;
   const player = state.players[playerId];
   if (payDonEqualize(state, playerId, events, db)) return;
   if (
@@ -519,6 +524,10 @@ export function endTurn(
     state.oncePerTurn.push(`${state.turn}:${card.instanceId}:end-of-turn`);
     if (result.pending) {
       state.pendingEffect = result.pending;
+      // The answering player is whoever the program names: Bandai's OP-17
+      // Q&A (OP17-047#1) has Shiki's opponent choose the card from their own
+      // hand, so the decision is handed across the table.
+      state.activePlayer = result.pending.playerId;
       events.push(...result.events);
       return;
     }
