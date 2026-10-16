@@ -2413,6 +2413,16 @@ export function continueExecution(
         if (!ownerId || !target) {
           throw new Error(`MISSING_MECHANIC_CARD: ${instanceId}`);
         }
+        // A Character under a "cannot be rested" effect stays active whoever's
+        // effect asks: Bandai's Q&A (EB02-011#4) rules that the restriction
+        // holds against the effects of either player's other cards. Nothing
+        // happened, so nothing is reported.
+        if (
+          ((target as Partial<BoardCard>).cannotRestUntilTurn ?? -1) >=
+          state.turn
+        ) {
+          continue;
+        }
         target.rested = true;
         // `character-rested` is what OP10-036 Perona's DON!! refund watches for,
         // and a Stage is not a Character: reporting one as rested would pay that
