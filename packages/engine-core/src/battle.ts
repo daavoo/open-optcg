@@ -200,7 +200,7 @@ export function prospectiveBattleTarget(
 }
 
 /**
- * Ends a battle whose target has left the field.
+ * Ends a battle whose target, or whose attacker, has left the field.
  *
  * An attack can outlive its target: a replacement effect, a bounce or a K.O.
  * resolved during the block or counter step can remove the very Character the
@@ -221,13 +221,21 @@ export function endBattleIfTargetLeftField(state: GameState): void {
   // A pending Trigger owns the phase for the same reason a pending effect does,
   // and ending the battle under one would drop the card the window is holding.
   if (!attack || state.pendingEffect || state.pendingTrigger) return;
-  if (attack.targetInstanceId === leaderInstanceId(attack.defenderPlayerId)) {
-    return;
-  }
-  const stillOnField = state.players[attack.defenderPlayerId].board.some(
-    (card) => card.instanceId === attack.targetInstanceId,
-  );
-  if (!stillOnField) resumeMainAfterBattle(state);
+  // The attacker leaving ends the battle the same way: OP13-053
+  // Marshall.D.Teach can trash itself as its own [When Attacking] cost, and
+  // Bandai's OP-13 Q&A (OP13-053#1) ends that battle once the Attack Step is
+  // over, with no Block or Counter Step for the defender.
+  const attackerOnField =
+    attack.attackerInstanceId === leaderInstanceId(attack.attackerPlayerId) ||
+    state.players[attack.attackerPlayerId].board.some(
+      (card) => card.instanceId === attack.attackerInstanceId,
+    );
+  const targetOnField =
+    attack.targetInstanceId === leaderInstanceId(attack.defenderPlayerId) ||
+    state.players[attack.defenderPlayerId].board.some(
+      (card) => card.instanceId === attack.targetInstanceId,
+    );
+  if (!attackerOnField || !targetOnField) resumeMainAfterBattle(state);
 }
 
 /**
