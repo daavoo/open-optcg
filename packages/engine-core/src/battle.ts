@@ -55,6 +55,7 @@ import {
   offerBuggyBlockerEffect,
   handHasType,
   handHasCategory,
+  restLocked,
 } from "./board.js";
 
 import { opensTriggerWindow, resumeMainAfterBattle } from "./pending.js";
@@ -350,7 +351,12 @@ export function onOpponentAttackSources(
       },
       active: true,
     },
-    ...defender.board.map((card) => ({ source: card, active: !card.rested })),
+    // "Active" here means "can pay a cost by resting": a "cannot be rested"
+    // effect takes that away from an active card too.
+    ...defender.board.map((card) => ({
+      source: card,
+      active: !card.rested && !restLocked(state, card),
+    })),
     ...(defender.stage
       ? [{ source: defender.stage, active: !defender.stage.rested }]
       : []),
