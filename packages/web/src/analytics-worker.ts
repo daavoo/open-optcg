@@ -100,12 +100,15 @@ const models = new Map<string, CompactScorerAgent>();
 let gpu: Awaited<ReturnType<typeof requestGpuDevice>> | undefined;
 /**
  * Games a worker plays at once on a GPU, their decisions scored in one batch.
- * A batch of a few already costs about what one decision does, and more games
- * at once only make them finish together, at the end of the run -- the
- * progress bar would sit still and then jump. On the CPU each decision costs
- * the same however they are interleaved, so one at a time.
+ * Every batch pays four readbacks (`CompactGpu.run`, once per stage) whatever
+ * its size, so a batch of a handful is mostly waiting on them; by this many
+ * the transformer blocks' arithmetic is most of a batch's cost. Past that the
+ * GPU's arithmetic is what a run waits on, so more games at once buy little
+ * and only make them finish in clumps -- the progress bar sits still and then
+ * jumps. On the CPU each decision costs the same however they are
+ * interleaved, so one at a time.
  */
-const GPU_CONCURRENT_GAMES = 6;
+const GPU_CONCURRENT_GAMES = 16;
 
 /**
  * The learned model as one deck's seat: the deck adapter its list matches,
