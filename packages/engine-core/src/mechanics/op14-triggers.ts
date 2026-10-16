@@ -715,6 +715,9 @@ export const op14TriggerMechanics: SetMechanics = {
       // straight back off, so the net effect is to run a card off the top of the
       // deck through the Trigger window. `[Opponent's Turn]` is a `turn-player`
       // gate, the same way EB03-055's `[On K.O.]` reads it.
+      //
+      // "Up to 1" makes the Life card optional and the damage not: Bandai's
+      // OP14-115 Q&A rules that declining the add still takes the damage.
       "OP14-115",
       {
         effect: {
@@ -722,7 +725,10 @@ export const op14TriggerMechanics: SetMechanics = {
           condition: { kind: "turn-player", player: "opponent" },
           then: {
             kind: "sequence",
-            effects: [topDeckToLife, { kind: "deal-damage", player: "self" }],
+            effects: [
+              { kind: "optional", effect: topDeckToLife },
+              { kind: "deal-damage", player: "self" },
+            ],
           },
         },
       },
