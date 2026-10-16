@@ -1602,6 +1602,17 @@ export type MechanicEffect =
        * `attach-don` note above for why the two readings are not the same.
        */
       from?: "active" | "rested" | "cost-area";
+      /**
+       * A gift of DON!! to the Leader or a Character of the DON!!'s owner
+       * (OP15-003 Alvida, OP15-010 Nezumi, OP15-012 Buggy, OP15-017 Morgan,
+       * OP15-023 Arlong): the DON!! may be either player's, and goes to a card
+       * of whoever owns it. Bandai's OP-15 Q&A rules both directions legal and
+       * crossing over illegal (OP15-010 Q1 and Q3), so the recipient choice
+       * spans both boards and the recipient's owner decides whose pile pays.
+       * `player` then names only the side whose cards are listed first; the
+       * activating player makes the choice either way.
+       */
+      eitherOwner?: true;
     }
   | {
       kind: "restrict";
@@ -2403,6 +2414,12 @@ export type MechanicPendingChoice =
        * pile: the active one, or the whole cost area.
        */
       from?: "active" | "cost-area";
+      /**
+       * Set only for an "its owner's" gift: `eligibleInstanceIds` then spans
+       * both players' cards, and each DON!! comes out of the recipient's
+       * owner's pile rather than `playerId`'s.
+       */
+      eitherOwner?: true;
     };
 
 export interface MechanicResult {

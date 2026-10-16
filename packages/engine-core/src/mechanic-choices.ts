@@ -24,6 +24,7 @@ import {
   flatten,
   formatOrderOption,
   formatSplitOrderOption,
+  opponentOf,
   orderReactionOptions,
   parseFaceDownOption,
   parseOrderOption,
@@ -462,10 +463,27 @@ export function resolveMechanicChoice(
       if (!pending.eligibleInstanceIds.includes(optionId)) {
         throw new Error(`INVALID_MECHANIC_OPTION: ${optionId}`);
       }
-      const player = state.players[pending.playerId];
+      // The recipient's owner pays: under "its owner's" (`eitherOwner`) an
+      // opposing card takes one of the opponent's DON!!, never the chooser's.
+      const ownerId: PlayerId =
+        pending.eitherOwner &&
+        (optionId === `${opponentOf(pending.playerId)}-leader` ||
+          state.players[opponentOf(pending.playerId)].board.some(
+            (card) => card.instanceId === optionId,
+          ))
+          ? opponentOf(pending.playerId)
+          : pending.playerId;
+      const player = state.players[ownerId];
+      // Which pile a "from the cost area" gift drains is the chooser's call
+      // (OP15-023 Q2 and Q3). Out of the opponent's area an active DON!! is
+      // the one that costs them something; out of the chooser's own, a rested
+      // one leaves the active DON!! still able to pay for something.
       const pools =
         pending.from === "cost-area"
-          ? [player.activeDon, player.restedDon]
+          ? pending.eitherOwner &&
+            ownerId === pending.execution.context.sourcePlayerId
+            ? [player.restedDon, player.activeDon]
+            : [player.activeDon, player.restedDon]
           : pending.from === "active"
             ? [player.activeDon]
             : [player.restedDon];
@@ -474,7 +492,7 @@ export function resolveMechanicChoice(
         if (moved.length >= pending.count) break;
         moved.push(...pool.splice(0, pending.count - moved.length));
       }
-      if (optionId === `${pending.playerId}-leader`) {
+      if (optionId === `${ownerId}-leader`) {
         player.leaderAttachedDon.push(...moved);
       } else {
         const target = player.board.find(
@@ -486,7 +504,7 @@ export function resolveMechanicChoice(
       }
       events.push({
         type: "don-attached",
-        playerId: pending.playerId,
+        playerId: ownerId,
         targetInstanceId: optionId,
         count: moved.length,
       });

@@ -215,11 +215,19 @@ export const op15BattleMechanics: SetMechanics = {
       // OP15-012 Buggy: "[printed text omitted -- pnpm card:text OP15-012]" Its `[On K.O.]` half is in
       // `op15-triggers.ts`.
       //
-      // Attacking rests DON!! to pay for nothing here -- the DON!! this recovers
-      // is whatever was rested earlier in the turn, and putting it on the
-      // attacker mid-attack is what makes Buggy a tempo card.
+      // "Its owner's", so either player's rested DON!! to a card of its owner's
+      // (OP15-012 Q1, Q4): one of your own spent DON!! onto the attacker
+      // mid-attack, or one of the opponent's onto their board for the East
+      // Blue cards that read given DON!! on opposing Characters.
       "OP15-012",
-      { effect: { kind: "give-rested-don", player: "self", count: 1 } },
+      {
+        effect: {
+          kind: "give-rested-don",
+          player: "self",
+          count: 1,
+          eitherOwner: true,
+        },
+      },
     ],
     [
       // OP15-111 Mont Blanc Noland: "[printed text omitted -- pnpm card:text OP15-111]"
