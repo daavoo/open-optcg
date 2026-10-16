@@ -840,30 +840,30 @@ export const op13OnPlayMechanics: SetMechanics = {
     [
       // OP13-108 Jewelry Bonney: "[printed text omitted -- pnpm card:text OP13-108]"
       //
-      // The compensation is not conditional on the Leader -- it is a separate
-      // sentence -- so a 9-cost body played behind the wrong Leader still hands a
-      // card over. Yellow's own plan wants their Life low anyway.
+      // The opponent's Life-to-hand is the "Then" of the {Egghead} Leader
+      // condition, not a sentence of its own: Bandai's OP-13 Q&A (OP13-108#1)
+      // has no card handed over behind any other Leader.
       "OP13-108",
       {
         effect: {
-          kind: "sequence",
-          effects: [
-            {
-              kind: "if",
-              condition: {
-                kind: "leader-has-type",
-                player: "self",
-                type: "Egghead",
-              },
-              then: {
+          kind: "if",
+          condition: {
+            kind: "leader-has-type",
+            player: "self",
+            type: "Egghead",
+          },
+          then: {
+            kind: "sequence",
+            effects: [
+              {
                 kind: "grant-keyword",
                 binding: SOURCE_BINDING,
                 keyword: "Rush",
                 expiresAfterTurns: 0,
               },
-            },
-            opponentLifeToTheirHand("op13-bonney-life"),
-          ],
+              opponentLifeToTheirHand("op13-bonney-life"),
+            ],
+          },
         },
       },
     ],

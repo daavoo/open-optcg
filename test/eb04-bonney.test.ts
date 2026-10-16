@@ -802,14 +802,16 @@ describe("OP13-108 Jewelry Bonney", () => {
 
     // EB04-001 carries {Egghead}, so the 10000 body can swing immediately.
     expect(hasKeyword(game.state, "p1", "bonney", "Rush")).toBe(true);
-    // The compensation is a separate sentence and is not conditional on it.
+    // ...and the "Then" hands the opponent their top Life card.
     expect(game.state.players.p2.life).toHaveLength(opposingLife - 1);
     expect(game.state.players.p2.hand.map((card) => card.instanceId)).toContain(
       topLife,
     );
   });
 
-  it("hands the Life card back even without the {Egghead} Leader", () => {
+  // Bandai's OP-13 Q&A (OP13-108#1): the Life-to-hand is gated with the
+  // [Rush], so behind any other Leader nothing is handed over.
+  it("hands no Life card back without the {Egghead} Leader", () => {
     const game = scenario()
       .decks(OPPONENT, OPPONENT)
       .seed("op13-108-wrong-leader")
@@ -822,7 +824,7 @@ describe("OP13-108 Jewelry Bonney", () => {
     settle(game);
 
     expect(hasKeyword(game.state, "p1", "bonney", "Rush")).toBe(false);
-    expect(game.state.players.p2.life).toHaveLength(opposingLife - 1);
+    expect(game.state.players.p2.life).toHaveLength(opposingLife);
   });
 });
 
