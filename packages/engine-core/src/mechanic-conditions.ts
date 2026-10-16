@@ -735,7 +735,10 @@ export function conditionMatches(
       bindings,
       db,
     ).map((card) => card.instanceId);
-    return characters.every((card) => matching.includes(card.instanceId));
+    return (
+      characters.length > 0 &&
+      characters.every((card) => matching.includes(card.instanceId))
+    );
   }
   if (condition.kind === "battle-target") {
     const attack = state.activeAttack;

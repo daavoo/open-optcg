@@ -244,6 +244,8 @@ describe("The Five Elders' trash-count statics", () => {
           .atTurn(11, { active: "p1" })
           .bareTable()
           .withLeader("p1", "OP13-079")
+          // OP13-097 needs a {Celestial Dragons} Character of its own.
+          .withBoard("p1", [character("jalmac", "OP13-085")])
           .withBoard("p2", [character(id, cardNumber)])
           .withTrash("p2", mill(trash))
           .withHand("p1", [instance("removal", removal)])

@@ -504,6 +504,8 @@ describe("sequencing the Leader's refund", () => {
 
   it("refunds the moment two DON!! are rested, before the next play", async () => {
     const game = luffyTurn({
+      // The refund needs an {Impel Down} body on the board to be offered.
+      selfBoard: [character("prisoner", "OP16-042", { rested: true })],
       hand: [instance("mr1", MR_1)],
       don: { rested: 2 },
     }).build();
