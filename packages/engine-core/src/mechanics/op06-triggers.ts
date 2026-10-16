@@ -34,11 +34,12 @@ import {
   trashFromHand,
 } from "./op06-shared.js";
 import { SOURCE_BINDING } from "../mechanics.js";
+import { asOnPlayTrigger } from "./shared.js";
 
 export const op06TriggerMechanics: SetMechanics = {
   trigger: [
     // OP06-013 Monkey.D.Luffy: the same dig its `[On Play]` runs.
-    ["OP06-013", filmSearch],
+    ["OP06-013", asOnPlayTrigger(filmSearch)],
     [
       // OP06-018 Gum-Gum King Kong Gatling: removal by power off a Life card,
       // where the `[Main]` half is a buff. The two halves of an Event answer

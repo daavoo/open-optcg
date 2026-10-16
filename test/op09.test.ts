@@ -2071,7 +2071,10 @@ describe("OP09-058 Special Muggy Ball", () => {
       .build();
 
     game.play({ summary: "[OP09-058]" });
-    expect(effectOptions(game.state)).toEqual(["reachable", "done"]);
+    // The opponent picks, and must pick one (Bandai's OP09-058 ruling; see
+    // test/faq-op09.test.ts).
+    expect(game.state.activePlayer).toBe("p2");
+    expect(effectOptions(game.state)).toEqual(["reachable"]);
     game.play({ type: "resolve-effect", optionId: "reachable" });
 
     expect(game.state.players.p2.hand.map((card) => card.instanceId)).toEqual([

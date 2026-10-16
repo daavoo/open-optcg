@@ -1176,13 +1176,14 @@ export type MechanicEffect =
       faceUp?: boolean;
       rested?: boolean;
       /**
-       * "You may trash this Character: <effect>" -- a cost paid with the
-       * source's own body, where the printed word is trash and not K.O.
+       * A Character moved from the board to the trash where the printed word
+       * is trash and not K.O.: "You may trash this Character: <effect>", a
+       * cost paid with the source's own body, or an effect that trashes an
+       * opponent's Character outright.
        *
-       * Sets `trashedNotKoed` on the signal, so the card's own `[On K.O.]` is
-       * not dispatched off its own cost. Nothing else in the pool needs it:
-       * every earlier `move` from the board to the trash is a clause that does
-       * mean a K.O.
+       * Sets `trashedNotKoed` on the signal, so the moved card's own
+       * `[On K.O.]` is not dispatched. Without it a `move` from the board to
+       * the trash is read as a K.O.
        */
       trashedNotKoed?: true;
       /**
@@ -2179,6 +2180,14 @@ export type MechanicEffect =
 
 export interface MechanicProgram {
   effect: MechanicEffect;
+  /**
+   * A `[Trigger]` that runs its card's own `[On Play]` -- seven cards print
+   * that, from OP06-013 to OP14-108. Bandai's OP-09 Q&A (OP09-081#1) rules it
+   * is still an [On Play] effect: while the owner's [On Play] effects are
+   * negated, the Trigger can be activated and does nothing. Set through
+   * `asOnPlayTrigger`, read by `createTriggerResult`.
+   */
+  runsOnPlay?: true;
 }
 
 export interface MechanicProgramInvocation {

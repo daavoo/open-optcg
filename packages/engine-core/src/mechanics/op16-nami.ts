@@ -6,6 +6,7 @@
 import { SOURCE_BINDING } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import {
+  asOnPlayTrigger,
   lifeToHandCost,
   playThrillerBarkFromTrashRested,
   preventCostSixAttack,
@@ -748,7 +749,7 @@ export const op16NamiMechanics: SetMechanics = {
       },
     ],
     // OP14-108 Silvers Rayleigh: [Trigger] Activate this card's [On Play] effect.
-    ["OP14-108", rayleighRemoval],
+    ["OP14-108", asOnPlayTrigger(rayleighRemoval)],
     [
       // OP16-119 Marshall.D.Teach: "[printed text omitted -- pnpm card:text OP16-119]"
       //
