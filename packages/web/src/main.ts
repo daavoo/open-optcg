@@ -60,6 +60,11 @@ import * as assetGateScreen from "./screens/asset-gate.js";
 import type { AssetGateContext } from "./screens/asset-gate.js";
 import * as homeScreen from "./screens/home.js";
 import type { HomeContext } from "./screens/home.js";
+import {
+  learnedModelIsFetched,
+  learnedModelText,
+  sendLearnedModel,
+} from "./learned-model.js";
 import * as setupScreen from "./screens/setup.js";
 import type { SeatPilot, SetupContext } from "./screens/setup.js";
 import {
@@ -323,6 +328,9 @@ interface Store {
   analytics: AnalyticsState;
   online: OnlineState;
 }
+
+/** Set once a fetched learned model has failed to arrive; see `learnedModelAvailable`. */
+let learnedModelMissing = false;
 
 const store: Store = {
   game: null,
@@ -717,7 +725,7 @@ const setupDeps: SetupContext = {
     renderSetup();
   },
   llmAvailable: () => store.llm.capability?.available !== false,
-  scorerAvailable: () => __SCORER_AVAILABLE__,
+  scorerAvailable: learnedModelAvailable,
   llmReady: () => llmSettings.ready(store.llm),
   llmProbePending: () => store.llm.capability === null,
   llmUnavailableMessage: () => llmSettings.unavailableMessage(store.llm),
@@ -1121,7 +1129,7 @@ const analyticsDeps: AnalyticsContext = {
   rerender: renderAnalytics,
   goToSetup: showSetup,
   randomSeed,
-  scorerAvailable: () => __SCORER_AVAILABLE__,
+  scorerAvailable: learnedModelAvailable,
 };
 
 function showAnalytics(): void {
@@ -1351,6 +1359,30 @@ onPrintedTextChange(() => {
   postPrintedText();
   if (store.game) renderGame();
 });
+
+// The learned model, where this page fetches it rather than carrying it
+// (`learned-model.ts`): asked for now, in the background, so it is usually in
+// hand before a match against it starts; a seat that is first waits for it.
+sendLearnedModel(store.worker);
+
+/**
+ * Whether to offer the learned model. A page that fetches it stops offering
+ * it once the fetch has failed -- a copy saved to disk, which has no file
+ * beside it, or no network -- so its seats fall back to the rules agents
+ * rather than stopping at the first decision.
+ */
+function learnedModelAvailable(): boolean {
+  return __SCORER_AVAILABLE__ && !learnedModelMissing;
+}
+if (learnedModelIsFetched()) {
+  void learnedModelText().then((text) => {
+    if (text !== null) return;
+    learnedModelMissing = true;
+    // Redrawn only where the choice is on screen; a match in progress keeps
+    // its seats.
+    if (!store.game && document.getElementById("setup-form")) renderSetup();
+  });
+}
 
 /**
  * A seat link: `/play#m=<match>&s=<seat>&t=<token>`.

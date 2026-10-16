@@ -16,9 +16,6 @@ import {
   isCompactPack,
   loadCompact,
   requestGpuDevice,
-  type CompactAdapter,
-  type CompactPack,
-  type ScorerPack,
 } from "@one-piece-sim/agents/scorer";
 import { deckManifests, type DeckManifest } from "@one-piece-sim/decks";
 import {
@@ -28,14 +25,13 @@ import {
   type AnalyticsGame,
   type SampleGame,
 } from "./analytics.js";
-
-/**
- * The learned model's pack and deck adapters, baked in by `tools/build-web.ts`
- * exactly as they are into the game worker (`worker.ts`); null and empty in a
- * build without them, where every run is played by the rules agents.
- */
-declare const __SCORER_PACK__: ScorerPack | CompactPack | null;
-declare const __SCORER_ADAPTERS__: CompactAdapter[];
+import {
+  isLearnedModelMessage,
+  learnedModel,
+  receiveLearnedModel,
+  type LearnedModel,
+  type LearnedModelMessage,
+} from "./learned-model-source.js";
 
 /** Who plays both decks of a run: the rules agents or the learned model. */
 export type AnalyticsPilot = "rules" | "scorer";
@@ -83,13 +79,20 @@ export type AnalyticsResponse =
 
 let activeRunId = 0;
 
-self.addEventListener("message", (event: MessageEvent<AnalyticsRequest>) => {
-  if (event.data.type === "cancel") {
-    activeRunId = 0;
-    return;
-  }
-  void run(event.data);
-});
+self.addEventListener(
+  "message",
+  (event: MessageEvent<AnalyticsRequest | LearnedModelMessage>) => {
+    if (isLearnedModelMessage(event.data)) {
+      receiveLearnedModel(event.data);
+      return;
+    }
+    if (event.data.type === "cancel") {
+      activeRunId = 0;
+      return;
+    }
+    void run(event.data);
+  },
+);
 
 /** One model a deck adapter (or none) makes, decoded once per worker. */
 const models = new Map<string, CompactScorerAgent>();
@@ -110,21 +113,19 @@ const GPU_CONCURRENT_GAMES = 6;
  * seat does.
  */
 function learnedSeat(
+  { pack, adapters }: LearnedModel,
   deckId: string,
   custom: Readonly<Record<string, DeckManifest>>,
 ): Agent {
-  if (!__SCORER_PACK__ || !isCompactPack(__SCORER_PACK__))
-    throw new Error("SCORER_PACK_MISSING");
+  if (!isCompactPack(pack)) throw new Error("SCORER_PACK_MISSING");
   const manifest = custom[deckId] ?? deckManifests[deckId];
-  const adapter = manifest
-    ? adapterFor(__SCORER_ADAPTERS__, manifest)
-    : undefined;
+  const adapter = manifest ? adapterFor(adapters, manifest) : undefined;
   const key = adapter?.deck.id ?? "";
   let model = models.get(key);
   if (!model) {
     if (adapter)
       console.info(`Learned model: the ${adapter.deck.id} deck adapter`);
-    const compact = loadCompact(__SCORER_PACK__, adapter);
+    const compact = loadCompact(pack, adapter);
     model = new CompactScorerAgent(
       gpu ? new CompactBatcher(compact, new CompactGpu(gpu, compact)) : compact,
     );
@@ -142,8 +143,22 @@ async function run(request: RunRequest): Promise<void> {
     runId: request.runId,
     total: request.pairs.length * request.seeds,
   });
-  const learned = request.pilot === "scorer";
-  if (learned && gpu === undefined) gpu = await requestGpuDevice();
+  // Waits for the pack where the page fetches it after drawing; see
+  // `learned-model-source.ts`.
+  let learned: LearnedModel | null = null;
+  if (request.pilot === "scorer") {
+    try {
+      learned = await learnedModel();
+    } catch (error) {
+      post({
+        type: "error",
+        runId: request.runId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+    if (gpu === undefined) gpu = await requestGpuDevice();
+  }
   // This worker's share of the run, in the run's order.
   const games: Array<{
     firstDeck: string;
@@ -179,8 +194,8 @@ async function run(request: RunRequest): Promise<void> {
         ...(learned
           ? {
               agents: {
-                first: learnedSeat(firstDeck, custom),
-                second: learnedSeat(secondDeck, custom),
+                first: learnedSeat(learned, firstDeck, custom),
+                second: learnedSeat(learned, secondDeck, custom),
               },
             }
           : {}),

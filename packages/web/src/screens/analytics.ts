@@ -31,6 +31,7 @@ import {
 } from "../deck-labels.js";
 import { renderDeckLeaderPreview } from "../deck-select.js";
 import { icon } from "../icons.js";
+import { sendLearnedModel } from "../learned-model.js";
 import * as footer from "./footer.js";
 
 /**
@@ -244,6 +245,7 @@ function workerInstances(
         handleMessage(state, ctx, event.data);
       },
     );
+    sendLearnedModel(worker);
     worker.addEventListener("error", () => {
       if (!state.running) return;
       stopSimulation(state);
