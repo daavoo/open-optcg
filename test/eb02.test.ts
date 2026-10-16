@@ -2700,12 +2700,13 @@ describe("EB02-059 Without Your Help I Can't Become the King of the Pirates!!!!"
     expect(boardNumbers(game, "p1")).toEqual(["EB02-029"]);
   });
 
-  it("reaches a [Sanji] of any colour, which the second branch names", () => {
+  it("does not reach a [Sanji] of another colour", () => {
+    // Bandai's Q&A EB02-059#1: "yellow" qualifies the [Sanji] branch too. See
+    // `test/faq-eb01-eb02.test.ts`.
     const game = defending("eb02-059-sanji")
       .withHand("p1", [
         instance("event", "EB02-059"),
-        // OP12-070 Sanji is a 3-cost purple Character, so only the name branch
-        // admits it.
+        // OP12-070 Sanji is a 3-cost purple Character.
         instance("sanji", "OP12-070"),
       ])
       .withBoard("p1", [character("wall", "EB02-029")])
@@ -2715,10 +2716,10 @@ describe("EB02-059 Without Your Help I Can't Become the King of the Pirates!!!!"
       .build();
 
     game.play({ type: "activate-counter-event", eventInstanceId: "event" });
-    game.play({ type: "resolve-effect", optionId: "sanji" });
+    expect(effectOptions(game.state)).not.toContain("sanji");
     settle(game);
 
-    expect(boardNumbers(game, "p1").sort()).toEqual(["EB02-029", "OP12-070"]);
+    expect(boardNumbers(game, "p1")).toEqual(["EB02-029"]);
   });
 });
 

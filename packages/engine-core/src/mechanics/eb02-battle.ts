@@ -51,8 +51,9 @@ export const eb02BattleMechanics: SetMechanics = {
       // board at one Life, which is the position Yellow plays to reach.
       //
       // The `anyOf` is the printed "your yellow {Straw Hat Crew} type Character
-      // cards **or** [Sanji]": the first branch is a colour and a type at once,
-      // the second is a name, and the cost ceiling is conjunctive with both.
+      // cards **or** [Sanji]", and "yellow" qualifies both branches: Bandai's
+      // Q&A (EB02-059#1) rules out a [Sanji] of any other colour. The cost
+      // ceiling is conjunctive with both too.
       "EB02-059",
       {
         cost: 4,
@@ -76,7 +77,7 @@ export const eb02BattleMechanics: SetMechanics = {
                 maxCost: 5,
                 anyOf: [
                   { color: "Yellow", type: "Straw Hat Crew" },
-                  { name: "Sanji" },
+                  { color: "Yellow", name: "Sanji" },
                 ],
               },
               bind: "eb02-059-play",
