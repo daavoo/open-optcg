@@ -786,6 +786,10 @@ export function getMechanicSignalInvocations(
           const moved = db.require(signal.card.cardNumber);
           if (
             signal.from !== rule.signal.from ||
+            // A card put back into the zone it came from -- a Life stack looked
+            // at and reordered -- has not left it, and every watcher here reads
+            // a card *leaving* its zone (Bandai's OP08-105#2).
+            signal.to === signal.from ||
             (rule.signal.to !== undefined && signal.to !== rule.signal.to) ||
             (rule.signal.ko === true && signal.ko !== true) ||
             (rule.signal.movedOwner === "self" &&
