@@ -50,7 +50,7 @@ repo root with `pnpm exec tsx`.
 
 ```bash
 cd ml
-.venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/list_ab.py mon \
+.venv/bin/python ../.claude/skills/evaluate-deck-list/scripts/list_ab.py mon \
   --pilot <adapter ckpt> --opponent-pilot <general ckpt> --against <targets> --seeds 64
 ```
 
@@ -63,9 +63,9 @@ cd ml
 ## 2. The per-card table
 
 ```bash
-.venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/record_traces.py mon \
+.venv/bin/python ../.claude/skills/evaluate-deck-list/scripts/record_traces.py mon \
   --pilot ... --opponent-pilot ... --against ... --seeds 32 --out checkpoints/mon-traces   # 1,024 games, ~5 min
-cd ../.. && pnpm exec tsx ml/bridge/card-usage.ts ml/checkpoints/mon-traces
+cd .. && pnpm exec tsx ml/bridge/card-usage.ts ml/checkpoints/mon-traces
 ```
 
 For each card the table gives:
@@ -140,7 +140,7 @@ removal Events.
 ## 5. Decide with a paired list A/B
 
 ```bash
-.venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/list_ab.py base v1 v2 v3 \
+.venv/bin/python ../.claude/skills/evaluate-deck-list/scripts/list_ab.py base v1 v2 v3 \
   --variants /tmp/variants.json --pilot ... --opponent-pilot ... --against ... --seeds 64
 ```
 
