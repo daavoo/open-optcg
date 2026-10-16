@@ -206,32 +206,5 @@ export function replacementOptionsFor(
     );
   }
 
-  if (definition.types.includes("Revolutionary Army")) {
-    // OP13-008 Emporio.Ivankov: trash itself instead.
-    options.push(
-      ...board
-        .filter((card) => card.cardNumber === "OP13-008")
-        .map((protector) => ({
-          optionId: `ivankov:${optionPrefix}:${protector.instanceId}`,
-          summary: `Trash Emporio.Ivankov instead of K.O. ${targetName}`,
-        })),
-    );
-    // OP13-017 Monkey.D.Dragon: take -2000 power instead, once per turn.
-    options.push(
-      ...board
-        .filter(
-          (card) =>
-            card.cardNumber === "OP13-017" &&
-            !state.oncePerTurn.includes(
-              `${state.turn}:${targetPlayerId}:${card.instanceId}:replacement`,
-            ),
-        )
-        .map((dragon) => ({
-          optionId: `dragon:${optionPrefix}:${dragon.instanceId}`,
-          summary: `Give Monkey.D.Dragon -2000 power instead of removing ${targetName}`,
-        })),
-    );
-  }
-
   return options;
 }

@@ -9,9 +9,9 @@
  * set: `removal: "off-field"` is the whole family, and reading them together is
  * what makes the six different "instead" clauses comparable.
  *
- * OP13-060 Amatsuki Toki and OP13-047 Fossa are OP13's K.O.-only readings,
- * and sit here rather than in a module of their own so the set's replacements
- * stay together.
+ * OP13's K.O.-only readings -- OP13-008 Emporio.Ivankov, OP13-047 Fossa and
+ * OP13-060 Amatsuki Toki -- sit here rather than in a module of their own so
+ * the set's replacements stay together.
  */
 import { type SetMechanics } from "./registry.js";
 
@@ -147,23 +147,70 @@ export const offFieldReplacementMechanics: SetMechanics = {
       },
     ],
     [
+      // OP13-008 Emporio.Ivankov: when the opponent's effect would K.O. one of
+      // your {Revolutionary Army} Characters, you may trash Ivankov instead.
+      //
+      // Ivankov is {Revolutionary Army} itself and may answer its own K.O.:
+      // Bandai's OP-13 Q&A (OP13-008#1) has it trashed rather than K.O.'d, so
+      // nothing keyed on a K.O. fires.
+      "OP13-008",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: false,
+        protects: { category: "character", type: "Revolutionary Army" },
+        label: "Trash Emporio.Ivankov",
+        cost: { kind: "trash-self" },
+      },
+    ],
+    [
+      // OP13-017 Monkey.D.Dragon: once per turn, when the opponent's effect
+      // would remove one of your {Revolutionary Army} Characters from the
+      // field, you may give Dragon -2000 power during this turn instead.
+      //
+      // Dragon pays out of its own power, however small: the Q&A (OP13-017#1)
+      // allows it at 2000 power or less.
+      "OP13-017",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: true,
+        removal: "off-field",
+        protects: { category: "character", type: "Revolutionary Army" },
+        label: "Give Monkey.D.Dragon -2000 power",
+        cost: { kind: "self-power-penalty", amount: -2_000 },
+      },
+    ],
+    [
+      // OP13-047 Fossa: when the opponent's effect would K.O. one of your
+      // Characters whose type includes "Whitebeard Pirates", you may trash
+      // Fossa instead -- itself included (OP13-047#1).
+      "OP13-047",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: false,
+        protects: {
+          category: "character",
+          typeIncluding: "Whitebeard Pirates",
+        },
+        label: "Trash Fossa",
+        cost: { kind: "trash-self" },
+      },
+    ],
+    [
       // OP13-060 Amatsuki Toki: when the opponent's effect would K.O. one of
       // your Characters whose type includes "Roger Pirates", you may trash
       // Toki instead.
       //
-      // The shape OP15-094 Zoro prints: `trash-self` rather than `ko-self`,
-      // since Toki is trashed rather than K.O.'d, and a K.O. is all it answers
-      // -- a bounce or a bury goes through. "A type including", so {Former
-      // Roger Pirates} bodies are covered too. Toki is {Roger Pirates} herself,
-      // and `excludesSelf` keeps her from answering her own K.O.: she would
-      // reach the trash either way, so the offer saves nothing -- the same
-      // reason Zoro carries it.
+      // `trash-self` rather than `ko-self`, since Toki is trashed rather than
+      // K.O.'d, and a K.O. is all it answers -- a bounce or a bury goes
+      // through. "A type including", so {Former Roger Pirates} bodies are
+      // covered too. Toki is {Roger Pirates} herself and may answer her own
+      // K.O. (OP13-060#1): trashed rather than K.O.'d, nothing keyed on a
+      // K.O. fires.
       "OP13-060",
       {
         opponentEffectOnly: true,
         oncePerTurn: false,
         protects: { category: "character", typeIncluding: "Roger Pirates" },
-        excludesSelf: true,
         label: "Trash Amatsuki Toki",
         cost: { kind: "trash-self" },
       },

@@ -689,6 +689,14 @@ export interface ReplacementProgram {
      */
     | { kind: "power-penalty"; amount: number }
     /**
+     * "…you may give this Character −2000 power during this turn instead" --
+     * OP13-017 Monkey.D.Dragon, which shields its whole {Revolutionary Army}
+     * team by shrinking itself. The penalty lands on the protector, where
+     * `power-penalty` charges the threatened card. Always payable: Bandai's
+     * OP-13 Q&A (OP13-017#1) allows it at 2000 power or less.
+     */
+    | { kind: "self-power-penalty"; amount: number }
+    /**
      * "…you may trash 1 card from the top of your Life cards instead" --
      * OP05-100 Enel, whose "would leave the field" is also the widest removal
      * reading in the pool.
