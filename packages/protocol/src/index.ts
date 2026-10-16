@@ -1271,6 +1271,23 @@ export type PublicEvent =
       sourceCardNumber: string;
     }
   | {
+      /**
+       * A Leader or Character was let attack the opponent's active Characters,
+       * not only rested ones, through `expiresAtTurn`.
+       *
+       * The twin of `keyword-granted` for a permission that is not a keyword:
+       * without it the clause writes a turn flag and nothing else, so the
+       * other seat saw an attack on an active Character with no line to say
+       * why. `playerId` owns the card that gained it.
+       */
+      type: "attack-active-granted";
+      playerId: PlayerId;
+      targetInstanceId: string;
+      targetCardNumber: string;
+      expiresAtTurn: number;
+      sourceCardNumber: string;
+    }
+  | {
       type: "damage-taken";
       playerId: PlayerId;
       lifeRemaining: number;
@@ -1857,6 +1874,16 @@ export interface GameObservation {
       /** Keywords an effect handed this Leader for the turn, still in force. */
       grantedKeywords?: GrantedKeywordObservation[];
       /**
+       * The turn through which an effect lets this card attack the opponent's
+       * active Characters as well as rested ones, present only while in force.
+       *
+       * Not a keyword, so `grantedKeywords` cannot carry it, and the printed
+       * text of the card it lands on never mentions it: EB03-008 Hibari hands
+       * it to a Leader, which then attacks an active Character with nothing on
+       * the board to say it could.
+       */
+      attacksActiveUntilTurn?: number;
+      /**
        * Every keyword in force on this Leader right now, from any source.
        *
        * See the board field of the same name: a Leader is the card most often
@@ -1973,6 +2000,16 @@ export interface GameObservation {
        * the ones no amount of reading the card can reveal.
        */
       grantedKeywords?: GrantedKeywordObservation[];
+      /**
+       * The turn through which an effect lets this card attack the opponent's
+       * active Characters as well as rested ones, present only while in force.
+       *
+       * Not a keyword, so `grantedKeywords` cannot carry it, and the printed
+       * text of the card it lands on never mentions it: EB03-008 Hibari hands
+       * it to a Leader, which then attacks an active Character with nothing on
+       * the board to say it could.
+       */
+      attacksActiveUntilTurn?: number;
       /**
        * Every keyword in force on this card right now, from any source:
        * printed, conditional, granted for the turn, or handed over by another
@@ -2142,6 +2179,16 @@ export interface GameObservation {
       /** Keywords an effect handed this Leader for the turn, still in force. */
       grantedKeywords?: GrantedKeywordObservation[];
       /**
+       * The turn through which an effect lets this card attack the opponent's
+       * active Characters as well as rested ones, present only while in force.
+       *
+       * Not a keyword, so `grantedKeywords` cannot carry it, and the printed
+       * text of the card it lands on never mentions it: EB03-008 Hibari hands
+       * it to a Leader, which then attacks an active Character with nothing on
+       * the board to say it could.
+       */
+      attacksActiveUntilTurn?: number;
+      /**
        * Every keyword in force on this Leader right now, from any source.
        *
        * See the board field of the same name: a Leader is the card most often
@@ -2248,6 +2295,16 @@ export interface GameObservation {
        * the ones no amount of reading the card can reveal.
        */
       grantedKeywords?: GrantedKeywordObservation[];
+      /**
+       * The turn through which an effect lets this card attack the opponent's
+       * active Characters as well as rested ones, present only while in force.
+       *
+       * Not a keyword, so `grantedKeywords` cannot carry it, and the printed
+       * text of the card it lands on never mentions it: EB03-008 Hibari hands
+       * it to a Leader, which then attacks an active Character with nothing on
+       * the board to say it could.
+       */
+      attacksActiveUntilTurn?: number;
       /**
        * Every keyword in force on this card right now, from any source:
        * printed, conditional, granted for the turn, or handed over by another

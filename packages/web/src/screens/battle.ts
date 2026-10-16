@@ -1364,6 +1364,7 @@ export function createBattleScreen(
        */
       onPlayNegated?: boolean;
       grantedKeywords?: readonly GrantedKeywordObservation[];
+      attacksActiveUntilTurn?: number;
     },
     active: GameObservation | null,
     size = "normal",
@@ -1479,6 +1480,16 @@ export function createBattleScreen(
     const grantedLabel = granted.length
       ? `, granted ${granted.map((grant) => grant.keyword).join(" and ")} through turn ${Math.max(...granted.map((grant) => grant.expiresAtTurn))}`
       : "";
+    // The same blind spot as a granted keyword, for a permission that is not
+    // one: a Leader under EB03-008 Hibari attacks an active Character, which
+    // its own text says nothing about.
+    const attacksActive =
+      active !== null &&
+      card.attacksActiveUntilTurn !== undefined &&
+      card.attacksActiveUntilTurn >= active.turn;
+    const attacksActiveLabel = attacksActive
+      ? `, can attack active Characters through turn ${card.attacksActiveUntilTurn}`
+      : "";
     const donLabel = attachedDon
       ? `, ${attachedDon} DON!! attached, ${formatCompactStat(power ?? 0)} power`
       : "";
@@ -1520,8 +1531,11 @@ export function createBattleScreen(
         (grant) =>
           `<span class="granted-keyword-badge" title="Granted [${grant.keyword}] through turn ${grant.expiresAtTurn} — ${GRANTED_KEYWORD_CONSEQUENCE[grant.keyword]}">${grant.keyword}</span>`,
       ),
+      attacksActive
+        ? `<span class="granted-keyword-badge" title="Can attack the opponent's active Characters, not only rested ones, through turn ${card.attacksActiveUntilTurn}">Hits active</span>`
+        : "",
     ].filter(Boolean);
-    return `<${element} class="game-card ${size} ${card.rested ? "rested" : ""} ${attackLocked ? "attack-locked" : ""} ${restLocked ? "rest-locked" : ""} ${refreshLocked ? "refresh-locked" : ""} ${attachedDon ? "has-don" : ""} ${actions.length && !boardTargeting() ? "actionable-source" : ""} ${targetOffer ? "valid-target" : ""} ${isSelected ? "selected-source" : ""} ${battleRole} ${art ? "has-art" : ""}" ${attributes} style="--card-color:var(--${color})${art ? `;--card-art:url('${art}')` : ""}" aria-label="${escapeHtml(card.name)}${battleLabel}${blockerLabel}${attackLockLabel}${restLockLabel}${refreshLockLabel}${summoningSickLabel}${negatedLabel}${onPlayNegatedLabel}${grantedLabel}${donLabel}${targetLabel}${costLabel}">
+    return `<${element} class="game-card ${size} ${card.rested ? "rested" : ""} ${attackLocked ? "attack-locked" : ""} ${restLocked ? "rest-locked" : ""} ${refreshLocked ? "refresh-locked" : ""} ${attachedDon ? "has-don" : ""} ${actions.length && !boardTargeting() ? "actionable-source" : ""} ${targetOffer ? "valid-target" : ""} ${isSelected ? "selected-source" : ""} ${battleRole} ${art ? "has-art" : ""}" ${attributes} style="--card-color:var(--${color})${art ? `;--card-art:url('${art}')` : ""}" aria-label="${escapeHtml(card.name)}${battleLabel}${blockerLabel}${attackLockLabel}${restLockLabel}${refreshLockLabel}${summoningSickLabel}${negatedLabel}${onPlayNegatedLabel}${grantedLabel}${attacksActiveLabel}${donLabel}${targetLabel}${costLabel}">
     <span class="card-top"><b>${card.cost ?? "L"}</b><small>${escapeHtml(card.cardNumber)}</small></span>
     ${cost ? `<span class="cost-overlay ${cost.direction}" title="${escapeHtml(cost.title)}"><small>C</small><b>${cost.cost}</b></span>` : ""}
     ${card.blocker ? `<span class="blocker-badge" title="Blocker ready">${icon("shield", "Blocker ready")}</span>` : ""}
@@ -3156,6 +3170,8 @@ export function createBattleScreen(
         };
       case "keyword-granted":
         return { icon: "zap", label: `Granted [${event.keyword}]` };
+      case "attack-active-granted":
+        return { icon: "zap", label: "Can attack active Characters" };
       case "attack-prevented":
         return { icon: "ban", label: "Stopped from attacking" };
       case "refresh-prevented":
@@ -3403,6 +3419,11 @@ export function createBattleScreen(
         return {
           icon: "zap",
           label: `${observationCardName(observation, event.targetInstanceId)} gained [${event.keyword}]`,
+        };
+      case "attack-active-granted":
+        return {
+          icon: "zap",
+          label: `${observationCardName(observation, event.targetInstanceId)} can attack active Characters this turn`,
         };
       case "attack-prevented":
         return {
@@ -3691,6 +3712,12 @@ export function createBattleScreen(
           cardNumber: event.targetCardNumber,
           icon: "zap",
           label: `Gained [${event.keyword}]`,
+        };
+      case "attack-active-granted":
+        return {
+          cardNumber: event.targetCardNumber,
+          icon: "zap",
+          label: "Can attack active Characters this turn",
         };
       case "attack-prevented":
         return {

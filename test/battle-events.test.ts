@@ -145,6 +145,21 @@ describe("event prose", () => {
     expect(text).toContain("Monkey.D.Luffy");
   });
 
+  it("says which card was let attack active Characters, and by what", () => {
+    const granted: PublicEvent = {
+      type: "attack-active-granted",
+      playerId: "p2",
+      targetInstanceId: "p2-leader",
+      targetCardNumber: "OP11-001",
+      expiresAtTurn: 4,
+      sourceCardNumber: "EB03-008",
+    };
+    const text = eventText(granted, "p1");
+    expect(text).toContain("Hibari");
+    expect(text).toContain("attack active Characters");
+    expect(text).toContain("through turn 4");
+  });
+
   it("does not repeat a Trigger reveal's own number as its source", () => {
     const revealed: PublicEvent = {
       type: "card-revealed",

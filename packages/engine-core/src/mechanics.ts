@@ -2317,6 +2317,14 @@ export function continueExecution(
         if (leaderPlayerId) {
           state.players[leaderPlayerId].leaderAttacksActiveUntilTurn =
             expiresAtTurn;
+          events.push({
+            type: "attack-active-granted",
+            playerId: leaderPlayerId,
+            targetInstanceId: instanceId,
+            targetCardNumber: state.players[leaderPlayerId].leaderCardNumber,
+            expiresAtTurn,
+            sourceCardNumber: execution.context.source.cardNumber,
+          });
           continue;
         }
         const target = [
@@ -2325,6 +2333,14 @@ export function continueExecution(
         ].find((card) => card.instanceId === instanceId);
         if (!target) throw new Error(`MISSING_MECHANIC_CARD: ${instanceId}`);
         target.attacksActiveUntilTurn = expiresAtTurn;
+        events.push({
+          type: "attack-active-granted",
+          playerId: state.players.p1.board.includes(target) ? "p1" : "p2",
+          targetInstanceId: target.instanceId,
+          targetCardNumber: target.cardNumber,
+          expiresAtTurn,
+          sourceCardNumber: execution.context.source.cardNumber,
+        });
       }
       continue;
     }

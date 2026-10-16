@@ -390,6 +390,8 @@ export function eventText(
       return `${cardLabel(event.sourceCardNumber)} kept ${cardLabel(event.targetCardNumber)} rested through turn ${event.expiresAtTurn} — it will not become active in the Refresh Phase.`;
     case "keyword-granted":
       return `${cardLabel(event.sourceCardNumber)} gave ${cardLabel(event.targetCardNumber)} [${event.keyword}] through turn ${event.expiresAtTurn} — ${GRANTED_KEYWORD_CONSEQUENCE[event.keyword]}.`;
+    case "attack-active-granted":
+      return `${cardLabel(event.sourceCardNumber)} let ${cardLabel(event.targetCardNumber)} attack active Characters through turn ${event.expiresAtTurn} — not only rested ones.`;
     case "effect-negated":
       return `${cardLabel(event.sourceCardNumber)} negated ${cardLabel(event.targetCardNumber)}'s effects through turn ${event.expiresAtTurn}.`;
     case "card-moved":

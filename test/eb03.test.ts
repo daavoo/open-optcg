@@ -4,6 +4,7 @@ import {
   effectiveCost,
   getLegalActions,
   hasKeyword,
+  observe,
 } from "@one-piece-sim/engine-core";
 import type { GameState } from "@one-piece-sim/engine-core";
 import {
@@ -530,6 +531,35 @@ describe("EB03-008 Hibari", () => {
     expect(game.state.players.p1.leaderAttacksActiveUntilTurn).toBe(
       game.state.turn,
     );
+  });
+
+  it("announces the grant and shows it on the Leader to both seats", () => {
+    // The grant writes a turn flag and nothing else, so from the other seat a
+    // Leader simply attacked an active Character: the event is the log line
+    // and the toast, and the observation field is the badge and the popup row.
+    const game = table("eb03-008-visible")
+      .withLeader("p1", "OP11-001")
+      .withHand("p1", [instance("hibari", "EB03-008")])
+      .withBoard("p2", [character("active", "EB03-030")])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "EB03-008" });
+    settle(game);
+
+    expect(game.events).toContainEqual({
+      type: "attack-active-granted",
+      playerId: "p1",
+      targetInstanceId: "p1-leader",
+      targetCardNumber: "OP11-001",
+      expiresAtTurn: game.state.turn,
+      sourceCardNumber: "EB03-008",
+    });
+    expect(observe(game.state, "p1").self.leader.attacksActiveUntilTurn).toBe(
+      game.state.turn,
+    );
+    expect(
+      observe(game.state, "p2").opponent.leader.attacksActiveUntilTurn,
+    ).toBe(game.state.turn);
   });
 
   it("offers nothing to a Leader without the type", () => {
