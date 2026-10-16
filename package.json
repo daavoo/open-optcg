@@ -99,18 +99,18 @@
     "@one-piece-sim/engine-core": "workspace:*",
     "@one-piece-sim/protocol": "workspace:*",
     "@one-piece-sim/referee": "workspace:*",
-    "@playwright/test": "^1.62.1",
-    "@types/node": "^26.4.1",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
     "esbuild": "^0.28.2",
-    "eslint": "^10.9.1",
+    "eslint": "^10.12.0",
     "fflate": "0.8.3",
     "miniflare": "4.20260730.0",
     "postject": "1.0.0-alpha.6",
-    "prettier": "^3.6.2",
-    "sharp": "^0.35.4",
-    "tsx": "^4.23.13",
+    "prettier": "^3.9.10",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.69.0",
-    "vitest": "^4.1.11"
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.4"
   }
 }
