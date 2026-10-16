@@ -685,6 +685,9 @@ function visibleBoard(
         : { cannotRefreshUntilTurn: instance.cannotRefreshUntilTurn }),
       ...(effectsNegated(state, instance.instanceId) ? { negated: true } : {}),
       ...(grants.length ? { grantedKeywords: grants } : {}),
+      ...((instance.attacksActiveUntilTurn ?? -1) >= state.turn
+        ? { attacksActiveUntilTurn: instance.attacksActiveUntilTurn }
+        : {}),
       effectiveKeywords: effectiveKeywords(
         state,
         playerId,
@@ -848,6 +851,9 @@ function visibleLeader(
     // A Leader has no BoardCard, so its turn-scoped grants live on the
     // player -- see `leaderUnblockableUntilTurn`.
     ...(leaderGrants.length ? { grantedKeywords: leaderGrants } : {}),
+    ...((player.leaderAttacksActiveUntilTurn ?? -1) >= state.turn
+      ? { attacksActiveUntilTurn: player.leaderAttacksActiveUntilTurn }
+      : {}),
     effectiveKeywords: effectiveKeywords(
       state,
       playerId,

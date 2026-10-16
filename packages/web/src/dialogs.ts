@@ -69,6 +69,13 @@ export interface ObservedPowerDetails {
    */
   grantedKeywords?: GrantedKeywordObservation[];
   /**
+   * The turn through which an effect lets this card attack active Characters.
+   *
+   * The same question as `grantedKeywords` answers -- "how did that attack?"
+   * -- for a permission that is not a keyword, so it needs its own row.
+   */
+  attacksActiveUntilTurn?: number;
+  /**
    * Every keyword in force on the card, from any source.
    *
    * `grantedKeywords` above covers the turn-scoped grants and nothing else, so a
@@ -285,10 +292,14 @@ export function renderCardStatusBadges(
         `<div class="ability-status active" role="status"><span>${icon("sparkles", `${keyword} from another card`)}</span><div><b>[${keyword}] from another card</b><small>Lasts while that card's condition holds · ${escapeHtml(GRANTED_KEYWORD_CONSEQUENCE[keyword])}</small></div></div>`,
     )
     .join("");
+  const attacksActiveBadge =
+    powerDetails?.attacksActiveUntilTurn === undefined
+      ? ""
+      : `<div class="ability-status active" role="status"><span>${icon("sparkles", "Can attack active Characters")}</span><div><b>Can attack active Characters this turn</b><small>Through turn ${powerDetails.attacksActiveUntilTurn} · it may attack the opponent's active Characters, not only rested ones</small></div></div>`;
   const immunityBadge = removalImmunity
     ? `<div class="ability-status ${removalImmunity.active ? "active" : "inactive"}" role="status"><span>${icon("shield", "Removal immunity")}</span><div><b>Opponent-effect removal immunity ${removalImmunity.active ? "active" : "inactive"}</b><small>${removalImmunity.fieldDon} field DON!! ${removalImmunity.active ? "(6 or fewer)" : "(requires 6 or fewer)"}</small></div></div>`
     : "";
-  return `${grantedBadges}${auraBadges}${immunityBadge}`;
+  return `${grantedBadges}${attacksActiveBadge}${auraBadges}${immunityBadge}`;
 }
 
 /**

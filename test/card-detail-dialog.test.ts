@@ -99,6 +99,24 @@ describe("card detail popup", () => {
     expect(html).not.toContain("power-breakdown");
   });
 
+  it("says a card may attack active Characters, which no keyword row can", () => {
+    // EB03-008 Hibari hands this to a {SWORD} Leader for the turn; the
+    // Leader's own text says nothing about it.
+    const html = renderCardDetailDialog(
+      { cardDetailCard: "OP11-001", cardDetailInstance: "p2-leader" },
+      {
+        currentPower: 5_000,
+        attachedDon: 0,
+        attachedDonApplies: true,
+        powerModifiers: [],
+        staticPowerModifiers: [],
+        attacksActiveUntilTurn: 4,
+      },
+    );
+    expect(html).toContain("Can attack active Characters this turn");
+    expect(html).toContain("Through turn 4");
+  });
+
   it("says a keyword came from another card, which neither text nor a grant can", () => {
     // OP16-001 Ace under OP16-003 Edward.Newgate: the Leader has [Double Attack]
     // and its own text says nothing about it, the way a granted keyword does not
