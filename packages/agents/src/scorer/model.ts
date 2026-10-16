@@ -1,7 +1,7 @@
 /**
  * The System-1 scorer's forward pass, in plain TypeScript.
  *
- * A ModernBERT-style encoder (research/system1/sys1/model.py) reads one packed
+ * A ModernBERT-style encoder (ml/sys1/model.py) reads one packed
  * decision -- `[CLS] state [SEP]` then each legal action's tokens -- and
  * returns a probability per action and a value for the seat to move. Written
  * out rather than run on a tensor library so the single-file app needs no

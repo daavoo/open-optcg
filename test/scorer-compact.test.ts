@@ -6,7 +6,7 @@
  * the model is checked on a tiny pack with deterministic weights: what must
  * hold for any weights -- probabilities over exactly the offered options,
  * unchanged by the order the options or cards arrive in -- and that the seat
- * finishes a real game choosing only legal actions. research/system1's
+ * finishes a real game choosing only legal actions. ml's
  * `bridge/parity-compact.ts` checks a trained pack against MLX.
  */
 import { describe, expect, it } from "vitest";

@@ -97,7 +97,8 @@ export interface SealedContext {
   applyTheme(): void;
   beginMatch(config: MatchConfig): void;
   randomSeed(): string;
-  learnedSealedPolicyAvailable(): boolean;
+  /** Whether the System-1 scorer can pilot a seat; see `setup.ts`. */
+  scorerAvailable(): boolean;
   /** Re-renders whichever sealed view (lobby or builder) is on screen. */
   rerender(): void;
   goHome(): void;
@@ -281,20 +282,18 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
 
 /**
  * The strongest pilot this build can actually offer, which is the same
- * reasoning the 1v1 lobby's default follows. The learned policy sits between
- * the two rather than being the demo's special case: it beats the heuristic
- * agent about 77% of the time, so where the LLM cannot be reached -- a hosted
- * page, the artifact opened from disk -- it is the better game.
+ * reasoning the 1v1 lobby's default follows: the learned model where the build
+ * carries one, the heuristic agent otherwise.
  *
  * Exported because a run started while the capability probe was still in
  * flight has to be re-answered when it lands, and the answer must not drift
  * from the one a fresh run gets.
  */
 export function strongestPilot(
-  ctx: Pick<SealedContext, "llmAvailable" | "learnedSealedPolicyAvailable">,
+  ctx: Pick<SealedContext, "llmAvailable" | "scorerAvailable">,
 ): Exclude<ControllerKind, "human"> {
   if (ctx.llmAvailable()) return "llm";
-  return ctx.learnedSealedPolicyAvailable() ? "learned" : "rules";
+  return ctx.scorerAvailable() ? "scorer" : "rules";
 }
 
 export function beginRun(
@@ -379,8 +378,8 @@ export function normalizeOpponentController(
   if (ctx.llmUnreachable() && state.run.opponentController === "llm")
     state.run.opponentController = strongestPilot(ctx);
   if (
-    !ctx.learnedSealedPolicyAvailable() &&
-    state.run.opponentController === "learned"
+    !ctx.scorerAvailable() &&
+    state.run.opponentController === "scorer"
   )
     state.run.opponentController = "rules";
 }
@@ -437,8 +436,8 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
         <select id="p2-controller">
           <option value="rules" ${run.opponentController === "rules" ? "selected" : ""}>Heuristics</option>
           ${
-            ctx.learnedSealedPolicyAvailable()
-              ? `<option value="learned" ${run.opponentController === "learned" ? "selected" : ""}>Learned model (RL-trained, ~77% vs Heuristics)</option>`
+            ctx.scorerAvailable()
+              ? `<option value="scorer" ${run.opponentController === "scorer" ? "selected" : ""}>Learned model</option>`
               : ""
           }
           <option value="llm" ${run.opponentController === "llm" ? "selected" : ""}>${ctx.llmUnreachable() ? "LLM (You need to run it locally, this opens setup docs)" : "LLM"}</option>

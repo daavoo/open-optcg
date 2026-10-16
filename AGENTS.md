@@ -24,7 +24,7 @@ packages/referee       online 1v1: referee and match host, reached by seat links
 packages/web           the browser app (built into one HTML file)
 packages/cli           terminal play
 tools/                 build, data fetching, simulation and analysis scripts
-ml/                    an experimental reinforcement-learning sidecar (Python)
+ml/                    the learned opponent's training (System-1 scorer, Python/MLX)
 test/                  the suite; card tests mirror the coverage gates
 test/support/          the scenario builder every new test should use
 ```

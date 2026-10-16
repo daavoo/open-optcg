@@ -12,7 +12,7 @@ import type { DeckManifest } from "./index.js";
  * Nami, OP13-027 Sanji, EB04-007 Zoro, OP14-022 Usopp and ST31-005 at four,
  * ST21-003 Sanji, and OP08-036 Electrical Luna. The deck keeps the "- Open OPTCG" id it shipped
  * with, under which a maintainer-supplied list ran until 12 Oct 2026; that
- * list is a training variant in `research/system1/bridge/deck-variants.ts`.
+ * list is a training variant in `ml/bridge/deck-variants.ts`.
  * Every identity is already stamped by `pnpm reference:audit`, so the deck
  * needs no audit entry of its own.
  *

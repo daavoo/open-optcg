@@ -1,7 +1,7 @@
 """How much has the model learned each card: how far its card-table row has
 moved from the table the compact models started from, against every card's.
 
-    cd research/system1 && .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/card_knowledge.py \
+    cd ml && .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/card_knowledge.py \
         checkpoints/v4-ppo/final OP16-069 OP09-119 ST26-005 [--adapter checkpoints/lora-mon-cards/final]
 
 A row that has barely moved is a card the model knows only by its start (a

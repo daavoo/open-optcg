@@ -236,11 +236,6 @@ export class EnelRulesAgent extends RegistryRulesAgent {
 }
 
 export {
-  LearnedSealedAgent,
-  type LearnedPolicyLayer,
-  type LearnedSealedPolicyWeights,
-} from "./learned-sealed-agent.js";
-export {
   chooseGenericBlock,
   chooseGenericCounter,
   chooseGenericRules,

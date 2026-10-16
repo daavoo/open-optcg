@@ -19,7 +19,6 @@ export type ControllerKind =
   | "llm"
   | "random"
   | "first"
-  | "learned"
   /** The System-1 scorer running in the worker. See `@one-piece-sim/agents/scorer`. */
   | "scorer"
   /**

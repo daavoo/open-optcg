@@ -1021,7 +1021,7 @@ const sealedDeps: SealedContext = {
   applyTheme,
   beginMatch,
   randomSeed,
-  learnedSealedPolicyAvailable: () => __LEARNED_SEALED_POLICY_AVAILABLE__,
+  scorerAvailable: learnedModelAvailable,
   rerender: () => {
     if (store.sealed.run) renderSealedBuilder();
     else showSealedLobby();

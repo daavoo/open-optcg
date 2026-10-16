@@ -1,9 +1,0 @@
-.venv/
-checkpoints/
-__pycache__/
-*.zip
-
-# Mypy and ruff caches under ml/python.
-.mypy_cache/
-.ruff_cache/
-snapshots/

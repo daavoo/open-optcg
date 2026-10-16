@@ -34,7 +34,7 @@ function stubContext(overrides: Partial<SealedContext> = {}): SealedContext {
     applyTheme: () => {},
     beginMatch: () => {},
     randomSeed: () => "match-test",
-    learnedSealedPolicyAvailable: () => false,
+    scorerAvailable: () => false,
     rerender: () => {},
     goHome: () => {},
     ...overrides,
@@ -142,7 +142,7 @@ describe("sealed screen render", () => {
       expect(
         opened({
           llmAvailable: () => true,
-          learnedSealedPolicyAvailable: () => true,
+          scorerAvailable: () => true,
         }),
       ).toBe("llm");
     });
@@ -151,16 +151,16 @@ describe("sealed screen render", () => {
       expect(
         opened({
           llmAvailable: () => false,
-          learnedSealedPolicyAvailable: () => true,
+          scorerAvailable: () => true,
         }),
-      ).toBe("learned");
+      ).toBe("scorer");
     });
 
     it("falls to the rules agent where this build ships no policy", () => {
       expect(
         opened({
           llmAvailable: () => false,
-          learnedSealedPolicyAvailable: () => false,
+          scorerAvailable: () => false,
         }),
       ).toBe("rules");
     });
@@ -177,10 +177,10 @@ describe("sealed screen render", () => {
       stubContext({
         llmUnreachable: () => true,
         llmAvailable: () => false,
-        learnedSealedPolicyAvailable: () => true,
+        scorerAvailable: () => true,
       }),
     );
-    expect(state.run!.opponentController).toBe("learned");
+    expect(state.run!.opponentController).toBe("scorer");
   });
 
   it("shows an inline message when one is set", () => {

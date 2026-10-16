@@ -3,7 +3,7 @@
  * triggers nothing -- and only that attack.
  *
  * Each case is a position the dominance rule has to get right, measured
- * against the engine by research/system1/bridge/attack-audit.ts: a vanilla
+ * against the engine by ml/bridge/attack-audit.ts: a vanilla
  * body swinging short is pruned; a Leader swinging short, an attacker whose
  * rest triggers a draw (ST32-003 Mihawk), and an attack that lands are not.
  * The same for a Counter: one the whole hand cannot turn into a save is

@@ -1,6 +1,6 @@
 /**
  * One decision as fixed-width numbers rather than text: the input of the small
- * scorer (`compact-model.ts` here, `research/system1/sys1/compact.py` in
+ * scorer (`compact-model.ts` here, `ml/sys1/compact.py` in
  * training). Training and play share this file, so the model reads in the app
  * exactly what it was trained on.
  *

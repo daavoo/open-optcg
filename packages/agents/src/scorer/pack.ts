@@ -1,7 +1,7 @@
 /**
  * The model pack: everything the in-browser scorer needs, in one JSON value.
  *
- * Written by research/system1/sys1/export_web.py (the text scorer) or
+ * Written by ml/sys1/export_web.py (the text scorer) or
  * export_compact.py (the small scorer, `CompactPack`). Weights travel as one
  * base64 blob of little-endian float16, which is half the size of float32 and
  * decodes in a few milliseconds; each tensor names its offset and shape in it.
@@ -70,7 +70,7 @@ function decodeTensors(
 }
 
 /**
- * The small scorer's pack (`research/system1/sys1/export_compact.py`): the
+ * The small scorer's pack (`ml/sys1/export_compact.py`): the
  * same float16 blob, a `kind` that tells it from the text scorer's, and no
  * tokenizer -- the compact encoding has no text.
  */
@@ -95,7 +95,7 @@ export function isCompactPack(
 }
 
 /**
- * A deck adapter (`research/system1/sys1/export_adapter.py`): a low-rank
+ * A deck adapter (`ml/sys1/export_adapter.py`): a low-rank
  * update of a base pack's blocks and heads, trained piloting one deck. Each
  * adapted layer `<layer>` carries `<layer>.a` (in, rank) and `<layer>.b`
  * (rank, out), already scaled, and plays as `<layer>.w + a @ b`.

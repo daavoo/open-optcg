@@ -21,9 +21,9 @@ training experiments this defers are at the end, so they are not lost.
   any position.
 - **Code:** branch `rules-from-model` (worktree
   `worktrees/rules-from-model`), not yet merged. The census and fork tools
-  are `research/system1/sys1/census.py`, `sys1/forks.py`,
+  are `ml/sys1/census.py`, `sys1/forks.py`,
   `bridge/fork.ts` and `bridge/rules-game.ts`.
-- **Data** (gitignored, under `research/system1/`, which links `data/` and
+- **Data** (gitignored, under `ml/`, which links `data/` and
   `checkpoints/` to `worktrees/system1/research/system1/`):
   - `data/census-long-ppo/`: the 5,304 recorded games;
   - `data/census-long-ppo-report/report.md` and `rows.jsonl.gz`: the census,
@@ -56,7 +56,7 @@ model's evaluation across both -- so the gap is a pointer, not a measurement.
 
 ## What the last training run showed
 
-`long-ppo` (`research/system1/EXPERIMENTS.md` entry 9): `distill-ppo/best`
+`long-ppo` (`ml/EXPERIMENTS.md` entry 9): `distill-ppo/best`
 trained 120 more iterations on all 52 decks, fourteen of them new to it.
 Paired on 3,720 unseen games against the rules agents:
 
@@ -89,18 +89,18 @@ the rules agent -- and would the rules agent win more by making it?
 ```sh
 # From the repo root: 5,304 games in 12 shards.
 for i in $(seq 0 11); do
-  pnpm exec tsx research/system1/bridge/dump.ts --prune --games 442 --shard $i/12 --seed census \
-    --out research/system1/data/census-long-ppo/shard-$(printf %02d $i).jsonl.gz &
+  pnpm exec tsx ml/bridge/dump.ts --prune --games 442 --shard $i/12 --seed census \
+    --out ml/data/census-long-ppo/shard-$(printf %02d $i).jsonl.gz &
 done; wait
-cd research/system1
+cd ml
 .venv/bin/python -m sys1.census data/census-long-ppo --checkpoint checkpoints/long-ppo/best \
   --eval checkpoints/long-eval/long-ppo.json --out data/census-long-ppo-report
 .venv/bin/python -m sys1.forks pick data/census-long-ppo-report data/census-long-ppo \
   --clusters 60 --per 500 --out data/census-forks/targets.jsonl
 for i in $(seq 0 11); do
-  (cd ../.. && pnpm exec tsx research/system1/bridge/fork.ts --shard $i/12 \
-    --targets research/system1/data/census-forks/targets.jsonl \
-    --out research/system1/data/census-forks/result-$(printf %02d $i).jsonl) &
+  (cd ../.. && pnpm exec tsx ml/bridge/fork.ts --shard $i/12 \
+    --targets ml/data/census-forks/targets.jsonl \
+    --out ml/data/census-forks/result-$(printf %02d $i).jsonl) &
 done; wait
 .venv/bin/python -m sys1.forks read data/census-forks/targets.jsonl data/census-forks/result-*.jsonl
 ```

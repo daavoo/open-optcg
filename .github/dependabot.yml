@@ -19,6 +19,6 @@ updates:
       interval: weekly
 
   - package-ecosystem: pip
-    directory: /ml/python
+    directory: /ml
     schedule:
       interval: monthly

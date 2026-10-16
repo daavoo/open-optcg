@@ -82,10 +82,7 @@
     "otari:down": "tsx tools/otari-local.ts down",
     "otari:status": "tsx tools/otari-local.ts status",
     "otari:key": "tsx tools/otari-local.ts key",
-    "otari:env": "tsx tools/otari-local.ts env",
-    "rl:action-table": "tsx ml/bridge/build-action-table.ts",
-    "rl:card-index": "tsx ml/bridge/build-card-index.ts",
-    "rl:server": "tsx ml/bridge/rl-server.ts"
+    "otari:env": "tsx tools/otari-local.ts env"
   },
   "dependencies": {
     "zod": "^4.5.4"

@@ -19,7 +19,7 @@ changed nothing. The win came from a swap the per-card table pointed to:
 points**. A removal Event that read well on paper lost 3.
 
 Scripts live in `scripts/` beside this file. The Python ones run from
-`research/system1` with `.venv/bin/python`, and the TypeScript ones from the
+`ml` with `.venv/bin/python`, and the TypeScript ones from the
 repo root with `pnpm exec tsx`.
 
 ## 0. Know your pilots and your field
@@ -38,7 +38,7 @@ repo root with `pnpm exec tsx`.
 
 - **The field.** A deck list file of the opponents that matter: tournament
   lists, plus anything the user plays. For mon it is
-  `research/system1/checkpoints/lora-eval/mon/targets2.txt`, 16 decks. Weigh
+  `ml/checkpoints/lora-eval/mon/targets2.txt`, 16 decks. Weigh
   whole-field results separately; a list tuned for the meta can lose elsewhere.
 - **Variants** never go in a tracked file. Write scratch manifests to a JSON
   `{id: {id, leader, cards}}` and pass `--variants` (scripts), or set
@@ -49,7 +49,7 @@ repo root with `pnpm exec tsx`.
 ## 1. Baseline, per matchup
 
 ```bash
-cd research/system1
+cd ml
 .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/list_ab.py mon \
   --pilot <adapter ckpt> --opponent-pilot <general ckpt> --against <targets> --seeds 64
 ```
@@ -65,7 +65,7 @@ cd research/system1
 ```bash
 .venv/bin/python ../../.claude/skills/evaluate-deck-list/scripts/record_traces.py mon \
   --pilot ... --opponent-pilot ... --against ... --seeds 32 --out checkpoints/mon-traces   # 1,024 games, ~5 min
-cd ../.. && pnpm exec tsx research/system1/bridge/card-usage.ts research/system1/checkpoints/mon-traces
+cd ../.. && pnpm exec tsx ml/bridge/card-usage.ts ml/checkpoints/mon-traces
 ```
 
 For each card the table gives:
@@ -102,7 +102,7 @@ How to read it:
   - `scripts/card_knowledge.py <general ckpt> <cards>` shows how far each card's
     row has moved from where compact training started. Mon's core moved 0.54–0.72.
     Its three 9 Oct cards moved 0.09–0.16, about the level of cards no list plays.
-  - `research/system1/bridge/deck-candidates.ts --leader <L> --cards <cards>` counts the other training
+  - `ml/bridge/deck-candidates.ts --leader <L> --cards <cards>` counts the other training
     lists that play each card.
 
   A card only this deck plays is learned only through it, and an adapter leaves
@@ -121,7 +121,7 @@ How to read it:
 ## 4. Choose candidates
 
 ```bash
-pnpm exec tsx research/system1/bridge/deck-candidates.ts --leader OP09-061 --deck mon
+pnpm exec tsx ml/bridge/deck-candidates.ts --leader OP09-061 --deck mon
 ```
 
 Prefer cards that meet all four:
@@ -158,7 +158,7 @@ removal Events.
 ## 6. Confirm the mechanism
 
 Before writing up why a swap won, record games of the winning list
-(`record_traces.py --variants`) and run `research/system1/bridge/card-usage.ts` on them.
+(`record_traces.py --variants`) and run `ml/bridge/card-usage.ts` on them.
 
 - Fra-Nosuke and Kamazo were each used as a **Counter about once a game**.
   Fra-Nosuke was never attacked with; Kamazo was played in about 1 game in 10.
@@ -171,7 +171,7 @@ Before writing up why a swap won, record games of the winning list
   by Leader alone, so a new list is already piloted by the deck's adapter.
   There is nothing to ship to play it.
 - **To make it the training list,** edit the deck's manifest in
-  `research/system1/bridge/decks.ts`. Then optionally fine-tune the adapter on it:
+  `ml/bridge/decks.ts`. Then optionally fine-tune the adapter on it:
   `compact_ppo --init <adapter> --lora 16 --train-cards <the list's cards> ...`,
   then `export_adapter`, a parity check, install, and `pnpm web:build`.
 
@@ -191,7 +191,7 @@ When one matchup is far below the rest (mon vs Xebec, 6–8%):
 
 2. **Record and analyse about 100 games.**
    - Record with `record_traces.py --against` a file holding just that deck.
-   - Render readable logs with `pnpm exec tsx research/system1/bridge/trace-text.ts <dir>`.
+   - Render readable logs with `pnpm exec tsx ml/bridge/trace-text.ts <dir>`.
    - Hand the logs to an analysis agent. Ask for: how games are lost (turn, mechanism), the
      opponent's key cards, recurring misplays with counts and file+turn examples, what the
      wins have in common, a structural-or-fixable verdict, and engine-bug suspicions.

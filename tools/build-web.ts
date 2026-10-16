@@ -346,25 +346,7 @@ async function buildWorker(
 }
 
 /**
- * The trained OP17 sealed policy (`ml/python/export_web_policy.py`), inlined
- * into `worker.ts` -- where `LearnedSealedAgent` actually runs -- rather than
- * the main bundle, so a build without it still produces a working artifact:
- * the "Learned model" opponent option just isn't offered (`main.ts` never
- * reads the weights directly).
- */
-const learnedSealedPolicy = await readFile(
-  join(webRoot, "learned-sealed-policy.json"),
-  "utf8",
-).catch(() => null);
-console.log(
-  learnedSealedPolicy
-    ? `Inlined the learned OP17 sealed policy (${Math.round(Buffer.byteLength(learnedSealedPolicy) / 1024)} KB)`
-    : "No learned-sealed-policy.json found; run ml/python/export_web_policy.py " +
-        '(the "Learned model" sealed opponent will be unavailable)',
-);
-
-/**
- * The System-1 scorer's model pack (`research/system1/sys1/export_web.py`).
+ * The System-1 scorer's model pack (`ml/sys1/export_web.py`).
  * Gitignored, since at ~12 MB it would weigh down every clone: `pnpm
  * model:fetch` downloads the published one from the newest `model-*` release,
  * which is what the hosted page's build does.
@@ -389,7 +371,7 @@ if (scorerPack) {
 }
 
 /**
- * Deck adapters over that pack (`research/system1/sys1/export_adapter.py`),
+ * Deck adapters over that pack (`ml/sys1/export_adapter.py`),
  * from `packages/web/src/scorer-adapters/`: gitignored and published like the
  * pack. One trained over a different pack would play nonsense, so it is left
  * out and named.
@@ -436,7 +418,6 @@ const inlinePack = learnedModel ? null : scorerPack;
 const inlineAdapters = learnedModel ? [] : scorerAdapters;
 
 const workerSource = await buildWorker("worker.ts", "EMPTY_WEB_WORKER_BUNDLE", {
-  __LEARNED_SEALED_POLICY__: learnedSealedPolicy ?? "null",
   __SCORER_PACK__: inlinePack ?? "null",
   __SCORER_ADAPTERS__: `[${inlineAdapters.join(",")}]`,
   __SCORER_PACK_BY_MESSAGE__: learnedModel ? "true" : "false",
@@ -470,7 +451,6 @@ const appBuild = await build({
     __BUILT_IN_CARD_ART__: JSON.stringify(builtInCardArt),
     __BUILT_IN_PRINTED_TEXT__: JSON.stringify(builtInPrintedText),
     __MATCH_SERVER__: JSON.stringify(matchServer),
-    __LEARNED_SEALED_POLICY_AVAILABLE__: learnedSealedPolicy ? "true" : "false",
     __SCORER_AVAILABLE__: scorerPack ? "true" : "false",
     __LEARNED_MODEL__: JSON.stringify(learnedModel),
   },

@@ -1,11 +1,9 @@
 import {
   FirstLegalAgent,
   GenericRulesAgent,
-  LearnedSealedAgent,
   RegistryRulesAgent,
   SeededRandomAgent,
   type Agent,
-  type LearnedSealedPolicyWeights,
 } from "@one-piece-sim/agents/local";
 import {
   LlmAgent,
@@ -39,14 +37,6 @@ import { deckManifests, type DeckManifest } from "@one-piece-sim/decks";
 import type { GameObservation } from "@one-piece-sim/protocol";
 import type { ControllerKind } from "./controller.js";
 import { rulesSeatLeader } from "./rules-seat.js";
-
-/**
- * Baked in at build time by `tools/build-web.ts` from
- * `ml/python/export_web_policy.py`'s output, so the worker (bundled
- * separately from the main app, see `buildWorker`) needs no network fetch to
- * play a sealed match against the trained model.
- */
-declare const __LEARNED_SEALED_POLICY__: LearnedSealedPolicyWeights;
 
 /**
  * One loaded scorer shared by every seat that asks for it: the pack decodes
@@ -155,9 +145,6 @@ function createAgent(request: ChooseRequest): Agent {
   if (request.controller === "first") return new FirstLegalAgent();
   if (request.controller === "random") {
     return new SeededRandomAgent(`${request.seed}:${request.agentKey}`);
-  }
-  if (request.controller === "learned") {
-    return new LearnedSealedAgent(__LEARNED_SEALED_POLICY__);
   }
   if (request.controller === "scorer") {
     // The small scorer reads its own deck list: the cards it has yet to draw.
