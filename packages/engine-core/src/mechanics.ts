@@ -2103,7 +2103,6 @@ export function continueExecution(
                   ...eligible.map(({ protector, entry }) => {
                     const bind = `${effect.binding}-replace-${protector.instanceId}`;
                     execution.bindings[bind] = [protector.instanceId];
-                    execution.bindings[`${bind}-threatened`] = [instanceId];
                     const covered = replacementCoveredTargets(
                       state,
                       execution.context.sourcePlayerId,
@@ -2113,6 +2112,14 @@ export function continueExecution(
                       db,
                       "off-field",
                     );
+                    // The threatened card, for an "instead" that acts on it
+                    // (OP11-101), with every card the same answer spares: a
+                    // penalty paid on the threatened card lands on each of
+                    // them (OP05-001#3).
+                    execution.bindings[`${bind}-threatened`] = [
+                      instanceId,
+                      ...covered,
+                    ];
                     return {
                       id: `replace:${protector.instanceId}`,
                       label: `${entry.label} instead of removing ${boardCardNames(state, boardOwner, [instanceId, ...covered], db)}`,
@@ -2979,9 +2986,6 @@ export function continueExecution(
                 ...eligible.map(({ protector, entry }) => {
                   const bind = `${effect.binding}-replace-${protector.instanceId}`;
                   execution.bindings[bind] = [protector.instanceId];
-                  // The threatened card too, for the one entry shape whose
-                  // "instead" moves *it* rather than paying something (OP11-101).
-                  execution.bindings[`${bind}-threatened`] = [instanceId];
                   const covered = replacementCoveredTargets(
                     state,
                     execution.context.sourcePlayerId,
@@ -2991,6 +2995,14 @@ export function continueExecution(
                     db,
                     "ko",
                   );
+                  // The threatened card, for an "instead" that acts on it
+                  // (OP11-101), with every card the same answer spares: a
+                  // penalty paid on the threatened card lands on each of them
+                  // (OP05-001#3).
+                  execution.bindings[`${bind}-threatened`] = [
+                    instanceId,
+                    ...covered,
+                  ];
                   return {
                     id: `replace:${protector.instanceId}`,
                     label: `${entry.label} instead of K.O. ${boardCardNames(state, ownerId, [instanceId, ...covered], db)}`,
