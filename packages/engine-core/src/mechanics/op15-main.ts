@@ -1,5 +1,9 @@
 /** OP15 `[Activate: Main]` programs and `[Main]` Events. */
-import { SOURCE_BINDING, type MechanicProgram } from "../mechanics.js";
+import {
+  SOURCE_BINDING,
+  type MechanicCondition,
+  type MechanicProgram,
+} from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { embarrassingLock, impactDialKo } from "./op15-shared.js";
 import { lookAndAdd, trashForBattlePower } from "./shared.js";
@@ -23,6 +27,31 @@ const aceDebuff: MechanicProgram = {
       expiresAfterTurns: 0,
     },
   },
+};
+
+/**
+ * The price OP15-003 Alvida, OP15-017 Morgan and OP15-023 Arlong print:
+ * moving one of the opponent's rested DON!! onto one of the opponent's
+ * Characters. It needs both an opposing Character and an opposing rested
+ * DON!!, and Bandai rules the ability unusable without either (OP15-003 Q4).
+ *
+ * The outermost condition, so `bareGateCondition` withholds the offer rather
+ * than letting the payoff run with the price unpaid. That is also why the
+ * printed "you may" is not an `optional` around the body: activating is the
+ * yes, and an `optional` under the gate would ask a second time.
+ */
+const OPPONENT_CAN_PAY_DON_PRICE: MechanicCondition = {
+  kind: "all-of",
+  conditions: [
+    { kind: "rested-don", player: "opponent", operator: "gte", value: 1 },
+    {
+      kind: "selector-count",
+      player: "opponent",
+      selector: { zone: "board", category: "character" },
+      operator: "gte",
+      value: 1,
+    },
+  ],
 };
 
 export const op15MainMechanics: SetMechanics = {
@@ -139,17 +168,42 @@ export const op15MainMechanics: SetMechanics = {
     [
       // OP15-010 Nezumi: "[printed text omitted -- pnpm card:text OP15-010]"
       //
-      // "Its owner's" is the owner of the rested DON!!, which is the player
-      // activating this -- the clause moves your own spent DON!! onto your own
-      // board, where it still adds power. `give-rested-don` is the node for it:
-      // the choice between the Leader and a Character is a real one, and a
-      // player with no rested DON!! is offered nothing.
+      // "Its owner's" is the owner of the rested DON!!, which may be either
+      // player (OP15-010 Q1): your own spent DON!! onto your own board, where
+      // it still adds power, or one of the opponent's onto theirs, which is
+      // what the East Blue cards that read given DON!! on opposing Characters
+      // want. `eitherOwner` is that choice; the gate withholds the activation
+      // when neither cost area holds a rested DON!! to move.
       "OP15-010",
       {
         oncePerTurn: true,
-        requires: { fieldDon: 1 },
         program: {
-          effect: { kind: "give-rested-don", player: "self", count: 1 },
+          effect: {
+            kind: "if",
+            condition: {
+              kind: "any-of",
+              conditions: [
+                {
+                  kind: "rested-don",
+                  player: "self",
+                  operator: "gte",
+                  value: 1,
+                },
+                {
+                  kind: "rested-don",
+                  player: "opponent",
+                  operator: "gte",
+                  value: 1,
+                },
+              ],
+            },
+            then: {
+              kind: "give-rested-don",
+              player: "self",
+              count: 1,
+              eitherOwner: true,
+            },
+          },
         },
       },
     ],
@@ -371,35 +425,36 @@ export const op15MainMechanics: SetMechanics = {
         oncePerTurn: true,
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "sequence",
-              effects: [
-                {
-                  kind: "choose",
-                  selector: {
+            kind: "if",
+            condition: OPPONENT_CAN_PAY_DON_PRICE,
+            then: {
+              kind: "choose",
+              selector: {
+                player: "opponent",
+                zone: "board",
+                category: "character",
+              },
+              bind: "op15-alvida-cost",
+              min: 1,
+              max: 1,
+              effect: {
+                kind: "sequence",
+                effects: [
+                  {
+                    kind: "attach-don",
                     player: "opponent",
-                    zone: "board",
-                    category: "character",
+                    from: "rested",
+                    count: 1,
+                    target: { binding: "op15-alvida-cost" },
                   },
-                  bind: "op15-alvida-cost",
-                  min: 1,
-                  max: 1,
-                  effect: {
-                    kind: "sequence",
-                    effects: [
-                      {
-                        kind: "attach-don",
-                        player: "opponent",
-                        from: "rested",
-                        count: 1,
-                        target: { binding: "op15-alvida-cost" },
-                      },
-                      { kind: "give-rested-don", player: "self", count: 1 },
-                    ],
+                  {
+                    kind: "give-rested-don",
+                    player: "self",
+                    count: 1,
+                    eitherOwner: true,
                   },
-                },
-              ],
+                ],
+              },
             },
           },
         },
@@ -408,46 +463,47 @@ export const op15MainMechanics: SetMechanics = {
     [
       // OP15-017 Morgan: "[printed text omitted -- pnpm card:text OP15-017]"
       //
-      // Both halves move *rested* DON!! onto a board, and they move opposite
-      // ways: the cost buries one of the opponent's on a Character of theirs,
-      // the payoff puts one of yours on your own. `requires.fieldDon` cannot
-      // gate the cost -- it is the opponent's DON!! being spent -- so the
-      // `choose` at `min: 1` over their board is what makes an unpayable
-      // activation resolve to nothing.
+      // Both halves move *rested* DON!! onto a board: the cost buries one of
+      // the opponent's on a Character of theirs, and the payoff gives a rested
+      // DON!! of either player to a card of its owner's (OP15-017 Q1, Q3).
+      // The price is the opponent's DON!!, which `requires` cannot gate, so
+      // the outermost `if` withholds the activation when it cannot be paid --
+      // without it the payoff ran on its own (OP15-017 Q4).
       "OP15-017",
       {
         oncePerTurn: true,
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "sequence",
-              effects: [
-                {
-                  kind: "choose",
-                  selector: {
+            kind: "if",
+            condition: OPPONENT_CAN_PAY_DON_PRICE,
+            then: {
+              kind: "choose",
+              selector: {
+                player: "opponent",
+                zone: "board",
+                category: "character",
+              },
+              bind: "op15-morgan-cost",
+              min: 1,
+              max: 1,
+              effect: {
+                kind: "sequence",
+                effects: [
+                  {
+                    kind: "attach-don",
                     player: "opponent",
-                    zone: "board",
-                    category: "character",
+                    from: "rested",
+                    count: 1,
+                    target: { binding: "op15-morgan-cost" },
                   },
-                  bind: "op15-morgan-cost",
-                  min: 1,
-                  max: 1,
-                  effect: {
-                    kind: "sequence",
-                    effects: [
-                      {
-                        kind: "attach-don",
-                        player: "opponent",
-                        from: "rested",
-                        count: 1,
-                        target: { binding: "op15-morgan-cost" },
-                      },
-                      { kind: "give-rested-don", player: "self", count: 1 },
-                    ],
+                  {
+                    kind: "give-rested-don",
+                    player: "self",
+                    count: 1,
+                    eitherOwner: true,
                   },
-                },
-              ],
+                ],
+              },
             },
           },
         },
@@ -456,50 +512,48 @@ export const op15MainMechanics: SetMechanics = {
     [
       // OP15-023 Arlong: "[printed text omitted -- pnpm card:text OP15-023]"
       //
-      // Both halves bury the *opponent's* DON!! on the opponent's own board --
-      // the cost names their rested pile, the payoff names their cost area,
-      // which is both piles and drains the active one first. That is the half
-      // that actually costs them tempo. `give-rested-don` is the same
-      // Leader-or-Character choice, made by the player activating this.
+      // The cost buries one of the opponent's rested DON!! on a Character of
+      // theirs; the payoff gives a DON!! out of either player's cost area,
+      // active or rested, to a card of its owner's (OP15-023 Q1, Q2, Q4) --
+      // out of the opponent's area an active one first, which is the one that
+      // costs them tempo, and their cards are the ones listed first. Gated
+      // like OP15-017 Morgan (OP15-023 Q5).
       "OP15-023",
       {
         oncePerTurn: true,
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "sequence",
-              effects: [
-                {
-                  kind: "choose",
-                  selector: {
+            kind: "if",
+            condition: OPPONENT_CAN_PAY_DON_PRICE,
+            then: {
+              kind: "choose",
+              selector: {
+                player: "opponent",
+                zone: "board",
+                category: "character",
+              },
+              bind: "op15-arlong-cost",
+              min: 1,
+              max: 1,
+              effect: {
+                kind: "sequence",
+                effects: [
+                  {
+                    kind: "attach-don",
                     player: "opponent",
-                    zone: "board",
-                    category: "character",
+                    from: "rested",
+                    count: 1,
+                    target: { binding: "op15-arlong-cost" },
                   },
-                  bind: "op15-arlong-cost",
-                  min: 1,
-                  max: 1,
-                  effect: {
-                    kind: "sequence",
-                    effects: [
-                      {
-                        kind: "attach-don",
-                        player: "opponent",
-                        from: "rested",
-                        count: 1,
-                        target: { binding: "op15-arlong-cost" },
-                      },
-                      {
-                        kind: "give-rested-don",
-                        player: "opponent",
-                        count: 1,
-                        from: "cost-area",
-                      },
-                    ],
+                  {
+                    kind: "give-rested-don",
+                    player: "opponent",
+                    count: 1,
+                    from: "cost-area",
+                    eitherOwner: true,
                   },
-                },
-              ],
+                ],
+              },
             },
           },
         },
@@ -992,36 +1046,60 @@ export const op15MainMechanics: SetMechanics = {
                   kind: "sequence",
                   effects: [
                     {
-                      kind: "choose",
-                      selector: { player: "self", zone: "hand" },
-                      bind: "op15-fire-fist-cost",
-                      min: 2,
-                      max: 2,
-                      effect: {
-                        kind: "sequence",
-                        effects: [
-                          {
-                            kind: "move",
-                            binding: "op15-fire-fist-cost",
-                            to: { player: "self", zone: "trash" },
-                          },
-                          {
-                            kind: "choose",
-                            selector: {
-                              player: "opponent",
-                              zone: "board",
-                              category: "character",
-                              maxCurrentPower: 0,
+                      // "As much as possible" (OP15-020#1): one card in hand is
+                      // still trashed, but the K.O. needs both.
+                      kind: "if",
+                      condition: {
+                        kind: "selector-count",
+                        player: "self",
+                        selector: { zone: "hand" },
+                        operator: "gte",
+                        value: 2,
+                      },
+                      then: {
+                        kind: "choose",
+                        selector: { player: "self", zone: "hand" },
+                        bind: "op15-fire-fist-cost",
+                        min: 2,
+                        max: 2,
+                        effect: {
+                          kind: "sequence",
+                          effects: [
+                            {
+                              kind: "move",
+                              binding: "op15-fire-fist-cost",
+                              to: { player: "self", zone: "trash" },
                             },
-                            bind: "op15-fire-fist-ko",
-                            min: 0,
-                            max: 1,
-                            effect: {
-                              kind: "knock-out",
-                              binding: "op15-fire-fist-ko",
+                            {
+                              kind: "choose",
+                              selector: {
+                                player: "opponent",
+                                zone: "board",
+                                category: "character",
+                                maxCurrentPower: 0,
+                              },
+                              bind: "op15-fire-fist-ko",
+                              min: 0,
+                              max: 1,
+                              effect: {
+                                kind: "knock-out",
+                                binding: "op15-fire-fist-ko",
+                              },
                             },
-                          },
-                        ],
+                          ],
+                        },
+                      },
+                      else: {
+                        kind: "choose",
+                        selector: { player: "self", zone: "hand" },
+                        bind: "op15-fire-fist-cost",
+                        min: 1,
+                        max: 1,
+                        effect: {
+                          kind: "move",
+                          binding: "op15-fire-fist-cost",
+                          to: { player: "self", zone: "trash" },
+                        },
                       },
                     },
                   ],

@@ -325,7 +325,8 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
   // resolves, and the survivor wins.
   const decked = (["p1", "p2"] as const).filter(
     (playerId) =>
-      state.players[playerId].deck.length === 0 &&
+      (state.players[playerId].deck.length === 0 ||
+        state.players[playerId].deckEmptiedOnTurn === state.turn) &&
       survivesEmptyDeck(state, playerId),
   );
   if (decked.length > 0) {

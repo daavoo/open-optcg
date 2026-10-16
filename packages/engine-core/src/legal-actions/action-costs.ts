@@ -37,8 +37,31 @@ export function costOfEffect(effect: MechanicEffect): ActionCost | undefined {
   if (first.kind === "rest-don" && first.player === "self") {
     return { restsDon: first.count };
   }
-  const trashed = handCardsTrashedBy(first);
+  const payment = handPayment(first);
+  const trashed = payment && handCardsTrashedBy(payment);
   return trashed === undefined ? undefined : { trashesFromHand: trashed };
+}
+
+/**
+ * The `choose` that pays a hand cost at the head of an effect: the step
+ * itself, or the `then` of an `if` that pays in full on one arm and as much as
+ * it can on the other -- OP15-020 Fire Fist, whose one card in hand is still
+ * trashed (OP15-020#1). The full payment is the price the card prints.
+ */
+function handPayment(
+  first: MechanicEffect,
+): Extract<MechanicEffect, { kind: "choose" }> | undefined {
+  if (first.kind === "choose") return first;
+  if (
+    first.kind === "if" &&
+    first.then.kind === "choose" &&
+    first.else !== undefined &&
+    handCardsTrashedBy(first.then) !== undefined &&
+    handCardsTrashedBy(first.else) !== undefined
+  ) {
+    return first.then;
+  }
+  return undefined;
 }
 
 /**
@@ -194,8 +217,9 @@ function payoffSteps(effect: MechanicEffect): readonly MechanicEffect[] {
   if (!first || !costOfEffect(effect)) return steps;
   // A hand cost is a `choose` whose own first step trashes the chosen cards;
   // whatever follows that step inside it is bought, like the steps after it.
-  if (first.kind === "choose") {
-    const inner = first.effect;
+  const payment = handPayment(first);
+  if (payment) {
+    const inner = payment.effect;
     return [
       ...(inner.kind === "sequence" ? inner.effects.slice(1) : []),
       ...rest,

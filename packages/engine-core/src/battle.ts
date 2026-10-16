@@ -247,9 +247,15 @@ export function namiLeaderDefenseAvailable(
   defenderPlayerId: PlayerId,
 ): boolean {
   const defender = state.players[defenderPlayerId];
+  // Met both when the attack was declared, which is when the ability
+  // triggers, and still now, when it resolves.
+  const donAtDeclaration =
+    state.activeAttack?.defenderLeaderDonAtDeclaration ??
+    defender.leaderAttachedDon.length;
   return (
     defender.leaderCardNumber === "OP11-041" &&
     !leaderEffectsNegated(state, defenderPlayerId) &&
+    donAtDeclaration >= 1 &&
     defender.leaderAttachedDon.length >= 1 &&
     defender.hand.length > 0 &&
     !state.oncePerTurn.includes(

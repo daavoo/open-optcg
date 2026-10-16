@@ -1095,39 +1095,52 @@ export function continueExecution(
     }
     if (effect.kind === "give-rested-don") {
       const playerId = resolvePlayer(execution.context, effect.player);
-      const player = state.players[playerId];
       const from = effect.from ?? "rested";
       // "From the cost area" is satisfied by either pile, so the gate asks
       // whether the area holds anything at all rather than whether one half
       // does.
-      const available =
-        from === "cost-area"
-          ? player.activeDon.length + player.restedDon.length
+      const available = (ownerId: PlayerId): number => {
+        const owner = state.players[ownerId];
+        return from === "cost-area"
+          ? owner.activeDon.length + owner.restedDon.length
           : from === "active"
-            ? player.activeDon.length
-            : player.restedDon.length;
-      if (available === 0) continue;
+            ? owner.activeDon.length
+            : owner.restedDon.length;
+      };
       const typeMatches = (cardNumber: string): boolean =>
         (effect.type === undefined || hasCardType(cardNumber, effect.type)) &&
         (effect.name === undefined || hasCardName(cardNumber, effect.name)) &&
         (effect.anyOfTypes === undefined ||
           effect.anyOfTypes.some((type) => hasCardType(cardNumber, type)));
+      // `player`'s cards first: it is the side each of these cards was written
+      // for, so a pilot that takes the first offer keeps doing so.
+      const owners: PlayerId[] = effect.eitherOwner
+        ? [playerId, opponentOf(playerId)]
+        : [playerId];
+      const eligibleInstanceIds = owners
+        .filter((ownerId) => available(ownerId) > 0)
+        .flatMap((ownerId) => {
+          const owner = state.players[ownerId];
+          return [
+            ...(typeMatches(owner.leaderCardNumber)
+              ? [`${ownerId}-leader`]
+              : []),
+            ...owner.board
+              .filter((card) => typeMatches(card.cardNumber))
+              .map((card) => card.instanceId),
+          ];
+        });
+      if (owners.every((ownerId) => available(ownerId) === 0)) continue;
       return {
         pending: {
           kind: "give-rested-don",
           execution,
           playerId,
-          eligibleInstanceIds: [
-            ...(typeMatches(player.leaderCardNumber)
-              ? [`${playerId}-leader`]
-              : []),
-            ...player.board
-              .filter((card) => typeMatches(card.cardNumber))
-              .map((card) => card.instanceId),
-          ],
+          eligibleInstanceIds,
           count: effect.count,
           ...(effect.type === undefined ? {} : { type: effect.type }),
           ...(from === "rested" ? {} : { from }),
+          ...(effect.eitherOwner ? { eitherOwner: true as const } : {}),
         },
         events,
         signals,

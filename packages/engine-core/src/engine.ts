@@ -91,6 +91,7 @@ import {
   canBlock,
   couldAttackThisTurn,
   hasKeyword,
+  survivesEmptyDeck,
 } from "./board.js";
 import { EngineError } from "./errors.js";
 import {
@@ -464,6 +465,15 @@ export function applyOfferedAction(
     GameAction["type"]
   >;
   handler({ state, events, activePlayer, action, offered, db });
+  // OP15-022 Brook's loss belongs to the turn the deck *became* 0, even if a
+  // card is put back under it later that turn (OP15-022 Q1), so the moment is
+  // noted here, after every action, where `completeEndTurn` can read it.
+  for (const playerId of ["p1", "p2"] as const) {
+    const player = state.players[playerId];
+    if (player.deck.length === 0 && survivesEmptyDeck(state, playerId, db)) {
+      player.deckEmptiedOnTurn = state.turn;
+    }
+  }
   // "If you have activated an Event with a base cost of N or more during this
   // turn" is read off the event stream rather than recorded at each of the ten
   // sites that activate one -- the `[Main]` table, the eight hand-written
