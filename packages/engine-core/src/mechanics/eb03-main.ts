@@ -528,11 +528,12 @@ export const eb03MainMechanics: SetMechanics = {
       //
       // The DON!! it sets active is its own controller's, and the rest that
       // follows spans the opponent's DON!! and their small bodies in one printed
-      // "up to 1" -- the same node EB03-012 uses, with a wider `match`.
+      // "up to 1" -- the same node EB03-012 uses, with a wider `match`. Both
+      // halves are "up to", so a cost area with no rested DON!! does not gate
+      // the activation: the rest still lands (EB03-061#1 Q&A).
       "EB03-061",
       {
         oncePerTurn: true,
-        requires: { restedDon: 1 },
         program: {
           effect: {
             kind: "sequence",
