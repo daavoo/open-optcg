@@ -471,8 +471,8 @@ export const op06MainMechanics: SetMechanics = {
       //
       // The second branch is Yellow's own shape: it only reaches for the win
       // while the opponent is on their last Life card, and the Life card it
-      // then adds to the hand is the price -- both halves of that branch, as
-      // the printed bullet reads them.
+      // then adds to the hand is the price. The price sits inside the same
+      // condition: off 1 Life the branch does nothing at all (Q&A OP06-116#1).
       "OP06-116",
       {
         cost: 4,
@@ -489,21 +489,21 @@ export const op06MainMechanics: SetMechanics = {
                 id: "damage",
                 label: "Deal 1 damage while your opponent is on 1 Life",
                 effect: {
-                  kind: "sequence",
-                  effects: [
-                    {
-                      kind: "if",
-                      condition: {
-                        kind: "zone-count",
-                        player: "opponent",
-                        zone: "life",
-                        operator: "eq",
-                        value: 1,
-                      },
-                      then: { kind: "deal-damage", player: "opponent" },
-                    },
-                    lifeTopToHand,
-                  ],
+                  kind: "if",
+                  condition: {
+                    kind: "zone-count",
+                    player: "opponent",
+                    zone: "life",
+                    operator: "eq",
+                    value: 1,
+                  },
+                  then: {
+                    kind: "sequence",
+                    effects: [
+                      { kind: "deal-damage", player: "opponent" },
+                      lifeTopToHand,
+                    ],
+                  },
                 },
               },
             ],

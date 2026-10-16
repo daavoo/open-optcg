@@ -4509,12 +4509,10 @@ describe("OP06-116 Reject", () => {
 
     expect(game.state.players.p2.life).toHaveLength(0);
     expect(game.state.players.p2.hand).toHaveLength(1);
-    // The Life card the second bullet costs is paid whether or not the damage
-    // landed, which is what the printed sentence says.
     expect(game.state.players.p1.life).toHaveLength(1);
   });
 
-  it("deals no damage while the opponent is above one Life", () => {
+  it("does nothing while the opponent is above one Life", () => {
     const game = table("op06-116-safe")
       .bareTable()
       .withHand("p1", [instance("event", "OP06-116")])
@@ -4527,7 +4525,9 @@ describe("OP06-116 Reject", () => {
     settleDeclining(game);
 
     expect(game.state.players.p2.life).toHaveLength(2);
-    expect(game.state.players.p1.life).toHaveLength(1);
+    // The Life card the branch pays sits behind the same condition as the
+    // damage (Q&A OP06-116#1): off 1 Life, p1 keeps it.
+    expect(game.state.players.p1.life).toHaveLength(2);
   });
 
   it("draws a card off a Life card", () => {
