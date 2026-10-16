@@ -570,6 +570,16 @@ export interface ActiveAttack {
    * barring blocks against the attacker's later attacks.
    */
   blockersDisabled?: boolean;
+  /**
+   * DON!! given to the defender's Leader when the attack was declared.
+   *
+   * An `[On Your Opponent's Attack]` ability triggers on the declaration, so a
+   * `[DON!! xN]` in front of it has to be met then: a DON!! the attacker's own
+   * `[When Attacking]` hands the defender's Leader afterwards does not switch
+   * it on (OP15-012 Q5, against OP11-041 Nami). Absent on a battle built
+   * without a declaration, where the current count is all there is to read.
+   */
+  defenderLeaderDonAtDeclaration?: number;
   koReplacementOffered?: boolean;
   /**
    * Instance ids whose `[On Your Opponent's Attack]` ability has already been

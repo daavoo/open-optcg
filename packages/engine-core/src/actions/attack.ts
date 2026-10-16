@@ -65,6 +65,8 @@ export function applyAttack({
     targetInstanceId: offered.targetInstanceId,
     battleAttackBonus: 0,
     counterPower: 0,
+    defenderLeaderDonAtDeclaration:
+      state.players[defenderPlayerId].leaderAttachedDon.length,
   };
   events.push({
     type: "attack-declared",
