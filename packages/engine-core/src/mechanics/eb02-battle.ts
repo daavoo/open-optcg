@@ -104,9 +104,11 @@ export const eb02BattleMechanics: SetMechanics = {
       //
       // The card from hand is the cost and both sentences are what it buys, so
       // they are nested inside it: an empty hand gets neither the Life card nor
-      // the +1000. Only the Life half carries the printed "if you have 1 or
-      // less Life cards" -- the buff is unconditional, which is what keeps the
-      // clause worth paying on a turn the controller is at four.
+      // the +1000. The printed "if you have 1 or less Life cards" gates both:
+      // Bandai's Q&A (EB02-052#1) rules that on 2 or more Life the +1000 is not
+      // gained either, so the "Then" sits inside the condition. The Life count
+      // is read once, before the banked card lands, so banking it does not
+      // switch off the buff that follows.
       //
       // The banked card goes on **face-down**: a Life card added by an effect
       // has never been seen, which is why nothing here sets `faceUp`.
@@ -127,18 +129,18 @@ export const eb02BattleMechanics: SetMechanics = {
               "eb02-052-cost",
               1,
               {
-                kind: "sequence",
-                effects: [
-                  {
-                    kind: "if",
-                    condition: {
-                      kind: "zone-count",
-                      player: "self",
-                      zone: "life",
-                      operator: "lte",
-                      value: 1,
-                    },
-                    then: {
+                kind: "if",
+                condition: {
+                  kind: "zone-count",
+                  player: "self",
+                  zone: "life",
+                  operator: "lte",
+                  value: 1,
+                },
+                then: {
+                  kind: "sequence",
+                  effects: [
+                    {
                       kind: "select",
                       selector: {
                         player: "self",
@@ -153,14 +155,14 @@ export const eb02BattleMechanics: SetMechanics = {
                         to: { player: "self", zone: "life", position: "top" },
                       },
                     },
-                  },
-                  {
-                    kind: "modify-power",
-                    binding: SOURCE_BINDING,
-                    amount: 1_000,
-                    expiresAfterTurns: 0,
-                  },
-                ],
+                    {
+                      kind: "modify-power",
+                      binding: SOURCE_BINDING,
+                      amount: 1_000,
+                      expiresAfterTurns: 0,
+                    },
+                  ],
+                },
               },
             ),
           },

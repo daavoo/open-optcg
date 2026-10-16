@@ -2267,7 +2267,9 @@ describe("EB02-052 Enel", () => {
     expect(currentPower(game.state, "p1", "enel")).toBe(12_000);
   });
 
-  it("buys the +1000 alone at four Life", () => {
+  it("buys nothing at four Life", () => {
+    // Bandai's Q&A EB02-052#1: the Life condition gates the +1000 too. See
+    // `test/faq-eb01-eb02.test.ts`.
     const game = table("eb02-052-high-life")
       .withBoard("p1", [character("enel", "EB02-052", { playedTurn: 1 })])
       .withHand("p1", [instance("fodder", "EB02-001")])
@@ -2284,7 +2286,7 @@ describe("EB02-052 Enel", () => {
     settle(game);
 
     expect(game.state.players.p1.life).toHaveLength(4);
-    expect(currentPower(game.state, "p1", "enel")).toBe(12_000);
+    expect(currentPower(game.state, "p1", "enel")).toBe(11_000);
   });
 
   it("is not offered on an empty hand", () => {
