@@ -18,28 +18,19 @@ export const op16NamiMechanics: SetMechanics = {
   activateMain: [
     [
       // P-096 Girl: "[printed text omitted -- pnpm card:text P-096]"
+      //
+      // The recipient is any card named Nami, with no category, so the Nami
+      // Leader the deck is built on qualifies alongside a Nami Character --
+      // `give-rested-don` is the node that offers the Leader.
       "P-096",
       {
         oncePerTurn: true,
         program: {
           effect: {
-            kind: "choose",
-            selector: {
-              player: "self",
-              zone: "board",
-              category: "character",
-              name: "Nami",
-            },
-            bind: "girl-don-target",
-            min: 0,
-            max: 1,
-            effect: {
-              kind: "attach-don",
-              player: "self",
-              from: "rested",
-              count: 1,
-              target: { binding: "girl-don-target" },
-            },
+            kind: "give-rested-don",
+            player: "self",
+            count: 1,
+            name: "Nami",
           },
         },
       },
