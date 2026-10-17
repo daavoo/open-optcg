@@ -2972,6 +2972,8 @@ describe("OP14-080 Gecko Moria (Leader)", () => {
     game.play({ type: "resolve-effect", optionId: "fodder-1" });
     game.play({ type: "resolve-effect", optionId: "fodder-2" });
     game.play({ type: "resolve-effect", optionId: "fodder-3" });
+    // "Up to 1": the add itself may still be declined once the cost is paid.
+    game.play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.players.p1.life.length).toBe(lifeBefore + 1);
   });

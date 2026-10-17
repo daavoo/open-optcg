@@ -1170,6 +1170,24 @@ describe("FAQ OP-14 Yellow", () => {
     expect(game.state.players.p1.life).toHaveLength(1);
     expect(hand(game, "p1")).toContain("p1-life-1");
   });
+
+  // Rindo's add is the same fragment OP14-072, OP14-080 and OP14-112 print,
+  // and "up to 1" means each of them may decline it too.
+  it("OP14-115#1, shared: OP14-112 Boa Hancock's Life add can be declined", () => {
+    const game = table("faq-op14-112-decline")
+      .withLeader("p1", "OP14-041")
+      .withHand("p1", [instance("hancock", "OP14-112")])
+      .withLife("p1", copies(2, "ST31-003", "p1-life"))
+      .withDeckTop("p1", [instance("p1-top", "ST31-003")])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "OP14-112" });
+    game.play({ type: "resolve-effect", optionId: "skip" });
+    settle(game);
+
+    expect(ids(game.state.players.p1.deck)[0]).toBe("p1-top");
+    expect(game.state.players.p1.life).toHaveLength(2);
+  });
 });
 
 describe("FAQ EB-04", () => {

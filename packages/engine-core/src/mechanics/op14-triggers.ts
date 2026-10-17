@@ -725,10 +725,7 @@ export const op14TriggerMechanics: SetMechanics = {
           condition: { kind: "turn-player", player: "opponent" },
           then: {
             kind: "sequence",
-            effects: [
-              { kind: "optional", effect: topDeckToLife },
-              { kind: "deal-damage", player: "self" },
-            ],
+            effects: [topDeckToLife, { kind: "deal-damage", player: "self" }],
           },
         },
       },
