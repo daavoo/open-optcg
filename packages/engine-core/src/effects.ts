@@ -2006,6 +2006,25 @@ function computeEffectOptions(
       },
     ];
   }
+  if (effect.kind === "slave-arrow-cost" && effect.step === "target") {
+    const player = state.players[effect.playerId];
+    const attacked = state.activeAttack?.targetInstanceId;
+    return effect.eligibleInstanceIds.map((optionId) => {
+      const name =
+        optionId === `${effect.playerId}-leader`
+          ? "your Leader"
+          : db.require(
+              player.board.find((card) => card.instanceId === optionId)!
+                .cardNumber,
+            ).name;
+      const aside =
+        optionId === attacked ? "" : ", which is not the card being attacked";
+      return {
+        optionId,
+        summary: `+${effect.power} power on ${name} during this battle${aside}`,
+      };
+    });
+  }
   if (effect.kind === "slave-arrow-cost") {
     return [
       ...effect.eligibleInstanceIds.map((optionId) => ({

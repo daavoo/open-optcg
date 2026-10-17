@@ -14,14 +14,23 @@ import {
   type MechanicProgram,
 } from "../mechanics.js";
 
+/**
+ * "You may add 1 card from the top (or bottom) of your Life cards to your
+ * hand: <effect>".
+ *
+ * `position` is which Life card pays: `"edge"` offers the top and the bottom,
+ * for the "top or bottom" printings; `"top"` is the card that prints only the
+ * top one.
+ */
 export const lifeToHandCost = (
   effect: MechanicProgram["effect"],
+  position: "top" | "edge" = "edge",
 ): MechanicProgram => ({
   effect: {
     kind: "optional",
     effect: {
       kind: "choose",
-      selector: { player: "self", zone: "life", position: "edge" },
+      selector: { player: "self", zone: "life", position },
       bind: "life-cost",
       min: 1,
       max: 1,

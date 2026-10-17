@@ -7,6 +7,7 @@
 import { addDonFromDeck } from "../don.js";
 import { drawCards } from "../effects.js";
 import { takeFromLife } from "../life.js";
+import { addPowerModifier } from "../pending.js";
 import { recordDeckTopKnowledge } from "../queries.js";
 import { type EffectContext } from "./context.js";
 import { type PublicEvent } from "@one-piece-sim/protocol";
@@ -145,7 +146,7 @@ export function resolveSlaveArrowCost({
     state.phase = effect.resumePhase;
     state.activePlayer = effect.resumePlayerId;
   };
-  if (optionId === "skip") {
+  if (optionId === "skip" && effect.step === "cost") {
     // "You may X: Y" -- decline the cost and the card resolves for nothing.
     // The Event is already in the trash and the DON!! already rested, which is
     // correct: the cost of *playing* it was paid before the choice.
@@ -154,6 +155,44 @@ export function resolveSlaveArrowCost({
   }
   if (!effect.eligibleInstanceIds.includes(optionId)) {
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
+  }
+  /**
+   * The +4000 on the card the attack is aimed at goes into the battle's
+   * counter pool, the way every Counter Event's does; on any other card it is
+   * a battle-scoped modifier on that card, the same as a hand Counter played
+   * aside in `actions/counter.ts`.
+   */
+  const boost = (targetInstanceId: string): PublicEvent[] => {
+    const attack = state.activeAttack;
+    if (!attack) return [];
+    const used = {
+      type: "counter-used" as const,
+      playerId: effect.playerId,
+      cardNumber: effect.sourceCardNumber,
+      power: effect.power,
+    };
+    if (targetInstanceId === attack.targetInstanceId) {
+      attack.counterPower += effect.power;
+      return [used];
+    }
+    addPowerModifier(
+      state,
+      effect.playerId,
+      targetInstanceId,
+      effect.power,
+      state.turn,
+      {
+        instanceId: effect.sourceInstanceId,
+        cardNumber: effect.sourceCardNumber,
+      },
+      true,
+    );
+    return [{ ...used, targetInstanceId }];
+  };
+  if (effect.step === "target") {
+    const events = boost(optionId);
+    resume();
+    return events;
   }
   const player = state.players[effect.playerId];
   const boardIndex = player.board.findIndex(
@@ -167,16 +206,31 @@ export function resolveSlaveArrowCost({
     instanceId: returned.instanceId,
     cardNumber: returned.cardNumber,
   });
-  const events: PublicEvent[] = [];
-  if (state.activeAttack) {
-    state.activeAttack.counterPower += effect.power;
-    events.push({
-      type: "counter-used",
-      playerId: effect.playerId,
-      cardNumber: effect.sourceCardNumber,
-      power: effect.power,
-    });
+  // The card being attacked first, then the Leader and every Character. "Up
+  // to 1" admits none, but with the cost already paid choosing none only
+  // throws the power away, so it is not offered; nor is a prompt with one
+  // card in it.
+  const attacked = state.activeAttack?.targetInstanceId;
+  const targets = [
+    ...new Set([
+      ...(attacked !== undefined &&
+      (attacked === `${effect.playerId}-leader` ||
+        player.board.some((card) => card.instanceId === attacked))
+        ? [attacked]
+        : []),
+      `${effect.playerId}-leader`,
+      ...player.board.map((card) => card.instanceId),
+    ]),
+  ];
+  if (targets.length > 1) {
+    state.pendingEffect = {
+      ...effect,
+      step: "target",
+      eligibleInstanceIds: targets,
+    };
+    return [];
   }
+  const events = boost(targets[0]!);
   resume();
   return events;
 }

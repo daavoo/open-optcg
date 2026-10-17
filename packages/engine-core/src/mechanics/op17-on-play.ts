@@ -63,13 +63,10 @@ export const op17OnPlayMechanics: SetMechanics = {
       },
     ],
     [
-      // OP17-014 Whitey Bay: "[On Play] K.O. one of your opponent's Characters
-      // with a base power of 2000 or less."
+      // OP17-014 Whitey Bay: "[printed text omitted -- pnpm card:text OP17-014]"
       //
-      // "One", not "up to 1", so `min: 1`: with a legal target on the board the
-      // K.O. is mandatory. The interpreter skips a `choose` it cannot fill, which
-      // is what keeps a board with nothing small enough from deadlocking on a
-      // choice with no options.
+      // "Up to 1", so `min: 0`: the K.O. can be declined with a target on the
+      // board. `maxPower` is the base-power ceiling the text names.
       "OP17-014",
       {
         effect: {
@@ -81,7 +78,7 @@ export const op17OnPlayMechanics: SetMechanics = {
             maxPower: 2_000,
           },
           bind: "op17-whitey-bay-ko",
-          min: 1,
+          min: 0,
           max: 1,
           effect: { kind: "knock-out", binding: "op17-whitey-bay-ko" },
         },
@@ -612,7 +609,8 @@ export const op17OnPlayMechanics: SetMechanics = {
             player: "opponent",
             zone: "board",
             category: "character",
-            maxBaseCost: 6,
+            // "A cost of 6 or less" is the cost the Character has now.
+            maxCost: 6,
             rested: true,
           },
           bind: "op17-bonk-ko",

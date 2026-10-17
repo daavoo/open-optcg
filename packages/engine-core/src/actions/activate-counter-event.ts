@@ -101,6 +101,7 @@ export function applyActivateCounterEvent({
       playerId: activePlayer,
       sourceCardNumber: eventCard.cardNumber,
       sourceInstanceId: eventCard.instanceId,
+      step: "cost",
       eligibleInstanceIds: player.board
         .filter((card) => effectiveCost(state, activePlayer, card) >= 2)
         .map((card) => card.instanceId),
