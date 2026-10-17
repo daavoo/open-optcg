@@ -508,51 +508,70 @@ export const op10OnPlayMechanics: SetMechanics = {
       // OP10-056 Mansherry: "[printed text omitted -- pnpm card:text OP10-056]"
       //
       // Two costs, both mandatory once the "you may" is taken, so the second is
-      // nested inside the first: a player who can rest but has no 4-cost
-      // Dressrosa body to give back must not get the bounce. The returned
+      // nested inside the first. The 4-cost {Dressrosa} body is checked first,
+      // outermost: a cost that cannot be paid in full cannot be started, so a
+      // player with nothing to give back is not offered the rest at all. Resting
+      // the Leader or Stage moves nothing the check reads. The returned
       // Character is the player's own, which is why the cost is worth paying at
       // all -- an [On Play] body picked back up.
       "OP10-056",
-      restDressrosaLeaderOrStage("op10-mansherry-rest", {
-        kind: "choose",
-        selector: {
-          player: "self",
-          zone: "board",
-          category: "character",
-          type: "Dressrosa",
-          minCost: 4,
-        },
-        bind: "op10-mansherry-return",
-        min: 1,
-        max: 1,
+      {
         effect: {
-          kind: "sequence",
-          effects: [
-            {
-              kind: "move",
-              binding: "op10-mansherry-return",
-              to: { player: "owner", zone: "hand" },
+          kind: "if",
+          condition: {
+            kind: "selector-count",
+            player: "self",
+            selector: {
+              zone: "board",
+              category: "character",
+              type: "Dressrosa",
+              minCost: 4,
             },
-            {
-              kind: "choose",
-              selector: {
-                player: "opponent",
-                zone: "board",
-                category: "character",
-                maxCost: 4,
-              },
-              bind: "op10-mansherry-bounce",
-              min: 0,
-              max: 1,
-              effect: {
-                kind: "move",
-                binding: "op10-mansherry-bounce",
-                to: { player: "owner", zone: "hand" },
-              },
+            operator: "gte",
+            value: 1,
+          },
+          then: restDressrosaLeaderOrStage("op10-mansherry-rest", {
+            kind: "choose",
+            selector: {
+              player: "self",
+              zone: "board",
+              category: "character",
+              type: "Dressrosa",
+              minCost: 4,
             },
-          ],
+            bind: "op10-mansherry-return",
+            min: 1,
+            max: 1,
+            effect: {
+              kind: "sequence",
+              effects: [
+                {
+                  kind: "move",
+                  binding: "op10-mansherry-return",
+                  to: { player: "owner", zone: "hand" },
+                },
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "opponent",
+                    zone: "board",
+                    category: "character",
+                    maxCost: 4,
+                  },
+                  bind: "op10-mansherry-bounce",
+                  min: 0,
+                  max: 1,
+                  effect: {
+                    kind: "move",
+                    binding: "op10-mansherry-bounce",
+                    to: { player: "owner", zone: "hand" },
+                  },
+                },
+              ],
+            },
+          }).effect,
         },
-      }),
+      },
     ],
     [
       // OP10-057 Leo: "[printed text omitted -- pnpm card:text OP10-057]"
