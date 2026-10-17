@@ -263,6 +263,16 @@ export type EffectOption =
        * needs it to re-word its own summary; see `reorderAction`.
        */
       destination?: string;
+      /**
+       * The second end a split placement may send cards to, as the summary
+       * names it: EB03-023 Kaya and OP11-049 Carrot place each card at the
+       * top *or* the bottom of the deck.
+       *
+       * Present only on a split offer, whose id ends `|N`: the first N cards
+       * of the order go to `destination` and the rest here. A caller moving
+       * that split point rewrites `N` the way it rewrites the order.
+       */
+      alternate?: string;
     }
   /** Anything the resolver could not classify; the raw id is still available. */
   | { kind: "other" };

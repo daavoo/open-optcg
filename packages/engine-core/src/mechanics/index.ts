@@ -395,6 +395,7 @@ export const onPlayPrograms = registries.onPlay;
 export const onBlockPrograms = registries.onBlock;
 export const onKoPrograms = registries.onKo;
 export const onEndOfYourTurnPrograms = registries.onEndOfYourTurn;
+export const onStartOfYourTurnPrograms = registries.onStartOfYourTurn;
 export const triggerPrograms = registries.trigger;
 export const replacementPrograms = registries.replacement;
 

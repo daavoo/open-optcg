@@ -748,6 +748,12 @@ export type PendingEffect =
        */
       endOfTurn?: true;
       /**
+       * Set when this choice came from a start-of-turn program (OP11-040's
+       * Leader), so answering the last of it runs the Refresh, Draw and DON!!
+       * steps the choice was asked ahead of.
+       */
+      startOfTurn?: true;
+      /**
        * Set when this choice came from an `[Activate: Main]` the player
        * clicked, so the marker that names the cause can be raised on the
        * action the clause's steps actually land on.

@@ -74,16 +74,38 @@ export function orderSummary(
   return `Place ${front} at ${primary} and ${back} at ${alternate}, in that order`;
 }
 
-/** An ordering action's trailing index list, and the offer it belongs to. */
+/**
+ * An ordering action's trailing index list, the offer it belongs to, and --
+ * on a split placement -- the `|N` split point after the list.
+ */
 function splitOrderId(
   actionId: string,
-): { head: string; indices: string[] } | undefined {
+): { head: string; indices: string[]; split?: string } | undefined {
   const cut = actionId.lastIndexOf(":");
   if (cut < 0) return undefined;
+  const tail = actionId.slice(cut + 1);
+  const bar = tail.indexOf("|");
   return {
     head: actionId.slice(0, cut),
-    indices: actionId.slice(cut + 1).split(","),
+    indices: (bar < 0 ? tail : tail.slice(0, bar)).split(","),
+    ...(bar < 0 ? {} : { split: tail.slice(bar + 1) }),
   };
+}
+
+/**
+ * The split point a caller asked for, when it is one the offer allows: a
+ * split offer takes any point from "all to the alternate" (0) to "all to the
+ * primary destination" (every card), and an unsplit offer takes none.
+ */
+function acceptedSplit(
+  offered: string | undefined,
+  requested: string | undefined,
+  count: number,
+): { ok: boolean; atPrimary?: number } {
+  if (offered === undefined) return { ok: requested === undefined };
+  if (requested === undefined || !/^\d+$/.test(requested)) return { ok: false };
+  const atPrimary = Number(requested);
+  return atPrimary <= count ? { ok: true, atPrimary } : { ok: false };
 }
 
 /** Whether two index lists name the same positions, in whatever order. */
@@ -100,8 +122,10 @@ function restamp(
   cards: readonly KnownCardRef[],
   indices: readonly string[],
   destination: string | undefined,
+  /** A split offer's two ends and where the caller divided the order. */
+  split?: { alternate: string; atPrimary: number },
 ): LegalAction {
-  const payload = indices.join(",");
+  const payload = `${indices.join(",")}${split ? `|${split.atPrimary}` : ""}`;
   const idHead = (id: string) => id.slice(0, id.lastIndexOf(":") + 1);
   return {
     ...offer,
@@ -111,10 +135,15 @@ function restamp(
       kind: "order",
       cards: [...cards],
       ...(destination === undefined ? {} : { destination }),
+      ...(split ? { alternate: split.alternate } : {}),
     },
     summary: orderSummary(
       cards.map((card) => card.name),
-      destination === undefined ? undefined : { primary: destination },
+      split && destination !== undefined
+        ? { primary: destination, ...split }
+        : destination === undefined
+          ? undefined
+          : { primary: destination },
     ),
   };
 }
@@ -123,6 +152,12 @@ function restamp(
 function orderDestination(action: LegalAction): string | undefined {
   if (action.type !== "resolve-effect") return undefined;
   return action.option.kind === "order" ? action.option.destination : undefined;
+}
+
+/** A split ordering offer's second end, or `undefined` for any other action. */
+function orderAlternate(action: LegalAction): string | undefined {
+  if (action.type !== "resolve-effect") return undefined;
+  return action.option.kind === "order" ? action.option.alternate : undefined;
 }
 
 /** The cards an ordering offer would place, or `undefined` for any other action. */
@@ -145,6 +180,12 @@ function orderedCards(
 export function reorderAction(
   action: LegalAction,
   order: readonly number[],
+  /**
+   * On a split offer, how many cards from the front of `order` go to the
+   * offer's own destination; the rest go to its alternate. Defaults to the
+   * split the offer was made with.
+   */
+  atPrimary?: number,
 ): LegalAction {
   const cards = orderedCards(action);
   if (!cards) throw new Error(`NOT_AN_ORDERING_ACTION: ${action.actionId}`);
@@ -153,11 +194,29 @@ export function reorderAction(
   if (!samePermutation(offered, indices)) {
     throw new Error(`INVALID_ORDER: ${indices.join(",")}`);
   }
+  const alternate = orderAlternate(action);
+  const offeredSplit = splitOrderId(action.actionId)?.split;
+  if (alternate === undefined || offeredSplit === undefined) {
+    if (atPrimary !== undefined) {
+      throw new Error(`NOT_A_SPLIT_ORDER: ${action.actionId}`);
+    }
+    return restamp(
+      action as LegalAction & { type: "resolve-effect" },
+      order.map((index) => cards[index]!),
+      indices,
+      orderDestination(action),
+    );
+  }
+  const split = atPrimary ?? Number(offeredSplit);
+  if (!Number.isInteger(split) || split < 0 || split > cards.length) {
+    throw new Error(`INVALID_SPLIT: ${split}`);
+  }
   return restamp(
     action as LegalAction & { type: "resolve-effect" },
     order.map((index) => cards[index]!),
     indices,
     orderDestination(action),
+    { alternate, atPrimary: split },
   );
 }
 
@@ -183,11 +242,19 @@ export function findOfferedAction(
     const offered = splitOrderId(candidate.actionId);
     if (!offered || offered.head !== requested.head) continue;
     if (!samePermutation(offered.indices, requested.indices)) continue;
+    // A split offer accepts any split point, the way it accepts any order:
+    // the engine lists only the two all-to-one-end splits.
+    const split = acceptedSplit(offered.split, requested.split, cards.length);
+    if (!split.ok) continue;
+    const alternate = orderAlternate(candidate);
     return restamp(
       candidate as LegalAction & { type: "resolve-effect" },
       requested.indices.map((index) => cards[Number(index)]!),
       requested.indices,
       orderDestination(candidate),
+      split.atPrimary !== undefined && alternate !== undefined
+        ? { alternate, atPrimary: split.atPrimary }
+        : undefined,
     );
   }
   return undefined;

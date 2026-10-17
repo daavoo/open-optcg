@@ -104,3 +104,24 @@ export const grantAttackActive = (
     expiresAfterTurns: 0,
   },
 });
+
+/**
+ * "Place them at the top or bottom of the deck in any order": every card bound
+ * to `binding`, each to either end, in an order the player picks -- OP11-049
+ * Carrot's look and the rest of OP11-040 Monkey.D.Luffy's search.
+ */
+export const placeAtTopOrBottom = (
+  binding: string,
+  bind: string,
+): MechanicEffect => ({
+  kind: "select",
+  selector: { player: "self", zone: "deck", binding },
+  bind,
+  count: "all",
+  effect: {
+    kind: "order-to-bottom",
+    binding: bind,
+    to: { player: "self", zone: "deck", position: "top" },
+    alternate: { player: "self", zone: "deck", position: "bottom" },
+  },
+});

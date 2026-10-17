@@ -11,6 +11,7 @@ import {
   dispatchMechanicInvocations,
   getMechanicSignalInvocations,
   getOnEndOfYourTurnMechanicProgram,
+  getOnStartOfYourTurnMechanicProgram,
   getOnKoMechanicProgram,
   isClauseOpeningOptional,
   optionalClauseMarker,
@@ -796,6 +797,61 @@ export function createOnEndOfYourTurnResult(
             dispatched.pending,
             dispatched.continuations,
           )
+        : null,
+    events: [...result.events, ...dispatched.events],
+  };
+}
+
+/**
+ * Runs a Leader's start-of-turn program -- the search OP11-040 Monkey.D.Luffy
+ * may activate as its controller's turn begins -- ahead of the Refresh Phase.
+ *
+ * Every choice it raises, and every choice a signal it emits raises, is marked
+ * `startOfTurn`, so answering the last of them is what resumes the turn's
+ * Refresh, Draw and DON!! steps (see `resumeStartOfTurn`).
+ */
+export function createOnStartOfYourTurnResult(
+  state: GameState,
+  playerId: PlayerId,
+  source: CardInstance,
+  db: CardDatabase = defaultCardDatabase,
+): OnPlayResult {
+  const mechanicProgram = getOnStartOfYourTurnMechanicProgram(
+    source.cardNumber,
+  );
+  if (!mechanicProgram) return { pending: null, events: [] };
+  const invocation = {
+    context: { sourcePlayerId: playerId, source },
+    program: mechanicProgram,
+  };
+  const result = executeMechanicProgram(
+    state,
+    invocation.context,
+    mechanicProgram,
+    db,
+  );
+  const continuations = getMechanicSignalInvocations(state, result.signals);
+  if (result.pending) {
+    return {
+      pending: {
+        ...mechanicPendingEffect(invocation, result.pending, continuations),
+        startOfTurn: true,
+      } as PendingEffect,
+      events: result.events,
+    };
+  }
+  const dispatched = dispatchMechanicInvocations(state, continuations, db);
+  return {
+    pending:
+      dispatched.pending && dispatched.invocation
+        ? ({
+            ...mechanicPendingEffect(
+              dispatched.invocation,
+              dispatched.pending,
+              dispatched.continuations,
+            ),
+            startOfTurn: true,
+          } as PendingEffect)
         : null,
     events: [...result.events, ...dispatched.events],
   };

@@ -45,6 +45,13 @@ export interface SetMechanics {
   onBlock?: Entries<OnBlockProgram>;
   onKo?: Entries<OnKoEntry>;
   onEndOfYourTurn?: Entries<MechanicProgram>;
+  /**
+   * An effect activated at the start of its controller's turn -- OP11-040
+   * Monkey.D.Luffy's Leader (`pnpm card:text OP11-040`). Asked before the
+   * Refresh Phase, which is where the comprehensive rules put start-of-turn
+   * effects; the card prints no bracketed marker for it.
+   */
+  onStartOfYourTurn?: Entries<MechanicProgram>;
   trigger?: Entries<MechanicProgram>;
   replacement?: Entries<ReplacementProgram>;
 }
@@ -62,6 +69,7 @@ const CLAUSES = [
   "onBlock",
   "onKo",
   "onEndOfYourTurn",
+  "onStartOfYourTurn",
   "trigger",
   "replacement",
 ] as const satisfies readonly (keyof SetMechanics)[];
