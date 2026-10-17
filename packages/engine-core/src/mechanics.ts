@@ -45,7 +45,7 @@ import {
   battleTargetMatches,
   type MechanicEffect,
   type MechanicProgram,
-  type MechanicProgramInvocation,
+  type MechanicInvocation,
   type MechanicExecution,
   type MechanicPendingChoice,
   type MechanicResult,
@@ -3107,7 +3107,7 @@ export function executeMechanicProgram(
  * which is the one `pickOrderedReaction` resolves.
  */
 export function orderReactionOptions(
-  reactions: readonly MechanicProgramInvocation[],
+  reactions: readonly MechanicInvocation[],
 ): string[] {
   const seen = new Set<string>();
   const options: string[] = [];
@@ -3125,11 +3125,11 @@ export function orderReactionOptions(
  * Throws on an id `orderReactionOptions` would not have offered.
  */
 export function pickOrderedReaction(
-  reactions: readonly MechanicProgramInvocation[],
+  reactions: readonly MechanicInvocation[],
   optionId: string,
 ): {
-  chosen: MechanicProgramInvocation;
-  rest: MechanicProgramInvocation[];
+  chosen: MechanicInvocation;
+  rest: MechanicInvocation[];
 } {
   if (!orderReactionOptions(reactions).includes(optionId)) {
     throw new Error(`INVALID_MECHANIC_OPTION: ${optionId}`);
