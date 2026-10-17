@@ -485,6 +485,25 @@ const communityDecks: Array<{
     cardlistFiles: ["cardlist-st01.html"],
     cardNumbers: ["ST01-011"],
   },
+  // Block-1 identities that a later printing keeps Standard-legal, played by
+  // current tournament lists. No shipped deck runs them; they are in the pool
+  // for the training variants. ST02-007, OP03-008, OP03-048, OP03-097 and
+  // ST06-008 were reprinted in block 4 on the PRB-02 page, which is the one
+  // read for them. OP02-013 carries a Super Parallel `X` print, which never
+  // rotates; its OP-02 page is read rather than the OP-08 one, whose print of
+  // it is that Super Parallel.
+  {
+    id: "Block-4 and X reprints",
+    cardlistFiles: ["cardlist-op02.html", "cardlist-prb02.html"],
+    cardNumbers: [
+      "OP02-013",
+      "OP03-008",
+      "OP03-048",
+      "OP03-097",
+      "ST02-007",
+      "ST06-008",
+    ],
+  },
   // ST-26, Bandai's (Purple/Black) Monkey.D.Luffy starter deck. Unlike ST31-36
   // it is not part of the format the ST31-36 loop above generates, so it comes
   // through here: its Leader OP09-061 and its five OP09 slots are stamped by

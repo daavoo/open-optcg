@@ -160,6 +160,7 @@ import { op08RemovalImmunities, op08StaticAbilities } from "./op08-static.js";
 import { op05StaticAbilities } from "./op05-static.js";
 import { st26StaticAbilities } from "./st26-static.js";
 import { op04StaticAbilities } from "./op04-static.js";
+import { op03StaticAbilities } from "./op03-static.js";
 import { st23StaticAbilities } from "./st23-static.js";
 import { st19StaticAbilities } from "./st19-static.js";
 import { prb02StaticAbilities } from "./prb02-static.js";
@@ -175,6 +176,9 @@ import { st18Mechanics } from "./st18.js";
 import { op03Mechanics } from "./op03.js";
 import { st23Mechanics } from "./st23.js";
 import { st01Mechanics } from "./st01.js";
+import { op02Mechanics } from "./op02.js";
+import { st02Mechanics } from "./st02.js";
+import { st06Mechanics } from "./st06.js";
 import { st10BattleMechanics } from "./st10-battle.js";
 import { st10MainMechanics } from "./st10-main.js";
 import { st10OnPlayMechanics } from "./st10-on-play.js";
@@ -233,6 +237,9 @@ const registries = mergeSetMechanics([
   { name: "op03", mechanics: op03Mechanics },
   { name: "st23", mechanics: st23Mechanics },
   { name: "st01", mechanics: st01Mechanics },
+  { name: "op02", mechanics: op02Mechanics },
+  { name: "st02", mechanics: st02Mechanics },
+  { name: "st06", mechanics: st06Mechanics },
   { name: "st10-on-play", mechanics: st10OnPlayMechanics },
   { name: "st10-main", mechanics: st10MainMechanics },
   { name: "st10-battle", mechanics: st10BattleMechanics },
@@ -436,6 +443,7 @@ registerStaticAbilities([
   ...op05StaticAbilities,
   ...st26StaticAbilities,
   ...op04StaticAbilities,
+  ...op03StaticAbilities,
   ...st23StaticAbilities,
   ...st19StaticAbilities,
   ...prb02StaticAbilities,

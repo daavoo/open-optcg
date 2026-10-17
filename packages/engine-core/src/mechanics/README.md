@@ -9,6 +9,10 @@ card data.
 | `st21.ts`              | `cards/src/st21-cards.ts`                                           |
 | `st22-*.ts`            | `cards/src/st22.ts`                                                 |
 | `op03.ts`              | the OP-03 reprints a shipped list plays, until the set comes in     |
+| `op03-static.ts`       | the continuous text those OP-03 reprints print                      |
+| `op02.ts`              | OP02-013 Ace, OP-02's one card in the pool (a Super Parallel `X`)   |
+| `st02.ts`              | ST02-007 Bonney, ST-02's one card in the pool (a block-4 reprint)   |
+| `st06.ts`              | ST06-008 Hina, ST-06's one card in the pool (a block-4 reprint)     |
 | `st26.ts`              | the five ST-26 exclusives the starter deck ships                    |
 | `st23.ts`              | the ST-23 exclusives (static rows in `st23-static.ts`)              |
 | `st01.ts`              | ST01-011 Brook, ST-01's one card in the pool (a block-4 reprint)    |
