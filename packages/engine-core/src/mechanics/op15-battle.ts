@@ -36,9 +36,10 @@ const amazonDebuff: MechanicEffect = {
  * OP15-002 Lucy (Leader): "[printed text omitted -- pnpm card:text OP15-002]"
  *
  * One clause on two timings, so one program registered twice. "Any number" is a
- * `choose` with no floor and a ceiling of four -- the deck-building limit on
- * copies of a card is four, and a hand holding more Events than that has better
- * things to do than pitch them all. The per-card arithmetic is `perCard`, which
+ * `choose` with no floor and a ceiling the hand never reaches in practice, the
+ * same `max` OP06-014 Ratchet and ST16-002 Gordon use: the Dressrosa shell runs
+ * several different Events, so the four-copy limit on one card is no ceiling on
+ * how many sit in hand. The per-card arithmetic is `perCard`, which
  * multiplies by the size of the binding: a `choose` binds every card picked at
  * once, so the buff cannot be written as one effect per card.
  */
@@ -52,7 +53,7 @@ const lucyTrashForPower: MechanicProgram = {
     },
     bind: "op15-lucy-pitch",
     min: 0,
-    max: 4,
+    max: 10,
     effect: {
       kind: "sequence",
       effects: [

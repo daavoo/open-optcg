@@ -10,8 +10,8 @@ import type { BoardCard, GameState } from "./model.js";
 import { fieldDonCount } from "./don.js";
 import {
   boardCardPower,
+  staticHandCostDelta,
   staticHandPlayDiscount,
-  trashEventCount,
 } from "./static-abilities.js";
 import { donPowerApplies } from "./queries.js";
 
@@ -65,13 +65,14 @@ function boardPower(
  * below instead prints its own static hand-price clause, always live while its
  * condition holds and never consumed.
  *
- * This is the *only* path a hand price takes -- `playCostFromHand` below is
- * what both `mainActions` and `applyPlayCard` read. A `StaticAbility` `cost`
- * layer reaches `effectiveCost`, which answers for a card on the *board*, so a
- * clause that prices a card in hand cannot live there: it would leave the hand
- * price untouched and, worse, make the played body read as cheaper than it is
- * to every "cost N or less" removal pointed at it. OP16-015 was written as such
- * a layer and moved here for exactly that.
+ * `playCostFromHand` below is what both `mainActions` and `applyPlayCard`
+ * read. A clause that prices a card in hand may instead be a `StaticAbility`
+ * `cost` layer with `costZone: "hand"`, which `effectiveCost` reads for the
+ * hand card and `staticHandCostDelta` folds into the price here; a plain `self`
+ * cost layer would not do, because it is read only on the field and would make
+ * the played body read as cheaper than it is to every "cost N or less" removal
+ * pointed at it. OP16-015 was written as such a layer and moved here for
+ * exactly that.
  *
  * Each entry carries its own predicate because the four conditions have nothing
  * in common: two read the opponent's board, one reads the player's own, and one
@@ -190,23 +191,6 @@ const STATIC_HAND_DISCOUNTS: readonly {
     amount: 3,
     when: (state, playerId) => state.players[playerId].trash.length >= 15,
   },
-  // OP15-021 "Just Watch Me, Ace!!!": "[printed text omitted -- pnpm card:text OP15-021]"
-  //
-  // The only Event in this table, and the reason `eventActivationCost` below
-  // exists: an Event is activated out of the hand rather than played onto the
-  // field, so its price came off the mechanic table's flat `cost` and nothing
-  // in the engine ever took the 3 off. In the Dressrosa Event shell the
-  // condition is met by the middle of most games -- the Leader trashes an Event
-  // for +1000 every turn it defends -- so a 1-cost -3000 was being offered at 4,
-  // and on 3 DON!! was not offered at all.
-  //
-  // `cost N or less` clauses pointed at the card read the same discount through
-  // the `cost` layer in `static-abilities.ts`; this entry is the hand price.
-  {
-    cardNumber: "OP15-021",
-    amount: 3,
-    when: (state, playerId, db) => trashEventCount(state, playerId, db) >= 4,
-  },
 ];
 
 function opponentHasHighPowerCharacter(
@@ -229,7 +213,9 @@ function staticHandDiscount(
   const entry = STATIC_HAND_DISCOUNTS.find(
     (candidate) => candidate.cardNumber === cardNumber,
   );
-  const own = entry && entry.when(state, playerId, db) ? entry.amount : 0;
+  const own =
+    (entry && entry.when(state, playerId, db) ? entry.amount : 0) -
+    staticHandCostDelta(state, playerId, cardNumber, db);
   // A discount another card's continuous text grants -- OP05-097 Mary Geoise
   // pricing every {Celestial Dragons} body in the hand -- lives in the static
   // table, where the aura scopes already know which Stage is out.

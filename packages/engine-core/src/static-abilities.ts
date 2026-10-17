@@ -1601,6 +1601,34 @@ export function staticHandPlayDiscount(
 }
 
 /**
+ * The card's own `costZone: "hand"` layers -- "give this card in your hand −N
+ * cost" -- summed for `cardNumber` as it sits in `playerId`'s hand, so the
+ * price paid to play or activate it reads the same number `effectiveCost`
+ * reports for the hand card. Negative for a discount.
+ */
+export function staticHandCostDelta(
+  state: GameState,
+  playerId: PlayerId,
+  cardNumber: string,
+  db: CardDatabase = cards,
+): number {
+  const context: AbilityContext = {
+    state,
+    playerId,
+    card: { instanceId: `${playerId}-hand-price`, cardNumber },
+    isLeader: false,
+    db,
+  };
+  return (bySelf.get(cardNumber) ?? []).reduce(
+    (total, ability) =>
+      ability.costZone === "hand"
+        ? total + (ability.cost?.(context) ?? 0)
+        : total,
+    0,
+  );
+}
+
+/**
  * Whether `cardNumber` in this player's hand refuses to be played by an
  * effect. See {@link StaticAbility.effectPlayFromHandBarred}.
  */

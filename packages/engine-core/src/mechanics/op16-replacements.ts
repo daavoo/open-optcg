@@ -1,10 +1,10 @@
 /**
  * OP16 replacement effects -- "if <a Character> would be K.O.'d, you may <pay>
- * instead" -- plus OP15's six.
+ * instead" -- plus OP15's.
  *
- * One module for both sets because the clause is rare and the two sets print it
- * eight times between them; splitting eight entries across two files would say
- * less than keeping them side by side, where the shapes can be compared.
+ * One module for both sets because the two sets print the clause often enough
+ * that the shapes are worth comparing side by side; splitting them across two
+ * files would say less than keeping them together.
  */
 import { type SetMechanics } from "./registry.js";
 
@@ -172,6 +172,39 @@ export const replacementMechanics: SetMechanics = {
         protects: { category: "character", maxPower: 7000 },
         label: "Add 1 card from the top of your Life cards to your hand",
         cost: { kind: "life-to-hand", count: 1 },
+      },
+    ],
+    [
+      // OP15-069 Nola: `pnpm card:text OP15-069`.
+      //
+      // OP15-105 Bonney's window -- every Character its controller owns at
+      // 7000 printed power or less, Nola included, against the opponent's
+      // effects only, and "removed from the field" so a bounce is answered as
+      // well as a K.O. -- paid with OP12-070 Sanji's DON!! returned from the
+      // field. The offer stands while a DON!! is on the field.
+      "OP15-069",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: false,
+        removal: "off-field",
+        protects: { category: "character", maxPower: 7000 },
+        label: "Return 1 DON!! card to your DON!! deck",
+        cost: { kind: "return-don", count: 1 },
+      },
+    ],
+    [
+      // OP15-090 Perona: `pnpm card:text OP15-090`.
+      //
+      // The same window as OP15-069 Nola above, paid with any one card from
+      // hand: no `match`, because the printed cost names no category.
+      "OP15-090",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: false,
+        removal: "off-field",
+        protects: { category: "character", maxPower: 7000 },
+        label: "Trash 1 card from your hand",
+        cost: { kind: "trash-from-hand", count: 1 },
       },
     ],
     [
