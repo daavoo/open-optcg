@@ -2898,7 +2898,7 @@ export const op11CardRecords = [
       tokens: ["[Blocker]"],
       nameAliases: [],
       identityWildcard: false,
-      cannotAttack: true,
+      cannotAttack: false,
       mentionsCannotAttack: true,
       survivesEmptyDeck: false,
       winsOnEmptyDeck: false,

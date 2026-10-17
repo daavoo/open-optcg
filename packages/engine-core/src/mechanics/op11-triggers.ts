@@ -7,6 +7,7 @@ import { type SetMechanics } from "./registry.js";
 import { op11EventPrograms } from "./op11-main.js";
 import { op11OnPlayMechanics } from "./op11-on-play.js";
 import { playFromHand } from "./op08-shared.js";
+import { lookAndPlay } from "./op06-shared.js";
 import { asOnPlayTrigger, payFromHand } from "./shared.js";
 import { placeAtTopOrBottom } from "./op11-shared.js";
 
@@ -125,6 +126,22 @@ export const op11TriggerMechanics: SetMechanics = {
     ],
   ],
   onKo: [
+    [
+      // OP11-051 Sanji: untimed text that reads as an `[On K.O.]` scoped to the
+      // opponent's effects (`pnpm card:text OP11-051`), the entry shape
+      // EB01-057 Shirahoshi uses: `opponentEffectOnly` keeps a lost fight and
+      // its controller's own removal from paying out. Its `[On Play]` is in
+      // `op11-on-play.ts`.
+      "OP11-051",
+      {
+        opponentEffectOnly: true,
+        program: lookAndPlay(5, "op11-sanji-look", {
+          category: "character",
+          type: "Straw Hat Crew",
+          maxCost: 5,
+        }),
+      },
+    ],
     [
       // OP11-024 Aladine: "[printed text omitted -- pnpm card:text OP11-024]"
       //

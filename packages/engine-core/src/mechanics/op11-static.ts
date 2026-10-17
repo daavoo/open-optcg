@@ -3,9 +3,39 @@
  * into power, cost and keyword queries. A clause with no timing marker lives
  * here; one with a marker is a program in this set's other modules.
  */
-import { hasCardName, hasCardType } from "@one-piece-sim/cards";
+import {
+  cardAttributes,
+  cards,
+  hasCardName,
+  hasCardType,
+  hasCardTypeIncluding,
+  type CardDatabase,
+} from "@one-piece-sim/cards";
+import type { PlayerId } from "@one-piece-sim/protocol";
+import type { BoardCard, GameState } from "../model.js";
 import { leaderHasType, turnPlayer } from "./static-shared.js";
-import type { StaticAbility } from "../static-abilities.js";
+import type {
+  AbilityContext,
+  RemovalImmunity,
+  StaticAbility,
+} from "../static-abilities.js";
+
+/**
+ * OP11-046 Vinsmoke Yonji's condition: "only" Characters with a type including
+ * GERMA. A universal over the board, so one off-type body switches it off;
+ * Yonji is itself GERMA, so the board is never empty while it is asked.
+ */
+const onlyGermaCharacters = (
+  state: GameState,
+  playerId: PlayerId,
+  db: CardDatabase,
+): boolean =>
+  state.players[playerId].board
+    .filter((card) => db.require(card.cardNumber).category === "character")
+    .every((card) => hasCardTypeIncluding(card.cardNumber, "GERMA"));
+
+const handSize = (context: AbilityContext): number =>
+  context.state.players[context.playerId].hand.length;
 
 export const op11StaticAbilities: readonly StaticAbility[] = [
   // OP11-001 Koby (Leader): "[printed text omitted -- pnpm card:text OP11-001]"
@@ -76,6 +106,47 @@ export const op11StaticAbilities: readonly StaticAbility[] = [
           : 0,
     },
   },
+  // OP11-027 Bulge-Eyed Neptunian (`pnpm card:text OP11-027`): attacking
+  // Characters the turn it is played is [Rush: Character], behind the
+  // Shirahoshi Leader only.
+  {
+    cardNumber: "OP11-027",
+    scope: "self",
+    keyword: {
+      keyword: "Rush: Character",
+      when: (context) =>
+        hasCardName(
+          context.state.players[context.playerId].leaderCardNumber,
+          "Shirahoshi",
+        ),
+    },
+  },
+  // OP11-046 Vinsmoke Yonji (`pnpm card:text OP11-046`): the rest half of its
+  // immunity. The K.O. half is a row in `op11RemovalImmunities`.
+  {
+    cardNumber: "OP11-046",
+    scope: "self",
+    restImmune: (context) =>
+      onlyGermaCharacters(context.state, context.playerId, context.db),
+  },
+  // OP11-057 Pedro (`pnpm card:text OP11-057`): a [Blocker] while the hand is
+  // at 4 or less.
+  {
+    cardNumber: "OP11-057",
+    scope: "self",
+    keyword: {
+      keyword: "Blocker",
+      when: (context) => !context.isLeader && handSize(context) <= 4,
+    },
+  },
+  // OP11-058 Monkey.D.Luffy (`pnpm card:text OP11-058`): barred from attacking
+  // while the hand is at 5 or more. Conditional, so it is this row rather than
+  // the derived `rules.cannotAttack` ban.
+  {
+    cardNumber: "OP11-058",
+    scope: "self",
+    attackBlocked: (context) => handSize(context) >= 5,
+  },
   // OP11-065 Charlotte Anana: [Blocker] with another purple Big Mom Character.
   {
     cardNumber: "OP11-065",
@@ -92,5 +163,29 @@ export const op11StaticAbilities: readonly StaticAbility[] = [
           );
         }),
     },
+  },
+];
+
+export const op11RemovalImmunities: readonly RemovalImmunity[] = [
+  // OP11-005 Smoker (`pnpm card:text OP11-005`): with a DON!! given, no
+  // Character without <Special> can K.O. it by an effect -- its controller's
+  // own Characters included, so `from: "any"`. A Leader, an Event or a
+  // <Special> Character still can.
+  {
+    cardNumber: "OP11-005",
+    from: "any",
+    koOnly: true,
+    bySource: (source) =>
+      source.category === "character" &&
+      !cardAttributes(source).includes("Special"),
+    when: (_state, _ownerId, card) =>
+      ((card as BoardCard).attachedDon?.length ?? 0) >= 1,
+  },
+  // OP11-046 Vinsmoke Yonji: the K.O. half of its immunity.
+  {
+    cardNumber: "OP11-046",
+    from: "opponent",
+    koOnly: true,
+    when: (state, ownerId) => onlyGermaCharacters(state, ownerId, cards),
   },
 ];
