@@ -213,6 +213,14 @@ export interface OnOpponentAttackProgram {
      * known before the offer is made, so the offer should not be made at all.
      */
     battleAttacker?: { filter: BattleTargetFilter; attribute?: string };
+    /**
+     * A gate on the Leader's type, read as a substring the way
+     * `leader-type-including` reads it -- OP12-069 Crocodile's buff behind its
+     * `DON!! −1` (`pnpm card:text OP12-069`). The same reasoning as
+     * `everyCharacterMatches`: known before the offer, and a prompt that pays
+     * a DON!! for nothing would spend the `[Once Per Turn]` on it too.
+     */
+    leaderTypeIncluding?: string;
   };
   program: MechanicProgram;
 }

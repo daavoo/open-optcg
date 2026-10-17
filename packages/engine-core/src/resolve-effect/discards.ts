@@ -8,8 +8,10 @@ import { returnDonToDeck } from "../don.js";
 import { drawCards, effectSource } from "../effects.js";
 import { addToLife } from "../life.js";
 import { leaderEffectsNegated } from "../static-abilities.js";
+import { type GameState } from "../model.js";
 import { type EffectContext } from "./context.js";
-import { type PublicEvent } from "@one-piece-sim/protocol";
+import { type CardDatabase } from "@one-piece-sim/cards";
+import { type PlayerId, type PublicEvent } from "@one-piece-sim/protocol";
 
 /** `st34-discard`. */
 export function resolveSt34Discard({
@@ -69,6 +71,30 @@ export function resolveSt34Discard({
   return events;
 }
 
+/**
+ * What OP12-040 Kuzan's Leader draws for one card trashed from `playerId`'s
+ * hand by `sourceCardNumber`'s effect: `pnpm card:text OP12-040`.
+ *
+ * The {Navy} test is on the *source* of the trash. Shared by every imperative
+ * hand-trash step -- `navy-discard`, and the `hand-trash-replacement` a
+ * {Navy} protector paying with a hand card goes through (OP12-048
+ * Donquixote Rosinante, OP12-053 Borsalino) -- so one Leader clause answers the
+ * same whichever step got there. The declarative `move` node reaches the same
+ * clause through the reaction rule in `mechanics/op12-reactions.ts`.
+ */
+export function navyHandTrashDraws(
+  state: GameState,
+  playerId: PlayerId,
+  sourceCardNumber: string,
+  db: CardDatabase,
+): number {
+  return state.players[playerId].leaderCardNumber === "OP12-040" &&
+    !leaderEffectsNegated(state, playerId) &&
+    db.require(sourceCardNumber).types.includes("Navy")
+    ? 1
+    : 0;
+}
+
 /** `navy-discard`. */
 export function resolveNavyDiscard({
   state,
@@ -95,22 +121,13 @@ export function resolveNavyDiscard({
   if (!discard) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
   player.trash.push(discard);
   player.handTrashedByEffectTurn = state.turn;
-  // OP12-040 Kuzan Leader: "[printed text omitted -- pnpm card:text OP12-040]"
-  //
-  // The {Navy} test is on the *source* of the trash, and it belongs here rather
-  // than being taken on trust from the effect kind's name: `navy-discard` is the
-  // generic trash-from-hand-as-a-cost step, and cards outside the type raise it
-  // too -- OP13-076 Divine Departure ({King Of The Pirates}/{Roger Pirates}) and
-  // OP15-078 Mamaragan ({Sky Island}) both do. `resolveDrawTrash` already reads
-  // the source's types this way; this path did not, so one Leader clause answered
-  // differently depending on which step happened to get there.
+  // `navy-discard` is the generic trash-from-hand-as-a-cost step, and cards
+  // outside the type raise it too -- OP13-076 Divine Departure and OP15-078
+  // Mamaragan both do -- which is why the Leader's draw reads the source's
+  // types rather than trusting the effect kind's name.
   const leaderDrawCount =
     (effect.leaderDrawCount ?? 0) +
-    (player.leaderCardNumber === "OP12-040" &&
-    !leaderEffectsNegated(state, effect.playerId) &&
-    db.require(effect.sourceCardNumber).types.includes("Navy")
-      ? 1
-      : 0);
+    navyHandTrashDraws(state, effect.playerId, effect.sourceCardNumber, db);
   const events: PublicEvent[] = [];
   if (effect.remaining > 1 && player.hand.length > 0) {
     state.pendingEffect = {

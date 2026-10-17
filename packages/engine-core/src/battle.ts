@@ -508,6 +508,21 @@ export function onOpponentAttackSources(
       ) {
         return [];
       }
+      if (
+        requires.leaderTypeIncluding !== undefined &&
+        !conditionMatches(
+          state,
+          context,
+          {
+            kind: "leader-type-including",
+            player: "self",
+            text: requires.leaderTypeIncluding,
+          },
+          {},
+        )
+      ) {
+        return [];
+      }
     }
     return [{ source, program, oncePerTurnKey }];
   });

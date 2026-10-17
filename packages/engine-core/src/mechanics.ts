@@ -31,6 +31,7 @@ import {
   effectPlayBarred,
   trashPlayGrantsRush,
   isRemovalImmune,
+  isRestImmune,
   negateEffects,
 } from "./static-abilities.js";
 import { activeDonOwner, fieldDonCount, returnDonToDeck } from "./don.js";
@@ -337,6 +338,45 @@ export function findCardZone(
     }
   }
   return undefined;
+}
+
+/**
+ * The card a `move` is the effect of: the card its `sourceBinding` names where
+ * it has one, else the program's own source. See `sourceBinding`.
+ */
+function moveSource(
+  state: GameState,
+  execution: MechanicExecution,
+  sourceBinding: string | undefined,
+): { cardNumber: string; playerId: PlayerId } {
+  const instanceId =
+    sourceBinding === undefined
+      ? undefined
+      : execution.bindings[sourceBinding]?.[0];
+  if (instanceId !== undefined) {
+    const leaderOf = (["p1", "p2"] as const).find(
+      (playerId) => instanceId === `${playerId}-leader`,
+    );
+    if (leaderOf) {
+      return {
+        cardNumber: state.players[leaderOf].leaderCardNumber,
+        playerId: leaderOf,
+      };
+    }
+    const found = findCardZone(state, instanceId);
+    const card =
+      found &&
+      zoneCards(state, found.playerId, found.zone).find(
+        (candidate) => candidate.instanceId === instanceId,
+      );
+    if (found && card) {
+      return { cardNumber: card.cardNumber, playerId: found.playerId };
+    }
+  }
+  return {
+    cardNumber: execution.context.source.cardNumber,
+    playerId: execution.context.sourcePlayerId,
+  };
 }
 
 /** Whether `effect` plays the cards `bind` names, alone or inside a sequence. */
@@ -1121,6 +1161,7 @@ export function continueExecution(
           (card) =>
             !card.rested &&
             (card.cannotRestUntilTurn ?? -1) < state.turn &&
+            !isRestImmune(state, targetPlayerId, card, db) &&
             (effect.maxCost === undefined ||
               effectiveCost(state, targetPlayerId, card, db) <=
                 effect.maxCost) &&
@@ -1894,6 +1935,7 @@ export function continueExecution(
     }
     if (effect.kind === "move") {
       const destination = effect.to.player;
+      const mover = moveSource(state, execution, effect.sourceBinding);
       // "You cannot add Life cards to your hand using your own effects during
       // this turn" -- the OP06-020 Hody Jones Leader's own price, which reaches
       // every clause that would move one, not just the ones printed alongside
@@ -2155,8 +2197,8 @@ export function continueExecution(
           ownerId,
           from,
           to: effect.to.zone,
-          sourceCardNumber: execution.context.source.cardNumber,
-          sourcePlayerId: execution.context.sourcePlayerId,
+          sourceCardNumber: mover.cardNumber,
+          sourcePlayerId: mover.playerId,
         });
         events.push({
           type: "card-moved",
@@ -2171,7 +2213,7 @@ export function continueExecution(
             originPosition,
           ),
           ...(effect.faceUp === undefined ? {} : { faceUp: effect.faceUp }),
-          sourceCardNumber: execution.context.source.cardNumber,
+          sourceCardNumber: mover.cardNumber,
         });
         // A search that prints "reveal up to 1 X and add it to your hand"
         // (Sugar OP10-065, Law OP09-069, Rosinante OP12-108) makes the added

@@ -323,6 +323,15 @@ export interface StaticAbility {
    * is barred. Read through {@link effectPlayBarred}.
    */
   effectPlayFromHandBarred?: (context: AbilityContext) => boolean;
+  /**
+   * Continuous immunity to being rested by the opponent's effects while a
+   * condition holds -- OP12-021 Ipponmatsu (`pnpm card:text OP12-021`).
+   *
+   * A fact about the card on the board, asked whenever an opposing effect
+   * looks for something to rest. Read through {@link isRestImmune}, which is
+   * also where the one hard-coded reading of the same sentence sits.
+   */
+  opponentRestImmune?: (context: AbilityContext) => boolean;
 }
 
 // --- shared predicates ------------------------------------------------------
@@ -599,10 +608,22 @@ export function isRestImmune(
   state: GameState,
   playerId: PlayerId,
   card: CardInstance,
+  db: CardDatabase = cards,
 ): boolean {
-  if (card.cardNumber !== "OP15-024") return false;
-  if (effectsNegated(state, card.instanceId)) return false;
-  return state.turnPlayerId !== playerId;
+  if (card.cardNumber === "OP15-024") {
+    if (effectsNegated(state, card.instanceId)) return false;
+    return state.turnPlayerId !== playerId;
+  }
+  const context: AbilityContext = {
+    state,
+    playerId,
+    card,
+    isLeader: false,
+    db,
+  };
+  return abilitiesFor(context).some((ability) =>
+    ability.opponentRestImmune?.(context),
+  );
 }
 
 /**
