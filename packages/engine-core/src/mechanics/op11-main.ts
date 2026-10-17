@@ -9,6 +9,7 @@ import {
 import { type SetMechanics } from "./registry.js";
 import {
   grantAttackActive,
+  opponentPlacesAtBottom,
   turnLifeFaceDown,
   turnLifeFaceUp,
 } from "./op11-shared.js";
@@ -459,19 +460,7 @@ export const op11MainMechanics: SetMechanics = {
             kind: "sequence",
             effects: [
               { kind: "rest", binding: SOURCE_BINDING },
-              {
-                kind: "choose",
-                selector: { player: "opponent", zone: "trash" },
-                chooser: "opponent",
-                bind: "op11-montdor-bury",
-                min: 2,
-                max: 2,
-                effect: {
-                  kind: "move",
-                  binding: "op11-montdor-bury",
-                  to: { player: "owner", zone: "deck", position: "bottom" },
-                },
-              },
+              opponentPlacesAtBottom({ zone: "trash" }, 2, "op11-montdor-bury"),
               {
                 kind: "select",
                 selector: { player: "self", zone: "life", position: "top" },

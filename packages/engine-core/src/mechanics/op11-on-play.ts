@@ -8,6 +8,7 @@ import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import {
   grantAttackActive,
+  opponentPlacesAtBottom,
   placeAtTopOrBottom,
   turnLifeFaceDown,
 } from "./op11-shared.js";
@@ -604,28 +605,13 @@ export const op11OnPlayMechanics: SetMechanics = {
       // OP11-091 Berry Good: "[printed text omitted -- pnpm card:text OP11-091]"
       //
       // Anti-recursion, aimed at a Counter-Event pile rather than at the board.
-      // The cards are theirs, so they choose which three go -- and with fewer
-      // than three Events in the trash the `choose` cannot be filled and nothing
-      // happens, which is the printed reading of a fixed count.
       "OP11-091",
       {
-        effect: {
-          kind: "choose",
-          selector: {
-            player: "opponent",
-            zone: "trash",
-            category: "event",
-          },
-          chooser: "opponent",
-          bind: "op11-berry-good",
-          min: 3,
-          max: 3,
-          effect: {
-            kind: "move",
-            binding: "op11-berry-good",
-            to: { player: "owner", zone: "deck", position: "bottom" },
-          },
-        },
+        effect: opponentPlacesAtBottom(
+          { zone: "trash", category: "event" },
+          3,
+          "op11-berry-good",
+        ),
       },
     ],
     [
@@ -764,8 +750,8 @@ export const op11OnPlayMechanics: SetMechanics = {
     [
       // OP11-104 Shirley: "[printed text omitted -- pnpm card:text OP11-104]"
       //
-      // "The rest" goes back as a pair to one end: the top keeps them for the
-      // next search, the bottom clears them out.
+      // "The rest" is placed card by card: each to either end, in the
+      // player's order, the same split OP11-049 Carrot uses.
       "OP11-104",
       turnLifeFaceDown("op11-shirley-cost", {
         kind: "sequence",
@@ -788,34 +774,7 @@ export const op11OnPlayMechanics: SetMechanics = {
               to: { player: "self", zone: "hand" },
             },
           },
-          {
-            kind: "choice",
-            branches: [
-              {
-                id: "top",
-                label: "Leave the rest on top of your deck",
-              },
-              {
-                id: "bottom",
-                label: "Place the rest at the bottom of your deck",
-                effect: {
-                  kind: "select",
-                  selector: {
-                    player: "self",
-                    zone: "deck",
-                    binding: "op11-shirley",
-                  },
-                  bind: "op11-shirley-rest",
-                  count: "all",
-                  effect: {
-                    kind: "move",
-                    binding: "op11-shirley-rest",
-                    to: { player: "self", zone: "deck", position: "bottom" },
-                  },
-                },
-              },
-            ],
-          },
+          placeAtTopOrBottom("op11-shirley", "op11-shirley-rest"),
         ],
       }),
     ],
