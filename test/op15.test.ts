@@ -1425,6 +1425,47 @@ describe("OP15 Red removal Events", () => {
     expect(game.state.players.p2.board).toHaveLength(0);
   });
 
+  // Robin's [On K.O.] damages p1 from inside the Fire Fist chain and opens a
+  // [Trigger] window, while OP15-119 Luffy's reaction to the Event is still
+  // queued for p2. Answering that reaction must hand the game back to the open
+  // Trigger, not to the Main Phase the chain interrupted: resuming Main left
+  // the Life card parked in the window and the next battle deleted it.
+  it("OP15-020 leaves a [Trigger] its chain opened waiting for its owner", () => {
+    const game = table("op15-020-trigger")
+      .withHand("p1", [
+        instance("fire-fist", "OP15-020"),
+        instance("pitch-1", "ST32-005"),
+        instance("pitch-2", "ST32-005"),
+      ])
+      .withLife("p1", [
+        instance("barrier", "OP10-060"),
+        instance("life-2", "ST32-004"),
+      ])
+      .withBoard("p2", [
+        character("robin", "EB03-055"),
+        character("luffy", "OP15-119"),
+      ])
+      .build();
+
+    game.play({ summary: "Fire Fist" });
+    game.play({ type: "resolve-effect", optionId: "robin" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
+    game.play({ type: "resolve-effect", optionId: "pitch-1" });
+    game.play({ type: "resolve-effect", optionId: "pitch-2" });
+    game.play({ type: "resolve-effect", optionId: "robin" });
+    // p2 answers its two optional clauses -- Robin's damage and Luffy's
+    // reveal -- in whatever order the engine asks for them.
+    let guard = 0;
+    while (game.state.pendingEffect && game.state.activePlayer === "p2") {
+      if (guard++ > 10) throw new Error("p2's choices never settled");
+      game.play({ type: "resolve-effect", optionId: "apply" });
+    }
+
+    expect(game.state.pendingTrigger?.card.instanceId).toBe("barrier");
+    expect(game.state.phase).toBe("trigger");
+    expect(game.state.activePlayer).toBe("p1");
+  });
+
   it("OP15-021 costs 3 less behind four Events in the trash", () => {
     const game = table("op15-021-cost")
       .withHand("p1", [instance("ace", "OP15-021")])
