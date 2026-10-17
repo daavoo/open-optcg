@@ -34,6 +34,7 @@ import type { CardInstance, GameState } from "./model.js";
 import {
   STATIC_OPPONENT_DON_READERS,
   STATIC_OWN_DON_CEILING_CARDS,
+  departedCardBasePower,
   effectsNegated,
 } from "./static-abilities.js";
 import {
@@ -763,8 +764,13 @@ export function getMechanicSignalInvocations(
               !rule.signal.movedAnyOfTypes.some((type) =>
                 hasCardType(signal.card.cardNumber, type),
               )) ||
+            // Base power as the card left the field: a "base power becomes"
+            // layer it carried there still counts (OP14-053 Vista's, which
+            // OP13-002 Ace reads).
             (rule.signal.movedMinPower !== undefined &&
-              (moved.power ?? 0) < rule.signal.movedMinPower) ||
+              ((signal.from === "board"
+                ? departedCardBasePower(state, signal.ownerId, signal.card, db)
+                : moved.power) ?? 0) < rule.signal.movedMinPower) ||
             (rule.signal.sourceType !== undefined &&
               (signal.sourceCardNumber === undefined ||
                 !hasCardType(

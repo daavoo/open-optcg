@@ -103,18 +103,22 @@ export const playTriggerBodyFromHand: MechanicProgram = {
  * "[printed text omitted -- pnpm card:text <card>]"
  *
  * Printed on the OP14-080 Gecko Moria Leader, OP14-072 Baby 5, OP14-112 Boa
- * Hancock and OP14-115 Rindo. Face-down, as a Life card dealt at setup is:
- * nothing in the text says to turn it face-up.
+ * Hancock and OP14-115 Rindo. "Up to 1", so the player may decline it -- the
+ * OP14-115 Q&A is the ruling that says so. Face-down, as a Life card dealt at
+ * setup is: nothing in the text says to turn it face-up.
  */
 export const topDeckToLife: MechanicProgram["effect"] = {
-  kind: "select",
-  selector: { player: "self", zone: "deck", position: "top" },
-  bind: "op14-deck-to-life",
-  count: "all",
+  kind: "optional",
   effect: {
-    kind: "move",
-    binding: "op14-deck-to-life",
-    to: { player: "self", zone: "life", position: "top" },
+    kind: "select",
+    selector: { player: "self", zone: "deck", position: "top" },
+    bind: "op14-deck-to-life",
+    count: "all",
+    effect: {
+      kind: "move",
+      binding: "op14-deck-to-life",
+      to: { player: "self", zone: "life", position: "top" },
+    },
   },
 };
 

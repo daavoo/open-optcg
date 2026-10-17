@@ -1947,6 +1947,7 @@ export function continueExecution(
               execution.context.source.cardNumber,
               db,
               "off-field",
+              execution.context.source.instanceId,
             )
           ) {
             continue;
@@ -2740,6 +2741,8 @@ export function continueExecution(
             execution.context.sourcePlayerId,
             execution.context.source.cardNumber,
             db,
+            "ko",
+            execution.context.source.instanceId,
           )
         ) {
           continue;

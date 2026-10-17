@@ -253,29 +253,44 @@ export const eb04OnPlayMechanics: SetMechanics = {
       // `maxCurrentPower` because "8000 power or less" is read after DON!! --
       // an 8000 body that took two DON!! for the swing is out of range, which is
       // exactly the trade the opponent made.
+      //
+      // A cost that cannot be paid buys nothing, so the whole clause is gated
+      // on Megalo still being active: one played rested by another effect
+      // (OP13-031 Law plays its target that way) has no rest left to give.
+      // Bandai's EB04-018 Q&A is the ruling.
       "EB04-018",
       {
         effect: {
-          kind: "optional",
-          effect: {
-            kind: "sequence",
-            effects: [
-              { kind: "rest", binding: SOURCE_BINDING },
-              {
-                kind: "choose",
-                selector: {
-                  player: "opponent",
-                  zone: "board",
-                  category: "character",
-                  rested: true,
-                  maxCurrentPower: 8_000,
+          kind: "if",
+          condition: {
+            kind: "selector-count",
+            player: "self",
+            selector: { zone: "board", binding: SOURCE_BINDING, rested: false },
+            operator: "gte",
+            value: 1,
+          },
+          then: {
+            kind: "optional",
+            effect: {
+              kind: "sequence",
+              effects: [
+                { kind: "rest", binding: SOURCE_BINDING },
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "opponent",
+                    zone: "board",
+                    category: "character",
+                    rested: true,
+                    maxCurrentPower: 8_000,
+                  },
+                  bind: "eb04-018-ko",
+                  min: 0,
+                  max: 1,
+                  effect: { kind: "knock-out", binding: "eb04-018-ko" },
                 },
-                bind: "eb04-018-ko",
-                min: 0,
-                max: 1,
-                effect: { kind: "knock-out", binding: "eb04-018-ko" },
-              },
-            ],
+              ],
+            },
           },
         },
       },

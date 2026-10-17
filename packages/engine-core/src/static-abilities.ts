@@ -641,6 +641,14 @@ export function isRemovalImmune(
    * a `"ko"`-only immunity does not answer them.
    */
   removalKind: "ko" | "off-field" = "ko",
+  /**
+   * The copy of `sourceCardNumber` doing the removing, where the caller knows
+   * it. OP14-003 Capone"Gang"Bege reads that Character's *base* power, which a
+   * static layer or a stored setter can have moved off the printed figure
+   * (OP13-084 Ju Peter sets its Five Elders to 7000). Without it the printed
+   * power is all there is to read.
+   */
+  sourceInstanceId?: string,
 ): boolean {
   // OP14-079 Crocodile (Leader): "[printed text omitted -- pnpm card:text OP14-079]" A self-imposed ban, which is what
   // pays for the Leader's own −10 cost engine: Crocodile shrinks a Character
@@ -717,9 +725,18 @@ export function isRemovalImmune(
   // the answer to this 1-cost body is.
   if (card.cardNumber === "OP14-003" && sourceCardNumber !== undefined) {
     const source = db.get(sourceCardNumber);
+    const sourceOnBoard =
+      sourceInstanceId === undefined
+        ? undefined
+        : state.players[sourcePlayerId].board.find(
+            (candidate) => candidate.instanceId === sourceInstanceId,
+          );
+    const sourceBasePower = sourceOnBoard
+      ? cardBasePower(state, sourcePlayerId, sourceOnBoard, db)
+      : source?.power;
     if (
       source?.category === "character" &&
-      (source.power ?? Number.POSITIVE_INFINITY) <= 5000
+      (sourceBasePower ?? Number.POSITIVE_INFINITY) <= 5000
     ) {
       return true;
     }
@@ -1136,6 +1153,43 @@ export function cardBasePower(
     state,
     playerId,
     onBoard,
+    false,
+    base,
+    db,
+    override !== undefined,
+  );
+}
+
+/**
+ * The base power a card had as it left the field, read off the board entry it
+ * left behind.
+ *
+ * `cardBasePower` reads printed power for anything off the board, which is
+ * right for a card sitting in the trash and wrong for "when your Character
+ * with N base power is K.O.'d": that clause asks what the Character *was*.
+ * Bandai's OP14-053 Q&A is the ruling -- OP14-053 Vista K.O.'d while its base
+ * power copies a 6000 Leader is a 6000-base Character to OP13-002 Ace. The
+ * entry keeps its stored setters, and a card's own `set-base` layers are read
+ * against it as they would be on the field; an entry that was never on the
+ * board carries neither and so reads its printed power.
+ */
+export function departedCardBasePower(
+  state: GameState,
+  playerId: PlayerId,
+  card: CardInstance,
+  db: CardDatabase = cards,
+): number | undefined {
+  const printed = db.require(card.cardNumber).power ?? undefined;
+  const override =
+    "basePowerOverrides" in card
+      ? storedBasePower((card as BoardCard).basePowerOverrides, state.turn)
+      : undefined;
+  const base = override ?? printed;
+  if (base === undefined) return undefined;
+  return staticBasePower(
+    state,
+    playerId,
+    card,
     false,
     base,
     db,
