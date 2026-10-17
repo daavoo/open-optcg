@@ -3,7 +3,7 @@
  * into power, cost and keyword queries. A clause with no timing marker lives
  * here; one with a marker is a program in this set's other modules.
  */
-import { hasCardType } from "@one-piece-sim/cards";
+import { hasCardName, hasCardType } from "@one-piece-sim/cards";
 import {
   type StaticAbility,
   opponentOf,
@@ -27,6 +27,37 @@ export const op10StaticAbilities: readonly StaticAbility[] = [
     power: {
       kind: "add",
       value: (context) => (turnPlayer(context) !== context.playerId ? 2000 : 0),
+    },
+  },
+  // OP10-086 Shiryu: "[printed text omitted -- pnpm card:text OP10-086]"
+  // Its `[Activate: Main]` K.O. is in `op10-main.ts`.
+  {
+    cardNumber: "OP10-086",
+    scope: "self",
+    power: {
+      kind: "add",
+      value: (context) => (turnPlayer(context) !== context.playerId ? 2000 : 0),
+    },
+  },
+  // OP10-108 Scratchmen Apoo: "[printed text omitted -- pnpm card:text OP10-108]"
+  //
+  // By name, so a second Apoo does not switch the first on; and by printed
+  // colour, so a multicolour card with yellow in it counts.
+  {
+    cardNumber: "OP10-108",
+    scope: "self",
+    keyword: {
+      keyword: "Blocker",
+      when: (context) =>
+        context.state.players[context.playerId].board.some(
+          (card) =>
+            card.instanceId !== context.card.instanceId &&
+            !hasCardName(card.cardNumber, "Scratchmen Apoo") &&
+            hasCardType(card.cardNumber, "Supernovas") &&
+            (context.db.require(card.cardNumber).colors ?? []).includes(
+              "Yellow",
+            ),
+        ),
     },
   },
   // OP10-001 Smoker (Leader): "[printed text omitted -- pnpm card:text OP10-001]"
