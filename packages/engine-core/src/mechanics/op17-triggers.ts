@@ -63,7 +63,9 @@ export const op17TriggerMechanics: SetMechanics = {
       // OP17-012 Blenheim: "[Blocker] [On K.O.] Play up to 1 card with a cost of 1
       // and a type including Whitebeard Pirates from your hand."
       //
-      // "a cost of 1" is exact, not a ceiling, so the bound is both ways.
+      // "a cost of 1" is exact, not a ceiling, so the bound is both ways. "A
+      // type including" is a substring, so {Whitebeard Pirates Allies} bodies
+      // qualify too.
       "OP17-012",
       {
         effect: {
@@ -72,7 +74,7 @@ export const op17TriggerMechanics: SetMechanics = {
             player: "self",
             zone: "hand",
             category: "character",
-            type: "Whitebeard Pirates",
+            typeIncluding: "Whitebeard Pirates",
             minCost: 1,
             maxCost: 1,
           },

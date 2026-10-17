@@ -7,9 +7,9 @@
  * (`pnpm card:text OP07-0xx` prints it from the local cache).
  *
  * Two OP07 `[Trigger]`s were in the pool before the set was, as cards community
- * decks ship: OP07-107 Franky and OP07-114 (`eb04-bonney.ts`). A third,
- * OP07-056 Slave Arrow, is implemented imperatively and named in
- * `LEGACY_IMPERATIVE_CARDS`. None of the three is registered here.
+ * decks ship: OP07-107 Franky and OP07-114 (`eb04-bonney.ts`), and neither is
+ * registered here. OP07-056 Slave Arrow's `[Counter]` is an imperative branch
+ * in `legal-actions/counter.ts`; its `[Trigger]` is an ordinary program below.
  *
  * An Event's `[Trigger]` that reads "activate this card's [Main]/[Counter]
  * effect" is literally the same program, registered twice -- the shape
@@ -76,6 +76,33 @@ export const op07TriggerMechanics: SetMechanics = {
     // OP07-018 KEEP OUT: its own `[Counter]`, which is the buff rather than a
     // battle scalar -- see the entry in `op07-battle.ts`.
     ["OP07-018", ownCounterProgram("OP07-018")],
+    [
+      // OP07-056 Slave Arrow: a draw-two that puts two cards from hand back
+      // under the deck. Its `[Counter]` half is imperative (see the header);
+      // this half is a plain refill and needs nothing the DSL lacks. Both
+      // placements are mandatory, so `min` equals `max`.
+      "OP07-056",
+      {
+        effect: {
+          kind: "sequence",
+          effects: [
+            { kind: "draw", player: "self", count: 2 },
+            {
+              kind: "choose",
+              selector: { player: "self", zone: "hand" },
+              bind: "op07-slave-arrow-bottom",
+              min: 2,
+              max: 2,
+              effect: {
+                kind: "move",
+                binding: "op07-slave-arrow-bottom",
+                to: { player: "self", zone: "deck", position: "bottom" },
+              },
+            },
+          ],
+        },
+      },
+    ],
     [
       // OP07-035 Karmic Punishment: the Trigger is removal rather than power,
       // and it only answers a body that is already rested -- which off a Life

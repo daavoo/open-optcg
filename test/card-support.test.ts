@@ -68,7 +68,6 @@ const LEGACY_IMPERATIVE_CARDS: readonly string[] = [
   "OP01-016",
   "OP02-068",
   "OP04-016",
-  "OP07-056",
   "OP10-036",
   "OP10-099",
   "OP10-103",
@@ -117,7 +116,7 @@ const LEGACY_IMPERATIVE_CARDS: readonly string[] = [
 ];
 
 /** Ratchet. Lower this as cards migrate; never raise it. */
-const IMPERATIVE_BUDGET = 51;
+const IMPERATIVE_BUDGET = 50;
 
 /**
  * Printed clauses nothing in the engine runs.

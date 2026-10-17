@@ -446,11 +446,17 @@ export function getOnKoMechanicProgram(
    * bare entry answers both, which is what every other `[On K.O.]` prints.
    */
   cause: "battle" | "effect" = "effect",
+  /**
+   * Whether the effect that K.O.'d it was its own controller's. Only the
+   * mechanic `knock-out` node knows whose effect ran it, so only its signal
+   * passes this; every other caller leaves it at `false`.
+   */
+  byOwnEffect = false,
 ): MechanicProgram | undefined {
   const entry = onKoPrograms.get(cardNumber);
   if (!entry) return undefined;
   if (!("opponentEffectOnly" in entry)) return entry;
-  return entry.opponentEffectOnly && cause === "battle"
+  return entry.opponentEffectOnly && (cause === "battle" || byOwnEffect)
     ? undefined
     : entry.program;
 }
@@ -673,7 +679,11 @@ export function getMechanicSignalInvocations(
       // where it is. See `ko` on the signal.
       signal.ko === true
     ) {
-      const program = getOnKoMechanicProgram(signal.card.cardNumber);
+      const program = getOnKoMechanicProgram(
+        signal.card.cardNumber,
+        "effect",
+        signal.sourcePlayerId === signal.ownerId,
+      );
       if (program) {
         invocations.push({
           context: { sourcePlayerId: signal.ownerId, source: signal.card },

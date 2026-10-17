@@ -230,6 +230,32 @@ export const eb01TriggerMechanics: SetMechanics = {
         },
       },
     ],
+    [
+      // EB01-057 Shirahoshi: untimed text that reads as an `[On K.O.]` scoped
+      // to the opponent's effects (`pnpm card:text EB01-057`). It has no
+      // marker, but it is the same window OP09-052 Marco's clause names, so it
+      // shares that entry shape: `opponentEffectOnly` keeps a lost fight and
+      // its controller's own removal from paying out. By the time this
+      // dispatches the card is in the trash; the Life card comes off the deck.
+      "EB01-057",
+      {
+        opponentEffectOnly: true,
+        program: {
+          effect: {
+            kind: "choose",
+            selector: { player: "self", zone: "deck", position: "top" },
+            bind: "eb01-shirahoshi-life",
+            min: 0,
+            max: 1,
+            effect: {
+              kind: "move",
+              binding: "eb01-shirahoshi-life",
+              to: { player: "self", zone: "life", position: "top" },
+            },
+          },
+        },
+      },
+    ],
   ],
   onEndOfYourTurn: [
     [
