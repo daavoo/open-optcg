@@ -314,26 +314,18 @@ describe("FAQ OP-14 Green", () => {
     expect(board(game, "p1")).not.toContain("buffalo");
   });
 
-  // The engine reads a cost that rests your cards as the Leader, the
-  // Characters and the Stage (`OWN_CARDS_ZONES` in mechanic-dsl.ts); a DON!!
-  // card is never a legal payment, so with the Leader rested and no
-  // Character the activation rests nothing and sets no DON!! active. Letting
-  // an active DON!! pay is a new kind of option inside a card `choose`, shared
-  // by every such cost in the pool (OP14-020, OP14-029, OP14-033, OP14-037,
-  // OP14-038, OP17-037, EB04-015) and by the rest-an-opponent's-card targets.
-  it.fails(
-    "OP14-020#2: the Leader's rest cost can be paid by resting a DON!! card",
-    () => {
-      const game = table("faq-op14-020-2")
-        .withLeader("p1", "OP14-020")
-        .withRestedLeader("p1")
-        .build();
+  // "Your cards" includes an active DON!! (`restableCards`), so with the
+  // Leader rested and no Character a DON!! pays.
+  it("OP14-020#2: the Leader's rest cost can be paid by resting a DON!! card", () => {
+    const game = table("faq-op14-020-2")
+      .withLeader("p1", "OP14-020")
+      .withRestedLeader("p1")
+      .build();
 
-      game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-      settle(game);
-      expect(game.state.players.p1.restedDon).toHaveLength(1);
-    },
-  );
+    game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
+    settle(game);
+    expect(game.state.players.p1.restedDon).toHaveLength(1);
+  });
 
   it("OP14-020#3: with no cost-5 Character the Leader still rests a card, and no lock follows", () => {
     const game = table("faq-op14-020-3")
@@ -394,23 +386,19 @@ describe("FAQ OP-14 Green", () => {
     expect(game.state.players.p1.board[0]?.rested).toBe(true);
   });
 
-  // `op14-triggers.ts` aims the [On K.O.] at the Leader, Characters and Stage.
-  // A DON!! card in the cost area is never a target, so with the Leader rested
-  // by its attack there is nothing to choose and the clause passes.
-  it.fails(
-    "OP14-024#1: Kin'emon's [On K.O.] can rest an opponent's active DON!! card",
-    () => {
-      const game = table("faq-op14-024-1-don")
-        .withBoard("p2", [character("kinemon", "OP14-024", { rested: true })])
-        .build();
+  // "Your opponent's cards" includes their active DON!!: with the Leader
+  // rested by its attack, a DON!! is still a target.
+  it("OP14-024#1: Kin'emon's [On K.O.] can rest an opponent's active DON!! card", () => {
+    const game = table("faq-op14-024-1-don")
+      .withBoard("p2", [character("kinemon", "OP14-024", { rested: true })])
+      .build();
 
-      attack(game, "p1-leader", "kinemon");
-      declineDefence(game);
-      expect(game.player).toBe("p2");
-      settle(game);
-      expect(game.state.players.p1.restedDon).toHaveLength(1);
-    },
-  );
+    attack(game, "p1-leader", "kinemon");
+    declineDefence(game);
+    expect(game.player).toBe("p2");
+    settle(game);
+    expect(game.state.players.p1.restedDon).toHaveLength(1);
+  });
 
   it("OP14-027#1: Shanks' when-rested clause fires on its attack", () => {
     const game = whenRestedTable("faq-op14-027-1", "OP14-027", [
@@ -432,22 +420,18 @@ describe("FAQ OP-14 Green", () => {
     expect(trash(game, "p2")).toContain("target");
   });
 
-  // Paying with a DON!! card is the half the engine does not offer; see
-  // OP14-020#2.
-  it.fails(
-    "OP14-029#1: Tashigi's rest-2 cost can be paid with DON!! cards",
-    () => {
-      const game = table("faq-op14-029-1")
-        .withRestedLeader("p1")
-        .withBoard("p1", [character("tashigi", "OP14-029")])
-        .build();
+  // An active DON!! pays, as for OP14-020#2.
+  it("OP14-029#1: Tashigi's rest-2 cost can be paid with DON!! cards", () => {
+    const game = table("faq-op14-029-1")
+      .withRestedLeader("p1")
+      .withBoard("p1", [character("tashigi", "OP14-029")])
+      .build();
 
-      game.play({ type: "activate-main", sourceInstanceId: "tashigi" });
-      settle(game);
-      expect(currentPower(game.state, "p1", "tashigi")).toBe(8000);
-      expect(game.state.players.p1.restedDon.length).toBeGreaterThan(0);
-    },
-  );
+    game.play({ type: "activate-main", sourceInstanceId: "tashigi" });
+    settle(game);
+    expect(currentPower(game.state, "p1", "tashigi")).toBe(8000);
+    expect(game.state.players.p1.restedDon.length).toBeGreaterThan(0);
+  });
 
   it("OP14-029#2: Tashigi can rest itself to pay its [Activate: Main]", () => {
     const game = table("faq-op14-029-2")

@@ -35,7 +35,7 @@ import {
   isRestImmune,
   type Keyword,
 } from "./static-abilities.js";
-import { fieldDonCount } from "./don.js";
+import { DON_CARD_NUMBER, fieldDonCount } from "./don.js";
 import {
   battleParticipant,
   battleTargetMatches,
@@ -461,6 +461,18 @@ export function selectCards(
             : 0))
     );
   });
+  if (selector.includeActiveDon === true) {
+    const excluded = new Set(
+      selector.excludeBinding === undefined
+        ? []
+        : (bindings[selector.excludeBinding] ?? []),
+    );
+    matches.push(
+      ...state.players[playerId].activeDon
+        .filter((instanceId) => !excluded.has(instanceId))
+        .map((instanceId) => ({ instanceId, cardNumber: DON_CARD_NUMBER })),
+    );
+  }
   // `limit` used to be applied after an unconditional return, so it silently
   // did nothing. Every current caller pairs it with an equal `count`, which is
   // why nothing broke; applying it here makes the selector mean what it says.

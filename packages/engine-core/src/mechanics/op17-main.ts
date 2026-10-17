@@ -1,5 +1,5 @@
 /** OP17 `[Main]` programs: Event cards and `[Activate: Main]` abilities. */
-import { SOURCE_BINDING } from "../mechanics.js";
+import { SOURCE_BINDING, restableCards } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { elbaphGiantOut, lifeToHandCost, lookAndAdd } from "./shared.js";
 
@@ -190,12 +190,7 @@ export const op17MainMechanics: SetMechanics = {
             condition: {
               kind: "selector-count",
               player: "self",
-              selector: {
-                zone: "board",
-                includeLeader: true,
-                rested: false,
-                canRest: true,
-              },
+              selector: restableCards("self"),
               operator: "gte",
               value: 4,
             },
@@ -206,13 +201,7 @@ export const op17MainMechanics: SetMechanics = {
                 effects: [
                   {
                     kind: "choose",
-                    selector: {
-                      player: "self",
-                      zone: "board",
-                      includeLeader: true,
-                      rested: false,
-                      canRest: true,
-                    },
+                    selector: restableCards("self"),
                     bind: "op17-038-cost",
                     min: 4,
                     max: 4,

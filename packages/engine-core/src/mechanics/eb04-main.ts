@@ -10,7 +10,11 @@
  *
  * Printed text for any card here is `pnpm card:text <CARD>`.
  */
-import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
+import {
+  SOURCE_BINDING,
+  type MechanicEffect,
+  restableCards,
+} from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { giveDonToRayleigh, lookAndAddOrTrash, payFromHand } from "./shared.js";
 
@@ -32,12 +36,7 @@ export const restOwnCardCost = (
   kind: "optional",
   effect: {
     kind: "choose",
-    selector: {
-      player: "self",
-      zone: ["board", "stage"],
-      includeLeader: true,
-      canRest: true,
-    },
+    selector: restableCards("self"),
     bind,
     min: 1,
     max: 1,

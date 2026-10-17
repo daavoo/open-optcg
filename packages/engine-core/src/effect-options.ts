@@ -15,7 +15,7 @@ import {
   parseFaceDownOption,
   parseOrderOption,
 } from "./mechanics.js";
-import { donPoolSize } from "./don.js";
+import { activeDonOwner, donPoolSize } from "./don.js";
 import { currentPower, donPowerApplies } from "./queries.js";
 
 function cardRef(card: CardInstance, db: CardDatabase): KnownCardRef {
@@ -227,6 +227,9 @@ export function describeEffectOption(
     if (Number.isInteger(count)) return { kind: "don-return-count", count };
   }
 
+  if (activeDonOwner(state, optionId)) {
+    return { kind: "resource", resource: "don" };
+  }
   const direct = locate(state, optionId);
   if (direct) return describeCard(state, decidingPlayerId, direct, {}, db);
 

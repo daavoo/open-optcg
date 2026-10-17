@@ -392,6 +392,28 @@ export function donPoolSize(
 }
 
 /** The ids of every DON!! on the player's field, in every pool. */
+/**
+ * The card number a DON!! carries when a card choice offers one.
+ *
+ * Bandai's OP-14 Q&A (OP14-020#2, OP14-024#1, OP14-029#1): "your cards" and
+ * "your opponent's cards" mean every active card on that side of the field --
+ * Leader, Characters, Stage *and* DON!!. A DON!! has no card record, so a
+ * choice that reaches one (`CardSelector.includeActiveDon`) carries its own
+ * id with this in place of a card number, and the few places that name or
+ * move a chosen card ask `activeDonOwner` first.
+ */
+export const DON_CARD_NUMBER = "DON!!";
+
+/** Whose active DON!! `instanceId` is, if it is one. */
+export function activeDonOwner(
+  state: GameState,
+  instanceId: string,
+): PlayerId | undefined {
+  return (["p1", "p2"] as const).find((playerId) =>
+    state.players[playerId].activeDon.includes(instanceId),
+  );
+}
+
 export function fieldDonIds(state: GameState, playerId: PlayerId): string[] {
   const player = state.players[playerId];
   return [

@@ -1,5 +1,5 @@
 /** OP15 `[On Play]` programs. */
-import { SOURCE_BINDING } from "../mechanics.js";
+import { SOURCE_BINDING, restableCards } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { lifeToHandCost, lookAndAdd } from "./shared.js";
 
@@ -11,11 +11,19 @@ export const op15OnPlayMechanics: SetMechanics = {
       // Migrated with the card's `[Activate: Main]`, for the reason OP12-046's
       // `[On Play]` was: the debt register is per card.
       //
-      // `rest-opponent-cards` is the node the branch this replaces was the
-      // model for -- the same offer, every unrested restable Character plus one
-      // interchangeable "a DON!!".
+      // "Your opponent's cards" is every active card on their side -- Leader,
+      // Characters, Stage and DON!! -- which `restableCards` names.
       "OP15-032",
-      { effect: { kind: "rest-opponent-cards", player: "opponent", count: 1 } },
+      {
+        effect: {
+          kind: "choose",
+          selector: restableCards("opponent"),
+          bind: "op15-brook-rest",
+          min: 0,
+          max: 1,
+          effect: { kind: "rest", binding: "op15-brook-rest" },
+        },
+      },
     ],
     [
       // OP15-004 Sea Cat: "[printed text omitted -- pnpm card:text OP15-004]"

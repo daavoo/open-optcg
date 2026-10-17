@@ -2,7 +2,7 @@
  * OP17 battle-window programs: `[Counter]` Events, `[On Your Opponent's
  * Attack]`, `[When Attacking]` and the Leader watchers.
  */
-import { OWN_CARDS_ZONES, SOURCE_BINDING } from "../mechanics.js";
+import { SOURCE_BINDING, restableCards } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { donMinus, trashForBattlePower } from "./shared.js";
 
@@ -145,15 +145,7 @@ export const op17BattleMechanics: SetMechanics = {
               effects: [
                 {
                   kind: "choose",
-                  selector: {
-                    player: "self",
-                    // "1 of your cards" reaches the Stage too. See
-                    // `OWN_CARDS_ZONES`.
-                    zone: OWN_CARDS_ZONES,
-                    includeLeader: true,
-                    rested: false,
-                    canRest: true,
-                  },
+                  selector: restableCards("self"),
                   bind: "op17-037-cost",
                   min: 1,
                   max: 1,

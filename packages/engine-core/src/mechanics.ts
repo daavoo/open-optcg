@@ -32,7 +32,7 @@ import {
   isRemovalImmune,
   negateEffects,
 } from "./static-abilities.js";
-import { fieldDonCount, returnDonToDeck } from "./don.js";
+import { activeDonOwner, fieldDonCount, returnDonToDeck } from "./don.js";
 import { nextInt, shuffle } from "./rng.js";
 import {
   type PlayerRef,
@@ -101,6 +101,7 @@ export {
   type CardZone,
   type ZonePosition,
   OWN_CARDS_ZONES,
+  restableCards,
   type MechanicContext,
   type CardSelector,
   type BattleTargetFilter,
@@ -2261,6 +2262,16 @@ export function continueExecution(
     }
     if (effect.kind === "rest") {
       for (const instanceId of instanceIds) {
+        // A DON!! chosen as one of "your cards" (`includeActiveDon`): it rests
+        // where it lies, in the cost area, and -- like every DON!! movement
+        // -- raises no event of its own.
+        const donOwner = activeDonOwner(state, instanceId);
+        if (donOwner) {
+          const player = state.players[donOwner];
+          player.activeDon = player.activeDon.filter((id) => id !== instanceId);
+          player.restedDon.push(instanceId);
+          continue;
+        }
         // A Leader has no BoardCard, so "[printed text omitted -- pnpm card:text <card>]" (OP17-033) needs its own branch -- the same
         // shape granted keywords already use to find a Leader instance id.
         const leaderPlayerId = (["p1", "p2"] as const).find(

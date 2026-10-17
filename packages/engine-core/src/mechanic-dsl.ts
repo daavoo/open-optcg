@@ -109,6 +109,21 @@ export const OWN_CARDS_ZONES = [
   "stage",
 ] as const satisfies readonly CardZone[];
 
+/**
+ * "N of your cards" / "N of your opponent's cards" as a rest names them: every
+ * active card on that side of the field -- Leader, Characters, Stage and
+ * DON!! (Bandai's OP-14 Q&A: OP14-020#2, OP14-024#1, OP14-029#1) -- that a
+ * "cannot be rested" effect does not hold.
+ */
+export const restableCards = (player: "self" | "opponent"): CardSelector => ({
+  player,
+  zone: OWN_CARDS_ZONES,
+  includeLeader: true,
+  rested: false,
+  canRest: true,
+  includeActiveDon: true,
+});
+
 export interface MechanicContext {
   sourcePlayerId: PlayerId;
   source: CardInstance;
@@ -138,6 +153,13 @@ export interface CardSelector {
    * only as a companion to one.
    */
   includeLeader?: boolean;
+  /**
+   * The side's active DON!! count as cards too: "rest N of your cards",
+   * "rest up to N of your opponent's cards" (Bandai's OP-14 Q&A). They follow
+   * the matching cards, each by its own id under `DON_CARD_NUMBER`, and pass
+   * no card filter -- a DON!! has no cost, power or type to be measured.
+   */
+  includeActiveDon?: true;
   position?: ZonePosition;
   category?: string;
   type?: string;

@@ -3,7 +3,11 @@
  * `[On Your Opponent's Attack]`, `[When Attacking]`, and the set's new
  * "when this Character becomes rested" clause.
  */
-import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
+import {
+  SOURCE_BINDING,
+  type MechanicEffect,
+  restableCards,
+} from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { donMinus, payFromHand, trashForBattlePower } from "./shared.js";
 import { sourceAtFivePower, topDeckToLife } from "./op14-shared.js";
@@ -92,12 +96,7 @@ export const op14BattleMechanics: SetMechanics = {
             kind: "optional",
             effect: {
               kind: "choose",
-              selector: {
-                player: "self",
-                zone: "board",
-                includeLeader: true,
-                rested: false,
-              },
+              selector: restableCards("self"),
               bind: "op14-surpass-counter",
               min: 1,
               max: 1,

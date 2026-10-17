@@ -1,9 +1,9 @@
 /** OP14 `[Main]` programs: Event cards and `[Activate: Main]` abilities. */
 import {
-  OWN_CARDS_ZONES,
   SOURCE_BINDING,
   type MechanicEffect,
   type MechanicProgram,
+  restableCards,
 } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { lookAndAddOrTrash, lookAndAdd } from "./shared.js";
@@ -23,14 +23,7 @@ const restOwnCards = (count: number, bind: string, effect: MechanicEffect) => ({
   kind: "optional" as const,
   effect: {
     kind: "choose" as const,
-    selector: {
-      player: "self" as const,
-      // "your cards", so the Stage pays as readily as a Character. See
-      // `OWN_CARDS_ZONES`.
-      zone: OWN_CARDS_ZONES,
-      includeLeader: true,
-      rested: false,
-    },
+    selector: restableCards("self"),
     bind,
     min: count,
     max: count,

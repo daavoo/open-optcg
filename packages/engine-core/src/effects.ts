@@ -42,6 +42,7 @@ import {
   onPlayEffectsNegated,
 } from "./static-abilities.js";
 import {
+  activeDonOwner,
   DON_POOL_ACTIVE,
   DON_POOL_RESTED,
   donPoolSize,
@@ -1208,6 +1209,8 @@ function describeCardOption(
 ): string {
   const visible = findCardByInstanceId(state, instanceId);
   if (visible) return db.require(visible.cardNumber).name;
+  const donOwner = activeDonOwner(state, instanceId);
+  if (donOwner) return `1 active DON!! of ${donOwner}`;
   for (const playerId of ["p1", "p2"] as const) {
     const life = state.players[playerId].life;
     if (life[0]?.instanceId === instanceId) return "your top Life card";
