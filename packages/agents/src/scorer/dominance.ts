@@ -10,6 +10,7 @@
  * every candidate on a copy of the state and reports anything that fired, and
  * the rest by playing both answers in `test/scorer-dominance.test.ts`.
  */
+import { isAsideCounter } from "../aside-counters.js";
 import { donCountReaders } from "@one-piece-sim/engine-core";
 import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
 import { turnStart } from "./render.js";
@@ -71,7 +72,9 @@ export function isWastedCounter(
   if (!battle || battle.counterShortfall === 0) return false;
   let reachable = 0;
   for (const offered of observation.legalActions) {
-    if (offered.type === "pass") continue;
+    // A Counter onto another card is the same hand card offered again: it adds
+    // nothing to this defense.
+    if (offered.type === "pass" || isAsideCounter(offered)) continue;
     if (offered.type !== "counter" || offered.counterPower === undefined) {
       return false;
     }
@@ -185,6 +188,7 @@ export function prunedActions(observation: GameObservation): Set<number> {
   const pruned = new Set<number>();
   observation.legalActions.forEach((action, index) => {
     if (
+      isAsideCounter(action) ||
       isDoomedAttack(action, observation) ||
       isWastedCounter(action, observation) ||
       isSpentLeaderOverride(action, observation)

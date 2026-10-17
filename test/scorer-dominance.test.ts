@@ -21,6 +21,7 @@ import {
   isWastedCounter,
   prunedActions,
 } from "@one-piece-sim/agents/scorer";
+import { isAsideCounter } from "@one-piece-sim/agents/local";
 import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
 import { character, instance, scenario, type Game } from "./support/index.js";
 
@@ -134,8 +135,20 @@ function counterStep(hand: string[]) {
   return observation;
 }
 
+/** The defender's own Counters; a Counter onto another card is always pruned. */
 function counters(observation: GameObservation): LegalAction[] {
-  return observation.legalActions.filter((action) => action.type === "counter");
+  return observation.legalActions.filter(
+    (action) => action.type === "counter" && !isAsideCounter(action),
+  );
+}
+
+/** Pruned indices other than the Counters onto another card. */
+function prunedOwn(observation: GameObservation): Set<number> {
+  return new Set(
+    [...prunedActions(observation)].filter(
+      (index) => !isAsideCounter(observation.legalActions[index]!),
+    ),
+  );
 }
 
 describe("scorer dominance pruning: Counters", () => {
@@ -149,7 +162,7 @@ describe("scorer dominance pruning: Counters", () => {
       expect(isWastedCounter(counter, observation)).toBe(true);
     }
     const pruned = prunedActions(observation);
-    expect(pruned.size).toBe(1);
+    expect(prunedOwn(observation).size).toBe(1);
     expect(
       observation.legalActions.filter((_, index) => !pruned.has(index)),
     ).toEqual([expect.objectContaining({ type: "pass" })]);
@@ -161,7 +174,7 @@ describe("scorer dominance pruning: Counters", () => {
     for (const counter of counters(observation)) {
       expect(isWastedCounter(counter, observation)).toBe(false);
     }
-    expect(prunedActions(observation).size).toBe(0);
+    expect(prunedOwn(observation).size).toBe(0);
   });
 });
 

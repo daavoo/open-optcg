@@ -192,6 +192,14 @@ export interface PowerModifier {
   expiresAtTurn: number;
   sourceCardNumber?: string;
   sourceInstanceId?: string;
+  /**
+   * Lasts until the battle it was given in ends. A Counter played onto a card
+   * that is not being attacked is one (Bandai rules Q&A, Keywords #4): the
+   * battle's `counterPower` pool defends only the attack's target, so a boost
+   * to any other card has to sit on that card. `clearBattleScopedPower` drops
+   * it once no battle is open; `expiresAtTurn` is still set as a backstop.
+   */
+  battleScoped?: true;
 }
 
 export interface CostModifier {

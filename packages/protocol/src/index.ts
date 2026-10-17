@@ -676,6 +676,19 @@ export type LegalAction =
        * action the engine offers reports it.
        */
       counterPower?: number;
+      /**
+       * The Leader or Character the Counter power goes to, when it is not the
+       * card being attacked. Absent means the defender, which is every offer
+       * the Counter step made before this field existed and still the first
+       * offer for each card.
+       *
+       * A Character card's Counter may raise any of the defending player's
+       * Leader or Character cards for the rest of the battle (Bandai rules
+       * Q&A, Keywords #4). Those offers come after every other Counter-step
+       * offer, so the defender's list reads as it did with them left out; the
+       * shipped agents leave them out (`withoutAsideCounters`).
+       */
+      targetInstanceId?: string;
       summary: string;
     }
   | {
@@ -1108,6 +1121,11 @@ export type PublicEvent =
       playerId: PlayerId;
       cardNumber: string;
       power: number;
+      /**
+       * Set only when the Counter went to a card other than the one being
+       * attacked; see the `counter` action's field of the same name.
+       */
+      targetInstanceId?: string;
     }
   | {
       type: "event-activated";
@@ -1600,6 +1618,8 @@ export interface PowerModifierObservation {
   expiresAtTurn: number;
   sourceCardNumber?: string;
   sourceInstanceId?: string;
+  /** Lasts until the current battle ends, not to the end of the turn. */
+  battleScoped?: true;
 }
 
 /**

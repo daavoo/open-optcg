@@ -176,6 +176,46 @@ export function counterActions(
           : `still hit; ${remaining} more Counter power needed and the hand cannot reach it`;
     return `defense becomes ${projectedDefense} vs ${attackPower} attack: ${result}`;
   };
+  const counterValue = (card: { cardNumber: string }): number =>
+    (db.require(card.cardNumber).counter ?? 0) +
+    handCounterPower(state, playerId, card.cardNumber, db);
+  /**
+   * The same Counter played onto one of the defender's other cards, which the
+   * rules allow (Bandai rules Q&A, Keywords #4) and which leaves this battle's
+   * defense where it is. Every Counter card in hand qualifies, the ones
+   * `alreadySafe` holds back too: the boost is for that card, not for this
+   * defense.
+   *
+   * Listed after every offer above, the pass included, so each of those keeps
+   * its place and its id; and nothing a shipped agent reads changes, since
+   * `withoutAsideCounters` takes these out before any of them decides.
+   */
+  const asideTargets = targetInstanceId
+    ? [
+        {
+          instanceId: `${playerId}-leader`,
+          label: `your Leader ${db.require(player.leaderCardNumber).name}`,
+        },
+        ...player.board.map((card) => ({
+          instanceId: card.instanceId,
+          label: `${db.require(card.cardNumber).name} [${card.cardNumber}]`,
+        })),
+      ].filter((target) => target.instanceId !== targetInstanceId)
+    : [];
+  const asideCounters = player.hand
+    .filter((card) => counterValue(card) > 0)
+    .flatMap((card) => {
+      const definition = db.require(card.cardNumber);
+      const counter = counterValue(card);
+      return asideTargets.map((target) => ({
+        actionId: `r${state.revision}:counter:${card.instanceId}:${target.instanceId}`,
+        type: "counter" as const,
+        cardInstanceId: card.instanceId,
+        counterPower: counter,
+        targetInstanceId: target.instanceId,
+        summary: `Counter with ${definition.name} [${definition.cardNumber}] onto ${target.label}, not the card being attacked (+${counter} to it for this battle; ${counterOutcome(0)})`,
+      }));
+    });
   return [
     ...counterCards.map((card) => {
       const definition = db.require(card.cardNumber);
@@ -234,5 +274,6 @@ export function counterActions(
           : undefined,
       )})`,
     },
+    ...asideCounters,
   ];
 }
