@@ -13,6 +13,7 @@ import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import {
   dispatchMechanicSignals,
   getOnEndOfYourTurnMechanicProgram,
+  getOnStartOfYourTurnMechanicProgram,
 } from "./card-mechanics.js";
 import {
   clearExpiredNegations,
@@ -31,6 +32,7 @@ import {
 
 import {
   createOnEndOfYourTurnResult,
+  createOnStartOfYourTurnResult,
   mechanicPendingEffect,
 } from "./effects.js";
 import { withoutBasePowerSetters } from "./base-power.js";
@@ -357,7 +359,50 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
   state.turn += 1;
   pruneOncePerTurn(state);
   events.push({ type: "turn-ended", playerId: activePlayer, nextPlayerId });
+  if (askStartOfTurn(state, nextPlayerId, events)) return;
   events.push(...drawForTurn(state, nextPlayerId));
+}
+
+/**
+ * Offers the new turn player's Leader its start-of-turn program, if it has
+ * one, before the Refresh Phase runs. Returns whether a decision is now
+ * waiting; answering it ends in {@link resumeStartOfTurn}.
+ *
+ * Before the Refresh rather than after the draw because that is where the
+ * comprehensive rules resolve "at the start of your turn" effects -- so a
+ * DON!! still given to a card from last turn is on the field and counts, and
+ * the turn's own DON!! Phase has not added any yet.
+ */
+function askStartOfTurn(
+  state: GameState,
+  playerId: PlayerId,
+  events: PublicEvent[],
+): boolean {
+  const leader = state.players[playerId].leaderCardNumber;
+  if (
+    !getOnStartOfYourTurnMechanicProgram(leader) ||
+    leaderEffectsNegated(state, playerId)
+  ) {
+    return false;
+  }
+  const result = createOnStartOfYourTurnResult(state, playerId, {
+    instanceId: leaderInstanceId(playerId),
+    cardNumber: leader,
+  });
+  events.push(...result.events);
+  if (!result.pending) return false;
+  state.pendingEffect = result.pending;
+  state.activePlayer = result.pending.playerId;
+  return true;
+}
+
+/** The Refresh, Draw and DON!! steps a start-of-turn choice was asked ahead of. */
+export function resumeStartOfTurn(
+  state: GameState,
+  events: PublicEvent[],
+): void {
+  state.activePlayer = state.turnPlayerId;
+  events.push(...drawForTurn(state, state.turnPlayerId));
 }
 
 /**

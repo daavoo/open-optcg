@@ -8,7 +8,7 @@
   "rules": {
     "rulesVersion": "st31-st32-st33-st34-st35-st36-1.2",
     "cardDataHash": "0198234a6c0c301661cc046728811fc1d5bc560d2b5cada21c25e00150d9e8e1",
-    "programHash": "4f52cd103d424c0c9bb4dc8edb93a50cb24d1c57b6aca2976951333446733868"
+    "programHash": "360b6b56c22432e25503bc5f683715c5752a7398fad6832613d3123372f0ac82"
   },
   "actions": [
     "r0:mulligan:keep",

@@ -7,7 +7,7 @@
 import { resolveEffect } from "../effects.js";
 import { offerAttackReactions, resolveBattle } from "../battle.js";
 import { handOverPendingEffect } from "../pending.js";
-import { completeEndTurn, endTurn } from "../turn.js";
+import { completeEndTurn, endTurn, resumeStartOfTurn } from "../turn.js";
 import { type ActionContext } from "./context.js";
 
 export function applyResolveEffect({
@@ -31,6 +31,11 @@ export function applyResolveEffect({
     resolvedEffect?.kind === "borsalino-end-turn" ||
     (resolvedEffect?.kind === "mechanic-choice" &&
       resolvedEffect.endOfTurn === true);
+  // A start-of-turn program's choices are asked before the Refresh Phase, so
+  // the turn's Refresh, Draw and DON!! steps run once the last one settles.
+  const continuesStartOfTurn =
+    resolvedEffect?.kind === "mechanic-choice" &&
+    resolvedEffect.startOfTurn === true;
   events.push(...resolveEffect(state, offered.optionId));
   if (onOpponentAttackOffer) {
     if (offered.optionId !== "skip") {
@@ -69,6 +74,12 @@ export function applyResolveEffect({
     // Maria's end-of-turn return -- is part of ending the turn too. Unmarked,
     // answering it left the player back in their Main Phase.
     state.pendingEffect.endOfTurn = true;
+  }
+  if (continuesStartOfTurn && state.phase !== "finished") {
+    if (!state.pendingEffect) resumeStartOfTurn(state, events);
+    else if (state.pendingEffect.kind === "mechanic-choice") {
+      state.pendingEffect.startOfTurn = true;
+    }
   }
   // A resolution can raise the *next* decision for the other player: the
   // second half of ST10-010's program is the opponent choosing their own

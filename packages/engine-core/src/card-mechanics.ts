@@ -43,6 +43,7 @@ import {
   eventMainPrograms,
   leaderWatcherPrograms,
   onEndOfYourTurnPrograms,
+  onStartOfYourTurnPrograms,
   onKoPrograms,
   onOpponentAttackPrograms,
   onBlockPrograms,
@@ -209,6 +210,12 @@ export function getOnEndOfYourTurnMechanicProgram(
   return onEndOfYourTurnPrograms.get(cardNumber);
 }
 
+export function getOnStartOfYourTurnMechanicProgram(
+  cardNumber: string,
+): MechanicProgram | undefined {
+  return onStartOfYourTurnPrograms.get(cardNumber);
+}
+
 /**
  * Every card whose behaviour is expressed as a mechanic program.
  *
@@ -222,6 +229,7 @@ export function mechanicProgramCards(): ReadonlySet<string> {
     ...onPlayPrograms.keys(),
     ...onKoPrograms.keys(),
     ...onEndOfYourTurnPrograms.keys(),
+    ...onStartOfYourTurnPrograms.keys(),
     ...triggerPrograms.keys(),
     ...whenAttackingPrograms.keys(),
     ...whenRestedPrograms.keys(),
@@ -374,6 +382,7 @@ export function donCountReaders(): DonCountReaders {
     onPlayPrograms,
     onKoPrograms,
     onEndOfYourTurnPrograms,
+    onStartOfYourTurnPrograms,
     whenAttackingPrograms,
     whenRestedPrograms,
     activateMainPrograms,
@@ -437,11 +446,17 @@ export function getOnKoMechanicProgram(
    * bare entry answers both, which is what every other `[On K.O.]` prints.
    */
   cause: "battle" | "effect" = "effect",
+  /**
+   * Whether the effect that K.O.'d it was its own controller's. Only the
+   * mechanic `knock-out` node knows whose effect ran it, so only its signal
+   * passes this; every other caller leaves it at `false`.
+   */
+  byOwnEffect = false,
 ): MechanicProgram | undefined {
   const entry = onKoPrograms.get(cardNumber);
   if (!entry) return undefined;
   if (!("opponentEffectOnly" in entry)) return entry;
-  return entry.opponentEffectOnly && cause === "battle"
+  return entry.opponentEffectOnly && (cause === "battle" || byOwnEffect)
     ? undefined
     : entry.program;
 }
@@ -664,7 +679,11 @@ export function getMechanicSignalInvocations(
       // where it is. See `ko` on the signal.
       signal.ko === true
     ) {
-      const program = getOnKoMechanicProgram(signal.card.cardNumber);
+      const program = getOnKoMechanicProgram(
+        signal.card.cardNumber,
+        "effect",
+        signal.sourcePlayerId === signal.ownerId,
+      );
       if (program) {
         invocations.push({
           context: { sourcePlayerId: signal.ownerId, source: signal.card },

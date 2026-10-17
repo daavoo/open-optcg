@@ -363,10 +363,14 @@ export const op16EnelMechanics: SetMechanics = {
       // there the trigger is automatic so the "may" has to live in the cost,
       // whereas here choosing to activate *is* the "may", and having chosen it
       // the cost is paid.
+      //
+      // The hand trash follows "Then," so it is part of the effect, not the
+      // cost: an empty hand still buys the [Blocker], and the discard is then
+      // skipped because there is nothing to choose.
       "OP15-060",
       {
         oncePerTurn: false,
-        requires: { fieldDon: 1, handCards: 1 },
+        requires: { fieldDon: 1 },
         program: {
           effect: {
             kind: "sequence",

@@ -173,15 +173,21 @@ export function describeEffectOption(
         // the summary says so without being told. ST-13 puts Life cards back
         // in the Life area, so the destination travels on the option: a caller
         // reordering the offer re-words the sentence from it.
-        const { to } = pendingChoice.choice;
+        //
+        // A split placement names both ends, so a caller moving its split
+        // point can say where each half goes.
+        const { to, alternate } = pendingChoice.choice;
         const destination =
-          to.zone === "deck" && to.position === "bottom"
+          to.zone === "deck" && to.position === "bottom" && !alternate
             ? undefined
             : describeMoveDestination(to);
         return {
           kind: "order",
           cards,
           ...(destination === undefined ? {} : { destination }),
+          ...(alternate
+            ? { alternate: describeMoveDestination(alternate) }
+            : {}),
         };
       }
     }

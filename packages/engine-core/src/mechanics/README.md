@@ -71,7 +71,8 @@ the same way, by the timing window a clause fires in: `*-on-play.ts`, `*-main.ts
 and `[Activate: Main]`), `*-battle.ts` (`[Counter]`,
 `[On Your Opponent's Attack]`, `[When Attacking]`, `[On Block]`, Leader watchers,
 and OP14's "when this Character becomes rested") and `*-triggers.ts`
-(`[Trigger]`, `[On K.O.]`, `[End of Your Turn]`).
+(`[Trigger]`, `[On K.O.]`, `[End of Your Turn]`, and a Leader's
+start-of-turn activation).
 
 A clause with no printed marker at all goes somewhere else again. Continuous text
 is a row in the set's `*-static.ts` (the predicates those rows read are in
