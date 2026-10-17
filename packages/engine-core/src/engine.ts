@@ -102,6 +102,7 @@ import { EngineError } from "./errors.js";
 import {
   settleDoubleAttackDamage,
   settleEffectDamage,
+  clearBattleScopedPower,
   handOverPendingEffect,
 } from "./pending.js";
 import { offerDonReturnChoice } from "./turn.js";
@@ -551,6 +552,7 @@ export function applyOfferedAction(
   settleDoubleAttackDamage(state, events);
   settleEffectDamage(state, events);
   endBattleIfTargetLeftField(state);
+  clearBattleScopedPower(state);
   // An `[On Play]` the mechanic DSL could not run inline, plus whatever was
   // queued behind it. Here rather than at each dispatch site because this is
   // the only point that is both past every one of them and in charge of the

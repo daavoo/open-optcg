@@ -382,32 +382,39 @@ describe("Bandai rules Q&A: Keywords", () => {
     expect(offered(game, "counter")).toEqual([]);
   });
 
-  // Engine disagrees: a Character card's Counter is added to
-  // `activeAttack.counterPower` (actions/counter.ts), i.e. always to the
-  // card being attacked, so one `counter` action is offered per card in hand
-  // and none names another target.
-  it.fails(
-    "Keywords 4: a Counter can raise a card that is not being attacked, for the battle",
-    () => {
-      // The ruling: yes, for the rest of the battle -- a Character card's
-      // Counter may go to any of your Leader or Characters, not only the
-      // defender.
-      const game = table("faq-counter-other-target")
-        .withBoard("p1", [character("attacker", "FIX-002")])
-        .withGivenDon("p1", "attacker", 2)
-        .withBoard("p2", [character("bystander", "FIX-001")])
-        .withHand("p2", [instance("counter", "FIX-001")])
-        .withLife("p2", lifeCards("p2", 2))
-        .build();
+  it("Keywords 4: a Counter can raise a card that is not being attacked, for the battle", () => {
+    // The ruling: yes, for the rest of the battle -- a Character card's
+    // Counter may go to any of your Leader or Characters, not only the
+    // defender.
+    const game = table("faq-counter-other-target")
+      .withBoard("p1", [character("attacker", "FIX-002")])
+      .withGivenDon("p1", "attacker", 2)
+      .withBoard("p2", [character("bystander", "FIX-001")])
+      .withHand("p2", [instance("counter", "FIX-001")])
+      .withLife("p2", lifeCards("p2", 2))
+      .build();
 
-      attack(game, "attacker", "p2-leader");
-      while (game.state.phase !== "counter") game.pass();
+    attack(game, "attacker", "p2-leader");
+    while (game.state.phase !== "counter") game.pass();
+    const bystanderBefore = currentPower(game.state, "p2", "bystander");
 
-      const counters = offered(game, "counter");
-      const targets = new Set(counters.map((action) => action.summary));
-      expect(targets.size).toBeGreaterThan(1);
-    },
-  );
+    game.play({
+      type: "counter",
+      cardInstanceId: "counter",
+      targetInstanceId: "bystander",
+    });
+
+    // The bystander gains it; the Leader under attack does not.
+    expect(currentPower(game.state, "p2", "bystander")).toBe(
+      bystanderBefore + 1000,
+    );
+    expect(game.state.activeAttack?.counterPower).toBe(0);
+
+    while (game.state.activeAttack) game.pass();
+
+    // "During this battle": gone once the battle is.
+    expect(currentPower(game.state, "p2", "bystander")).toBe(bystanderBefore);
+  });
 
   it("Keywords 5: a Character's Counter costs nothing", () => {
     const game = table("faq-counter-free")

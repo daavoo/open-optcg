@@ -2765,7 +2765,13 @@ export function createBattleScreen(
         (candidate) => candidate.instanceId === action.cardInstanceId,
       );
       if (card) {
-        return `Counter +${formatCompactStat(card.counter)}`;
+        // A Counter onto a card other than the one being attacked names the
+        // card it goes to; otherwise it reads exactly like the defender's.
+        const onto =
+          action.targetInstanceId === undefined
+            ? ""
+            : ` onto ${observationCardName(observation, action.targetInstanceId)}`;
+        return `Counter +${formatCompactStat(card.counter)}${onto}`;
       }
     }
     if (action.type === "activate-counter-event") {

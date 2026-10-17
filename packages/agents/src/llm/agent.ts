@@ -1,3 +1,4 @@
+import { withoutAsideCounters } from "../aside-counters.js";
 import type {
   CardFacts,
   GameObservation,
@@ -943,9 +944,10 @@ export class LlmAgent implements Agent {
   }
 
   async chooseAction(
-    observation: GameObservation,
+    offered: GameObservation,
     signal?: AbortSignal,
   ): Promise<LegalAction> {
+    const observation = withoutAsideCounters(offered);
     this.#lastReasoning = undefined;
     this.#lastRawExchange = undefined;
     // A plan is a plan for one turn. Keyed on the turn number rather than on

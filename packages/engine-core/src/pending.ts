@@ -41,10 +41,12 @@ export function addPowerModifier(
   amount: number,
   expiresAtTurn: number,
   source?: CardInstance,
+  battleScoped = false,
 ): void {
   const modifier = {
     amount,
     expiresAtTurn,
+    ...(battleScoped ? { battleScoped: true as const } : {}),
     ...(source
       ? {
           sourceCardNumber: source.cardNumber,
@@ -329,6 +331,37 @@ export function resumeMainAfterBattle(state: GameState): void {
   if (state.phase !== "finished" && attackerPlayerId) {
     state.phase = "main";
     state.activePlayer = attackerPlayerId;
+  }
+}
+
+/**
+ * Drops the power modifiers given "for this battle" once no battle is open.
+ *
+ * Run after every action rather than at each place a battle ends, because a
+ * battle ends in several: the damage step, an attacker or target leaving the
+ * field, a K.O. that opens an `[On K.O.]`, a replacement that cancels it. A
+ * modifier that outlived its battle would defend that card against every
+ * later attack this turn.
+ *
+ * Leaves an array untouched unless it holds one, so a state with none
+ * serializes and hashes exactly as it would without this pass.
+ */
+export function clearBattleScopedPower(state: GameState): void {
+  if (state.activeAttack) return;
+  for (const playerId of ["p1", "p2"] as const) {
+    const player = state.players[playerId];
+    if (player.leaderPowerModifiers.some((modifier) => modifier.battleScoped)) {
+      player.leaderPowerModifiers = player.leaderPowerModifiers.filter(
+        (modifier) => !modifier.battleScoped,
+      );
+    }
+    for (const card of player.board) {
+      if (card.powerModifiers?.some((modifier) => modifier.battleScoped)) {
+        card.powerModifiers = card.powerModifiers.filter(
+          (modifier) => !modifier.battleScoped,
+        );
+      }
+    }
   }
 }
 

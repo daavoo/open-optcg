@@ -4,6 +4,7 @@
  * One of the eleven handlers `applyAction` dispatches to; see
  * `actions/index.ts` for the table and the contract they share.
  */
+import { addPowerModifier } from "../pending.js";
 import { handCounterPower } from "../static-abilities.js";
 import { type ActionContext } from "./context.js";
 
@@ -28,12 +29,20 @@ export function applyCounter({
   const power =
     (db.require(card.cardNumber).counter ?? 0) +
     handCounterPower(state, activePlayer, card.cardNumber, db);
-  state.activeAttack.counterPower += power;
+  const aside = offered.targetInstanceId;
+  if (aside === undefined) {
+    state.activeAttack.counterPower += power;
+  } else {
+    // A card the attack is not pointed at: the battle's pool defends only the
+    // target, so the boost sits on the card itself until the battle ends.
+    addPowerModifier(state, activePlayer, aside, power, state.turn, card, true);
+  }
   player.trash.push(card);
   events.push({
     type: "counter-used",
     playerId: activePlayer,
     cardNumber: card.cardNumber,
     power,
+    ...(aside === undefined ? {} : { targetInstanceId: aside }),
   });
 }

@@ -12,6 +12,9 @@ import { createDonLookaheadModule } from "./modules/lookahead-module.js";
 import { createDonSequenceModule } from "./modules/don-sequence-module.js";
 import { decideModule, type PolicyModule } from "./policy-module.js";
 import { LEADERS, policiesForDeck } from "./registry.js";
+import { withoutAsideCounters } from "../aside-counters.js";
+
+export { isAsideCounter, withoutAsideCounters } from "../aside-counters.js";
 
 export interface Agent {
   chooseAction(
@@ -60,7 +63,7 @@ export class SeededRandomAgent implements Agent {
 
 export class GenericRulesAgent implements Agent {
   async chooseAction(observation: GameObservation): Promise<LegalAction> {
-    return chooseGenericRules(observation).action;
+    return chooseGenericRules(withoutAsideCounters(observation)).action;
   }
 }
 
@@ -99,7 +102,10 @@ abstract class ComposedRulesAgent implements Agent, SimulatingAgent {
   }
 
   async chooseAction(observation: GameObservation): Promise<LegalAction> {
-    const policyDecision = chooseWithModules(observation, this.modules());
+    const policyDecision = chooseWithModules(
+      withoutAsideCounters(observation),
+      this.modules(),
+    );
     this.#lastDecision = policyDecision;
     return policyDecision.action;
   }
