@@ -240,8 +240,12 @@ class Scenario {
   withLife(player: PlayerId, life: number | CardInstance[]): this {
     return this.#setup((state) => {
       const target = state.players[player];
+      // Dealt as setup deals it: the deck's top card ends at the bottom of
+      // Life. Explicit cards are given top first.
       target.life =
-        typeof life === "number" ? target.deck.splice(0, life) : [...life];
+        typeof life === "number"
+          ? target.deck.splice(0, life).reverse()
+          : [...life];
     });
   }
 
