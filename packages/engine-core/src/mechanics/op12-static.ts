@@ -3,7 +3,7 @@
  * into power, cost and keyword queries. A clause with no timing marker lives
  * here; one with a marker is a program in this set's other modules.
  */
-import { hasCardType } from "@one-piece-sim/cards";
+import { cardAttributes, hasCardType } from "@one-piece-sim/cards";
 import {
   leaderHasType,
   lowLife,
@@ -14,7 +14,18 @@ import {
   turnPlayer,
   twoBaseCostFiveCharacters,
 } from "./static-shared.js";
-import type { StaticAbility, RemovalImmunity } from "../static-abilities.js";
+import type {
+  AbilityContext,
+  StaticAbility,
+  RemovalImmunity,
+} from "../static-abilities.js";
+
+const leaderIsSlash = (context: AbilityContext): boolean =>
+  cardAttributes(
+    context.db.require(
+      context.state.players[context.playerId].leaderCardNumber,
+    ),
+  ).includes("Slash");
 
 export const op12StaticAbilities: readonly StaticAbility[] = [
   // OP12-063 Vinsmoke Reiju: +2000 power and +5 cost with 4 or more Events in
@@ -39,8 +50,33 @@ export const op12StaticAbilities: readonly StaticAbility[] = [
     scope: "self",
     cost: (context) => (twoBaseCostFiveCharacters(context) ? 1 : 0),
   },
+  // OP12-036 Roronoa Zoro: `pnpm card:text OP12-036`.
+  //
+  // Three rows for three questions: whether an effect may play it out of hand,
+  // whether it survives losing a fight, and its number. The last two share the
+  // <Slash> Leader gate; the first is unconditional.
+  {
+    cardNumber: "OP12-036",
+    scope: "self",
+    effectPlayFromHandBarred: () => true,
+  },
+  {
+    cardNumber: "OP12-036",
+    scope: "self",
+    battleKoImmune: (context, attacker) =>
+      leaderIsSlash(context) &&
+      cardAttributes(context.db.require(attacker.cardNumber)).includes("Slash"),
+  },
+  {
+    cardNumber: "OP12-036",
+    scope: "self",
+    power: {
+      kind: "add",
+      value: (context) => (leaderIsSlash(context) ? 1000 : 0),
+    },
+  },
   // OP12-053 Borsalino: "[printed text omitted -- pnpm card:text OP12-053]" Its replacement clause is
-  // declared in `unimplemented-clauses.ts`.
+  // in `op13-replacements.ts`.
   {
     cardNumber: "OP12-053",
     scope: "self",

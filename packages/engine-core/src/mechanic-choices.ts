@@ -19,6 +19,7 @@ import { replacementRegistry } from "./replacement-eligibility.js";
 import { currentPowerOfBoardCard, selectCards } from "./mechanic-conditions.js";
 import {
   continueExecution,
+  effectPlayableCandidates,
   faceDownOption,
   findCardZone,
   flatten,
@@ -99,11 +100,17 @@ export function getMechanicChoiceOptions(
     }
     return counts;
   }
-  const eligible = selectCards(
+  const eligible = effectPlayableCandidates(
     state,
-    pending.execution.context,
-    pending.selector,
-    pending.execution.bindings,
+    selectCards(
+      state,
+      pending.execution.context,
+      pending.selector,
+      pending.execution.bindings,
+      db,
+    ),
+    pending.effect,
+    pending.bind,
     db,
   );
   let options = eligible
