@@ -9,8 +9,9 @@
  * set: `removal: "off-field"` is the whole family, and reading them together is
  * what makes the six different "instead" clauses comparable.
  *
- * OP13-060 Amatsuki Toki is the one K.O.-only reading in OP13, and sits here
- * rather than in a module of its own so the set's replacements stay together.
+ * OP13-060 Amatsuki Toki and OP13-047 Fossa are OP13's K.O.-only readings,
+ * and sit here rather than in a module of their own so the set's replacements
+ * stay together.
  */
 import { type SetMechanics } from "./registry.js";
 
@@ -164,6 +165,27 @@ export const offFieldReplacementMechanics: SetMechanics = {
         protects: { category: "character", typeIncluding: "Roger Pirates" },
         excludesSelf: true,
         label: "Trash Amatsuki Toki",
+        cost: { kind: "trash-self" },
+      },
+    ],
+    [
+      // OP13-047 Fossa: "[printed text omitted -- pnpm card:text OP13-047]"
+      //
+      // Toki's shape over the Blue Whitebeard deck: a K.O. only, paid by
+      // trashing the protector, and "a type including" so {Whitebeard Pirates
+      // Allies} bodies are covered. Fossa is {Whitebeard Pirates} himself, and
+      // `excludesSelf` keeps him from answering his own K.O., which would save
+      // nothing.
+      "OP13-047",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: false,
+        protects: {
+          category: "character",
+          typeIncluding: "Whitebeard Pirates",
+        },
+        excludesSelf: true,
+        label: "Trash Fossa",
         cost: { kind: "trash-self" },
       },
     ],
