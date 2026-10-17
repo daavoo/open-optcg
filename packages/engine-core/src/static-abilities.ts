@@ -326,7 +326,8 @@ export interface StaticAbility {
   /**
    * "This Character cannot be rested by your opponent's effects", live while
    * the predicate holds -- OP15-024 Usopp on the opponent's turn, OP11-046
-   * Vinsmoke Yonji while every Character beside it is GERMA.
+   * Vinsmoke Yonji while every Character beside it is GERMA, OP12-021
+   * Ipponmatsu behind a Slash Leader with 6 rested DON!!.
    *
    * Continuous and read off the card itself, unlike `cannotRestUntilTurn`,
    * which an effect writes for a window. Read through {@link isRestImmune}.

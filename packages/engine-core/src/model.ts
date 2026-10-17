@@ -992,6 +992,12 @@ export type PendingEffect =
       sourceInstanceId: string;
       eligibleInstanceIds: string[];
       remaining: number;
+      /**
+       * Cards OP12-040 Kuzan's Leader owes for the cards already trashed in
+       * this payment, drawn once the last one is paid so a drawn card is never
+       * offered as the rest of the payment. See `navyHandTrashDraws`.
+       */
+      leaderDrawCount?: number;
       resumePhase?: "main" | "block" | "counter";
       resumePlayerId?: PlayerId;
     }

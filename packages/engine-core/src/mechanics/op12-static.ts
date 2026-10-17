@@ -75,6 +75,15 @@ export const op12StaticAbilities: readonly StaticAbility[] = [
       value: (context) => (leaderIsSlash(context) ? 1000 : 0),
     },
   },
+  // OP12-021 Ipponmatsu: `pnpm card:text OP12-021`. The DON!! it counts are
+  // the cost area's rested pile -- a given DON!! is not in the cost area.
+  {
+    cardNumber: "OP12-021",
+    scope: "self",
+    restImmune: (context) =>
+      leaderIsSlash(context) &&
+      context.state.players[context.playerId].restedDon.length >= 6,
+  },
   // OP12-053 Borsalino: "[printed text omitted -- pnpm card:text OP12-053]" Its replacement clause is
   // in `op13-replacements.ts`.
   {

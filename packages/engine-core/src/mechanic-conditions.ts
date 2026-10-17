@@ -416,7 +416,7 @@ export function selectCards(
           // selector reaching across the table is.
           !(
             selector.player === "opponent" &&
-            isRestImmune(state, playerId, card)
+            isRestImmune(state, playerId, card, db)
           ))) &&
       (selector.keyword === undefined ||
         cardHasKeyword(state, playerId, card, selector.keyword, db)) &&

@@ -231,10 +231,13 @@ export const op12BattleMechanics: SetMechanics = {
     ],
     [
       // OP12-069 Crocodile: "[printed text omitted -- pnpm card:text OP12-069]"Baroque Works"[printed text omitted -- pnpm card:text OP12-069]"
+      //
+      // The Leader's type gates the offer as well as the buff: the DON!! −1
+      // would otherwise be paid for nothing behind any other Leader.
       "OP12-069",
       {
         oncePerTurn: true,
-        requires: { fieldDon: 1 },
+        requires: { fieldDon: 1, leaderTypeIncluding: "Baroque Works" },
         program: {
           effect: donMinus(1, {
             kind: "if",

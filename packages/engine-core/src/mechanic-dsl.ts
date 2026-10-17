@@ -1206,6 +1206,18 @@ export type MechanicEffect =
        * same reason.
        */
       skipReplacements?: true;
+      /**
+       * Internal: the binding that holds the card whose effect this move is,
+       * when that is not the program's source.
+       *
+       * A replacement paid with a hand card is paid inside the removing card's
+       * program, so without this the trash would read as the *remover's*
+       * effect. OP12-040 Kuzan's Leader draws only for a hand trash its own
+       * {Navy} card's effect made, and the card that made it is the protector
+       * -- OP12-053 Borsalino, OP12-048 Donquixote Rosinante -- which
+       * `replacementCostEffect` names here.
+       */
+      sourceBinding?: string;
     }
   | {
       kind: "play";

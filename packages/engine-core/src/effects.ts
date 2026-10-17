@@ -40,6 +40,7 @@ import {
   charactersArriveRested,
   effectsNegated,
   isRemovalImmune,
+  isRestImmune,
   onPlayEffectsNegated,
 } from "./static-abilities.js";
 import {
@@ -931,6 +932,7 @@ function activeRestTargets(
       (card) =>
         !card.rested &&
         (card.cannotRestUntilTurn ?? -1) < state.turn &&
+        !isRestImmune(state, opponentOf(playerId), card) &&
         effectiveCost(state, opponentOf(playerId), card) <= maxCost,
     )
     .map((card) => card.instanceId);
