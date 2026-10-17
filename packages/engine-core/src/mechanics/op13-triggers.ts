@@ -1,7 +1,11 @@
 /**
  * OP13 `[Trigger]`, `[On K.O.]` and `[End of Your Turn]` programs.
  */
-import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
+import {
+  SOURCE_BINDING,
+  type MechanicEffect,
+  restableCards,
+} from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { op13EventPrograms, restOpponentUpToCost } from "./op13-main.js";
 import { op13OnPlayMechanics } from "./op13-on-play.js";
@@ -52,12 +56,7 @@ export const op13TriggerMechanics: SetMechanics = {
       {
         effect: {
           kind: "choose",
-          selector: {
-            player: "opponent",
-            zone: ["board", "stage"],
-            includeLeader: true,
-            canRest: true,
-          },
+          selector: restableCards("opponent"),
           bind: "op13-franky-rest",
           min: 0,
           max: 2,

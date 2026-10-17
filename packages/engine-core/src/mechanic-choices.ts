@@ -9,7 +9,7 @@ import {
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import type { CardInstance, GameState } from "./model.js";
 import { effectiveCost } from "./queries.js";
-import { fieldDonCount } from "./don.js";
+import { activeDonOwner, fieldDonCount } from "./don.js";
 import type {
   MechanicPendingChoice,
   MechanicResult,
@@ -109,6 +109,16 @@ export function getMechanicChoiceOptions(
   let options = eligible
     .map((card) => card.instanceId)
     .filter((instanceId) => !pending.selected.includes(instanceId));
+  // Active DON!! are interchangeable, so one of them stands for the rest: the
+  // next pick offers the next one. See `CardSelector.includeActiveDon`.
+  const firstDon = options.find(
+    (instanceId) => activeDonOwner(state, instanceId) !== undefined,
+  );
+  options = options.filter(
+    (instanceId) =>
+      instanceId === firstDon ||
+      activeDonOwner(state, instanceId) === undefined,
+  );
   if (
     pending.distinctNames ||
     pending.maxTotalCost !== undefined ||

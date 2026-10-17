@@ -386,12 +386,19 @@ function restOwnCardsSelector(cost: {
   zones?: readonly CardZone[];
   includeLeader?: boolean;
 }): CardSelector {
+  // "Your cards" with nothing narrowing it reaches the active DON!! as well
+  // (OP14-029#1); text naming a category, a zone or the Leader does not.
+  const anyCard =
+    cost.match === undefined &&
+    cost.zones === undefined &&
+    cost.includeLeader === undefined;
   return {
     ...(cost.match ?? {}),
     player: "self",
     zone: cost.zones ?? (cost.match === undefined ? OWN_CARDS_ZONES : "board"),
     includeLeader: cost.includeLeader ?? cost.match === undefined,
     rested: false,
+    ...(anyCard ? { includeActiveDon: true as const } : {}),
   };
 }
 

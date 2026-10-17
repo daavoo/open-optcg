@@ -4063,10 +4063,13 @@ describe("OP17-038 event offer is gated on its condition", () => {
     const state = scenario();
     state.players.p1.hand = [{ instanceId: "evt", cardNumber: "OP17-038" }];
     // Leader + 2 Characters = 3 restable cards, short of the 4 the Event needs.
+    // An active DON!! is one of "your cards" too (OP14-020#2), so every DON!!
+    // is spent first.
     state.players.p1.board = [
       character("a", "FIX-001"),
       character("b", "FIX-001"),
     ];
+    state.players.p1.restedDon.push(...state.players.p1.activeDon.splice(0));
     const actions = getLegalActions(state, state.activePlayer);
     expect(
       actions.some(
@@ -4099,14 +4102,16 @@ describe("OP17-038 event offer is gated on its condition", () => {
   it("is not offered when the only restable cards are already rested", () => {
     const state = scenario();
     state.players.p1.hand = [{ instanceId: "evt", cardNumber: "OP17-038" }];
-    // Leader + 4 Characters, but all four Characters are rested, so only the
-    // Leader is restable -- short of the 4 the Event needs.
+    // Leader + 4 Characters, but all four Characters are rested and every
+    // DON!! is spent, so only the Leader is restable -- short of the 4 the
+    // Event needs.
     state.players.p1.board = [
       character("a", "FIX-001", { rested: true }),
       character("b", "FIX-001", { rested: true }),
       character("c", "FIX-001", { rested: true }),
       character("d", "FIX-001", { rested: true }),
     ];
+    state.players.p1.restedDon.push(...state.players.p1.activeDon.splice(0));
     const actions = getLegalActions(state, state.activePlayer);
     expect(
       actions.some(

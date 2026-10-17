@@ -1,8 +1,8 @@
 /** OP14 `[Trigger]`, `[On K.O.]` and `[End of Your Turn]` programs. */
 import {
-  OWN_CARDS_ZONES,
   SOURCE_BINDING,
   type MechanicEffect,
+  restableCards,
 } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import {
@@ -94,12 +94,7 @@ export const op14TriggerMechanics: SetMechanics = {
           kind: "optional",
           effect: {
             kind: "choose",
-            selector: {
-              player: "self",
-              zone: "board",
-              includeLeader: true,
-              rested: false,
-            },
+            selector: restableCards("self"),
             bind: "op14-surpass-cost",
             min: 1,
             max: 1,
@@ -294,13 +289,7 @@ export const op14TriggerMechanics: SetMechanics = {
       {
         effect: {
           kind: "choose",
-          selector: {
-            player: "opponent",
-            zone: ["board", "stage"],
-            includeLeader: true,
-            rested: false,
-            canRest: true,
-          },
+          selector: restableCards("opponent"),
           bind: "op14-kinemon-rest",
           min: 0,
           max: 1,
@@ -316,14 +305,7 @@ export const op14TriggerMechanics: SetMechanics = {
           kind: "optional",
           effect: {
             kind: "choose",
-            selector: {
-              // "your cards": the Stage is a legal payment too. See
-              // `OWN_CARDS_ZONES`.
-              player: "self",
-              zone: OWN_CARDS_ZONES,
-              includeLeader: true,
-              rested: false,
-            },
+            selector: restableCards("self"),
             bind: "op14-perona033-cost",
             min: 1,
             max: 1,

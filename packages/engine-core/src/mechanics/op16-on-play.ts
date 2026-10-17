@@ -1,5 +1,5 @@
 /** OP16 `[On Play]` programs. */
-import { SOURCE_BINDING } from "../mechanics.js";
+import { SOURCE_BINDING, restableCards } from "../mechanics.js";
 import { ace118Search } from "./op16-triggers.js";
 import { revealEightThousand, trashEightThousand } from "./op16-shared.js";
 import { type SetMechanics } from "./registry.js";
@@ -358,12 +358,7 @@ export const op16OnPlayMechanics: SetMechanics = {
           effects: [
             {
               kind: "choose",
-              selector: {
-                player: "opponent",
-                zone: "board",
-                includeLeader: true,
-                canRest: true,
-              },
+              selector: restableCards("opponent"),
               bind: "op16-zoro-rest",
               min: 0,
               max: 1,

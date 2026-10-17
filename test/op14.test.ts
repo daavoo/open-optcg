@@ -1606,13 +1606,20 @@ describe("OP14-038 I Never Bother to Remember the Faces of Trash", () => {
     // synthetic instance with no `rested` field, so it used to pass that filter
     // however many times it had already paid -- a second payment for free. See
     // `isRested`.
+    // The two Characters, and one active DON!! standing for the rest (an
+    // active DON!! is one of "your cards", OP14-020#2).
+    const offers = game
+      .legalActions()
+      .filter((action) => action.type === "resolve-effect");
     expect(
-      game
-        .legalActions()
-        .filter((action) => action.type === "resolve-effect")
+      offers
+        .filter((action) => action.option.kind === "card")
         .map((action) => action.optionId)
         .sort(),
     ).toEqual(["a", "b"]);
+    expect(
+      offers.filter((action) => action.option.kind === "resource"),
+    ).toHaveLength(1);
   });
 
   it("adds +3000 to the Leader as a Counter", () => {

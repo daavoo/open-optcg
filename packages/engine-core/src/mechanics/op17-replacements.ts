@@ -45,7 +45,8 @@ export const op17ReplacementMechanics: SetMechanics = {
       //
       // "A type including" is the substring reading, which is what reaches
       // {Red-Haired Pirates Allies} -- Crone Oli's own type and OP17-026
-      // Fugar's. The Character rested is a free choice, Oli herself included.
+      // Fugar's. The card rested is any of the controller's -- Leader, Character,
+      // Stage or DON!! -- Oli herself included.
       "OP17-021",
       {
         opponentEffectOnly: true,
@@ -55,12 +56,8 @@ export const op17ReplacementMechanics: SetMechanics = {
           category: "character",
           typeIncluding: "Red-Haired Pirates",
         },
-        label: "Rest 1 of your Characters",
-        cost: {
-          kind: "rest-own-cards",
-          count: 1,
-          match: { category: "character" },
-        },
+        label: "Rest 1 of your cards",
+        cost: { kind: "rest-own-cards", count: 1 },
       },
     ],
     [
