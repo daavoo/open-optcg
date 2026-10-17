@@ -523,17 +523,19 @@ describe("OP10-042 Usopp", () => {
     return game;
   };
 
-  it.fails(
-    "OP10-042#1: the Leader's draw and a K.O.'d Character's [On K.O.] resolve in the order their controller picks",
-    () => {
-      // Engine: no ordering decision is offered. Franky's [On K.O.] opens
-      // straight away and the Leader's reaction rule draws only after it --
-      // and everything it caused -- has settled.
-      const game = frankyFalls("faq-op10-042-1");
-      expect(ids(game.state.players.p1.trash)).toContain("franky");
-      expect(effectOptions(game, "p1")).not.toContain("cub");
-    },
-  );
+  it("OP10-042#1: the Leader's draw and a K.O.'d Character's [On K.O.] resolve in the order their controller picks", () => {
+    const game = frankyFalls("faq-op10-042-1");
+    expect(ids(game.state.players.p1.trash)).toContain("franky");
+    expect(effectOptions(game, "p1")).toEqual([
+      "reaction:franky",
+      "reaction:p1-leader",
+    ]);
+
+    // The draw first, then the [On K.O.].
+    game.play({ type: "resolve-effect", optionId: "reaction:p1-leader" });
+    expect(ids(game.state.players.p1.hand)).toEqual(["drawn"]);
+    expect(effectOptions(game, "p1")).toContain("cub");
+  });
 
   it("OP10-042#2: a {Dressrosa} Character K.O.'d by the opponent's attack draws a card", () => {
     const game = theirTurn("faq-op10-042-2")
@@ -555,19 +557,17 @@ describe("OP10-042 Usopp", () => {
     expect(ids(game.state.players.p1.hand)).toEqual(["drawn"]);
   });
 
-  it.fails(
-    "OP10-042#3: the Leader's draw resolves before the [On Play] of a Character an [On K.O.] played",
-    () => {
-      // Engine: the draw waits for the whole [On K.O.] chain. Cub's [On Play]
-      // is offered while the hand is still empty, and the card is drawn only
-      // once Cub has resolved.
-      const game = frankyFalls("faq-op10-042-3");
-      game.play({ type: "resolve-effect", optionId: "cub" });
-      expect(ids(game.state.players.p1.board)).toEqual(["cub"]);
-      expect(effectOptions(game, "p1")).toContain("apply");
-      expect(ids(game.state.players.p1.hand)).toEqual(["drawn"]);
-    },
-  );
+  it("OP10-042#3: the Leader's draw resolves before the [On Play] of a Character an [On K.O.] played", () => {
+    // The [On K.O.] first; the draw it was ordered against is still waiting
+    // when Cub's [On Play] triggers, so it goes ahead of it.
+    const game = frankyFalls("faq-op10-042-3");
+    game.play({ type: "resolve-effect", optionId: "reaction:franky" });
+    game.play({ type: "resolve-effect", optionId: "cub" });
+    expect(ids(game.state.players.p1.board)).toEqual(["cub"]);
+    expect(ids(game.state.players.p1.hand)).toEqual(["drawn"]);
+    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP10-044");
+    expect(effectOptions(game, "p1")).toContain("apply");
+  });
 
   /** p1's base-cost-3 Blue Gilly, 4 under p1's Usopp, on p2's turn. */
   const gillyTable = (seed: string) =>
@@ -705,55 +705,52 @@ describe("OP10-058 Rebecca", () => {
     expect(franky?.rested).toBe(false);
   });
 
-  it.fails(
-    "OP10-058#2: the two played Characters' [On Play]s resolve in the order their controller picks",
-    () => {
-      // Engine: each Character's [On Play] resolves the moment it is played,
-      // inside Rebecca's effect, so the active one always goes first and the
-      // rested one is not even on the field yet when it does.
-      const game = rebecca(
-        "faq-op10-058-2",
-        [],
-        [instance("cub", "OP10-044"), instance("moocy", "OP10-043")],
-      );
-      game.play({ type: "play-card", cardNumber: "OP10-058" });
-      game.play({ type: "resolve-effect", optionId: "cub" });
-      game.play({ type: "resolve-effect", optionId: "moocy" });
-      game.play({ type: "resolve-effect", optionId: "done" });
-      game.play({ type: "resolve-effect", optionId: "cub" });
+  it("OP10-058#2: the two played Characters' [On Play]s resolve in the order their controller picks", () => {
+    const game = rebecca(
+      "faq-op10-058-2",
+      [],
+      [instance("cub", "OP10-044"), instance("moocy", "OP10-043")],
+    );
+    game.play({ type: "play-card", cardNumber: "OP10-058" });
+    // Reveal both, then play Cub active; Moocy follows rested.
+    game.play({ type: "resolve-effect", optionId: "cub" });
+    game.play({ type: "resolve-effect", optionId: "moocy" });
+    game.play({ type: "resolve-effect", optionId: "cub" });
 
-      expect(ids(game.state.players.p1.board)).toEqual([
-        "rebecca",
-        "cub",
-        "moocy",
-      ]);
-    },
-  );
+    expect(ids(game.state.players.p1.board)).toEqual([
+      "rebecca",
+      "cub",
+      "moocy",
+    ]);
+    expect(effectOptions(game)).toEqual(["reaction:cub", "reaction:moocy"]);
 
-  it.fails(
-    "OP10-058#3: a Character trashed to make room for the second play does not get its [On Play]",
-    () => {
-      // Engine: Cub's [On Play] is offered as soon as Cub is played, before
-      // Moocy is played and Cub is trashed to make room for it.
-      const game = rebecca(
-        "faq-op10-058-3",
-        [
-          character("a", "FIX-001"),
-          character("b", "FIX-001"),
-          character("c", "FIX-001"),
-        ],
-        [instance("cub", "OP10-044"), instance("moocy", "OP10-043")],
-      );
-      game.play({ type: "play-card", cardNumber: "OP10-058" });
-      game.play({ type: "resolve-effect", optionId: "cub" });
-      game.play({ type: "resolve-effect", optionId: "moocy" });
-      game.play({ type: "resolve-effect", optionId: "done" });
-      game.play({ type: "resolve-effect", optionId: "cub" });
+    // The rested one first.
+    game.play({ type: "resolve-effect", optionId: "reaction:moocy" });
+    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP10-043");
+  });
 
-      expect(effectOptions(game)).toContain("cub");
-      expect(effectOptions(game)).not.toContain("apply");
-    },
-  );
+  it("OP10-058#3: a Character trashed to make room for the second play does not get its [On Play]", () => {
+    const game = rebecca(
+      "faq-op10-058-3",
+      [
+        character("a", "FIX-001"),
+        character("b", "FIX-001"),
+        character("c", "FIX-001"),
+      ],
+      [instance("cub", "OP10-044"), instance("moocy", "OP10-043")],
+    );
+    game.play({ type: "play-card", cardNumber: "OP10-058" });
+    game.play({ type: "resolve-effect", optionId: "cub" });
+    game.play({ type: "resolve-effect", optionId: "moocy" });
+    game.play({ type: "resolve-effect", optionId: "cub" });
+    // Five Characters: Cub goes to make room for Moocy.
+    game.play({ type: "resolve-effect", optionId: "cub" });
+
+    expect(ids(game.state.players.p1.trash)).toContain("cub");
+    // Only Moocy's [On Play] is left: no order to pick, and nothing of Cub's.
+    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP10-043");
+    expect(effectOptions(game)).toEqual(["apply", "skip"]);
+  });
 });
 
 it("OP10-067#1: with no Event recovered, a DON!! is still set active", () => {

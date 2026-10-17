@@ -2276,8 +2276,8 @@ export interface MechanicProgramInvocation {
    */
   spendsOncePerTurn?: true;
   /**
-   * Shared by the automatic clauses one player has answering the same signal,
-   * when more than one card is answering it.
+   * Shared by the clauses one player has triggered at the same time, when more
+   * than one card is answering -- see `orderSimultaneous`.
    *
    * Read by `dispatchMechanicInvocations`, which stops at a run of these and
    * asks the controller which resolves first (`order-reactions`). Only the
@@ -2285,6 +2285,13 @@ export interface MechanicProgramInvocation {
    * from the next group's.
    */
   orderGroup?: string;
+  /**
+   * An `[On Play]` the DSL's `play` node raised, which activates only if its
+   * Character is still on the field when its turn comes: OP10-058 Rebecca's
+   * first play, trashed to make room for her second, never gets its own
+   * (OP10-058#3). See `leftFieldBeforeActivating`.
+   */
+  onField?: true;
 }
 
 /**
@@ -2299,6 +2306,10 @@ export interface MechanicProgramInvocation {
 export interface OnPlayHandlerInvocation {
   context: MechanicContext;
   onPlayHandler: true;
+  /** As on `MechanicProgramInvocation`. */
+  orderGroup?: string;
+  /** As on `MechanicProgramInvocation`. */
+  onField?: true;
 }
 
 export type MechanicInvocation =
@@ -2433,7 +2444,7 @@ export type MechanicPendingChoice =
   | {
       kind: "order-reactions";
       execution: MechanicExecution;
-      reactions: MechanicProgramInvocation[];
+      reactions: MechanicInvocation[];
     }
   /**
    * The `rest-opponent-cards` node's repeated choice: one opposing Character

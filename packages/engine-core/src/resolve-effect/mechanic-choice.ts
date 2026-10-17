@@ -41,10 +41,11 @@ export function resolveMechanicChoiceEffect({
   } else {
     result = resolveMechanicChoice(state, effect.choice, optionId);
   }
+  // Already waiting first, then what this step set off (OP10-042#3).
   const continuations = [
-    ...getMechanicSignalInvocations(state, result.signals),
     ...ordered,
     ...(effect.continuations ?? []),
+    ...getMechanicSignalInvocations(state, result.signals),
   ];
   if (result.pending) {
     state.pendingEffect = {
