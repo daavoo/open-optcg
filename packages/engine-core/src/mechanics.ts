@@ -28,6 +28,7 @@ import {
 import { knockOut } from "./removal.js";
 import {
   charactersArriveRested,
+  effectPlayBarred,
   trashPlayGrantsRush,
   isRemovalImmune,
   negateEffects,
@@ -336,6 +337,50 @@ export function findCardZone(
     }
   }
   return undefined;
+}
+
+/** Whether `effect` plays the cards `bind` names, alone or inside a sequence. */
+function playsBinding(effect: MechanicEffect, bind: string): boolean {
+  if (effect.kind === "play") return effect.binding === bind;
+  if (effect.kind === "sequence") {
+    return effect.effects.some((step) => playsBinding(step, bind));
+  }
+  return false;
+}
+
+/**
+ * A choice's candidates less the hand cards whose own text bars an effect
+ * from playing them (OP12-036). Asked by the `choose` node and by the options
+ * it then offers, so a card the `play` node would refuse is never a pick: an
+ * "up to" choice left with nothing is declined rather than asked.
+ */
+export function effectPlayableCandidates<T extends CardInstance>(
+  state: GameState,
+  candidates: T[],
+  effect: MechanicEffect,
+  bind: string,
+  db: CardDatabase,
+): T[] {
+  if (!playsBinding(effect, bind)) return candidates;
+  return candidates.filter(
+    (card) => !effectPlayBarredFromHand(state, card.instanceId, db),
+  );
+}
+
+function effectPlayBarredFromHand(
+  state: GameState,
+  instanceId: string,
+  db: CardDatabase,
+): boolean {
+  const located = findCardZone(state, instanceId);
+  if (located?.zone !== "hand") return false;
+  const card = state.players[located.playerId].hand.find(
+    (candidate) => candidate.instanceId === instanceId,
+  );
+  return (
+    card !== undefined &&
+    effectPlayBarred(state, located.playerId, card.cardNumber, db)
+  );
 }
 
 function removeCard(
@@ -696,11 +741,17 @@ export function continueExecution(
       continue;
     }
     if (effect.kind === "choose") {
-      const eligible = selectCards(
+      const eligible = effectPlayableCandidates(
         state,
-        execution.context,
-        effect.selector,
-        execution.bindings,
+        selectCards(
+          state,
+          execution.context,
+          effect.selector,
+          execution.bindings,
+          db,
+        ),
+        effect.effect,
+        effect.bind,
         db,
       );
       if (eligible.length < effect.min) continue;
@@ -1753,6 +1804,9 @@ export function continueExecution(
         continue;
       }
       for (const instanceId of instanceIds) {
+        // The `choose` that bound it already left such a card out; this holds
+        // for a `play` reached through any other binding.
+        if (effectPlayBarredFromHand(state, instanceId, db)) continue;
         // An Event is activated, never played, so a `play` that lands on one
         // leaves it where it is. OP07-097 Vegapunk's selector admits any
         // {Egghead} card -- the deck runs two {Egghead} Events -- and its

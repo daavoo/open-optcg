@@ -313,6 +313,16 @@ export interface StaticAbility {
    * for any board card. Read through {@link staticHandPlayDiscount}.
    */
   handPlayDiscount?: (context: AbilityContext) => number;
+  /**
+   * A hand card that no effect may play -- OP12-036 Roronoa Zoro, the only
+   * card in the pool that prints it (`pnpm card:text OP12-036`).
+   *
+   * A rule about the card while it is still in hand, so the subject is the
+   * hand card under a synthetic id, as {@link handPlayDiscount}'s is. The
+   * main-phase play action is untouched: only a `play` node an effect resolves
+   * is barred. Read through {@link effectPlayBarred}.
+   */
+  effectPlayFromHandBarred?: (context: AbilityContext) => boolean;
 }
 
 // --- shared predicates ------------------------------------------------------
@@ -1557,6 +1567,28 @@ export function staticHandPlayDiscount(
   return abilitiesFor(context).reduce(
     (total, ability) => total + (ability.handPlayDiscount?.(context) ?? 0),
     0,
+  );
+}
+
+/**
+ * Whether `cardNumber` in this player's hand refuses to be played by an
+ * effect. See {@link StaticAbility.effectPlayFromHandBarred}.
+ */
+export function effectPlayBarred(
+  state: GameState,
+  playerId: PlayerId,
+  cardNumber: string,
+  db: CardDatabase = cards,
+): boolean {
+  const context: AbilityContext = {
+    state,
+    playerId,
+    card: { instanceId: `${playerId}-hand-play`, cardNumber },
+    isLeader: false,
+    db,
+  };
+  return abilitiesFor(context).some((ability) =>
+    ability.effectPlayFromHandBarred?.(context),
   );
 }
 
