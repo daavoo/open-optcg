@@ -21,6 +21,7 @@ import {
 } from "@one-piece-sim/decks";
 import type { ResolvedDeck } from "@one-piece-sim/protocol";
 import { createRulesAgent } from "../../packages/cli/src/agent-factory.js";
+import { SCANNED_LISTS, SCANNED_VARIANTS } from "./deck-pool-scan.js";
 import { DECK_VARIANTS, variantId } from "./deck-variants.js";
 
 const LISTS: Record<string, DeckManifest> = {
@@ -81,6 +82,7 @@ const LISTS: Record<string, DeckManifest> = {
 const extra = process.env.SYS1_EXTRA_DECKS;
 const TRAINING_ONLY_DECKS: Record<string, DeckManifest> = {
   ...LISTS,
+  ...SCANNED_LISTS,
   ...(extra
     ? (JSON.parse(readFileSync(extra, "utf8")) as Record<string, DeckManifest>)
     : {}),
@@ -93,7 +95,7 @@ export const TRAINING_DECK_IDS: readonly string[] = [
 
 /** Each variant (`deck-variants.ts`) as a manifest under its base's Leader, by id. */
 const VARIANTS: Record<string, { base: string; manifest: DeckManifest }> = {};
-for (const variant of DECK_VARIANTS) {
+for (const variant of [...DECK_VARIANTS, ...SCANNED_VARIANTS]) {
   const id = variantId(variant);
   const leader = (
     TRAINING_ONLY_DECKS[variant.base] ?? deckManifests[variant.base]
