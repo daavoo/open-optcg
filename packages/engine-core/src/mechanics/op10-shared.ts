@@ -209,16 +209,12 @@ export const millTwo: MechanicEffect = {
  * The card leaves *their* hand, so they pick it: `chooser: "opponent"`, the rule
  * for anything discarded out of a hand.
  */
-export const opponentDiscardsAtFive = (bind: string): MechanicEffect => ({
-  kind: "if",
-  condition: {
-    kind: "zone-count",
-    player: "opponent",
-    zone: "hand",
-    operator: "gte",
-    value: 5,
-  },
-  then: {
+export const opponentDiscardsAtFive = (
+  bind: string,
+  /** A "Then, ..." that shares the hand-size gate rather than following it. */
+  then?: MechanicEffect,
+): MechanicEffect => {
+  const discard: MechanicEffect = {
     kind: "choose",
     selector: { player: "opponent", zone: "hand" },
     chooser: "opponent",
@@ -230,8 +226,19 @@ export const opponentDiscardsAtFive = (bind: string): MechanicEffect => ({
       binding: bind,
       to: { player: "owner", zone: "trash" },
     },
-  },
-});
+  };
+  return {
+    kind: "if",
+    condition: {
+      kind: "zone-count",
+      player: "opponent",
+      zone: "hand",
+      operator: "gte",
+      value: 5,
+    },
+    then: then ? { kind: "sequence", effects: [discard, then] } : discard,
+  };
+};
 
 export const trashOpponentLifeTop = (bind: string): MechanicEffect => ({
   kind: "select",

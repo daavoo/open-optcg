@@ -115,5 +115,6 @@ export function registeredReplacementOptions(
   ).map(({ protector, entry }) => ({
     optionId: `mechanic:${optionPrefix}:${protector.instanceId}`,
     summary: `${entry.label} instead of K.O. ${targetName}`,
+    ...(entry.mandatory ? { mandatory: true as const } : {}),
   }));
 }

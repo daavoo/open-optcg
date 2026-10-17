@@ -8,6 +8,7 @@ import {
   type StaticAbility,
   opponentOf,
   type RemovalImmunity,
+  staticCostDeltaWhere,
 } from "../static-abilities.js";
 import { attachedDon, restedCharacters, turnPlayer } from "./static-shared.js";
 
@@ -67,9 +68,16 @@ export const op10StaticAbilities: readonly StaticAbility[] = [
   // OP10-042 Usopp (Leader): "[printed text omitted -- pnpm card:text OP10-042]"
   //
   // Cost, not power, and it is protection: +1 cost lifts a body out of the reach
-  // of "cost N or less" removal. Printed cost is what the "2 or more" gate reads,
-  // because the effective one would include this very buff and let a 1-drop
-  // climb into its own condition.
+  // of "cost N or less" removal.
+  //
+  // The "2 or more" gate is read twice, the way Bandai's OP10-042#4-6 rulings
+  // walk it. A permanent effect is processed before an effect a triggered or
+  // activated ability left behind, and the turn player's permanent effects
+  // before the other player's: so the gate first sees the printed cost plus
+  // the opponent's continuous cost auras (only ever live on their own turn),
+  // and a 1-drop never climbs into its own condition. Then the turn's cost
+  // changes land on top, and a card they leave at 1 or less, this +1 included,
+  // loses the +1 -- −3 on a raised 4 reaches 0, not 1, while −2 stops at 2.
   //
   // "Characters" are cards on the field, and an aura's cost layer is read in
   // every zone its predicate allows -- so the predicate asks for the board.
@@ -79,15 +87,34 @@ export const op10StaticAbilities: readonly StaticAbility[] = [
   {
     cardNumber: "OP10-042",
     scope: "controller-aura",
-    cost: (context) =>
-      !context.isLeader &&
-      context.state.players[context.playerId].board.some(
+    cost: (context) => {
+      if (context.isLeader) return 0;
+      const onBoard = context.state.players[context.playerId].board.find(
         (card) => card.instanceId === context.card.instanceId,
-      ) &&
-      hasCardType(context.card.cardNumber, "Dressrosa") &&
-      (context.db.require(context.card.cardNumber).cost ?? 0) >= 2
-        ? 1
-        : 0,
+      );
+      if (!onBoard || !hasCardType(context.card.cardNumber, "Dressrosa")) {
+        return 0;
+      }
+      const printed = context.db.require(context.card.cardNumber).cost ?? 0;
+      const others = (include: (ability: StaticAbility) => boolean) =>
+        staticCostDeltaWhere(
+          context.state,
+          context.playerId,
+          context.card,
+          context.db,
+          (ability) => ability.cardNumber !== "OP10-042" && include(ability),
+        );
+      const first = others(
+        (ability) =>
+          ability.scope === "opponent-aura" ||
+          ability.scope === "opponent-board-aura",
+      );
+      if (printed + first < 2) return 0;
+      const temporary = (onBoard.costModifiers ?? [])
+        .filter((modifier) => modifier.expiresAtTurn >= context.state.turn)
+        .reduce((total, modifier) => total + modifier.amount, 0);
+      return printed + others(() => true) + temporary + 1 >= 2 ? 1 : 0;
+    },
   },
   // OP10-113 Roronoa Zoro: "[printed text omitted -- pnpm card:text OP10-113]"
   //

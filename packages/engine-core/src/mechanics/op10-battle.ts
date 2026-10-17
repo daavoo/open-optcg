@@ -219,20 +219,31 @@ export const op10BattleMechanics: SetMechanics = {
                   kind: "sequence",
                   effects: [
                     { kind: "return-don", player: "self", count: 1 },
+                    // The `[DON!! x1]` is read again once the DON!! −1 is
+                    // paid: Bandai's OP10-069#1 ruling is that returning the
+                    // one given DON!! leaves nothing to K.O. with.
                     {
-                      kind: "choose",
-                      selector: {
-                        player: "opponent",
-                        zone: "board",
-                        category: "character",
-                        maxCost: 1,
+                      kind: "if",
+                      condition: {
+                        kind: "source-attached-don",
+                        operator: "gte",
+                        value: 1,
                       },
-                      bind: "op10-fighting-fish-ko",
-                      min: 0,
-                      max: 1,
-                      effect: {
-                        kind: "knock-out",
-                        binding: "op10-fighting-fish-ko",
+                      then: {
+                        kind: "choose",
+                        selector: {
+                          player: "opponent",
+                          zone: "board",
+                          category: "character",
+                          maxCost: 1,
+                        },
+                        bind: "op10-fighting-fish-ko",
+                        min: 0,
+                        max: 1,
+                        effect: {
+                          kind: "knock-out",
+                          binding: "op10-fighting-fish-ko",
+                        },
                       },
                     },
                   ],

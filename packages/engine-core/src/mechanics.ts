@@ -2059,7 +2059,16 @@ export function continueExecution(
           // Face-down is the absence of the flag, the same representation
           // `addToLife` documents: writing `faceUp: false` would make a card put
           // into Life by an effect hash differently from one dealt at setup.
-          ...(effect.faceUp === true ? { faceUp: true } : {}),
+          // A card only rearranged within Life keeps its face unless the
+          // clause says otherwise: Bandai's OP10-116#2 ruling has a face-up
+          // Life card looked at and put back stay face-up.
+          ...(effect.faceUp === true ||
+          (effect.faceUp === undefined &&
+            from === "life" &&
+            effect.to.zone === "life" &&
+            card.faceUp === true)
+            ? { faceUp: true }
+            : {}),
           ...(effect.to.zone === "board"
             ? {
                 rested: effect.rested ?? false,
@@ -2728,7 +2737,44 @@ export function continueExecution(
       }
       continue;
     }
-    for (const [index, instanceId] of instanceIds.entries()) {
+    // One effect K.O.ing several Characters K.O.s them at once, so a protector
+    // that is itself among the targets can still pay for another of them:
+    // Bandai's OP10-032#2 ruling lets an active Tashigi rest to save a green
+    // Character K.O.'d alongside it, and Tashigi is still K.O.'d. Taken in
+    // chosen order, a protector picked first would be gone before the other
+    // target was asked about, so the targets with a replacement on offer are
+    // asked about before the ones without; each group keeps its chosen order.
+    const koOrder = (() => {
+      if (effect.skipReplacements || instanceIds.length < 2) return instanceIds;
+      const offered = instanceIds.filter((instanceId) => {
+        const ownerId = (["p1", "p2"] as const).find((candidate) =>
+          state.players[candidate].board.some(
+            (card) => card.instanceId === instanceId,
+          ),
+        );
+        const threatened = ownerId
+          ? state.players[ownerId].board.find(
+              (card) => card.instanceId === instanceId,
+            )
+          : undefined;
+        return (
+          ownerId !== undefined &&
+          threatened !== undefined &&
+          eligibleReplacements(
+            state,
+            execution.context.sourcePlayerId,
+            ownerId,
+            threatened,
+            db,
+          ).length > 0
+        );
+      });
+      return [
+        ...offered,
+        ...instanceIds.filter((instanceId) => !offered.includes(instanceId)),
+      ];
+    })();
+    for (const [index, instanceId] of koOrder.entries()) {
       const ownerId = (["p1", "p2"] as const).find((candidate) =>
         state.players[candidate].board.some(
           (card) => card.instanceId === instanceId,
@@ -2782,7 +2828,7 @@ export function continueExecution(
           // into this loop -- and because what is left of them depends on the
           // answer: one accepted replacement saves every other target it
           // protects (see `replacementCoveredTargets`).
-          const remaining = instanceIds.slice(index + 1);
+          const remaining = koOrder.slice(index + 1);
           const thenRest = (
             effectNow: MechanicEffect,
             restBind: string,
@@ -2801,25 +2847,31 @@ export function continueExecution(
           const targetName = db.require(threatened.cardNumber).name;
           const koBind = `${effect.binding}-ko-${instanceId}`;
           execution.bindings[koBind] = [instanceId];
+          // A prevention (OP10-118) leaves its controller no K.O. to pick.
+          const prevented = eligible.some(({ entry }) => entry.mandatory);
           return {
             pending: {
               kind: "choice",
               execution,
               chooserPlayerId: ownerId,
               branches: [
-                {
-                  id: `ko:${instanceId}`,
-                  label: `K.O. ${targetName}`,
-                  effect: thenRest(
-                    {
-                      kind: "knock-out",
-                      binding: koBind,
-                      skipReplacements: true,
-                    },
-                    `${effect.binding}-after-replacement`,
-                    remaining,
-                  ),
-                },
+                ...(prevented
+                  ? []
+                  : [
+                      {
+                        id: `ko:${instanceId}`,
+                        label: `K.O. ${targetName}`,
+                        effect: thenRest(
+                          {
+                            kind: "knock-out",
+                            binding: koBind,
+                            skipReplacements: true,
+                          },
+                          `${effect.binding}-after-replacement`,
+                          remaining,
+                        ),
+                      },
+                    ]),
                 ...eligible.map(({ protector, entry }) => {
                   const bind = `${effect.binding}-replace-${protector.instanceId}`;
                   execution.bindings[bind] = [protector.instanceId];

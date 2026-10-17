@@ -946,7 +946,7 @@ export type PendingEffect =
       targetInstanceId: string;
       sourceCardNumber: string;
       sourceInstanceId: string;
-      options: Array<{ optionId: string; summary: string }>;
+      options: Array<{ optionId: string; summary: string; mandatory?: true }>;
       resumePhase?: "main" | "block" | "counter";
       resumePlayerId?: PlayerId;
     }
