@@ -78,7 +78,23 @@ export function applyResolveEffect({
     // A finished game is not resumed: EB03-055 Nico Robin's [On K.O.] can deal
     // the last point of damage from inside a pending effect, and restoring the
     // interrupted phase over it would un-end the game.
-    if (state.phase !== "finished") {
+    //
+    // An open Trigger window is answered first. Effect damage can open one
+    // while the queue still has more to say -- EB03-055's [On K.O.] reveals
+    // the Life card, and OP15-119's reaction to the same Event is raised after
+    // it -- so the saved phase predates the window, and restoring it would
+    // pass over the Trigger and leave its card held by nothing. The Trigger
+    // carries its own resume, which is where play goes once it is answered.
+    // A card still parked by `dealDamage` (`fromEffect`) has no window yet:
+    // `settleEffectDamage` decides that after this action.
+    const openTrigger =
+      state.pendingTrigger && !state.pendingTrigger.fromEffect
+        ? state.pendingTrigger
+        : null;
+    if (state.phase !== "finished" && openTrigger) {
+      state.phase = "trigger";
+      state.activePlayer = openTrigger.playerId;
+    } else if (state.phase !== "finished") {
       state.phase = state.pendingEffectResume.phase;
       state.activePlayer = state.pendingEffectResume.playerId;
     }
