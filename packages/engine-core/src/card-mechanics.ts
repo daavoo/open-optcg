@@ -29,7 +29,11 @@ import {
   type MechanicSignal,
 } from "./mechanics.js";
 import { donReturnedReactionCards, fieldDonCount } from "./don.js";
-import { hasOnPlayHandler, queuePendingContinuations } from "./effects.js";
+import {
+  hasOnPlayHandler,
+  opponentOf,
+  queuePendingContinuations,
+} from "./effects.js";
 import type { CardInstance, GameState } from "./model.js";
 import {
   STATIC_OPPONENT_DON_READERS,
@@ -640,6 +644,7 @@ export function getMechanicSignalInvocations(
         invocations.push({
           context: { sourcePlayerId: signal.playerId, source: signal.card },
           program,
+          onField: true,
         });
       } else if (includeOnPlay && hasOnPlayHandler(signal.card.cardNumber)) {
         // The other half of the same question. A card's `[On Play]` is either a
@@ -650,6 +655,7 @@ export function getMechanicSignalInvocations(
         invocations.push({
           context: { sourcePlayerId: signal.playerId, source: signal.card },
           onPlayHandler: true,
+          onField: true,
         });
       }
     } else if (signal.kind === "card-rested") {
@@ -701,7 +707,6 @@ export function getMechanicSignalInvocations(
   const turnPlayerId = state.turnPlayerId;
   for (const signal of signals) {
     for (const playerId of ["p1", "p2"] as const) {
-      const groupStart = invocations.length;
       for (const rule of REACTION_RULES) {
         // A board-scoped rule dispatches once per copy on the field, with that
         // copy as the source; a Leader-scoped one has exactly one source and it
@@ -898,36 +903,55 @@ export function getMechanicSignalInvocations(
         }
         if (rule.oncePerTurn) state.oncePerTurn.push(key);
       }
-      tagOrderGroup(state, invocations.slice(groupStart), signal.kind);
     }
   }
-  return invocations;
+  return orderSimultaneous(state, invocations);
 }
 
 /**
- * Marks one player's reactions to one signal as a group to be ordered, when
- * more than one card is answering -- see `orderGroup`.
+ * Clauses that triggered at the same time, in the order they are activated.
  *
- * The id only has to differ from the group queued next to it. The turn, the
- * player and the first source tell apart any two groups a single action
- * raises, and `oncePerTurn` grows with every `[Once Per Turn]` clause that
- * fires, so two groups of the same cards answering two signals of one action
- * differ in it too.
+ * The turn player's first, then the other player's; within one player's, the
+ * controller picks the order, so a run of two or more different cards is
+ * tagged as one `orderGroup` and the dispatcher asks. That covers a played
+ * card's own `[On Play]` or a K.O.'d card's `[On K.O.]` beside whatever was
+ * watching for it -- OP10-058 Rebecca's two plays (OP10-058#2), OP10-090
+ * Franky's [On K.O.] beside OP10-042 Usopp's draw (OP10-042#1) -- as well as
+ * several watchers answering one signal. Copies of one card are not asked
+ * about: which goes first cannot matter.
+ *
+ * The id only has to differ from the group queued next to it, and it names
+ * the action, the player and every member, so two groups only share one when
+ * the same cards answer twice in one action -- and then asking among them
+ * once more is what the controller would be owed anyway.
  */
-function tagOrderGroup(
+export function orderSimultaneous(
   state: GameState,
-  group: readonly MechanicInvocation[],
-  signalKind: string,
-): void {
-  const cards = new Set(
-    group.map((invocation) => invocation.context.source.cardNumber),
-  );
-  if (cards.size < 2) return;
-  const first = group[0]!.context;
-  const id = `${String(state.turn)}:${signalKind}:${first.sourcePlayerId}:${first.source.instanceId}:${String(state.oncePerTurn.length)}`;
-  for (const invocation of group) {
-    if ("program" in invocation) invocation.orderGroup = id;
+  invocations: readonly MechanicInvocation[],
+): MechanicInvocation[] {
+  const turnPlayer = state.turnPlayerId;
+  const ordered = [
+    ...invocations.filter(
+      (invocation) => invocation.context.sourcePlayerId === turnPlayer,
+    ),
+    ...invocations.filter(
+      (invocation) => invocation.context.sourcePlayerId !== turnPlayer,
+    ),
+  ];
+  for (const playerId of [turnPlayer, opponentOf(turnPlayer)]) {
+    const group = ordered.filter(
+      (invocation) => invocation.context.sourcePlayerId === playerId,
+    );
+    const cards = new Set(
+      group.map((invocation) => invocation.context.source.cardNumber),
+    );
+    if (cards.size < 2) continue;
+    const id = `${String(state.revision)}:${playerId}:${group
+      .map((invocation) => invocation.context.source.instanceId)
+      .join(",")}`;
+    for (const invocation of group) invocation.orderGroup = id;
   }
+  return ordered;
 }
 
 export interface MechanicDispatchResult {
@@ -974,13 +998,17 @@ function isFieldReaction(invocation: MechanicProgramInvocation): boolean {
  * the order before it sends Kid to the deck -- depended on that stop, while
  * OP08-119 Kaido & Linlin, whose K.O. comes first, never raised it. An
  * `[On K.O.]` and a Leader's reaction are not field reactions and run as before.
+ *
+ * An `[On Play]` the `play` node raised is held to the same rule (`onField`).
  */
 function leftFieldBeforeActivating(
   state: GameState,
   invocation: MechanicInvocation,
 ): boolean {
-  if (!("program" in invocation) || !invocation.automatic) return false;
-  if (!isFieldReaction(invocation)) return false;
+  if (invocation.onField !== true) {
+    if (!("program" in invocation) || !invocation.automatic) return false;
+    if (!isFieldReaction(invocation)) return false;
+  }
   const player = state.players[invocation.context.sourcePlayerId];
   const { instanceId } = invocation.context.source;
   return (
@@ -1057,9 +1085,11 @@ export function dispatchMechanicInvocations(
       });
     }
     events.push(...result.events);
-    continuations.unshift(
-      ...getMechanicSignalInvocations(state, result.signals),
-    );
+    // What this clause set off waits behind what was already waiting: the
+    // Leader's draw that triggered beside OP10-090 Franky's [On K.O.] goes
+    // before the [On Play] of the Character that [On K.O.] played
+    // (OP10-042#3).
+    continuations.push(...getMechanicSignalInvocations(state, result.signals));
     if (result.pending) {
       return {
         pending: result.pending,
@@ -1081,19 +1111,15 @@ export function dispatchMechanicInvocations(
  */
 function takeOrderGroup(queue: MechanicInvocation[]): {
   pending: MechanicPendingChoice;
-  invocation: MechanicProgramInvocation;
+  invocation: MechanicInvocation;
 } | null {
   const head = queue[0];
-  if (!head || !("program" in head) || head.orderGroup === undefined) {
-    return null;
-  }
+  if (!head || head.orderGroup === undefined) return null;
   let end = 1;
-  while (end < queue.length) {
-    const next = queue[end]!;
-    if (!("program" in next) || next.orderGroup !== head.orderGroup) break;
+  while (end < queue.length && queue[end]!.orderGroup === head.orderGroup) {
     end += 1;
   }
-  const group = queue.slice(0, end) as MechanicProgramInvocation[];
+  const group = queue.slice(0, end);
   if (orderReactionOptions(group).length < 2) {
     for (const invocation of group) delete invocation.orderGroup;
     return null;
