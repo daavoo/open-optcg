@@ -1177,7 +1177,7 @@ export function continueExecution(
             ...(typeMatches(owner.leaderCardNumber)
               ? [`${ownerId}-leader`]
               : []),
-            ...owner.board
+            ...(effect.recipient === "leader" ? [] : owner.board)
               .filter((card) => typeMatches(card.cardNumber))
               .map((card) => card.instanceId),
           ];

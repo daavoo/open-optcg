@@ -191,6 +191,22 @@ export const replacementMechanics: SetMechanics = {
       },
     ],
     [
+      // OP16-033 Morley: `pnpm card:text OP16-033`.
+      //
+      // OP15-035 Laboon's payment with OP15-003 Alvida's reach: no `protects`,
+      // because the clause names "this Character", and no "by your opponent's
+      // effect", so a lost battle and its controller's own K.O. are answered
+      // too. "Your cards" is the Leader, the Characters, the Stage and the
+      // active DON!!, Morley included while it is active.
+      "OP16-033",
+      {
+        opponentEffectOnly: false,
+        oncePerTurn: false,
+        label: "Rest 2 of your cards",
+        cost: { kind: "rest-own-cards", count: 2 },
+      },
+    ],
+    [
       // OP16-018 Rockstar: "[printed text omitted -- pnpm card:text OP16-018]"
       //
       // The only card in either set whose *whole* printed text is a

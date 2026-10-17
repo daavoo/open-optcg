@@ -348,9 +348,9 @@ export const op16OnPlayMechanics: SetMechanics = {
     [
       // OP16-035 Roronoa Zoro: "[printed text omitted -- pnpm card:text OP16-035]"
       //
-      // "Cards", so the Leader is a legal target -- `includeLeader`. The three
-      // DON!! go to the Leader specifically, with no choice of recipient, which
-      // is `attach-don` rather than `give-rested-don`.
+      // "Cards", so the Leader is a legal target -- `includeLeader`. The
+      // DON!! go to the Leader alone, so the gift names it as the only
+      // recipient; "up to 3" leaves the count to the player.
       "OP16-035",
       {
         effect: {
@@ -384,11 +384,10 @@ export const op16OnPlayMechanics: SetMechanics = {
                           to: { player: "self", zone: "trash" },
                         },
                         {
-                          kind: "attach-don",
+                          kind: "give-rested-don",
                           player: "self",
-                          from: "rested",
                           count: 3,
-                          target: "leader",
+                          recipient: "leader",
                         },
                       ],
                     },
