@@ -631,12 +631,15 @@ export const op08MainMechanics: SetMechanics = {
           effect: {
             kind: "if",
             condition: givenDon(1),
-            then: lifeToHandCost({
-              kind: "grant-keyword",
-              binding: SOURCE_BINDING,
-              keyword: "Rush",
-              expiresAfterTurns: 0,
-            }).effect,
+            then: lifeToHandCost(
+              {
+                kind: "grant-keyword",
+                binding: SOURCE_BINDING,
+                keyword: "Rush",
+                expiresAfterTurns: 0,
+              },
+              "top",
+            ).effect,
           },
         },
       },
@@ -1225,19 +1228,22 @@ export const op08MainMechanics: SetMechanics = {
       {
         oncePerTurn: true,
         requires: { lifeCards: 1 },
-        program: lifeToHandCost({
-          kind: "choose",
-          selector: { player: "self", zone: "board", category: "character" },
-          bind: "op08-custard-buff",
-          min: 0,
-          max: 1,
-          effect: {
-            kind: "modify-power",
-            binding: "op08-custard-buff",
-            amount: 1_000,
-            expiresAfterTurns: 1,
+        program: lifeToHandCost(
+          {
+            kind: "choose",
+            selector: { player: "self", zone: "board", category: "character" },
+            bind: "op08-custard-buff",
+            min: 0,
+            max: 1,
+            effect: {
+              kind: "modify-power",
+              binding: "op08-custard-buff",
+              amount: 1_000,
+              expiresAfterTurns: 1,
+            },
           },
-        }),
+          "top",
+        ),
       },
     ],
     [

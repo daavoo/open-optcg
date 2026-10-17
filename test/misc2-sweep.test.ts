@@ -1167,3 +1167,74 @@ describe("OP07-056 Slave Arrow's +4000 target", () => {
     expect(currentPower(game.state, "p1", "jinbe")).toBe(6000);
   });
 });
+
+describe("a Life card paid from the top", () => {
+  covers("OP05-060", "[Activate: Main]");
+  covers("OP08-008", "[Activate: Main]");
+  covers("OP08-103", "[Activate: Main]");
+  covers("OP15-100", "[On Play]");
+  covers("OP15-109", "[On Play]");
+
+  // Each of these prints "from the top of your Life cards", so the bottom card
+  // is never offered -- unlike the "top or bottom" costs `lifeToHandCost`
+  // defaults to.
+  const life = [
+    instance("life-top", "ST31-003"),
+    instance("life-bottom", "ST31-002"),
+  ];
+
+  const paysTheTopCard = (game: Game) => {
+    applyOptional(game);
+    expect(effectOptions(game.state)).toEqual(["life-top"]);
+    game.play({ type: "resolve-effect", optionId: "life-top" });
+    settleDeclining(game);
+    expect(ids(game.state.players.p1.hand)).toContain("life-top");
+    expect(ids(game.state.players.p1.life)).toEqual(["life-bottom"]);
+  };
+
+  it("OP05-060 Luffy's activation", () => {
+    const game = table("life-top-op05-060")
+      .withLeader("p1", "OP05-060")
+      .withLife("p1", life)
+      .build();
+    game.play({ type: "activate-main", summary: "OP05-060" });
+    paysTheTopCard(game);
+  });
+
+  it("OP08-008 Dalton's activation", () => {
+    const game = table("life-top-op08-008")
+      .withBoard("p1", [character("dalton", "OP08-008", { playedTurn: 11 })])
+      .withGivenDon("p1", "dalton", 1)
+      .withLife("p1", life)
+      .build();
+    game.play({ type: "activate-main", summary: "OP08-008" });
+    paysTheTopCard(game);
+  });
+
+  it("OP08-103 Custard's activation", () => {
+    const game = table("life-top-op08-103")
+      .withBoard("p1", [character("custard", "OP08-103")])
+      .withLife("p1", life)
+      .build();
+    game.play({ type: "activate-main", summary: "OP08-103" });
+    paysTheTopCard(game);
+  });
+
+  it("OP15-100's [On Play]", () => {
+    const game = table("life-top-op15-100")
+      .withHand("p1", [instance("kamakiri", "OP15-100")])
+      .withLife("p1", life)
+      .build();
+    game.play({ type: "play-card", cardNumber: "OP15-100" });
+    paysTheTopCard(game);
+  });
+
+  it("OP15-109's [On Play]", () => {
+    const game = table("life-top-op15-109")
+      .withHand("p1", [instance("robin", "OP15-109")])
+      .withLife("p1", life)
+      .build();
+    game.play({ type: "play-card", cardNumber: "OP15-109" });
+    paysTheTopCard(game);
+  });
+});

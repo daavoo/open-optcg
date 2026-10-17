@@ -870,29 +870,32 @@ export const op15OnPlayMechanics: SetMechanics = {
       // `lifeToHandCost` expresses as a `choose` at `min: 1` over an empty zone.
       // Kamakiri trashes itself, so the K.O. resolves with it already gone.
       "OP15-100",
-      lifeToHandCost({
-        kind: "sequence",
-        effects: [
-          {
-            kind: "move",
-            binding: SOURCE_BINDING,
-            to: { player: "self", zone: "trash" },
-          },
-          {
-            kind: "choose",
-            selector: {
-              player: "opponent",
-              zone: "board",
-              category: "character",
-              maxCost: 6,
+      lifeToHandCost(
+        {
+          kind: "sequence",
+          effects: [
+            {
+              kind: "move",
+              binding: SOURCE_BINDING,
+              to: { player: "self", zone: "trash" },
             },
-            bind: "op15-kamakiri-ko",
-            min: 0,
-            max: 1,
-            effect: { kind: "knock-out", binding: "op15-kamakiri-ko" },
-          },
-        ],
-      }),
+            {
+              kind: "choose",
+              selector: {
+                player: "opponent",
+                zone: "board",
+                category: "character",
+                maxCost: 6,
+              },
+              bind: "op15-kamakiri-ko",
+              min: 0,
+              max: 1,
+              effect: { kind: "knock-out", binding: "op15-kamakiri-ko" },
+            },
+          ],
+        },
+        "top",
+      ),
     ],
     [
       // OP15-031 Purinpurin: "[printed text omitted -- pnpm card:text OP15-031]"
@@ -1073,45 +1076,48 @@ export const op15OnPlayMechanics: SetMechanics = {
       // known and the one banked is not. Both halves after the colon sit inside
       // the Leader check: the printed "Then" continues the same sentence.
       "OP15-109",
-      lifeToHandCost({
-        kind: "if",
-        condition: {
-          kind: "leader-has-type",
-          player: "self",
-          type: "Straw Hat Crew",
-        },
-        then: {
-          kind: "sequence",
-          effects: [
-            {
-              kind: "choose",
-              selector: { player: "self", zone: "deck", position: "top" },
-              bind: "op15-robin109-bank",
-              min: 0,
-              max: 1,
-              effect: {
-                kind: "move",
-                binding: "op15-robin109-bank",
-                to: { player: "self", zone: "life", position: "top" },
+      lifeToHandCost(
+        {
+          kind: "if",
+          condition: {
+            kind: "leader-has-type",
+            player: "self",
+            type: "Straw Hat Crew",
+          },
+          then: {
+            kind: "sequence",
+            effects: [
+              {
+                kind: "choose",
+                selector: { player: "self", zone: "deck", position: "top" },
+                bind: "op15-robin109-bank",
+                min: 0,
+                max: 1,
+                effect: {
+                  kind: "move",
+                  binding: "op15-robin109-bank",
+                  to: { player: "self", zone: "life", position: "top" },
+                },
               },
-            },
-            {
-              kind: "choose",
-              selector: {
-                player: "self",
-                zone: "hand",
-                category: "character",
-                type: "Sky Island",
-                maxCost: 5,
+              {
+                kind: "choose",
+                selector: {
+                  player: "self",
+                  zone: "hand",
+                  category: "character",
+                  type: "Sky Island",
+                  maxCost: 5,
+                },
+                bind: "op15-robin109-play",
+                min: 0,
+                max: 1,
+                effect: { kind: "play", binding: "op15-robin109-play" },
               },
-              bind: "op15-robin109-play",
-              min: 0,
-              max: 1,
-              effect: { kind: "play", binding: "op15-robin109-play" },
-            },
-          ],
+            ],
+          },
         },
-      }),
+        "top",
+      ),
     ],
     [
       // OP15-104 Conis: "[printed text omitted -- pnpm card:text OP15-104]"

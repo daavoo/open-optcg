@@ -572,17 +572,30 @@ export const op05MainMechanics: SetMechanics = {
       {
         oncePerTurn: true,
         requires: { lifeCards: 1 },
-        program: lifeToHandCost({
-          kind: "if",
-          condition: {
-            kind: "any-of",
-            conditions: [
-              { kind: "field-don", player: "self", operator: "lte", value: 0 },
-              { kind: "field-don", player: "self", operator: "gte", value: 3 },
-            ],
+        program: lifeToHandCost(
+          {
+            kind: "if",
+            condition: {
+              kind: "any-of",
+              conditions: [
+                {
+                  kind: "field-don",
+                  player: "self",
+                  operator: "lte",
+                  value: 0,
+                },
+                {
+                  kind: "field-don",
+                  player: "self",
+                  operator: "gte",
+                  value: 3,
+                },
+              ],
+            },
+            then: { kind: "add-don", player: "self", count: 1, rested: false },
           },
-          then: { kind: "add-don", player: "self", count: 1, rested: false },
-        }),
+          "top",
+        ),
       },
     ],
     [
