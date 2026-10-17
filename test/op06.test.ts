@@ -2562,6 +2562,40 @@ describe("the four Vinsmoke siblings that trade themselves in", () => {
 
     expect(activationOffered(game, "OP06-060")).toBe(false);
   });
+
+  // The `DON!! −1` is answered after the Character has trashed itself, so the
+  // DON!! the engine first took back can be one given to that Character. Paying
+  // from another body instead must leave the trashed card's DON!! where leaving
+  // the field put them -- rested in the cost area -- not look for its pool.
+  it("pays the DON!! from another body after trashing the one it was given to", () => {
+    const game = table("op06-060-rehome")
+      .bareTable()
+      .withLeader("p1", "OP06-042")
+      .withBoard("p1", [
+        character("ichiji", "OP06-060"),
+        character("reiju", "OP06-069"),
+      ])
+      .withHand("p1", [instance("big", "OP06-061")])
+      .withDonDeck("p1", 8)
+      .withGivenDon("p1", "ichiji", 1)
+      .withGivenDon("p1", "reiju", 1)
+      .withDeckTop("p1", [instance("draw", "ST32-004")])
+      .build();
+
+    game.play({ type: "activate-main", summary: "OP06-060" });
+    applyOptional(game);
+    expect(effectOptions(game.state)).toContain("return-don:reiju");
+    game.play({ type: "resolve-effect", optionId: "return-don:reiju" });
+    payDonMinus(game);
+
+    const p1 = game.state.players.p1;
+    expect(p1.trash.map((card) => card.cardNumber)).toContain("OP06-060");
+    expect(
+      p1.board.find((card) => card.instanceId === "reiju")?.attachedDon,
+    ).toEqual([]);
+    expect(p1.restedDon).toHaveLength(1);
+    expect(p1.donDeck).toHaveLength(9);
+  });
 });
 
 describe("OP06-061 Vinsmoke Ichiji", () => {

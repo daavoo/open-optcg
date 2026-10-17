@@ -437,8 +437,13 @@ export function placeReturnedDon(
   player.donDeck.push(taken);
   const givenBack = player.donDeck.shift();
   if (givenBack === undefined) throw new Error("EMPTY_DON_DECK");
-  const source = writableDonPool(state, playerId, origin);
-  if (!source) throw new Error(`MISSING_DON_POOL: ${origin}`);
+  // The guessed origin can be a Character that has left the field since the
+  // guess, when the same cost also trashes it (Vinsmoke Ichiji OP06-060:
+  // "DON!! −1, You may trash this Character"). Leaving the field rested every
+  // DON!! it was given, so that is where the one handed back belongs.
+  const source =
+    writableDonPool(state, playerId, origin) ??
+    state.players[playerId].restedDon;
   source.push(givenBack);
   return remaining;
 }
