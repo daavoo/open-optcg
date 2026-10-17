@@ -8,6 +8,7 @@ import {
   fieldDon,
   leaderHasType,
   saboAura,
+  totalGivenDon,
   trashAtLeastCount,
   turnPlayer,
 } from "./static-shared.js";
@@ -66,6 +67,22 @@ export const op13StaticAbilities: readonly StaticAbility[] = [
       when: (context) =>
         !context.isLeader &&
         context.state.players[context.playerId].life.length <= 1,
+    },
+  },
+  // OP13-112 Vegapunk: `pnpm card:text OP13-112`.
+  //
+  // "A total of" counts the DON!! given to the Leader and to every Character
+  // alike, which is what `totalGivenDon` sums. Given DON!! stay on their cards
+  // through the opponent's turn, so the DON!! that powered its controller's
+  // attacks are what keep the keyword on when the blocks are asked for.
+  {
+    cardNumber: "OP13-112",
+    scope: "self",
+    keyword: {
+      keyword: "Blocker",
+      when: (context) =>
+        !context.isLeader &&
+        totalGivenDon(context.state, context.playerId) >= 2,
     },
   },
   // OP13-003 Gol.D.Roger (Leader): one DON!! of each DON!! Phase goes onto
