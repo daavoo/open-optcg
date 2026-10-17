@@ -43,6 +43,7 @@ import {
   eventMainPrograms,
   leaderWatcherPrograms,
   onEndOfYourTurnPrograms,
+  onStartOfYourTurnPrograms,
   onKoPrograms,
   onOpponentAttackPrograms,
   onBlockPrograms,
@@ -209,6 +210,12 @@ export function getOnEndOfYourTurnMechanicProgram(
   return onEndOfYourTurnPrograms.get(cardNumber);
 }
 
+export function getOnStartOfYourTurnMechanicProgram(
+  cardNumber: string,
+): MechanicProgram | undefined {
+  return onStartOfYourTurnPrograms.get(cardNumber);
+}
+
 /**
  * Every card whose behaviour is expressed as a mechanic program.
  *
@@ -222,6 +229,7 @@ export function mechanicProgramCards(): ReadonlySet<string> {
     ...onPlayPrograms.keys(),
     ...onKoPrograms.keys(),
     ...onEndOfYourTurnPrograms.keys(),
+    ...onStartOfYourTurnPrograms.keys(),
     ...triggerPrograms.keys(),
     ...whenAttackingPrograms.keys(),
     ...whenRestedPrograms.keys(),
@@ -374,6 +382,7 @@ export function donCountReaders(): DonCountReaders {
     onPlayPrograms,
     onKoPrograms,
     onEndOfYourTurnPrograms,
+    onStartOfYourTurnPrograms,
     whenAttackingPrograms,
     whenRestedPrograms,
     activateMainPrograms,

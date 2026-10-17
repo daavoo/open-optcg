@@ -1,5 +1,6 @@
 /**
- * OP11 `[Trigger]`, `[On K.O.]` and `[End of Your Turn]` programs.
+ * OP11 `[Trigger]`, `[On K.O.]`, `[End of Your Turn]` and start-of-turn
+ * programs.
  */
 import { type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
@@ -7,6 +8,7 @@ import { op11EventPrograms } from "./op11-main.js";
 import { op11OnPlayMechanics } from "./op11-on-play.js";
 import { playFromHand } from "./op08-shared.js";
 import { asOnPlayTrigger, payFromHand } from "./shared.js";
+import { placeAtTopOrBottom } from "./op11-shared.js";
 
 /** "Rest up to 1 of your opponent's Characters with a cost of N or less." */
 const restOpponentUpToCost = (cost: number, bind: string): MechanicEffect => ({
@@ -66,6 +68,62 @@ const hasActiveDon = {
 } as const;
 
 export const op11TriggerMechanics: SetMechanics = {
+  onStartOfYourTurn: [
+    [
+      // OP11-040 Monkey.D.Luffy (Leader): `pnpm card:text OP11-040`.
+      //
+      // Gated outside the `optional` so a turn without 8 DON!! on the field
+      // asks nothing at all. "On your field" counts DON!! still given to cards
+      // from last turn: the window opens before the Refresh Phase returns them.
+      "OP11-040",
+      {
+        effect: {
+          kind: "if",
+          condition: {
+            kind: "field-don",
+            player: "self",
+            operator: "gte",
+            value: 8,
+          },
+          then: {
+            kind: "optional",
+            effect: {
+              kind: "sequence",
+              effects: [
+                {
+                  kind: "look-at",
+                  player: "self",
+                  count: 5,
+                  bind: "op11-luffy-leader-look",
+                },
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "self",
+                    zone: "deck",
+                    binding: "op11-luffy-leader-look",
+                    type: "Straw Hat Crew",
+                  },
+                  bind: "op11-luffy-leader-add",
+                  min: 0,
+                  max: 1,
+                  effect: {
+                    kind: "move",
+                    binding: "op11-luffy-leader-add",
+                    to: { player: "self", zone: "hand" },
+                  },
+                },
+                placeAtTopOrBottom(
+                  "op11-luffy-leader-look",
+                  "op11-luffy-leader-rest",
+                ),
+              ],
+            },
+          },
+        },
+      },
+    ],
+  ],
   onKo: [
     [
       // OP11-024 Aladine: "[printed text omitted -- pnpm card:text OP11-024]"

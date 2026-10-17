@@ -6,7 +6,11 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { grantAttackActive, turnLifeFaceDown } from "./op11-shared.js";
+import {
+  grantAttackActive,
+  placeAtTopOrBottom,
+  turnLifeFaceDown,
+} from "./op11-shared.js";
 import {
   donMinus,
   lookAndAdd,
@@ -303,32 +307,17 @@ export const op11OnPlayMechanics: SetMechanics = {
       // OP11-049 Carrot: "[printed text omitted -- pnpm card:text OP11-049]"
       //
       // No card is added to hand and none is trashed: the whole clause is
-      // information plus the choice of which of the three to bury. The cards not
-      // chosen stay where they are, which is the top -- so a `choose` of up to 3
-      // for the bottom says the same thing as an ordering of all three, without
-      // asking for an order the engine has no way to offer.
+      // information plus where each of the three goes. Each card may go to
+      // either end, in the player's order, which is the split `order-to-bottom`
+      // carries through `alternate` -- the same placement OP05-055 X.Drake
+      // prints.
       "OP11-049",
       {
         effect: {
           kind: "sequence",
           effects: [
             { kind: "look-at", player: "self", count: 3, bind: "op11-carrot" },
-            {
-              kind: "choose",
-              selector: {
-                player: "self",
-                zone: "deck",
-                binding: "op11-carrot",
-              },
-              bind: "op11-carrot-bury",
-              min: 0,
-              max: 3,
-              effect: {
-                kind: "move",
-                binding: "op11-carrot-bury",
-                to: { player: "self", zone: "deck", position: "bottom" },
-              },
-            },
+            placeAtTopOrBottom("op11-carrot", "op11-carrot-place"),
           ],
         },
       },
@@ -364,8 +353,8 @@ export const op11OnPlayMechanics: SetMechanics = {
       // OP11-054 Nami: "[printed text omitted -- pnpm card:text OP11-054]"
       //
       // Net one card and a big look at the deck, for a Leader that pays two
-      // colours. The two cards go back as a pair, to whichever end the player
-      // picks -- the top being a setup for a search, the bottom a way to bury
+      // colours. The two cards go back in the player's order, each to either
+      // end -- the top being a setup for a search, the bottom a way to bury
       // dead weight.
       "OP11-054",
       {
@@ -383,31 +372,14 @@ export const op11OnPlayMechanics: SetMechanics = {
                 min: 2,
                 max: 2,
                 effect: {
-                  kind: "choice",
-                  branches: [
-                    {
-                      id: "top",
-                      label: "Place them on top of your deck",
-                      effect: {
-                        kind: "move",
-                        binding: "op11-nami-back",
-                        to: { player: "self", zone: "deck", position: "top" },
-                      },
-                    },
-                    {
-                      id: "bottom",
-                      label: "Place them at the bottom of your deck",
-                      effect: {
-                        kind: "move",
-                        binding: "op11-nami-back",
-                        to: {
-                          player: "self",
-                          zone: "deck",
-                          position: "bottom",
-                        },
-                      },
-                    },
-                  ],
+                  kind: "order-to-bottom",
+                  binding: "op11-nami-back",
+                  to: { player: "self", zone: "deck", position: "top" },
+                  alternate: {
+                    player: "self",
+                    zone: "deck",
+                    position: "bottom",
+                  },
                 },
               },
             ],
@@ -792,8 +764,8 @@ export const op11OnPlayMechanics: SetMechanics = {
     [
       // OP11-104 Shirley: "[printed text omitted -- pnpm card:text OP11-104]"
       //
-      // "The rest" goes back as a pair to one end, the same shape OP11-054 Nami
-      // uses: the top keeps them for the next search, the bottom clears them out.
+      // "The rest" goes back as a pair to one end: the top keeps them for the
+      // next search, the bottom clears them out.
       "OP11-104",
       turnLifeFaceDown("op11-shirley-cost", {
         kind: "sequence",
