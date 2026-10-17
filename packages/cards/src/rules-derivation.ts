@@ -486,8 +486,12 @@ const IDENTITY_WILDCARD =
  *
  * The full stop is load-bearing: OP12-020 Roronoa Zoro prints "[printed text omitted -- pnpm card:text OP12-020]", a conditional restriction on *what* it may attack, and a looser
  * match would stop that Leader attacking at all.
+ *
+ * So is the sentence start: OP11-058 Monkey.D.Luffy prints the same words after
+ * an "If ...," condition on its hand size, and that is a board fact for an
+ * `attackBlocked` static row, not a ban for the game's whole length.
  */
-const CANNOT_ATTACK = /this (?:Leader|Character) cannot attack\./i;
+const CANNOT_ATTACK = /(?<!, )this (?:Leader|Character) cannot attack\./i;
 
 /**
  * A Leader that rewrites the losing condition, in the same way "this Leader

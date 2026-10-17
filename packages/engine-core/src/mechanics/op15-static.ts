@@ -185,8 +185,8 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
       },
     },
   },
-  // OP15-024 Usopp: "[Opponent's Turn] This Character ... gains [Blocker]." The
-  // rest-immunity half of the same clause is `isRestImmune`.
+  // OP15-024 Usopp: "[Opponent's Turn] This Character ... gains [Blocker]."
+  // and, in the same clause, cannot be rested by the opponent's effects.
   {
     cardNumber: "OP15-024",
     scope: "self",
@@ -194,6 +194,7 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
       keyword: "Blocker",
       when: (context) => turnPlayer(context) !== context.playerId,
     },
+    restImmune: (context) => turnPlayer(context) !== context.playerId,
   },
   // OP15-051 Monkey.D.Luffy: "[printed text omitted -- pnpm card:text OP15-051]" A defensive body that
   // only holds the line for the archetype it is printed for.

@@ -806,9 +806,9 @@ export function createOnEndOfYourTurnResult(
  * Runs a Leader's start-of-turn program -- the search OP11-040 Monkey.D.Luffy
  * may activate as its controller's turn begins -- ahead of the Refresh Phase.
  *
- * Every choice it raises, and every choice a signal it emits raises, is marked
- * `startOfTurn`, so answering the last of them is what resumes the turn's
- * Refresh, Draw and DON!! steps (see `resumeStartOfTurn`).
+ * The caller marks the state `startOfTurnSuspended`, so whatever this raises
+ * holds the turn's Refresh, Draw and DON!! steps until it settles (see
+ * `resumeStartOfTurn`).
  */
 export function createOnStartOfYourTurnResult(
   state: GameState,
@@ -833,10 +833,7 @@ export function createOnStartOfYourTurnResult(
   const continuations = getMechanicSignalInvocations(state, result.signals);
   if (result.pending) {
     return {
-      pending: {
-        ...mechanicPendingEffect(invocation, result.pending, continuations),
-        startOfTurn: true,
-      } as PendingEffect,
+      pending: mechanicPendingEffect(invocation, result.pending, continuations),
       events: result.events,
     };
   }
@@ -844,14 +841,11 @@ export function createOnStartOfYourTurnResult(
   return {
     pending:
       dispatched.pending && dispatched.invocation
-        ? ({
-            ...mechanicPendingEffect(
-              dispatched.invocation,
-              dispatched.pending,
-              dispatched.continuations,
-            ),
-            startOfTurn: true,
-          } as PendingEffect)
+        ? mechanicPendingEffect(
+            dispatched.invocation,
+            dispatched.pending,
+            dispatched.continuations,
+          )
         : null,
     events: [...result.events, ...dispatched.events],
   };

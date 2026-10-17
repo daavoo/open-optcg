@@ -748,12 +748,6 @@ export type PendingEffect =
        */
       endOfTurn?: true;
       /**
-       * Set when this choice came from a start-of-turn program (OP11-040's
-       * Leader), so answering the last of it runs the Refresh, Draw and DON!!
-       * steps the choice was asked ahead of.
-       */
-      startOfTurn?: true;
-      /**
        * Set when this choice came from an `[Activate: Main]` the player
        * clicked, so the marker that names the cause can be raised on the
        * action the clause's steps actually land on.
@@ -1410,6 +1404,19 @@ export interface GameState {
    * a state that never had a continuation hashes exactly as it did before.
    */
   pendingContinuations?: MechanicInvocation[];
+  /**
+   * Set while a Leader's start-of-turn program (OP11-040) is resolving ahead
+   * of the turn's Refresh, Draw and DON!! steps, and cleared by
+   * `resumeStartOfTurn` once nothing is left to answer.
+   *
+   * Kept on the state rather than on the pending effect because the program
+   * can stop on any kind of decision, not only its own card or option picks:
+   * a `DON!! −N` return choice, a K.O. replacement, a reaction to what it
+   * moved, or the opponent's Trigger from damage it dealt. Each is answered by
+   * its own action, and the turn resumes after whichever settles last.
+   * Absent otherwise, so every other position hashes as it did before.
+   */
+  startOfTurnSuspended?: true;
   /**
    * DON!! returned by `DON!! −N` this action whose origin is still unconfirmed.
    *

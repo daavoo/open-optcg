@@ -135,7 +135,7 @@ import { promoReactionRules } from "./promo-reactions.js";
 import { st10ReactionRules } from "./st10-reactions.js";
 import { op14StaticAbilities } from "./op14-static.js";
 import { op10RemovalImmunities, op10StaticAbilities } from "./op10-static.js";
-import { op11StaticAbilities } from "./op11-static.js";
+import { op11RemovalImmunities, op11StaticAbilities } from "./op11-static.js";
 import { op17StaticAbilities } from "./op17-static.js";
 import {
   promoRemovalImmunities,
@@ -476,6 +476,7 @@ registerRemovalImmunities([
   ...op08RemovalImmunities,
   ...op09RemovalImmunities,
   ...op10RemovalImmunities,
+  ...op11RemovalImmunities,
   ...op12RemovalImmunities,
   ...op13RemovalImmunities,
   ...op15RemovalImmunities,
