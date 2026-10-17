@@ -14,5 +14,11 @@
  * the cards, the text and the programs are all unchanged, so neither hash in
  * `provenance.ts` moves, and a trace recorded against the old action ids would
  * otherwise fail as illegal halfway through with nothing to say why.
+ *
+ * Bumped to 1.2 when setup started dealing Life so the deck's top card is the
+ * bottom Life card (Bandai's rules Q&A, Basic Rules 2). No card or program
+ * changed, so again neither hash moves, but every seeded game holds its Life
+ * in the opposite order and a recorded action list diverges at the first
+ * damage.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.1";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.2";

@@ -89,32 +89,25 @@ const offered = (game: Game, type: LegalAction["type"]) =>
   game.legalActions().filter((action) => action.type === type);
 
 describe("Bandai rules Q&A: Basic Rules", () => {
-  // Engine disagrees: setup deals `deck.splice(0, n)` straight onto Life
-  // (actions/mulligan-decision.ts), so the deck's top card becomes the *top*
-  // Life card. Hidden and shuffled either way, but a seeded game draws a
-  // different Life card first.
-  it.fails(
-    "Basic 2: the top card of the deck becomes the bottom Life card",
-    () => {
-      // The ruling: the deck's top card goes to the bottom of Life.
-      const unkept = scenario()
-        .decks("FIXTURE-RED", "FIXTURE-BLUE")
-        .seed("faq-life-order")
-        .build();
-      const deckTop = unkept.state.players.p1.deck
-        .slice(0, 5)
-        .map((card) => card.instanceId);
+  it("Basic 2: the top card of the deck becomes the bottom Life card", () => {
+    // The ruling: the deck's top card goes to the bottom of Life.
+    const unkept = scenario()
+      .decks("FIXTURE-RED", "FIXTURE-BLUE")
+      .seed("faq-life-order")
+      .build();
+    const deckTop = unkept.state.players.p1.deck
+      .slice(0, 5)
+      .map((card) => card.instanceId);
 
-      const game = scenario()
-        .decks("FIXTURE-RED", "FIXTURE-BLUE")
-        .seed("faq-life-order")
-        .keepBothHands()
-        .build();
+    const game = scenario()
+      .decks("FIXTURE-RED", "FIXTURE-BLUE")
+      .seed("faq-life-order")
+      .keepBothHands()
+      .build();
 
-      const life = game.state.players.p1.life.map((card) => card.instanceId);
-      expect(life).toEqual([...deckTop].reverse());
-    },
-  );
+    const life = game.state.players.p1.life.map((card) => card.instanceId);
+    expect(life).toEqual([...deckTop].reverse());
+  });
 
   it("Basic 3: a Character reduced to 0 power or less stays on the field", () => {
     const game = table("faq-zero-power")

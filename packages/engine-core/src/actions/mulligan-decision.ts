@@ -40,7 +40,10 @@ export function applyMulliganDecision({
       // OP11-041 Nami and OP16-022 Luffy both run four -- so it is read off
       // the Leader rather than hardcoded, the same as DON!! deck size above.
       const lifeCount = db.facts(setupPlayer.leaderCardNumber).cost;
-      setupPlayer.life.push(...setupPlayer.deck.splice(0, lifeCount));
+      // Dealt one at a time off the top of the deck, each on top of the last,
+      // so the deck's top card ends at the bottom of Life (Bandai's rules Q&A,
+      // Basic Rules 2). `life[0]` is the top card.
+      setupPlayer.life.push(...setupPlayer.deck.splice(0, lifeCount).reverse());
     }
     state.phase = "main";
     state.activePlayer = nextPlayerId;
