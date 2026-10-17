@@ -10,7 +10,12 @@ import {
   type RemovalImmunity,
   staticCostDeltaWhere,
 } from "../static-abilities.js";
-import { attachedDon, restedCharacters, turnPlayer } from "./static-shared.js";
+import {
+  attachedDon,
+  leaderHasType,
+  restedCharacters,
+  turnPlayer,
+} from "./static-shared.js";
 
 export const op10StaticAbilities: readonly StaticAbility[] = [
   {
@@ -59,6 +64,54 @@ export const op10StaticAbilities: readonly StaticAbility[] = [
             ),
         ),
     },
+  },
+  // OP10-053 Bian: "[printed text omitted -- pnpm card:text OP10-053]"
+  //
+  // By name, the way OP10-108 reads its partner: a second Bian is not "other
+  // than [Bian]", so two copies do not switch each other on.
+  {
+    cardNumber: "OP10-053",
+    scope: "self",
+    keyword: {
+      keyword: "Blocker",
+      when: (context) =>
+        !context.isLeader &&
+        context.state.players[context.playerId].board.some(
+          (card) =>
+            card.instanceId !== context.card.instanceId &&
+            !hasCardName(card.cardNumber, "Bian") &&
+            hasCardType(card.cardNumber, "The Tontattas"),
+        ),
+    },
+  },
+  // OP10-085 Jesus Burgess: "[printed text omitted -- pnpm card:text OP10-085]"
+  //
+  // Black's self-mill is what fills the trash this reads, so on the turn the
+  // package has milled enough a 5-cost 6000 swings the turn it lands.
+  {
+    cardNumber: "OP10-085",
+    scope: "self",
+    keyword: {
+      keyword: "Rush",
+      when: (context) =>
+        !context.isLeader &&
+        attachedDon(context) >= 1 &&
+        context.state.players[context.playerId].trash.length >= 8,
+    },
+  },
+  // OP10-104 Caribou: "[printed text omitted -- pnpm card:text OP10-104]"
+  //
+  // A battle immunity, not a removal one: an effect's K.O. still answers it.
+  // The DON!! given on its controller's turn stays on it through the
+  // opponent's, which is when the clause is asked.
+  {
+    cardNumber: "OP10-104",
+    scope: "self",
+    battleKoImmune: (context) =>
+      !context.isLeader &&
+      attachedDon(context) >= 1 &&
+      leaderHasType(context, "Supernovas") &&
+      context.state.players[opponentOf(context.playerId)].life.length >= 3,
   },
   // OP10-001 Smoker (Leader): "[printed text omitted -- pnpm card:text OP10-001]"
   //
@@ -161,7 +214,7 @@ export const op10StaticAbilities: readonly StaticAbility[] = [
         context.state.players[opponentOf(context.playerId)].life.length,
     },
   },
-  // OP10-094 Kaido: "[printed text omitted -- pnpm card:text OP10-094]"
+  // OP10-094 Ryuma: "[printed text omitted -- pnpm card:text OP10-094]"
   //
   // Found by the census in `test/double-attack.test.ts`: the printed-keyword
   // table in `packages/cards` skips "gains [Double Attack]" as a grant, exactly

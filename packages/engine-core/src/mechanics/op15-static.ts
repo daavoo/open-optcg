@@ -12,9 +12,11 @@ import {
 } from "../static-abilities.js";
 import {
   attachedDon,
+  boardHasName,
   fieldDon,
   isNamedOrSelf,
   leaderHasType,
+  ownLeaderPower,
   trashEventCountOf,
   turnPlayer,
 } from "./static-shared.js";
@@ -108,11 +110,9 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
   // OP15-021 "Just Watch Me, Ace!!!": "[printed text omitted -- pnpm card:text OP15-021]" A discount read off the trash,
   // which the Dressrosa Event shell fills on its own.
   //
-  // A `cost` layer answers for "cost N or less" clauses pointed at the card,
-  // which for an Event means only the ones that read a hand. It does *not*
-  // reach the price paid to activate the Event: that is a hand price, and
-  // `hand-price.ts` is the only place one is decided. The same clause therefore
-  // has an entry there too, over the `trashEventCount` this one reads.
+  // A `costZone: "hand"` layer, so it answers "cost N or less" clauses that
+  // read the hand and, through `staticHandCostDelta`, the price paid to
+  // activate the Event.
   {
     cardNumber: "OP15-021",
     scope: "self",
@@ -185,8 +185,8 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
       },
     },
   },
-  // OP15-024 Usopp: "[Opponent's Turn] This Character ... gains [Blocker]." The
-  // rest-immunity half of the same clause is `isRestImmune`.
+  // OP15-024 Usopp: "[Opponent's Turn] This Character ... gains [Blocker]."
+  // and, in the same clause, cannot be rested by the opponent's effects.
   {
     cardNumber: "OP15-024",
     scope: "self",
@@ -194,6 +194,7 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
       keyword: "Blocker",
       when: (context) => turnPlayer(context) !== context.playerId,
     },
+    restImmune: (context) => turnPlayer(context) !== context.playerId,
   },
   // OP15-051 Monkey.D.Luffy: "[printed text omitted -- pnpm card:text OP15-051]" A defensive body that
   // only holds the line for the archetype it is printed for.
@@ -307,6 +308,37 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
       keyword: "Rush",
       when: (context) => fieldDon(context) >= 6,
     },
+  },
+  // OP15-068 Heavenly Warriors: [Blocker] while at 6 or less DON!! on the
+  // field -- OP15-067 Shura's ceiling, on a keyword the purple ramp-down deck
+  // wants on defence instead of offence.
+  {
+    cardNumber: "OP15-068",
+    scope: "self",
+    readsDon: ["own-ceiling"],
+    keyword: {
+      keyword: "Blocker",
+      when: (context) => fieldDon(context) <= 6,
+    },
+  },
+  // OP15-050 Bobby Funk: +3000 while its controller has a [Kelly Funk]
+  // Character. Read live, so the buff leaves with the brother.
+  {
+    cardNumber: "OP15-050",
+    scope: "self",
+    power: {
+      kind: "add",
+      value: (context) => (boardHasName(context, "Kelly Funk") ? 3000 : 0),
+    },
+  },
+  // OP15-013 Pincers: −2 cost in hand while its controller's Leader is at 0
+  // power or less -- current power, which the Red Alabasta package spends its
+  // own Leader down to.
+  {
+    cardNumber: "OP15-013",
+    scope: "self",
+    costZone: "hand",
+    cost: (context) => (ownLeaderPower(context) <= 0 ? -2 : 0),
   },
   // OP15-060 and OP15-118 Enel: +2000 power while at 6 or less DON!! on the
   // field. The removal immunity on the same clause lives in `isRemovalImmune`.

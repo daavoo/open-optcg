@@ -34,6 +34,96 @@ import {
   resolvePlayer,
 } from "./mechanics.js";
 
+type GiftChoice = Extract<MechanicPendingChoice, { kind: "give-rested-don" }>;
+
+/** The player whose DON!! a gift to `recipient` comes out of. */
+function giftOwner(
+  state: GameState,
+  pending: GiftChoice,
+  recipient: string,
+): PlayerId {
+  // The recipient's owner pays: under "its owner's" (`eitherOwner`) an
+  // opposing card takes one of the opponent's DON!!, never the chooser's.
+  const opponent = opponentOf(pending.playerId);
+  return pending.eitherOwner &&
+    (recipient === `${opponent}-leader` ||
+      state.players[opponent].board.some(
+        (card) => card.instanceId === recipient,
+      ))
+    ? opponent
+    : pending.playerId;
+}
+
+/** The piles a gift drains, in the order it drains them. */
+function giftPools(
+  state: GameState,
+  pending: GiftChoice,
+  ownerId: PlayerId,
+): string[][] {
+  const player = state.players[ownerId];
+  // Which pile a "from the cost area" gift drains is the chooser's call
+  // (OP15-023 Q2 and Q3). Out of the opponent's area an active DON!! is the
+  // one that costs them something; out of the chooser's own, a rested one
+  // leaves the active DON!! still able to pay for something.
+  return pending.from === "cost-area"
+    ? pending.eitherOwner &&
+      ownerId === pending.execution.context.sourcePlayerId
+      ? [player.restedDon, player.activeDon]
+      : [player.activeDon, player.restedDon]
+    : pending.from === "active"
+      ? [player.activeDon]
+      : [player.restedDon];
+}
+
+/**
+ * How many DON!! a gift to `recipient` can move: the printed "up to N", or
+ * what its pile holds when that is fewer.
+ */
+function giftCeiling(
+  state: GameState,
+  pending: GiftChoice,
+  recipient: string,
+): number {
+  const held = giftPools(state, pending, giftOwner(state, pending, recipient))
+    .map((pool) => pool.length)
+    .reduce((sum, size) => sum + size, 0);
+  return Math.min(pending.count, held);
+}
+
+/** The option giving `count` DON!! to `recipient`, short of the most it could. */
+const fewerGiftOption = (recipient: string, count: number): string =>
+  `give:${recipient}:${String(count)}`;
+
+/**
+ * Reads a `give-rested-don` option: a bare instance id gives as many as the
+ * gift can move, and `give:<id>:<n>` gives `n`. Undefined for `skip` and for
+ * anything this choice did not offer.
+ */
+export function parseGiftOption(
+  state: GameState,
+  pending: GiftChoice,
+  optionId: string,
+): { recipient: string; count: number } | undefined {
+  if (pending.eligibleInstanceIds.includes(optionId)) {
+    return {
+      recipient: optionId,
+      count: giftCeiling(state, pending, optionId),
+    };
+  }
+  const match = /^give:(.+):(\d+)$/.exec(optionId);
+  if (!match) return undefined;
+  const recipient = match[1]!;
+  const count = Number(match[2]);
+  if (
+    !pending.eligibleInstanceIds.includes(recipient) ||
+    count < 1 ||
+    count >= giftCeiling(state, pending, recipient)
+  ) {
+    return undefined;
+  }
+  return { recipient, count };
+}
+
 export function getMechanicChoiceOptions(
   state: GameState,
   pending: MechanicPendingChoice,
@@ -76,7 +166,25 @@ export function getMechanicChoiceOptions(
     ];
   }
   if (pending.kind === "give-rested-don") {
-    return [...pending.eligibleInstanceIds, "skip"];
+    // "Up to N" is a count as well as a recipient. Each bare id gives the
+    // most the gift can move and keeps its place at the front, so a caller
+    // that takes the first offer gives what it always gave; every smaller
+    // count follows, largest first, and `skip` is the zero.
+    return [
+      ...pending.eligibleInstanceIds,
+      ...pending.eligibleInstanceIds.flatMap((recipient) => {
+        const fewer: string[] = [];
+        for (
+          let count = giftCeiling(state, pending, recipient) - 1;
+          count >= 1;
+          count -= 1
+        ) {
+          fewer.push(fewerGiftOption(recipient, count));
+        }
+        return fewer;
+      }),
+      "skip",
+    ];
   }
   if (pending.kind === "blind-hand-pick") {
     // Positions, never ids: an instance id in an option is a card the
@@ -477,52 +585,31 @@ export function resolveMechanicChoice(
   if (pending.kind === "give-rested-don") {
     const events: PublicEvent[] = [];
     if (optionId !== "skip") {
-      if (!pending.eligibleInstanceIds.includes(optionId)) {
-        throw new Error(`INVALID_MECHANIC_OPTION: ${optionId}`);
-      }
-      // The recipient's owner pays: under "its owner's" (`eitherOwner`) an
-      // opposing card takes one of the opponent's DON!!, never the chooser's.
-      const ownerId: PlayerId =
-        pending.eitherOwner &&
-        (optionId === `${opponentOf(pending.playerId)}-leader` ||
-          state.players[opponentOf(pending.playerId)].board.some(
-            (card) => card.instanceId === optionId,
-          ))
-          ? opponentOf(pending.playerId)
-          : pending.playerId;
+      const gift = parseGiftOption(state, pending, optionId);
+      if (!gift) throw new Error(`INVALID_MECHANIC_OPTION: ${optionId}`);
+      const ownerId = giftOwner(state, pending, gift.recipient);
       const player = state.players[ownerId];
-      // Which pile a "from the cost area" gift drains is the chooser's call
-      // (OP15-023 Q2 and Q3). Out of the opponent's area an active DON!! is
-      // the one that costs them something; out of the chooser's own, a rested
-      // one leaves the active DON!! still able to pay for something.
-      const pools =
-        pending.from === "cost-area"
-          ? pending.eitherOwner &&
-            ownerId === pending.execution.context.sourcePlayerId
-            ? [player.restedDon, player.activeDon]
-            : [player.activeDon, player.restedDon]
-          : pending.from === "active"
-            ? [player.activeDon]
-            : [player.restedDon];
       const moved: string[] = [];
-      for (const pool of pools) {
-        if (moved.length >= pending.count) break;
-        moved.push(...pool.splice(0, pending.count - moved.length));
+      for (const pool of giftPools(state, pending, ownerId)) {
+        if (moved.length >= gift.count) break;
+        moved.push(...pool.splice(0, gift.count - moved.length));
       }
-      if (optionId === `${ownerId}-leader`) {
+      if (gift.recipient === `${ownerId}-leader`) {
         player.leaderAttachedDon.push(...moved);
       } else {
         const target = player.board.find(
-          (card) => card.instanceId === optionId,
+          (card) => card.instanceId === gift.recipient,
         );
-        if (!target) throw new Error(`MISSING_MECHANIC_CARD: ${optionId}`);
+        if (!target) {
+          throw new Error(`MISSING_MECHANIC_CARD: ${gift.recipient}`);
+        }
         target.attachedDon ??= [];
         target.attachedDon.push(...moved);
       }
       events.push({
         type: "don-attached",
         playerId: ownerId,
-        targetInstanceId: optionId,
+        targetInstanceId: gift.recipient,
         count: moved.length,
       });
     }

@@ -323,6 +323,16 @@ export interface StaticAbility {
    * is barred. Read through {@link effectPlayBarred}.
    */
   effectPlayFromHandBarred?: (context: AbilityContext) => boolean;
+  /**
+   * "This Character cannot be rested by your opponent's effects", live while
+   * the predicate holds -- OP15-024 Usopp on the opponent's turn, OP11-046
+   * Vinsmoke Yonji while every Character beside it is GERMA, OP12-021
+   * Ipponmatsu behind a Slash Leader with 6 rested DON!!.
+   *
+   * Continuous and read off the card itself, unlike `cannotRestUntilTurn`,
+   * which an effect writes for a window. Read through {@link isRestImmune}.
+   */
+  restImmune?: (context: AbilityContext) => boolean;
 }
 
 // --- shared predicates ------------------------------------------------------
@@ -524,6 +534,15 @@ export interface RemovalImmunity {
   when?: (state: GameState, ownerId: PlayerId, card: CardInstance) => boolean;
   /** See {@link StaticAbility.readsDon}. */
   readsDon?: readonly DonCountRead[];
+  /**
+   * For "cannot be K.O.'d by effects of <some cards>": whether the card whose
+   * effect is removing it is one the immunity answers. OP11-005 Smoker is
+   * immune to Characters without <Special> and to nothing else, so a Leader,
+   * an Event or a <Special> Character still removes it. A caller that cannot
+   * name the source card gets "not immune", the reading `isRemovalImmune`
+   * gives OP14-003 for the same reason.
+   */
+  bySource?: (source: CardDefinition) => boolean;
 }
 
 /**
@@ -578,19 +597,20 @@ function immunityHolds(
   ownerId: PlayerId,
   card: CardInstance,
   removalKind: "ko" | "off-field",
+  source: CardDefinition | undefined,
 ): boolean {
   return (
     (immunity.koOnly !== true || removalKind === "ko") &&
+    (immunity.bySource === undefined ||
+      (source !== undefined && immunity.bySource(source))) &&
     (immunity.when?.(state, ownerId, card) ?? true)
   );
 }
 
 /**
- * Whether an opponent's Leader or Character effect may rest this Character.
- *
- * OP15-024 Usopp: "[printed text omitted -- pnpm card:text OP15-024]" Distinct from
- * `cannotRestUntilTurn`, which an effect writes onto a card for a window; this
- * is continuous and read off the card itself, so it survives anything.
+ * Whether an opponent's effect may rest this Character: the `restImmune` rows
+ * of its own text. Distinct from `cannotRestUntilTurn`, which an effect writes
+ * onto a card for a window; this is continuous and read off the card itself.
  *
  * Deliberately narrow: it says nothing about resting the card as a *cost* its
  * own controller pays, or about the ordinary rest of declaring an attack.
@@ -599,10 +619,18 @@ export function isRestImmune(
   state: GameState,
   playerId: PlayerId,
   card: CardInstance,
+  db: CardDatabase = cards,
 ): boolean {
-  if (card.cardNumber !== "OP15-024") return false;
-  if (effectsNegated(state, card.instanceId)) return false;
-  return state.turnPlayerId !== playerId;
+  const own = bySelf.get(card.cardNumber);
+  if (!own || effectsNegated(state, card.instanceId)) return false;
+  const context: AbilityContext = {
+    state,
+    playerId,
+    card,
+    isLeader: false,
+    db,
+  };
+  return own.some((ability) => ability.restImmune?.(context) === true);
 }
 
 /**
@@ -660,6 +688,8 @@ export function isRemovalImmune(
    */
   sourceInstanceId?: string,
 ): boolean {
+  const source =
+    sourceCardNumber === undefined ? undefined : db.get(sourceCardNumber);
   // OP14-079 Crocodile (Leader): "[printed text omitted -- pnpm card:text OP14-079]" A self-imposed ban, which is what
   // pays for the Leader's own −10 cost engine: Crocodile shrinks a Character
   // for its Baroque Works bodies to answer rather than answering it itself.
@@ -682,7 +712,7 @@ export function isRemovalImmune(
         immunity.from === "any" &&
         immunity.protects === undefined &&
         immunity.cardNumber === card.cardNumber &&
-        immunityHolds(immunity, state, ownerId, card, removalKind),
+        immunityHolds(immunity, state, ownerId, card, removalKind, source),
     )
   ) {
     return true;
@@ -720,7 +750,7 @@ export function isRemovalImmune(
           (candidate) =>
             candidate.cardNumber === aura.cardNumber &&
             !effectsNegated(state, candidate.instanceId) &&
-            immunityHolds(aura, state, ownerId, candidate, removalKind),
+            immunityHolds(aura, state, ownerId, candidate, removalKind, source),
         ),
     )
   ) {
@@ -756,7 +786,7 @@ export function isRemovalImmune(
       immunity.from === "opponent" &&
       immunity.protects === undefined &&
       immunity.cardNumber === card.cardNumber &&
-      immunityHolds(immunity, state, ownerId, card, removalKind),
+      immunityHolds(immunity, state, ownerId, card, removalKind, source),
   );
 }
 
@@ -1566,6 +1596,34 @@ export function staticHandPlayDiscount(
   };
   return abilitiesFor(context).reduce(
     (total, ability) => total + (ability.handPlayDiscount?.(context) ?? 0),
+    0,
+  );
+}
+
+/**
+ * The card's own `costZone: "hand"` layers -- "give this card in your hand −N
+ * cost" -- summed for `cardNumber` as it sits in `playerId`'s hand, so the
+ * price paid to play or activate it reads the same number `effectiveCost`
+ * reports for the hand card. Negative for a discount.
+ */
+export function staticHandCostDelta(
+  state: GameState,
+  playerId: PlayerId,
+  cardNumber: string,
+  db: CardDatabase = cards,
+): number {
+  const context: AbilityContext = {
+    state,
+    playerId,
+    card: { instanceId: `${playerId}-hand-price`, cardNumber },
+    isLeader: false,
+    db,
+  };
+  return (bySelf.get(cardNumber) ?? []).reduce(
+    (total, ability) =>
+      ability.costZone === "hand"
+        ? total + (ability.cost?.(context) ?? 0)
+        : total,
     0,
   );
 }

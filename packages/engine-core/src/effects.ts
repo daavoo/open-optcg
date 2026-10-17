@@ -22,6 +22,7 @@ import {
   EFFECT_RESOLVERS,
   type EffectResolver,
 } from "./resolve-effect/index.js";
+import { parseGiftOption } from "./mechanic-choices.js";
 import {
   describeMoveDestination,
   executeMechanicProgram,
@@ -40,6 +41,7 @@ import {
   charactersArriveRested,
   effectsNegated,
   isRemovalImmune,
+  isRestImmune,
   onPlayEffectsNegated,
 } from "./static-abilities.js";
 import {
@@ -806,9 +808,9 @@ export function createOnEndOfYourTurnResult(
  * Runs a Leader's start-of-turn program -- the search OP11-040 Monkey.D.Luffy
  * may activate as its controller's turn begins -- ahead of the Refresh Phase.
  *
- * Every choice it raises, and every choice a signal it emits raises, is marked
- * `startOfTurn`, so answering the last of them is what resumes the turn's
- * Refresh, Draw and DON!! steps (see `resumeStartOfTurn`).
+ * The caller marks the state `startOfTurnSuspended`, so whatever this raises
+ * holds the turn's Refresh, Draw and DON!! steps until it settles (see
+ * `resumeStartOfTurn`).
  */
 export function createOnStartOfYourTurnResult(
   state: GameState,
@@ -833,10 +835,7 @@ export function createOnStartOfYourTurnResult(
   const continuations = getMechanicSignalInvocations(state, result.signals);
   if (result.pending) {
     return {
-      pending: {
-        ...mechanicPendingEffect(invocation, result.pending, continuations),
-        startOfTurn: true,
-      } as PendingEffect,
+      pending: mechanicPendingEffect(invocation, result.pending, continuations),
       events: result.events,
     };
   }
@@ -844,14 +843,11 @@ export function createOnStartOfYourTurnResult(
   return {
     pending:
       dispatched.pending && dispatched.invocation
-        ? ({
-            ...mechanicPendingEffect(
-              dispatched.invocation,
-              dispatched.pending,
-              dispatched.continuations,
-            ),
-            startOfTurn: true,
-          } as PendingEffect)
+        ? mechanicPendingEffect(
+            dispatched.invocation,
+            dispatched.pending,
+            dispatched.continuations,
+          )
         : null,
     events: [...result.events, ...dispatched.events],
   };
@@ -937,6 +933,7 @@ function activeRestTargets(
       (card) =>
         !card.rested &&
         (card.cannotRestUntilTurn ?? -1) < state.turn &&
+        !isRestImmune(state, opponentOf(playerId), card) &&
         effectiveCost(state, opponentOf(playerId), card) <= maxCost,
     )
     .map((card) => card.instanceId);
@@ -1495,8 +1492,12 @@ function computeEffectOptions(
                         // active, so it buys power for the rest of the turn rather
                         // than parking a spent DON!!. Calling both "rested" told a
                         // reader -- and an LLM seat, which plans off these summaries
-                        // -- the opposite of what the card does.
-                        `Give 1 ${choice.from === "active" ? "active" : "rested"} DON!! to ${describeCardOption(state, optionId, db)}`
+                        // -- the opposite of what the card does. The count is
+                        // the option's own: "up to N" offers every count.
+                        (() => {
+                          const gift = parseGiftOption(state, choice, optionId);
+                          return `Give ${String(gift?.count ?? 1)} ${choice.from === "active" ? "active" : "rested"} DON!! to ${describeCardOption(state, gift?.recipient ?? optionId, db)}`;
+                        })()
                     : optionId === "apply"
                       ? optionalEffectSummary(
                           effect.sourceCardNumber,
@@ -2004,6 +2005,25 @@ function computeEffectOptions(
         } to be K.O.'d`,
       },
     ];
+  }
+  if (effect.kind === "slave-arrow-cost" && effect.step === "target") {
+    const player = state.players[effect.playerId];
+    const attacked = state.activeAttack?.targetInstanceId;
+    return effect.eligibleInstanceIds.map((optionId) => {
+      const name =
+        optionId === `${effect.playerId}-leader`
+          ? "your Leader"
+          : db.require(
+              player.board.find((card) => card.instanceId === optionId)!
+                .cardNumber,
+            ).name;
+      const aside =
+        optionId === attacked ? "" : ", which is not the card being attacked";
+      return {
+        optionId,
+        summary: `+${effect.power} power on ${name} during this battle${aside}`,
+      };
+    });
   }
   if (effect.kind === "slave-arrow-cost") {
     return [

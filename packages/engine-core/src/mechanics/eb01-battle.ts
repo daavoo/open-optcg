@@ -193,8 +193,10 @@ export const eb01BattleMechanics: SetMechanics = {
       // once its controller has run out, which is the Impel Down plan.
       "EB01-026",
       {
+        // No `requires`: [DON!! x1] counts the DON!! given to Bellett, which
+        // the program's own condition reads, and says nothing about DON!!
+        // left active to spend.
         oncePerTurn: false,
-        requires: { activeDon: 1 },
         program: {
           effect: {
             kind: "if",

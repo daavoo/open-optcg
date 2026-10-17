@@ -667,6 +667,9 @@ export function replacementCostEffect(
       kind: "move",
       binding: `${bind}-cost`,
       to: { player, zone: "trash" },
+      // The protector's effect trashes the card, not the remover's -- which is
+      // what OP12-040 Kuzan's Leader asks of a {Navy} protector.
+      sourceBinding: bind,
     },
   };
   // "…you may rest this Character *and* trash 1 card from your hand instead"

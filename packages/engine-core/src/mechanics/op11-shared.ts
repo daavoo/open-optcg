@@ -5,7 +5,11 @@
  * Fish-Man Island package pays by turning a Life card over, and the Navy/SWORD
  * package hands one attacker the right to attack an active Character.
  */
-import { type MechanicEffect, type MechanicProgram } from "../mechanics.js";
+import {
+  type CardSelector,
+  type MechanicEffect,
+  type MechanicProgram,
+} from "../mechanics.js";
 
 /**
  * "[printed text omitted -- pnpm card:text <card>]"
@@ -108,7 +112,8 @@ export const grantAttackActive = (
 /**
  * "Place them at the top or bottom of the deck in any order": every card bound
  * to `binding`, each to either end, in an order the player picks -- OP11-049
- * Carrot's look and the rest of OP11-040 Monkey.D.Luffy's search.
+ * Carrot's look, and the rest of OP11-040 Monkey.D.Luffy's and OP11-104
+ * Shirley's searches.
  */
 export const placeAtTopOrBottom = (
   binding: string,
@@ -125,3 +130,52 @@ export const placeAtTopOrBottom = (
     alternate: { player: "self", zone: "deck", position: "bottom" },
   },
 });
+
+/**
+ * "[printed text omitted -- pnpm card:text <card>]" -- OP11-072 Charlotte
+ * Mont-d'or's two trash cards and OP11-091 Berry Good's three Events: the
+ * opponent places `count` of their own cards at the bottom of their deck.
+ *
+ * The cards are theirs, so they pick which and in what order, one at a time.
+ * Holding fewer than `count`, they place as many as they can (rule 8-4-4-1, the
+ * reading Bandai's OP-17 Q&A gives OP17-049's fixed "trashes 2"): a single
+ * `choose` with `min: count` would place nothing at all. So the clause asks for
+ * the largest count the zone can fill, stepping down one at a time, which keeps
+ * the order theirs at every size -- an `exhaustive` pick would take a short
+ * zone whole and decide the order for them.
+ */
+export const opponentPlacesAtBottom = (
+  selector: Omit<CardSelector, "player">,
+  count: number,
+  bind: string,
+): MechanicEffect => {
+  const place = (size: number): MechanicEffect => ({
+    kind: "choose",
+    selector: { player: "opponent", ...selector },
+    chooser: "opponent",
+    bind,
+    min: size,
+    max: size,
+    effect: {
+      kind: "move",
+      binding: bind,
+      to: { player: "owner", zone: "deck", position: "bottom" },
+    },
+  });
+  let effect = place(1);
+  for (let size = 2; size <= count; size += 1) {
+    effect = {
+      kind: "if",
+      condition: {
+        kind: "selector-count",
+        player: "opponent",
+        selector,
+        operator: "gte",
+        value: size,
+      },
+      then: place(size),
+      else: effect,
+    };
+  }
+  return effect;
+};

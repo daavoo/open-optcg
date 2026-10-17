@@ -748,12 +748,6 @@ export type PendingEffect =
        */
       endOfTurn?: true;
       /**
-       * Set when this choice came from a start-of-turn program (OP11-040's
-       * Leader), so answering the last of it runs the Refresh, Draw and DON!!
-       * steps the choice was asked ahead of.
-       */
-      startOfTurn?: true;
-      /**
        * Set when this choice came from an `[Activate: Main]` the player
        * clicked, so the marker that names the cause can be raised on the
        * action the clause's steps actually land on.
@@ -930,11 +924,17 @@ export type PendingEffect =
        * discards from hand, so this is the first one whose cost is paid off the
        * board. The counter power is only added once the cost is paid, which is
        * what "You may X: Y" means.
+       *
+       * The +4000 goes to "up to 1 of your Leader or Character cards", any of
+       * them (Bandai rules Q&A, Keywords 4), so once the cost is paid a second
+       * `step` asks which. In the `"target"` step `eligibleInstanceIds` are
+       * the cards the power can go to, the card being attacked first.
        */
       kind: "slave-arrow-cost";
       playerId: PlayerId;
       sourceCardNumber: string;
       sourceInstanceId: string;
+      step: "cost" | "target";
       eligibleInstanceIds: string[];
       power: number;
       resumePhase: "counter";
@@ -998,6 +998,12 @@ export type PendingEffect =
       sourceInstanceId: string;
       eligibleInstanceIds: string[];
       remaining: number;
+      /**
+       * Cards OP12-040 Kuzan's Leader owes for the cards already trashed in
+       * this payment, drawn once the last one is paid so a drawn card is never
+       * offered as the rest of the payment. See `navyHandTrashDraws`.
+       */
+      leaderDrawCount?: number;
       resumePhase?: "main" | "block" | "counter";
       resumePlayerId?: PlayerId;
     }
@@ -1410,6 +1416,19 @@ export interface GameState {
    * a state that never had a continuation hashes exactly as it did before.
    */
   pendingContinuations?: MechanicInvocation[];
+  /**
+   * Set while a Leader's start-of-turn program (OP11-040) is resolving ahead
+   * of the turn's Refresh, Draw and DON!! steps, and cleared by
+   * `resumeStartOfTurn` once nothing is left to answer.
+   *
+   * Kept on the state rather than on the pending effect because the program
+   * can stop on any kind of decision, not only its own card or option picks:
+   * a `DON!! −N` return choice, a K.O. replacement, a reaction to what it
+   * moved, or the opponent's Trigger from damage it dealt. Each is answered by
+   * its own action, and the turn resumes after whichever settles last.
+   * Absent otherwise, so every other position hashes as it did before.
+   */
+  startOfTurnSuspended?: true;
   /**
    * DON!! returned by `DON!! −N` this action whose origin is still unconfirmed.
    *

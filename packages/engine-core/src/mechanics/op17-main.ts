@@ -688,27 +688,31 @@ export const op17MainMechanics: SetMechanics = {
     [
       // OP17-101 Caribou: "[printed text omitted -- pnpm card:text OP17-101]"
       //
-      // `lifeToHandCost` is the shared shape for paying with a Life card.
+      // `lifeToHandCost` is the shared shape for paying with a Life card; the
+      // text names the top card, so the bottom one is not a way to pay.
       "OP17-101",
       {
         oncePerTurn: true,
-        program: lifeToHandCost({
-          kind: "choose",
-          selector: {
-            player: "opponent",
-            zone: "board",
-            category: "character",
+        program: lifeToHandCost(
+          {
+            kind: "choose",
+            selector: {
+              player: "opponent",
+              zone: "board",
+              category: "character",
+            },
+            bind: "op17-caribou-debuff",
+            min: 0,
+            max: 1,
+            effect: {
+              kind: "modify-power",
+              binding: "op17-caribou-debuff",
+              amount: -3_000,
+              expiresAfterTurns: 0,
+            },
           },
-          bind: "op17-caribou-debuff",
-          min: 0,
-          max: 1,
-          effect: {
-            kind: "modify-power",
-            binding: "op17-caribou-debuff",
-            amount: -3_000,
-            expiresAfterTurns: 0,
-          },
-        }),
+          "top",
+        ),
       },
     ],
     [

@@ -313,8 +313,9 @@ export const op10TriggerMechanics: SetMechanics = {
     [
       // OP10-020 Gum-Gum UFO: "[printed text omitted -- pnpm card:text OP10-020]"
       //
-      // Printed power -- `maxPower` -- which is the reading every "power N or
-      // less" removal in the format takes.
+      // Current power -- `maxCurrentPower` -- since the text says "power", not
+      // "base power": a Character the opponent has pumped with DON!! on their
+      // own turn is out of reach, and one debuffed down to 3000 is in it.
       "OP10-020",
       {
         effect: {
@@ -323,7 +324,7 @@ export const op10TriggerMechanics: SetMechanics = {
             player: "opponent",
             zone: "board",
             category: "character",
-            maxPower: 3_000,
+            maxCurrentPower: 3_000,
           },
           bind: "op10-ufo-trigger-ko",
           min: 0,

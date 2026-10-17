@@ -330,7 +330,16 @@ export function pendingEffectActions(
         sourceCardNumber: pendingEffect.sourceCardNumber,
         option,
         ...(grants ? { grants } : {}),
-        ...(donGift ? { donGift } : {}),
+        // A `give:<id>:<n>` option gives `n`, short of the printed "up to N"
+        // -- the describer reads that count off the option as its `amount`.
+        ...(donGift
+          ? {
+              donGift:
+                option.kind === "card" && option.amount !== undefined
+                  ? { ...donGift, count: option.amount }
+                  : donGift,
+            }
+          : {}),
         // Only where a card is being named: the "add no card" option of the
         // same choice moves nothing, and a destination on it would read as an
         // option that puts something in the hand.

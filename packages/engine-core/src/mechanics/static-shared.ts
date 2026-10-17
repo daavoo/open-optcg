@@ -81,29 +81,42 @@ export const currentLeaderPower = (context: AbilityContext): number => {
  * +1000 on its controller's turn alone, so it adds nothing to the Leader being
  * attacked.
  */
-export const opposingLeaderPower = (context: AbilityContext): number => {
-  const opponentId = opponentOf(context.playerId);
-  const opponent = context.state.players[opponentId];
+export const opposingLeaderPower = (context: AbilityContext): number =>
+  leaderPowerWithLayers(context, opponentOf(context.playerId));
+
+/**
+ * The controller's own Leader's power with its static layers folded, as
+ * {@link opposingLeaderPower} reads the other side's -- for a hand cost layer
+ * gated on it (OP15-013 Pincers), which no power layer reads back.
+ */
+export const ownLeaderPower = (context: AbilityContext): number =>
+  leaderPowerWithLayers(context, context.playerId);
+
+function leaderPowerWithLayers(
+  context: AbilityContext,
+  leaderPlayerId: PlayerId,
+): number {
+  const leaderPlayer = context.state.players[leaderPlayerId];
   const override = storedBasePower(
-    opponent.leaderBasePowers,
+    leaderPlayer.leaderBasePowers,
     context.state.turn,
   );
   const printed =
-    override ?? context.db.require(opponent.leaderCardNumber).power ?? 0;
-  const modifiers = opponent.leaderPowerModifiers
+    override ?? context.db.require(leaderPlayer.leaderCardNumber).power ?? 0;
+  const modifiers = leaderPlayer.leaderPowerModifiers
     .filter((modifier) => modifier.expiresAtTurn >= context.state.turn)
     .reduce((total, modifier) => total + modifier.amount, 0);
   const don =
-    context.state.turnPlayerId === opponentId
-      ? opponent.leaderAttachedDon.length * 1000
+    context.state.turnPlayerId === leaderPlayerId
+      ? leaderPlayer.leaderAttachedDon.length * 1000
       : 0;
   return (
     staticPower(
       context.state,
-      opponentId,
+      leaderPlayerId,
       {
-        instanceId: `${opponentId}-leader`,
-        cardNumber: opponent.leaderCardNumber,
+        instanceId: `${leaderPlayerId}-leader`,
+        cardNumber: leaderPlayer.leaderCardNumber,
       },
       true,
       printed,
@@ -113,7 +126,7 @@ export const opposingLeaderPower = (context: AbilityContext): number => {
     modifiers +
     don
   );
-};
+}
 
 /**
  * "All of your [X] cards and this Character" -- the shape OP15-070 Fuza and

@@ -6,6 +6,7 @@
  */
 import {
   createOnKoResult,
+  drawCards,
   mechanicPendingEffect,
   placeCharacter,
   resolveEffect,
@@ -21,6 +22,7 @@ import {
   replacementKey,
 } from "../removal.js";
 import { type EffectContext } from "./context.js";
+import { navyHandTrashDraws } from "./discards.js";
 import { type PublicEvent } from "@one-piece-sim/protocol";
 
 /** `character-area-replacement`. */
@@ -132,6 +134,7 @@ export function resolveHandTrashReplacement({
   state,
   effect,
   optionId,
+  db,
 }: EffectContext<"hand-trash-replacement">): PublicEvent[] {
   if (!effect.eligibleInstanceIds.includes(optionId)) {
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
@@ -143,17 +146,17 @@ export function resolveHandTrashReplacement({
   const [card] = player.hand.splice(handIndex, 1);
   if (!card) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
   player.trash.push(card);
-  if (effect.remaining > 1) {
-    state.pendingEffect = {
-      ...effect,
-      eligibleInstanceIds: player.hand.map((candidate) => candidate.instanceId),
-      remaining: effect.remaining - 1,
-    };
-  } else if (effect.resumePhase && effect.resumePlayerId) {
-    state.phase = effect.resumePhase;
-    state.activePlayer = effect.resumePlayerId;
-  }
-  return [
+  // A hand card trashed by the protector's effect: ST33-004's price and
+  // OP14-045/049/056's clauses read these two marks.
+  player.handTrashedByEffectTurn = state.turn;
+  state.handTrashedByEffectOnTurn = {
+    ...state.handTrashedByEffectOnTurn,
+    [effect.playerId]: state.turn,
+  };
+  const leaderDrawCount =
+    (effect.leaderDrawCount ?? 0) +
+    navyHandTrashDraws(state, effect.playerId, effect.sourceCardNumber, db);
+  const events: PublicEvent[] = [
     {
       type: "card-moved",
       playerId: effect.playerId,
@@ -164,6 +167,28 @@ export function resolveHandTrashReplacement({
       sourceCardNumber: effect.sourceCardNumber,
     },
   ];
+  if (effect.remaining > 1) {
+    state.pendingEffect = {
+      ...effect,
+      eligibleInstanceIds: player.hand.map((candidate) => candidate.instanceId),
+      remaining: effect.remaining - 1,
+      leaderDrawCount,
+    };
+    return events;
+  }
+  events.push(
+    ...drawCards(
+      state,
+      effect.playerId,
+      leaderDrawCount,
+      effect.sourceCardNumber,
+    ),
+  );
+  if (effect.resumePhase && effect.resumePlayerId) {
+    state.phase = effect.resumePhase;
+    state.activePlayer = effect.resumePlayerId;
+  }
+  return events;
 }
 
 /** `battle-ko-replacement`. */

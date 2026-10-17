@@ -364,9 +364,10 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
 }
 
 /**
- * Offers the new turn player's Leader its start-of-turn program, if it has
- * one, before the Refresh Phase runs. Returns whether a decision is now
- * waiting; answering it ends in {@link resumeStartOfTurn}.
+ * Runs the new turn player's Leader's start-of-turn program, if it has one,
+ * before the Refresh Phase. Returns whether it ran: the turn is then suspended,
+ * and {@link resumeStartOfTurn} finishes it at the end of the action that
+ * leaves nothing to answer -- this one, when the program asked nothing.
  *
  * Before the Refresh rather than after the draw because that is where the
  * comprehensive rules resolve "at the start of your turn" effects -- so a
@@ -390,19 +391,34 @@ function askStartOfTurn(
     cardNumber: leader,
   });
   events.push(...result.events);
-  if (!result.pending) return false;
-  state.pendingEffect = result.pending;
-  state.activePlayer = result.pending.playerId;
+  state.startOfTurnSuspended = true;
+  if (result.pending) {
+    state.pendingEffect = result.pending;
+    state.activePlayer = result.pending.playerId;
+  }
   return true;
 }
 
-/** The Refresh, Draw and DON!! steps a start-of-turn choice was asked ahead of. */
+/**
+ * The Refresh, Draw and DON!! steps a start-of-turn program was run ahead of,
+ * once nothing it started is left to answer.
+ *
+ * Asked at the end of every action rather than by the handler of any one kind
+ * of answer: the program can stop on its own picks, on a `DON!! −N` return
+ * choice, on a replacement offer or on the opponent's Trigger, and the action
+ * that settles the last of them is the one that resumes the turn.
+ */
 export function resumeStartOfTurn(
   state: GameState,
   events: PublicEvent[],
 ): void {
-  state.activePlayer = state.turnPlayerId;
-  events.push(...drawForTurn(state, state.turnPlayerId));
+  if (!state.startOfTurnSuspended) return;
+  if (state.phase !== "finished") {
+    if (state.pendingEffect || state.pendingTrigger || state.donReturn) return;
+    state.activePlayer = state.turnPlayerId;
+    events.push(...drawForTurn(state, state.turnPlayerId));
+  }
+  delete state.startOfTurnSuspended;
 }
 
 /**

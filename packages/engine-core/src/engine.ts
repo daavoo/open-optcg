@@ -105,7 +105,7 @@ import {
   clearBattleScopedPower,
   handOverPendingEffect,
 } from "./pending.js";
-import { offerDonReturnChoice } from "./turn.js";
+import { offerDonReturnChoice, resumeStartOfTurn } from "./turn.js";
 
 export interface Callback<T> {
   handle(event: T): void;
@@ -575,6 +575,10 @@ export function applyOfferedAction(
     handOverPendingEffect(state);
   }
   offerDonReturnChoice(state);
+  // Last, so a start-of-turn program's every loose end -- the return choice
+  // just offered, a Trigger its damage opened, a reaction drained above -- is
+  // answered before the turn it was run ahead of goes on.
+  resumeStartOfTurn(state, events);
   state.revision += 1;
   state.eventSequence += events.length;
   state.events = [...history, ...events];

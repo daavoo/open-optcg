@@ -582,45 +582,59 @@ export const op12MainMechanics: SetMechanics = {
     ],
     [
       // OP12-091 Poker: "[printed text omitted -- pnpm card:text OP12-091]"
+      //
+      // A trash of fewer than 3 cannot pay, so the count is the program's
+      // outermost `if`: that withholds the offer rather than spending the
+      // `[Once Per Turn]` on a cost nobody can pay.
       "OP12-091",
       {
         oncePerTurn: true,
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "choose",
-              selector: { player: "self", zone: "trash" },
-              bind: "op12-poker-cost",
-              min: 3,
-              max: 3,
+            kind: "if",
+            condition: {
+              kind: "selector-count",
+              player: "self",
+              selector: { zone: "trash" },
+              operator: "gte",
+              value: 3,
+            },
+            then: {
+              kind: "optional",
               effect: {
-                kind: "sequence",
-                effects: [
-                  {
-                    kind: "move",
-                    binding: "op12-poker-cost",
-                    to: { player: "self", zone: "deck", position: "bottom" },
-                  },
-                  {
-                    kind: "choose",
-                    selector: {
-                      player: "self",
-                      zone: "board",
-                      category: "character",
-                      type: "SMILE",
+                kind: "choose",
+                selector: { player: "self", zone: "trash" },
+                bind: "op12-poker-cost",
+                min: 3,
+                max: 3,
+                effect: {
+                  kind: "sequence",
+                  effects: [
+                    {
+                      kind: "move",
+                      binding: "op12-poker-cost",
+                      to: { player: "self", zone: "deck", position: "bottom" },
                     },
-                    bind: "op12-poker-buff",
-                    min: 0,
-                    max: 2,
-                    effect: {
-                      kind: "modify-power",
-                      binding: "op12-poker-buff",
-                      amount: 2_000,
-                      expiresAfterTurns: 0,
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "self",
+                        zone: "board",
+                        category: "character",
+                        type: "SMILE",
+                      },
+                      bind: "op12-poker-buff",
+                      min: 0,
+                      max: 2,
+                      effect: {
+                        kind: "modify-power",
+                        binding: "op12-poker-buff",
+                        amount: 2_000,
+                        expiresAfterTurns: 0,
+                      },
                     },
-                  },
-                ],
+                  ],
+                },
               },
             },
           },
@@ -632,36 +646,46 @@ export const op12MainMechanics: SetMechanics = {
       //
       // The Leader alone, and only a {Supernovas} one -- `zone: []` with
       // `includeLeader` and a type filter. The buff outlives the turn, so it is
-      // defence rather than reach.
+      // defence rather than reach. The Leader's type is also the outermost
+      // `if`, so the activation is not offered where resting Bonney buys
+      // nothing.
       "OP12-101",
       {
         oncePerTurn: false,
         requires: { sourceActive: true },
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "sequence",
-              effects: [
-                { kind: "rest", binding: SOURCE_BINDING },
-                {
-                  kind: "select",
-                  selector: {
-                    player: "self",
-                    zone: [],
-                    includeLeader: true,
-                    type: "Supernovas",
+            kind: "if",
+            condition: {
+              kind: "leader-has-type",
+              player: "self",
+              type: "Supernovas",
+            },
+            then: {
+              kind: "optional",
+              effect: {
+                kind: "sequence",
+                effects: [
+                  { kind: "rest", binding: SOURCE_BINDING },
+                  {
+                    kind: "select",
+                    selector: {
+                      player: "self",
+                      zone: [],
+                      includeLeader: true,
+                      type: "Supernovas",
+                    },
+                    bind: "op12-bonney-leader",
+                    count: "all",
+                    effect: {
+                      kind: "modify-power",
+                      binding: "op12-bonney-leader",
+                      amount: 1_000,
+                      expiresAfterTurns: 1,
+                    },
                   },
-                  bind: "op12-bonney-leader",
-                  count: "all",
-                  effect: {
-                    kind: "modify-power",
-                    binding: "op12-bonney-leader",
-                    amount: 1_000,
-                    expiresAfterTurns: 1,
-                  },
-                },
-              ],
+                ],
+              },
             },
           },
         },

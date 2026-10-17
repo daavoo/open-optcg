@@ -13,7 +13,9 @@ import { type MechanicEffect, type MechanicProgram } from "../mechanics.js";
  * OP15-097 "I Find It Embarrassing as a Human Being": "[printed text omitted -- pnpm card:text OP15-097]" Its `[Trigger]` prints "[printed text omitted -- pnpm card:text OP15-097]".
  *
  * `expiresAfterTurns: 1` is "[printed text omitted -- pnpm card:text OP15-097]",
- * the same window OP16-032 Magellan's lock uses.
+ * the same window OP16-032 Magellan's lock uses. `maxBaseCost` because the
+ * clause reads base cost: a body whose cost a static layer raised is still in
+ * range, and one whose cost was lowered is not.
  */
 export const embarrassingLock: MechanicProgram = {
   effect: {
@@ -31,7 +33,7 @@ export const embarrassingLock: MechanicProgram = {
         player: "opponent",
         zone: "board",
         category: "character",
-        maxCost: 5,
+        maxBaseCost: 5,
       },
       bind: "op15-embarrassing-lock",
       min: 0,
