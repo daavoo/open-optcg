@@ -44,7 +44,9 @@ export const buryCost = (effect: MechanicEffect): MechanicEffect => ({
  *
  * A pure sort rather than a search -- nothing is added to hand -- printed on
  * two Blue promos. `order-to-bottom` asks the player a card at a time and
- * skips asking while the cards left are all the same card.
+ * skips asking while the cards left are all the same card; `alternate` lets
+ * the same placement split the five between the top and the bottom, the way
+ * EB03-023 Kaya's identical text does.
  */
 export const sortFiveDeep = (bind: string): MechanicProgram => ({
   effect: {
@@ -59,7 +61,8 @@ export const sortFiveDeep = (bind: string): MechanicProgram => ({
         effect: {
           kind: "order-to-bottom",
           binding: `${bind}-order`,
-          to: { player: "self", zone: "deck", position: "bottom" },
+          to: { player: "self", zone: "deck", position: "top" },
+          alternate: { player: "self", zone: "deck", position: "bottom" },
         },
       },
     ],

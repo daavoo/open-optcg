@@ -930,11 +930,17 @@ export type PendingEffect =
        * discards from hand, so this is the first one whose cost is paid off the
        * board. The counter power is only added once the cost is paid, which is
        * what "You may X: Y" means.
+       *
+       * The +4000 goes to "up to 1 of your Leader or Character cards", any of
+       * them (Bandai rules Q&A, Keywords 4), so once the cost is paid a second
+       * `step` asks which. In the `"target"` step `eligibleInstanceIds` are
+       * the cards the power can go to, the card being attacked first.
        */
       kind: "slave-arrow-cost";
       playerId: PlayerId;
       sourceCardNumber: string;
       sourceInstanceId: string;
+      step: "cost" | "target";
       eligibleInstanceIds: string[];
       power: number;
       resumePhase: "counter";

@@ -3,10 +3,30 @@
  * into power, cost and keyword queries. A clause with no timing marker lives
  * here; one with a marker is a program in this set's other modules.
  */
+import { hasCardType } from "@one-piece-sim/cards";
 import { attachedDon, turnPlayer } from "./static-shared.js";
 import type { StaticAbility } from "../static-abilities.js";
 
 export const eb01StaticAbilities: readonly StaticAbility[] = [
+  // EB01-024 Hamlet: printed text `pnpm card:text EB01-024`.
+  //
+  // A Character granting its own side an aura, so `board-aura`: live while
+  // Hamlet is on the board, applied to every one of its controller's
+  // {SMILE} Characters -- Hamlet is one -- while that player holds 4 or
+  // fewer cards.
+  {
+    cardNumber: "EB01-024",
+    scope: "board-aura",
+    power: {
+      kind: "add",
+      value: (context) =>
+        !context.isLeader &&
+        hasCardType(context.card.cardNumber, "SMILE") &&
+        context.state.players[context.playerId].hand.length <= 4
+          ? 1000
+          : 0,
+    },
+  },
   // EB01-014 Sanji: "[DON!! x1] [Your Turn] This Character gains +1000 power for
   // every 3 of your rested DON!! cards."
   //

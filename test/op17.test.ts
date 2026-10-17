@@ -2448,8 +2448,8 @@ describe("OP17 [On Your Opponent's Attack]", () => {
           action.type === "play-card" && action.cardInstanceId === "whitey",
       ),
     );
-    // "K.O. one", not "up to 1": the only options are the legal targets.
-    expect(effectOptions(state)).toEqual(["small"]);
+    // "Up to 1": the legal target, and declining it.
+    expect(effectOptions(state)).toEqual(["small", "done"]);
     state = submit(
       state,
       requireAction(
