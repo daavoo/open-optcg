@@ -42,11 +42,9 @@ export const op13ReactionRules: readonly ReactionRule[] = [
     // OP13-078 Oro Jackson (Stage): "[printed text omitted -- pnpm card:text OP13-078]"Roger Pirates"[printed text omitted -- pnpm card:text OP13-078]"
     //
     // The first *Stage* in this table, which is what `controller: "stage"` is for.
-    // The signal cannot say whose effect removed the Character -- it reports the
-    // move, not its cause -- so this fires on any exit from its controller's
-    // board, including a K.O. in battle. The narrower reading would need the
-    // removal's actor to reach the signal stream; the wider one is what the same
-    // trade-off already buys OP16-041 Buggy and OP10-042 Usopp.
+    // `bySource: "opponent"` is "by your opponent's effect": a K.O. in battle
+    // carries no source and a Character its own controller trashes or bounces
+    // is their effect, so neither pays out.
     cardNumber: "OP13-078",
     controller: "stage",
     signal: {
@@ -54,6 +52,7 @@ export const op13ReactionRules: readonly ReactionRule[] = [
       from: "board",
       movedTypeIncluding: "Roger Pirates",
       movedOwner: "self",
+      bySource: "opponent",
     },
     ownTurn: false,
     oncePerTurn: true,
