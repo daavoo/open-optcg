@@ -1067,7 +1067,7 @@ describe("OP15-060 Enel, the second 6-cost finisher", () => {
     expect(hasKeyword(state, "p1", "enel", "Blocker")).toBe(true);
   });
 
-  it("is not offered when either half of the cost is unpayable", () => {
+  it("is offered on the DON!! −1 alone, since the hand trash is not a cost", () => {
     const state = scenario();
     state.players.p1.board = [character("enel", "OP15-060")];
     const activation = (candidate: GameState) =>
@@ -1077,18 +1077,15 @@ describe("OP15-060 Enel, the second 6-cost finisher", () => {
           action.sourceCardNumber === "OP15-060",
       );
 
-    // The ability has no once-per-turn clause, so an activation that could
-    // resolve to nothing would be a legal action that changes no state -- and a
-    // rules agent takes that forever. Both halves of the cost gate the offer.
+    // No DON!! on the field: the DON!! −1 cannot be paid.
     state.players.p1.activeDon = [];
     state.players.p1.hand = [{ instanceId: "pitch", cardNumber: "OP15-075" }];
     expect(activation(state)).toHaveLength(0);
 
+    // "Then, trash 1 card from your hand" follows the colon, so an empty hand
+    // does not withhold the [Blocker].
     state.players.p1.activeDon = ["d1"];
     state.players.p1.hand = [];
-    expect(activation(state)).toHaveLength(0);
-
-    state.players.p1.hand = [{ instanceId: "pitch", cardNumber: "OP15-075" }];
     expect(activation(state).length).toBeGreaterThan(0);
   });
 });
