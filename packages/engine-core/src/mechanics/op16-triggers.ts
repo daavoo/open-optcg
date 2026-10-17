@@ -17,7 +17,12 @@ const blackbeardLeader = {
   type: "Blackbeard Pirates",
 } as const;
 
-/** OP16-102 Avalo Pizarro. */
+/**
+ * OP16-102 Avalo Pizarro.
+ *
+ * No category on the selector: every card named Fullalead (OP09-099, OP17-057)
+ * is a Stage, so the name is the whole filter.
+ */
 const pizarroRecursion: MechanicProgram = {
   effect: {
     kind: "sequence",
@@ -28,7 +33,6 @@ const pizarroRecursion: MechanicProgram = {
         selector: {
           player: "self",
           zone: ["hand", "trash"],
-          category: "character",
           name: "Fullalead",
         },
         bind: "op16-pizarro-play",

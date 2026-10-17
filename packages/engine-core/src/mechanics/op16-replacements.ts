@@ -157,7 +157,25 @@ export const replacementMechanics: SetMechanics = {
       },
     ],
     [
-      // OP16-014 Marco: "[printed text omitted -- pnpm card:text OP16-014]"
+      // OP15-105 Jewelry Bonney: "[printed text omitted -- pnpm card:text OP15-105]"
+      //
+      // OP15-009 Koby's window -- every Character its controller owns at 7000
+      // printed power or less, Bonney included, against the opponent's effects
+      // only, and "removed from the field" so a bounce is answered as well as a
+      // K.O. -- paid with OP15-098's Life card instead of Leader power. The
+      // offer stands while there is Life to spend.
+      "OP15-105",
+      {
+        opponentEffectOnly: true,
+        oncePerTurn: false,
+        removal: "off-field",
+        protects: { category: "character", maxPower: 7000 },
+        label: "Add 1 card from the top of your Life cards to your hand",
+        cost: { kind: "life-to-hand", count: 1 },
+      },
+    ],
+    [
+      // OP16-014 Marco:"[printed text omitted -- pnpm card:text OP16-014]"
       //
       // `protects` with an empty filter is "any Character you control", which is
       // what "one of your Characters" means -- Marco included. The `ko-self`
