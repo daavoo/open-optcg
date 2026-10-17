@@ -378,6 +378,31 @@ export const op16TriggerMechanics: SetMechanics = {
       ace118Search,
     ],
     [
+      // OP16-024 Inazuma: untimed text that reads as an `[On K.O.]` scoped to
+      // the opponent's effects (`pnpm card:text OP16-024`) -- EB01-057
+      // Shirahoshi's shape. `opponentEffectOnly` keeps a lost fight and its
+      // controller's own removal from paying out. Any opposing Character may be
+      // named; one already rested is a legal choice that changes nothing.
+      "OP16-024",
+      {
+        opponentEffectOnly: true,
+        program: {
+          effect: {
+            kind: "choose",
+            selector: {
+              player: "opponent",
+              zone: "board",
+              category: "character",
+            },
+            bind: "op16-inazuma-rest",
+            min: 0,
+            max: 1,
+            effect: { kind: "rest", binding: "op16-inazuma-rest" },
+          },
+        },
+      },
+    ],
+    [
       // OP16-031 Buggy: "[printed text omitted -- pnpm card:text OP16-031]"
       "OP16-031",
       {

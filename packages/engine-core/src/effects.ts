@@ -22,6 +22,7 @@ import {
   EFFECT_RESOLVERS,
   type EffectResolver,
 } from "./resolve-effect/index.js";
+import { parseGiftOption } from "./mechanic-choices.js";
 import {
   describeMoveDestination,
   executeMechanicProgram,
@@ -1491,8 +1492,12 @@ function computeEffectOptions(
                         // active, so it buys power for the rest of the turn rather
                         // than parking a spent DON!!. Calling both "rested" told a
                         // reader -- and an LLM seat, which plans off these summaries
-                        // -- the opposite of what the card does.
-                        `Give 1 ${choice.from === "active" ? "active" : "rested"} DON!! to ${describeCardOption(state, optionId, db)}`
+                        // -- the opposite of what the card does. The count is
+                        // the option's own: "up to N" offers every count.
+                        (() => {
+                          const gift = parseGiftOption(state, choice, optionId);
+                          return `Give ${String(gift?.count ?? 1)} ${choice.from === "active" ? "active" : "rested"} DON!! to ${describeCardOption(state, gift?.recipient ?? optionId, db)}`;
+                        })()
                     : optionId === "apply"
                       ? optionalEffectSummary(
                           effect.sourceCardNumber,

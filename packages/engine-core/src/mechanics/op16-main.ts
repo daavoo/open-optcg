@@ -523,10 +523,14 @@ export const op16MainMechanics: SetMechanics = {
     ],
     [
       // OP16-052 Monkey.D.Luffy: "[printed text omitted -- pnpm card:text OP16-052]"
+      //
+      // `restedDon`, not `fieldDon`: only a rested DON!! can be given, so with
+      // every DON!! active the activation would spend the `[Once Per Turn]`
+      // and move nothing.
       "OP16-052",
       {
         oncePerTurn: true,
-        requires: { fieldDon: 1 },
+        requires: { restedDon: 1 },
         program: {
           effect: { kind: "give-rested-don", player: "self", count: 1 },
         },
@@ -813,7 +817,9 @@ export const op16MainMechanics: SetMechanics = {
       //
       // The 9-cost payoff the whole reveal shell is holding those Characters
       // for: two of them at once, free. `max: 2` on one choice, because the
-      // printed "up to 2" is a single decision.
+      // printed "up to 2" is a single decision. "A type including" is the
+      // substring reading, so {Whitebeard Pirates Allies} -- OP16-013 McGuy,
+      // OP16-016 Ramba, OP16-017 LittleOars Jr. -- is reached too.
       "OP16-019",
       {
         cost: 9,
@@ -824,7 +830,7 @@ export const op16MainMechanics: SetMechanics = {
               ...powerEightThousand,
               player: "self",
               zone: "hand",
-              type: "Whitebeard Pirates",
+              typeIncluding: "Whitebeard Pirates",
             },
             bind: "op16-show-em-play",
             min: 0,
@@ -1066,37 +1072,44 @@ export const op16MainMechanics: SetMechanics = {
       // OP16-020 "If You're Coming with Me... Kiss Your Lives Goodbye!!":
       // "[printed text omitted -- pnpm card:text OP16-020]"
       //
-      // A 0-cost Event, so `restDon` is its whole price -- declared here rather
-      // than only in the program so the offer can check it is payable.
+      // The DON!! and the reveal are one "you may" cost, so the DON!! rests
+      // inside the reveal's `choose`: declined, or with no 8000-power Character
+      // to show, nothing is paid. An `Event`-level `restDon` would be paid on
+      // play, before the player had answered either. The outer `if` keeps the
+      // offer withheld while no DON!! is active to pay with.
       "OP16-020",
       {
         cost: 0,
-        restDon: 1,
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "sequence",
-              effects: [
-                {
-                  kind: "choose",
-                  selector: {
-                    ...powerEightThousand,
-                    player: "self",
-                    zone: "hand",
-                  },
-                  bind: "op16-goodbye-reveal",
-                  min: 1,
-                  max: 1,
-                  effect: {
-                    kind: "sequence",
-                    effects: [
-                      { kind: "reveal", binding: "op16-goodbye-reveal" },
-                      { kind: "draw", player: "self", count: 1 },
-                    ],
-                  },
+            kind: "if",
+            condition: {
+              kind: "active-don",
+              player: "self",
+              operator: "gte",
+              value: 1,
+            },
+            then: {
+              kind: "optional",
+              effect: {
+                kind: "choose",
+                selector: {
+                  ...powerEightThousand,
+                  player: "self",
+                  zone: "hand",
                 },
-              ],
+                bind: "op16-goodbye-reveal",
+                min: 1,
+                max: 1,
+                effect: {
+                  kind: "sequence",
+                  effects: [
+                    { kind: "rest-don", player: "self", count: 1 },
+                    { kind: "reveal", binding: "op16-goodbye-reveal" },
+                    { kind: "draw", player: "self", count: 1 },
+                  ],
+                },
+              },
             },
           },
         },

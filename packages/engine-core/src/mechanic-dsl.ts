@@ -1606,6 +1606,12 @@ export type MechanicEffect =
       count: number;
       type?: string;
       /**
+       * `"leader"` for a gift printed to "your Leader" alone -- OP16-035
+       * Roronoa Zoro. The count is still the player's to choose; only the
+       * Characters drop out of the recipient choice.
+       */
+      recipient?: "leader";
+      /**
        * A card name the recipient must answer to -- "1 of your
        * [Monkey.D.Luffy] cards" (OP13-021 Gum-Gum Gatling Gun, ST31-005
        * Thousand Sunny).
