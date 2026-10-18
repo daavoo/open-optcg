@@ -944,7 +944,6 @@ describe("FAQ OP-14 Black", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "goldenweek" });
     // The −10 cost comes next, before Goldenweek's draw.
     expect(effectOptions(game)).toContain("target");
@@ -971,7 +970,6 @@ describe("FAQ OP-14 Black", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "absalom" });
 
     // Absalom's [On K.O.] search is now open, and the buff is already on.
@@ -988,7 +986,6 @@ describe("FAQ OP-14 Black", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "kumacy" });
     settle(game);
     game.play({ type: "play-card", cardNumber: "OP14-109" });
@@ -1008,7 +1005,6 @@ describe("FAQ OP-14 Black", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "oinkchuck" });
     settle(game);
     const kumacy = game.state.players.p1.board.find(

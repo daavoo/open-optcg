@@ -829,7 +829,6 @@ describe("OP10-022 Trafalgar Law", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "OP10-022" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "kyros" });
     game.play({ type: "resolve-effect", optionId: "bonney" });
     resolveAll(game);

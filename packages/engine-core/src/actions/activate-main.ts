@@ -15,7 +15,7 @@ import { mechanicPendingEffect } from "../effects.js";
 import { leaderInstanceId } from "../board.js";
 import { handOverPendingEffect, triggerFranky } from "../pending.js";
 import { type CardInstance } from "../model.js";
-import { type MechanicProgram } from "../mechanics.js";
+import { type MechanicEffect, type MechanicProgram } from "../mechanics.js";
 import { eventActivationCost } from "../hand-price.js";
 import { type ActionContext } from "./context.js";
 
@@ -222,18 +222,36 @@ export function applyActivateMain({
  * activation *is* the yes, the same reading `onOpponentAttackSummary` names
  * from the other side: that prompt is worth keeping because it arrives unasked.
  *
- * Only an `optional` that is the entire program is unwrapped. One inside a
- * sequence sits behind an effect that has already resolved, so it is a real
- * decision made with what that effect revealed, and it stays. The cost itself
- * is still declinable where the printed text allows it: what remains is the
- * `choose` that picks what pays, and an unpayable one resolves to nothing
- * rather than trapping the player.
+ * The gate is unwrapped wherever nothing can resolve before it is asked: the
+ * whole program, the `then` of an `if` -- `donMinus` writes "DON!! −N, You may
+ * ...:" as a field-DON!! check around the `optional`, and a Leader-type check
+ * guards EB03-016 Kouzuki Hiyori's the same way -- or the first step of a
+ * `sequence`. The `if` is decided at the instant of activation, so it tells the
+ * player nothing they did not know when they clicked. Left in place, the "no"
+ * also changed nothing on a clause that is not `[Once Per Turn]`, so the same
+ * activation was offered again and a pilot could loop on activate-and-decline
+ * forever: OP11-070 Charlotte Pudding and EB03-016 were most of the System-1
+ * trainer's games that hit the action cap.
+ *
+ * An `optional` behind an effect that has already resolved is a real decision
+ * made with what that effect revealed, and it stays. The cost itself is still
+ * declinable where the printed text allows it: what remains is the `choose`
+ * that picks what pays, and an unpayable one resolves to nothing rather than
+ * trapping the player.
  */
 function alreadyOptedIn(program: MechanicProgram): MechanicProgram {
-  const effect = program.effect;
+  return { ...program, effect: optedIn(program.effect) };
+}
+
+function optedIn(effect: MechanicEffect): MechanicEffect {
   // A named chooser is the opponent answering, not the activating player.
-  if (effect.kind !== "optional" || (effect.chooser ?? "self") !== "self") {
-    return program;
+  if (effect.kind === "optional") {
+    return (effect.chooser ?? "self") === "self" ? effect.effect : effect;
   }
-  return { ...program, effect: effect.effect };
+  if (effect.kind === "if") return { ...effect, then: optedIn(effect.then) };
+  if (effect.kind === "sequence" && effect.effects.length > 0) {
+    const [first, ...rest] = effect.effects;
+    return { ...effect, effects: [optedIn(first!), ...rest] };
+  }
+  return effect;
 }

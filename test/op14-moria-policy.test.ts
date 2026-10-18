@@ -81,7 +81,6 @@ describe("the Leader's activation", () => {
       .withTrash("p1", [instance("kumacy", "OP14-102")])
       .build();
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
 
     expect(optionIdOf(await chosen(game))).toBe("hogback");
     expect(optionIdOf(await chosen(game, ["op14-moria-fodder"]))).toBe("moria");

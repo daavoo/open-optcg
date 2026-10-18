@@ -59,7 +59,6 @@ function answer(game: Game, ...preferred: string[]): void {
 /** Spend `fodder` on the Leader to give `target` -10 cost, milling two. */
 function drain(game: Game, fodder: string, target: string): void {
   game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-  game.play({ type: "resolve-effect", optionId: "apply" });
   game.play({ type: "resolve-effect", optionId: fodder });
   game.play({ type: "resolve-effect", optionId: target });
   game.play({ type: "resolve-effect", optionId: "apply" });

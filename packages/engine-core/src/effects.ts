@@ -1039,7 +1039,8 @@ export function queuePendingContinuations(
  *
  * Called from the end of every action -- the one place that both owns the
  * pending slot and is reached however the action got here. An effect still in
- * flight defers the whole queue to the next action, which is the same rule the
+ * flight, or a Trigger window still open, defers the whole queue to the next
+ * action, which is the same rule the
  * `[Event]` watchers a few lines above it follow: the thing the player is
  * already answering comes first.
  */
@@ -1051,7 +1052,10 @@ export function drainPendingContinuations(
   while (
     state.pendingContinuations &&
     state.pendingContinuations.length > 0 &&
-    !state.pendingEffect
+    !state.pendingEffect &&
+    // A damaged Life card's [Trigger] is part of the effect that dealt the
+    // damage, so it is answered before the next queued effect starts.
+    !state.pendingTrigger
   ) {
     const next = state.pendingContinuations.shift()!;
     if ("program" in next) {

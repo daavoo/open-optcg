@@ -414,7 +414,6 @@ describe("OP13-082 Five Elders", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "OP13-082" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "fodder" });
     // "Different card names": the second Warcury is not offered once the first
     // has been taken.

@@ -49,7 +49,6 @@ const optionIdOf = (action: LegalAction) =>
 /** Activate the Leader and accept its "you may", leaving the K.O. choice. */
 function atFodderChoice(game: Game): Game {
   game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-  game.play({ type: "resolve-effect", optionId: "apply" });
   return game;
 }
 

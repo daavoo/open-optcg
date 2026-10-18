@@ -471,4 +471,43 @@ describe("OP15-111 Mont Blanc Noland", () => {
     expect(hasKeyword(game.state, "p1", "kalgara", "Rush")).toBe(false);
     expect(kalgaraCanAttack(game)).toBe(false);
   });
+
+  // The System-1 trainer's op08-098-list deck fronts the OP08-098 Kalgara
+  // Leader, and choosing it threw LEADER_KEYWORD_UNSUPPORTED: Rush.
+  it("can give [Rush] to a [Kalgara] Leader, which changes nothing", () => {
+    const game = table("op15-111-leader")
+      .withLeader("p1", "OP08-098")
+      .withBoard("p1", [character("noland", "OP15-111")])
+      .withLife("p2", copies(2, "OP08-099", "p2-life"))
+      .withGivenDon("p1", "noland", 1)
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "noland",
+      targetInstanceId: "p2-leader",
+    });
+    expect(effectOptions(game, "p1")).toContain("p1-leader");
+    game.play({ type: "resolve-effect", optionId: "p1-leader" });
+    expect(game.events).toContainEqual(
+      expect.objectContaining({
+        type: "keyword-granted",
+        targetInstanceId: "p1-leader",
+        keyword: "Rush",
+      }),
+    );
+    declineDefence(game);
+    while (game.state.pendingEffect) game.play({ type: "resolve-effect" });
+
+    expect(game.state.players.p2.life).toHaveLength(1);
+    expect(
+      game
+        .legalActions()
+        .some(
+          (action) =>
+            action.type === "attack" &&
+            action.attackerInstanceId === "p1-leader",
+        ),
+    ).toBe(true);
+  });
 });

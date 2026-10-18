@@ -999,6 +999,17 @@ export function dispatchMechanicInvocations(
   );
   const events: PublicEvent[] = [];
   while (continuations.length > 0) {
+    // A point of effect damage parked by `dealDamage` is still owed its
+    // [Trigger] check, and that belongs to the effect that dealt it, so the
+    // next queued effect waits behind it. OP08-119 Kaido & Linlin K.O.s three
+    // EB03-055 Nico Robin at once: each [On K.O.] deals a damage, and the
+    // second one resolving before the first damage's Trigger was answered
+    // would need a second parked card. The rest of the queue goes to
+    // `drainPendingContinuations`, which runs once the Trigger is answered.
+    if (state.pendingTrigger?.fromEffect) {
+      queuePendingContinuations(state, continuations);
+      return { pending: null, invocation: null, continuations: [], events };
+    }
     const ordering = takeOrderGroup(continuations);
     if (ordering) {
       return {

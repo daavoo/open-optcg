@@ -438,7 +438,6 @@ describe("OP16 Navy ramp", () => {
     expect(game.state.players.p1.donDeck).toHaveLength(1);
 
     game.play({ type: "activate-main", sourceInstanceId: "kuzan" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "blocker" });
 
     expect(game.state.players.p2.board[0]?.blockerDisabledUntilTurn).toBe(
@@ -733,7 +732,6 @@ describe("OP16 Land of Wano trash engine", () => {
     expect(effectiveCost(game.state, "p1", momo)).toBe(25);
 
     game.play({ type: "activate-main", sourceInstanceId: "momo" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "big-momo" });
 
     expect(game.state.players.p1.board.map((card) => card.instanceId)).toEqual([

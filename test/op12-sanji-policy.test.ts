@@ -67,7 +67,6 @@ describe("the Leader's activation", () => {
       ])
       .build();
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
 
     expect(optionIdOf(await chosen(game))).toBe("boeuf");
     expect(optionIdOf(await chosen(game, ["op12-sanji-event"]))).toBe("giant");

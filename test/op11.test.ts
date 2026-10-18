@@ -202,7 +202,6 @@ describe("OP11-074 Streusen", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "OP11-074" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     expect(effectOptions(game.state)).toContain("cost-4");
     game.play({ type: "resolve-effect", optionId: "cost-4" });
     game.play({ type: "resolve-effect", optionId: "victim" });
@@ -223,7 +222,6 @@ describe("OP11-074 Streusen", () => {
 
     const donBefore = game.state.players.p1.activeDon.length;
     game.play({ type: "activate-main", summary: "OP11-074" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "cost-0" });
     resolveAll(game);
 
@@ -281,7 +279,6 @@ describe("OP11-107 Topknot Neptunian", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "OP11-107" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "life-1" });
     resolveAll(game);
 
@@ -308,7 +305,6 @@ describe("OP11-107 Topknot Neptunian", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "OP11-107" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     resolveAll(game);
 
     expect(
