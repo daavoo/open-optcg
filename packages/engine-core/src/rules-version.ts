@@ -26,5 +26,10 @@
  * resolves started waiting behind the ones already waiting (Bandai's OP-10
  * Q&A, OP10-042 and OP10-058). A recorded action list meets an ordering
  * question it never answered, or answers one that is no longer asked.
+ *
+ * Bumped to 1.4 when the clauses watching for a Life card leaving on battle
+ * damage started waiting for the end of the Damage Step -- after the Trigger
+ * and every [Double Attack] point (Bandai's OP-05 Q&A, OP05-098). A recorded
+ * action list answers the Trigger and the watcher in the other order.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.3";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.4";

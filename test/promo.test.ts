@@ -1996,6 +1996,12 @@ describe("P-117 Nami (Leader)", () => {
     const trashBefore = game.state.players.p1.trash.length;
     game.play({ type: "attack", targetInstanceId: "p2-leader" });
     declineDefence(game);
+    // The Life card the attack took has a [Trigger]. The Leader's clause
+    // waits until the Damage Step is over (OP05-098#1 in Bandai's OP-05 Q&A
+    // rules the same for Enel's), so p2 answers the Trigger first.
+    if (game.state.phase === "trigger") {
+      game.play({ type: "resolve-trigger", optionId: "skip" });
+    }
     applyOptional(game);
     settle(game);
 

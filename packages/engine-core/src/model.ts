@@ -1417,6 +1417,19 @@ export interface GameState {
    */
   pendingContinuations?: MechanicInvocation[];
   /**
+   * The clauses watching for a Life card leaving that battle damage set off,
+   * held until the Damage Step is over.
+   *
+   * Bandai's OP-05 Q&A on OP05-098 Enel's Leader: the clause triggers when the
+   * card leaves, so whether it fires is read then -- a [Trigger] that refills
+   * Life from 0 does not stop it (OP05-098#2) -- but it resolves only once the
+   * Trigger has been processed (#1) and every point of a [Double Attack] has
+   * landed (#4). Moved to `pendingContinuations` by `releaseDamageReactions`,
+   * or into the queue of a [Trigger] that was activated, where it is ordered
+   * beside whatever the Trigger set off (#3). Absent when nothing is held.
+   */
+  pendingDamageReactions?: MechanicInvocation[];
+  /**
    * Set while a Leader's start-of-turn program (OP11-040) is resolving ahead
    * of the turn's Refresh, Draw and DON!! steps, and cleared by
    * `resumeStartOfTurn` once nothing is left to answer.

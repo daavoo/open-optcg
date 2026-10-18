@@ -15,9 +15,9 @@ import {
 } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import {
-  applyMechanicReactions,
   dispatchMechanicInvocations,
   getLeaderWatcherProgram,
+  getMechanicSignalInvocations,
   getOnOpponentAttackProgram,
   getWhenAttackingMechanicProgram,
 } from "./card-mechanics.js";
@@ -1156,48 +1156,35 @@ export function resolveBattle(
     };
   }
   // "When a card is removed from your opponent's Life cards" -- OP08-105
-  // Jewelry Bonney, and the Leader clauses that watch the same signal.
-  //
-  // Raised here, but *installed* at each of the three ways this step ends: a
-  // reaction that asks a question has to take the pending slot after the phase
-  // and the active player are settled, or it is either lost or resumed into a
-  // window that has not been opened yet.
-  const lifeReaction = applyMechanicReactions(state, [
-    {
-      kind: "card-moved",
-      card: life,
-      ownerId: attack.defenderPlayerId,
-      from: "life",
-      to: "hand",
-      // Whose attack connected, for a clause that names the Leader's own --
-      // P-117 Nami. The signal is the same shape for a Character's attack, so
-      // nothing downstream could tell them apart without this.
-      ...(attack.attackerInstanceId ===
-      leaderInstanceId(attack.attackerPlayerId)
-        ? { byLeaderAttack: true as const }
-        : {}),
-    },
-  ]);
-  events.push(...lifeReaction.events);
-  const installLifeReaction = () => {
-    if (!lifeReaction.pending || !lifeReaction.invocation) return;
-    // A game that has just ended is not resumed into: the resume slot exists to
-    // hand a live window back, and `resolve-effect` refuses a finished game for
-    // the same reason.
-    if (state.phase === "finished" || state.phase === "mulligan") return;
-    const resume = {
-      phase: state.phase,
-      playerId: state.activePlayer,
-    } as const;
-    state.pendingEffect = mechanicPendingEffect(
-      lifeReaction.invocation,
-      lifeReaction.pending,
-      lifeReaction.continuations,
-    );
-    state.pendingEffectResume = resume;
-    state.phase = "main";
-    state.activePlayer = lifeReaction.invocation.context.sourcePlayerId;
-  };
+  // Jewelry Bonney, and the Leader clauses that watch the same signal. Whether
+  // each one fires is decided now, as the card leaves; they are held until
+  // the Damage Step is over -- see `pendingDamageReactions`.
+  const lifeWatchers = getMechanicSignalInvocations(
+    state,
+    [
+      {
+        kind: "card-moved",
+        card: life,
+        ownerId: attack.defenderPlayerId,
+        from: "life",
+        to: "hand",
+        // Whose attack connected, for a clause that names the Leader's own --
+        // P-117 Nami. The signal is the same shape for a Character's attack,
+        // so nothing downstream could tell them apart without this.
+        ...(attack.attackerInstanceId ===
+        leaderInstanceId(attack.attackerPlayerId)
+          ? { byLeaderAttack: true as const }
+          : {}),
+      },
+    ],
+    false,
+  );
+  if (lifeWatchers.length > 0) {
+    state.pendingDamageReactions = [
+      ...(state.pendingDamageReactions ?? []),
+      ...lifeWatchers,
+    ];
+  }
   // "[printed text omitted -- pnpm card:text <card>]" -- the whole keyword, in one branch: the Life card
   // goes to the trash instead of into the hand, and the Trigger window below is
   // never opened. Read from the attacker, because [Banish] is a property of the
@@ -1222,7 +1209,6 @@ export function resolveBattle(
       to: "trash",
     });
     resumeMainAfterBattle(state);
-    installLifeReaction();
     return;
   }
   if (opensTriggerWindow(life.cardNumber)) {
@@ -1242,7 +1228,6 @@ export function resolveBattle(
     state.pendingTrigger = { playerId: attack.defenderPlayerId, card: life };
     state.phase = "trigger";
     state.activePlayer = attack.defenderPlayerId;
-    installLifeReaction();
     return;
   }
   // `damage-taken` says the Life total dropped; `bankDamagedLifeCard` says
@@ -1250,5 +1235,4 @@ export function resolveBattle(
   // deck -- see ST13-003's Leader.
   events.push(...bankDamagedLifeCard(state, attack.defenderPlayerId, life, db));
   resumeMainAfterBattle(state);
-  installLifeReaction();
 }

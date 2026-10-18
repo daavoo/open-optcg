@@ -89,12 +89,19 @@ export function applyResolveTrigger({
     );
     resumeAfterTrigger(state);
   } else if (getTriggerMechanicProgram(trigger.card.cardNumber)) {
+    // The damage's Life watchers join the Trigger's queue, unless a second
+    // [Double Attack] point is still owed: they wait for that too (OP05-098#4).
+    const held = state.pendingBattleDamage
+      ? []
+      : (state.pendingDamageReactions ?? []);
+    if (held.length > 0) delete state.pendingDamageReactions;
     const triggered = createTriggerResult(
       state,
       trigger.playerId,
       trigger.card,
       db,
       reactions,
+      held,
     );
     // A Trigger that reads "play this card" puts itself on the board, so the
     // usual trip to the trash would duplicate it. OP12-080 Baratie is a *Stage*

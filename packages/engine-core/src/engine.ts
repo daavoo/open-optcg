@@ -76,6 +76,7 @@ import {
   drainPendingContinuations,
   mechanicPendingEffect,
   queuePendingContinuations,
+  releaseDamageReactions,
 } from "./effects.js";
 import type {
   BoardCard,
@@ -557,6 +558,7 @@ export function applyOfferedAction(
   // queued behind it. Here rather than at each dispatch site because this is
   // the only point that is both past every one of them and in charge of the
   // pending slot; see `drainPendingContinuations`.
+  releaseDamageReactions(state);
   const pendingBeforeDrain = state.pendingEffect;
   events.push(...drainPendingContinuations(state, db));
   // A clause drained here belongs to whoever owns the card, which is not
