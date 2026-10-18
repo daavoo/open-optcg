@@ -84,6 +84,18 @@ describe("deck editor screen render", () => {
     expect(html).toContain('data-pick-leader="ST21-001"');
   });
 
+  it("offers import only before a deck is started, not inside the editor", () => {
+    const dialog = '<div id="import-dialog-stub"></div>';
+    const ctx = stubContext({ renderImportDialog: () => dialog });
+    const editing = render(stateFor(), ctx);
+    expect(editing).not.toContain('id="open-import"');
+    expect(editing).not.toContain(dialog);
+    expect(editing).toContain('id="export-list"');
+    const start = stateFor({ leader: "", cards: {} });
+    start.stage = "choose";
+    expect(render(start, ctx)).toContain(dialog);
+  });
+
   it("searches the printed effect text of pool cards when a pack is loaded", () => {
     const state = stateFor();
     const pool = cardsForLeader(state.deck!.leader).filter(
@@ -130,6 +142,7 @@ describe("deck editor screen render", () => {
     expect(html).toContain("deck-start-shell");
     expect(html).toContain('id="start-from-leader"');
     expect(html).toContain('id="start-from-base"');
+    expect(html).toContain('id="start-from-import"');
     expect(html).not.toContain("card-catalog");
     expect(html).not.toContain('id="leader-picker"');
   });

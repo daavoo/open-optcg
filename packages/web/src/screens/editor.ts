@@ -36,9 +36,9 @@ export interface EditorState {
   /**
    * Where in the editor's opening sequence the player is. A deck started from
    * nothing has no card pool until it has a Leader, and the two ways of
-   * getting one -- pick a Leader, or copy a shipped deck -- are different
-   * enough that they are asked as a choice ("choose") before either selector
-   * ("leader", "base") is shown. "edit" is the editor itself, and where a deck
+   * getting one -- pick a Leader, copy a shipped deck, or import a list -- are
+   * different enough that they are asked as a choice ("choose") before any
+   * selector ("leader", "base", or the import dialog over the choice) is shown. "edit" is the editor itself, and where a deck
    * opened with a Leader already starts.
    */
   stage: EditorStage;
@@ -142,7 +142,7 @@ export function render(state: EditorState, ctx: EditorContext): string {
     <aside class="deck-editor-tools">
       <div class="editor-leader-card">${leaderCard || `<div class="deck-select-preview empty"></div>`}<div class="leader-summary"><span>${leader?.colors?.join(" / ") ?? "No color"}</span><strong>${escapeHtml(leader?.name ?? "Choose a Leader")}</strong></div></div>
       <button class="secondary wide" id="open-leader-picker">${icon("crown", "Choose a Leader")}${leader ? "Change Leader" : "Choose a Leader"}</button>
-      <div class="editor-tool-row"><button class="secondary" id="open-import">${icon("file-up", "Import a deck list")}Import</button><button class="secondary" id="export-list">${icon("download", "Export deck list")}Export</button></div>
+      <button class="secondary wide" id="export-list">${icon("download", "Export deck list")}Export</button>
       ${state.message ? `<p class="editor-message">${escapeHtml(state.message)}</p>` : ""}
       <button class="primary wide" id="save-custom" ${validation.errors.length ? "disabled" : ""}>${icon("save", "Save this deck")}Save this deck</button>
       ${renderOverview(state.deck, state.overviewOpen)}
@@ -164,7 +164,6 @@ export function render(state: EditorState, ctx: EditorContext): string {
     ${renderLeaderDialog(state)}
     ${renderNameDialog(state)}
     ${ctx.renderCardDetailDialog()}
-    ${ctx.renderImportDialog()}
   </main>`;
 }
 
@@ -366,11 +365,16 @@ function renderFormatSelect(format: DeckFormat): string {
  *
  * A deck started from nothing has no card pool -- the Leader's colours decide
  * what is even on offer -- so the editor cannot open on an empty list. There
- * are two honest ways to get a first Leader: name one, or copy a shipped deck
- * and change it. They lead to different selectors (a grid of Leaders, a grid
- * of decks) and to a different amount of work afterwards, so the choice
- * between them is its own page rather than a tab on one grid, and each
- * selector is a page of its own with a way back to the choice.
+ * are three honest ways to get a first Leader: name one, copy a shipped deck
+ * and change it, or paste a list built elsewhere. They lead to different
+ * selectors (a grid of Leaders, a grid of decks, a text box) and to a
+ * different amount of work afterwards, so the choice between them is its own
+ * page rather than a tab on one grid. The two grids are pages of their own
+ * with a way back to the choice; the text box is a dialog over it, since
+ * closing it is the way back.
+ *
+ * Import lives here and not in the editor: a list replaces the deck outright,
+ * so it is a way to start a deck, not a change to the one being edited.
  */
 function renderStart(state: EditorState, ctx: EditorContext): string {
   const back =
@@ -392,10 +396,11 @@ function renderStart(state: EditorState, ctx: EditorContext): string {
   return `<main class="deck-editor-shell deck-start-shell" data-stage="${state.stage}">
     <header class="deck-editor-header deck-start-header">${back}<div><p class="eyebrow">Deck editor</p><h1>${title}</h1></div><div></div></header>
     <section class="deck-start-body">${body}</section>
+    ${state.stage === "choose" ? ctx.renderImportDialog() : ""}
   </main>`;
 }
 
-/** The two options, as two large cards: the choice is the whole page. */
+/** The options, as large cards: the choice is the whole page. */
 function renderStartChoice(): string {
   return `<p class="deck-start-lead">How do you want to start?</p>
     <div class="deck-start-options">
@@ -408,6 +413,11 @@ function renderStartChoice(): string {
         <span class="deck-start-option-art" aria-hidden="true">${icon("copy", "")}</span>
         <strong>Choose a base deck</strong>
         <span>Start from a shipped deck, or one of your own, and change what you like. Saving writes a new deck.</span>
+      </button>
+      <button class="deck-start-option" type="button" id="start-from-import">
+        <span class="deck-start-option-art" aria-hidden="true">${icon("file-up", "")}</span>
+        <strong>Import a deck list</strong>
+        <span>Paste a list built somewhere else, one card per line, and change what you like.</span>
       </button>
     </div>`;
 }
@@ -606,17 +616,22 @@ export function bind(state: EditorState, ctx: EditorContext): void {
         ctx.rerender();
       });
     });
-  document.querySelector("#open-import")?.addEventListener("click", () => {
-    ctx.openImportDialog();
-    ctx.rerender();
-  });
+  document
+    .querySelector("#start-from-import")
+    ?.addEventListener("click", () => {
+      ctx.openImportDialog();
+      ctx.rerender();
+    });
   ctx.bindImportDialog(
     () => {
       ctx.rerender();
     },
     (parsed) => {
       state.deck = parsed;
+      state.savedDeckId = null;
+      state.deckName = "";
       state.message = "Deck list imported.";
+      state.stage = "edit";
       ctx.rerender();
     },
   );

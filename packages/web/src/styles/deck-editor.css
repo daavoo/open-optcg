@@ -48,13 +48,13 @@
   font: 400 1.1rem var(--font-body);
   color: var(--editor-muted);
 }
-/* Two cards of equal weight, side by side while the page is wide enough for
-   both to be read at a glance, and stacked once it is not. */
+/* Three cards of equal weight, side by side while the page is wide enough for
+   all of them to be read at a glance, and stacked once it is not. */
 .deck-start-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
   gap: 1.25rem;
-  width: min(44rem, 100%);
+  width: min(54rem, 100%);
   margin: 0 auto;
 }
 .deck-start-option {
@@ -184,8 +184,7 @@
 /* Long Leader option labels would otherwise widen the grid items past the
    sidebar track and clip against the catalog. */
 .deck-editor-tools,
-.deck-editor-tools > *,
-.editor-tool-row > * {
+.deck-editor-tools > * {
   min-width: 0;
 }
 .deck-editor-tools select,
@@ -193,8 +192,7 @@
   width: 100%;
   max-width: 100%;
 }
-.deck-editor-tools .wide,
-.editor-tool-row button {
+.deck-editor-tools .wide {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -269,11 +267,6 @@
 }
 .editor-leader-card .catalog-card-caption {
   display: none;
-}
-.editor-tool-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
 }
 .editor-message {
   margin: 0;
