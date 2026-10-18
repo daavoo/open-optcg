@@ -26,6 +26,7 @@ function stubContext(overrides: Partial<SetupContext> = {}): SetupContext {
       p1: "(Red) Monkey.D.Luffy - Starter Deck 31",
       p2: "(Yellow) Eustass Kid - Starter Deck 36",
     },
+    persistSetupDecks: () => {},
     seatPilots: { p1: "you", p2: "ai" },
     refreshLobby: () => {},
     scorerAvailable: () => false,
