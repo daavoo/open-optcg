@@ -10,6 +10,7 @@ import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import {
   dispatchMechanicInvocations,
   getMechanicSignalInvocations,
+  orderSimultaneous,
   getOnEndOfYourTurnMechanicProgram,
   getOnStartOfYourTurnMechanicProgram,
   getOnKoMechanicProgram,
@@ -31,7 +32,6 @@ import {
   parseOrderSplit,
   type MechanicEffect,
   type MechanicInvocation,
-  type MechanicProgramInvocation,
   type MechanicPendingChoice,
 } from "./mechanics.js";
 import type { CardInstance, GameState, PendingEffect } from "./model.js";
@@ -691,31 +691,19 @@ export function createOnKoResult(
   );
   const mechanicProgram = getOnKoMechanicProgram(source.cardNumber, cause);
   if (mechanicProgram) {
-    const invocation = {
-      context: { sourcePlayerId: playerId, source },
-      program: mechanicProgram,
-    };
-    const result = executeMechanicProgram(
+    // The card's own clause and whatever was watching for the K.O. triggered
+    // together, so the controller orders them (OP10-042#1).
+    const dispatched = dispatchMechanicInvocations(
       state,
-      invocation.context,
-      mechanicProgram,
+      orderSimultaneous(state, [
+        {
+          context: { sourcePlayerId: playerId, source },
+          program: mechanicProgram,
+        },
+        ...removalWatchers,
+      ]),
       db,
     );
-    const continuations = [
-      ...getMechanicSignalInvocations(state, result.signals),
-      ...removalWatchers,
-    ];
-    if (result.pending) {
-      return {
-        pending: mechanicPendingEffect(
-          invocation,
-          result.pending,
-          continuations,
-        ),
-        events: result.events,
-      };
-    }
-    const dispatched = dispatchMechanicInvocations(state, continuations, db);
     return {
       pending:
         dispatched.pending && dispatched.invocation
@@ -725,7 +713,7 @@ export function createOnKoResult(
               dispatched.continuations,
             )
           : null,
-      events: [...result.events, ...dispatched.events],
+      events: dispatched.events,
     };
   }
   const legacy = createOnKoEffect(state, playerId, source, resumePlayerId, db);
@@ -1058,23 +1046,29 @@ export function drainPendingContinuations(
     !state.pendingTrigger
   ) {
     const next = state.pendingContinuations.shift()!;
-    if ("program" in next) {
+    if ("program" in next || next.orderGroup !== undefined) {
       // A group waiting to be ordered goes as one, or the dispatcher would
       // see a group of one and run it without asking.
       const batch = [next];
       while (
         next.orderGroup !== undefined &&
         state.pendingContinuations[0] !== undefined &&
-        "program" in state.pendingContinuations[0] &&
         state.pendingContinuations[0].orderGroup === next.orderGroup
       ) {
-        batch.push(state.pendingContinuations.shift() as typeof next);
+        batch.push(state.pendingContinuations.shift()!);
       }
+      const queued = state.pendingContinuations.length;
       const dispatched = dispatchMechanicInvocations(state, batch, db);
       events.push(...dispatched.events);
-      // Whatever that program queued behind itself keeps its place at the head.
-      if (dispatched.continuations.length > 0) {
-        state.pendingContinuations.unshift(...dispatched.continuations);
+      // Whatever that program queued behind itself keeps its place at the
+      // head -- and so does a handler the dispatcher parked, which
+      // `queuePendingContinuations` appended at the tail.
+      const parked = state.pendingContinuations.splice(queued);
+      if (dispatched.continuations.length > 0 || parked.length > 0) {
+        state.pendingContinuations.unshift(
+          ...parked,
+          ...dispatched.continuations,
+        );
       }
       if (dispatched.pending && dispatched.invocation) {
         state.pendingEffect = mechanicPendingEffect(
@@ -1134,31 +1128,19 @@ export function createOnPlayEffect(
     ? undefined
     : getOnPlayMechanicProgram(source.cardNumber);
   if (mechanicProgram) {
-    const invocation = {
-      context: { sourcePlayerId: playerId, source },
-      program: mechanicProgram,
-    };
-    const result = executeMechanicProgram(
+    // The card's own clause and whatever was watching for the play triggered
+    // together, so the controller orders them.
+    const dispatched = dispatchMechanicInvocations(
       state,
-      invocation.context,
-      mechanicProgram,
+      orderSimultaneous(state, [
+        {
+          context: { sourcePlayerId: playerId, source },
+          program: mechanicProgram,
+        },
+        ...watchers,
+      ]),
       db,
     );
-    const continuations = [
-      ...getMechanicSignalInvocations(state, result.signals),
-      ...watchers,
-    ];
-    if (result.pending) {
-      return {
-        pending: mechanicPendingEffect(
-          invocation,
-          result.pending,
-          continuations,
-        ),
-        events: result.events,
-      };
-    }
-    const dispatched = dispatchMechanicInvocations(state, continuations, db);
     return {
       pending:
         dispatched.pending && dispatched.invocation
@@ -1168,7 +1150,7 @@ export function createOnPlayEffect(
               dispatched.continuations,
             )
           : null,
-      events: [...result.events, ...dispatched.events],
+      events: dispatched.events,
     };
   }
   // The card's own clause first, watchers behind it -- the order the program
@@ -1247,7 +1229,7 @@ function findCardByInstanceId(
  * what the effect's own wording has not yet.
  */
 function reactionSourceName(
-  reactions: readonly MechanicProgramInvocation[],
+  reactions: readonly MechanicInvocation[],
   optionId: string,
   db: CardDatabase,
 ): string {

@@ -899,6 +899,13 @@ describe("OP16 Blue/Yellow Nami profile", () => {
         action.type === "resolve-effect" && action.optionId === "apply",
     );
 
+    // Both were K.O.'d at once, so their owner orders the two [On K.O.]s.
+    state = submit(
+      state,
+      (action) =>
+        action.type === "resolve-effect" &&
+        action.optionId === "reaction:perona",
+    );
     expect(state.pendingEffect?.sourceCardNumber).toBe("OP14-111");
     state = submit(
       state,

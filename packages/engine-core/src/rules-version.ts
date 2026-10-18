@@ -20,5 +20,11 @@
  * changed, so again neither hash moves, but every seeded game holds its Life
  * in the opposite order and a recorded action list diverges at the first
  * damage.
+ *
+ * Bumped to 1.3 when clauses that trigger together started being ordered by
+ * their controller, turn player first, and a clause triggered while another
+ * resolves started waiting behind the ones already waiting (Bandai's OP-10
+ * Q&A, OP10-042 and OP10-058). A recorded action list meets an ordering
+ * question it never answered, or answers one that is no longer asked.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.2";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.3";
