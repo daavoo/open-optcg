@@ -857,6 +857,13 @@ export function createTriggerResult(
    * already knows how to hold a second program while the first is answered.
    */
   reactions: readonly MechanicInvocation[] = [],
+  /**
+   * The Life watchers the same damage set off (`pendingDamageReactions`).
+   * They wait for the Trigger, and are then ordered together with whatever
+   * it set off: OP05-098 Enel's Leader beside the [On Play] of the OP05-106
+   * Shura its Trigger played (Bandai's OP05-098#3).
+   */
+  held: readonly MechanicInvocation[] = [],
 ): OnPlayResult {
   const mechanicProgram = getTriggerMechanicProgram(source.cardNumber);
   if (!mechanicProgram) return { pending: null, events: [] };
@@ -864,7 +871,11 @@ export function createTriggerResult(
   // negation of those empties it (OP09-081#1); the "when a [Trigger]
   // activates" watchers still answer, because it was activated.
   if (mechanicProgram.runsOnPlay && onPlayEffectsNegated(state, playerId, db)) {
-    const dispatched = dispatchMechanicInvocations(state, [...reactions], db);
+    const dispatched = dispatchMechanicInvocations(
+      state,
+      [...reactions, ...held],
+      db,
+    );
     return {
       pending:
         dispatched.pending && dispatched.invocation
@@ -889,7 +900,10 @@ export function createTriggerResult(
   );
   const continuations = [
     ...reactions,
-    ...getMechanicSignalInvocations(state, result.signals),
+    ...orderSimultaneous(state, [
+      ...held,
+      ...getMechanicSignalInvocations(state, result.signals),
+    ]),
   ];
   if (result.pending) {
     return {
@@ -1020,6 +1034,30 @@ export function queuePendingContinuations(
     ...(state.pendingContinuations ?? []),
     ...invocations,
   ];
+}
+
+/**
+ * Hands the Life watchers battle damage set off to the parked queue, once the
+ * Damage Step is over: no Trigger window open, no [Double Attack] point still
+ * owed, nothing else resolving. See `pendingDamageReactions`.
+ */
+export function releaseDamageReactions(state: GameState): void {
+  const held = state.pendingDamageReactions;
+  if (!held) return;
+  if (state.phase === "finished") {
+    delete state.pendingDamageReactions;
+    return;
+  }
+  if (
+    state.phase === "trigger" ||
+    state.pendingTrigger ||
+    state.pendingBattleDamage ||
+    state.pendingEffect
+  ) {
+    return;
+  }
+  delete state.pendingDamageReactions;
+  queuePendingContinuations(state, held);
 }
 
 /**

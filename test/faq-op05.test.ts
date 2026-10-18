@@ -1013,93 +1013,70 @@ describe("FAQ OP05 Yellow", () => {
         .withGivenDon("p2", attacker.instanceId, 2)
         .build();
 
-    // Engine disagrees on all four OP05-098 rulings, for one reason: the Life
-    // card leaving on damage raises the `card-moved` signal at once, and
-    // `resolveBattle` (battle.ts, `installLifeReaction`) installs the
-    // Leader's reaction before the Trigger window is offered and before a
-    // [Double Attack]'s second point is dealt. Bandai holds the clause until
-    // the Trigger has been processed and the Damage Step has ended. Deferring
-    // Life watchers past the Trigger window and `pendingBattleDamage` changes
-    // the shared damage flow for every Life-leave watcher (OP08-105 Jewelry
-    // Bonney, P-117 Nami among them), so it is left for a design decision.
+    // All four rulings come down to one timing: the Leader's clause is decided
+    // as the Life card leaves, and resolves once the Damage Step is over --
+    // after the Trigger and after a [Double Attack]'s second point. See
+    // `pendingDamageReactions`.
     //
-    // #1: Enel adds the deck top to Life and asks for the hand trash first;
-    // the Trigger is offered only after.
-    it.fails(
-      "OP05-098#1: the Trigger is decided first, and the Leader's clause follows it",
-      () => {
-        // OP06-116 Reject's Trigger draws a card.
-        const game = enel("faq-op05-098-1", "OP06-116");
-        attack(game, "attacker", "p1-leader");
-        passDefence(game);
-        expect(offered(game, "resolve-trigger").length).toBeGreaterThan(0);
-        expect(game.state.players.p1.life).toHaveLength(0);
-        expect(game.state.players.p1.deck).toHaveLength(4);
+    // #1: the Trigger is offered with Life still at 0, and Enel answers after.
+    it("OP05-098#1: the Trigger is decided first, and the Leader's clause follows it", () => {
+      // OP06-116 Reject's Trigger draws a card.
+      const game = enel("faq-op05-098-1", "OP06-116");
+      attack(game, "attacker", "p1-leader");
+      passDefence(game);
+      expect(offered(game, "resolve-trigger").length).toBeGreaterThan(0);
+      expect(game.state.players.p1.life).toHaveLength(0);
+      expect(game.state.players.p1.deck).toHaveLength(4);
 
-        game.play({ type: "resolve-trigger", summary: "Activate" });
-        settle(game);
-        expect(ids(game.state.players.p1.hand)).toContain("p1-deck-1");
-        expect(ids(game.state.players.p1.life)).toEqual(["p1-deck-2"]);
-      },
-    );
+      game.play({ type: "resolve-trigger", summary: "Activate" });
+      settle(game);
+      expect(ids(game.state.players.p1.hand)).toContain("p1-deck-1");
+      expect(ids(game.state.players.p1.life)).toEqual(["p1-deck-2"]);
+    });
 
-    // #2: Enel has already refilled Life to 1 when the Trigger is offered, so
-    // OP06-115's at-0-Life clause adds nothing and Life ends at 1.
-    it.fails(
-      "OP05-098#2: a Trigger that refills Life from 0 does not stop the Leader's clause",
-      () => {
-        // OP06-115's Trigger stands in for OP03-118 Ikoku Sovereignty: at 0
-        // Life it adds the top of the deck to Life.
-        const game = enel("faq-op05-098-2", "OP06-115");
-        attack(game, "attacker", "p1-leader");
-        passDefence(game);
-        game.play({ type: "resolve-trigger", summary: "Activate" });
-        settle(game);
-        expect(game.state.players.p1.life).toHaveLength(2);
-      },
-    );
+    // #2: the Trigger refills Life from 0 first, and Enel still adds one.
+    it("OP05-098#2: a Trigger that refills Life from 0 does not stop the Leader's clause", () => {
+      // OP06-115's Trigger stands in for OP03-118 Ikoku Sovereignty: at 0
+      // Life it adds the top of the deck to Life.
+      const game = enel("faq-op05-098-2", "OP06-115");
+      attack(game, "attacker", "p1-leader");
+      passDefence(game);
+      game.play({ type: "resolve-trigger", summary: "Activate" });
+      settle(game);
+      expect(game.state.players.p1.life).toHaveLength(2);
+    });
 
-    // #3: Enel resolves before the Trigger is decided, so Shura's [On Play]
-    // and the Leader's clause are never waiting together for an order.
-    it.fails(
-      "OP05-098#3: Shura's [On Play] and the Leader's clause go in the order the player picks",
-      () => {
-        const game = enel("faq-op05-098-3", "OP05-106");
-        attack(game, "attacker", "p1-leader");
-        passDefence(game);
-        game.play({ type: "resolve-trigger", summary: "Activate" });
-        expect(game.player).toBe("p1");
-        expect(game.summaries("p1").some((s) => s.includes("Enel"))).toBe(true);
-        expect(game.summaries("p1").some((s) => s.includes("Shura"))).toBe(
-          true,
-        );
-      },
-    );
+    // #3: Shura's [On Play] and Enel's clause wait together, so p1 orders them.
+    it("OP05-098#3: Shura's [On Play] and the Leader's clause go in the order the player picks", () => {
+      const game = enel("faq-op05-098-3", "OP05-106");
+      attack(game, "attacker", "p1-leader");
+      passDefence(game);
+      game.play({ type: "resolve-trigger", summary: "Activate" });
+      expect(game.player).toBe("p1");
+      expect(game.summaries("p1").some((s) => s.includes("Enel"))).toBe(true);
+      expect(game.summaries("p1").some((s) => s.includes("Shura"))).toBe(true);
+    });
 
-    // #4: Enel answers the first point, and the second point then takes the
-    // card it added, leaving 0 Life with the [Once Per Turn] spent.
-    it.fails(
-      "OP05-098#4: both Double Attack damage land before the Leader adds a Life card",
-      () => {
-        const game = enel(
-          "faq-op05-098-4",
-          "FIX-001",
-          character("oden", "OP09-047"),
-        );
-        attack(game, "oden", "p1-leader");
-        passDefence(game);
-        while (
-          game.state.pendingEffect ||
-          offered(game, "resolve-trigger").length
-        ) {
-          if (offered(game, "resolve-trigger").length)
-            game.play({ type: "resolve-trigger" });
-          else game.play({ type: "resolve-effect" });
-        }
-        expect(game.state.phase).not.toBe("finished");
-        expect(game.state.players.p1.life).toHaveLength(1);
-      },
-    );
+    // #4: the second point finds no Life and does nothing; Enel then adds one.
+    it("OP05-098#4: both Double Attack damage land before the Leader adds a Life card", () => {
+      const game = enel(
+        "faq-op05-098-4",
+        "FIX-001",
+        character("oden", "OP09-047"),
+      );
+      attack(game, "oden", "p1-leader");
+      passDefence(game);
+      while (
+        game.state.pendingEffect ||
+        offered(game, "resolve-trigger").length
+      ) {
+        if (offered(game, "resolve-trigger").length)
+          game.play({ type: "resolve-trigger" });
+        else game.play({ type: "resolve-effect" });
+      }
+      expect(game.state.phase).not.toBe("finished");
+      expect(game.state.players.p1.life).toHaveLength(1);
+    });
   });
 
   describe("OP05-100 Enel", () => {
