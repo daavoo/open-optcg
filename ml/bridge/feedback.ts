@@ -93,6 +93,7 @@ for (const path of inputs) {
     seed: file.config.seed,
     ...(file.config.seedMode ? { seedMode: file.config.seedMode } : {}),
     startingPlayer: file.config.startingPlayer,
+    ...(file.config.timeLimit ? { timeLimit: file.config.timeLimit } : {}),
   });
   let applied = 0;
   for (const flag of [...file.flags].sort(

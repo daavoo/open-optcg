@@ -19,11 +19,39 @@ import type {
   GrantableKeyword,
   PlayerId,
   PublicEvent,
+  TimeLimitProcedure,
 } from "@one-piece-sim/protocol";
 
 /** Big numbers as the cards print them: 5000 power reads as "5k". */
 export function formatCompactStat(value: number): string {
   return Math.abs(value) >= 1000 ? `${value / 1000}k` : String(value);
+}
+
+/** Each §8.2 procedure as the reason a game was won on time. */
+const TIME_LIMIT_PROCEDURE_TEXT: Record<TimeLimitProcedure, string> = {
+  life: "more Life cards",
+  deck: "more cards left in the deck",
+  characters: "more Characters",
+  "life-drawn": "the last card drawn from Life",
+  "final-turn": "a tie on every count, against the player whose turn ended it",
+};
+
+/**
+ * How a game was won, as the phrase after "won": "by life", "by deck
+ * exhaustion", or for a game decided on time, "on time, by more Life cards" --
+ * which procedure decided it is the part a reader cannot work out from the
+ * board.
+ */
+export function gameEndText(
+  reason: string,
+  procedure?: TimeLimitProcedure | null,
+): string {
+  if (reason === "time") {
+    return procedure
+      ? `on time, by ${TIME_LIMIT_PROCEDURE_TEXT[procedure]}`
+      : "on time";
+  }
+  return `by ${reason.replace("-", " ")}`;
 }
 
 /**
@@ -342,8 +370,10 @@ export function eventText(
       return `${who(event.playerId)} ended the turn.`;
     case "extra-turn-granted":
       return `${who(event.playerId)} will take an extra turn after this one${sourceSuffix(event.sourceCardNumber)}.`;
+    case "time-called":
+      return `Time was called on turn ${event.turn}: the game is decided at the end of turn ${event.finalTurn}.`;
     case "game-ended":
-      return `${who(event.winner)} won by ${event.reason.replace("-", " ")}.`;
+      return `${who(event.winner)} won ${gameEndText(event.reason, event.procedure)}.`;
     case "don-attached": {
       const target = named(event.targetInstanceId);
       return `${who(event.playerId)} attached ${event.count} DON!!${target ? ` to ${target}` : ""}.`;

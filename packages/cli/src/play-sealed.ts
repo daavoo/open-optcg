@@ -21,7 +21,11 @@
  */
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { GameService, reorderAction } from "@one-piece-sim/engine-core";
+import {
+  GameService,
+  gameEndText,
+  reorderAction,
+} from "@one-piece-sim/engine-core";
 import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
 import { RegistryRulesAgent } from "@one-piece-sim/agents/local";
 import {
@@ -283,6 +287,6 @@ if (quit) {
   console.log("Playtest ended.");
 } else {
   console.log(
-    `\nGame over: ${observation.winner === "p1" ? "You" : "Opponent"} wins by ${observation.resultReason}.`,
+    `\nGame over: ${observation.winner === "p1" ? "You" : "Opponent"} wins ${gameEndText(observation.resultReason ?? "card-effect", observation.timeLimit?.decidedBy)}.`,
   );
 }

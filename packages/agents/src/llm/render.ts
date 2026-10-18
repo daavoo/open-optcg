@@ -477,6 +477,24 @@ function eventLine(
  * seat's to continue; and a mulligan is the starting player's own decision but
  * not a turn to plan.
  */
+/**
+ * The time limit, once it matters: a game decided on time is won on Life
+ * first, so a seat that knows the count is running out plays for the Life lead
+ * rather than for a lethal turn that will never come. Nothing before time is
+ * called, and nothing in an untimed game.
+ */
+function timeLimitLines(observation: GameObservation): string[] {
+  const limit = observation.timeLimit;
+  if (!limit?.called || limit.turnsLeft === null) return [];
+  const left =
+    limit.turnsLeft === 0
+      ? "this is the last turn"
+      : `${limit.turnsLeft} more turn${limit.turnsLeft === 1 ? "" : "s"} after this one`;
+  return [
+    `Time has been called: ${left}. When turn ${limit.finalTurn} ends, the player with more Life cards wins; if tied, more cards left in the deck; then more Characters; then whoever last took a Life card into hand.`,
+  ];
+}
+
 function planLines(steps: readonly string[]): string[] {
   if (steps.length === 0) {
     return [
@@ -545,6 +563,7 @@ export function renderDecisionRequest(
   out.push(
     `Turn ${observation.turn}. It is ${yourTurn ? "YOUR TURN" : "the OPPONENT'S TURN"}.`,
     `Phase: ${observation.phase}.`,
+    ...timeLimitLines(observation),
     "",
   );
   if (previousDecision) {

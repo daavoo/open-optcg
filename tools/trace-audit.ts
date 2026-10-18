@@ -257,6 +257,7 @@ for (const file of files) {
     seed: config.seed,
     ...(config.seedMode ? { seedMode: config.seedMode } : {}),
     startingPlayer: config.startingPlayer,
+    ...(config.timeLimit ? { timeLimit: config.timeLimit } : {}),
   });
 
   /** Attacks declared this turn by the turn player, in declaration order. */

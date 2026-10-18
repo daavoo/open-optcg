@@ -17,6 +17,7 @@ import {
 } from "@one-piece-sim/decks";
 import type {
   GameObservation,
+  GameResultReason,
   LegalAction,
   PlayerId,
   PublicEvent,
@@ -88,7 +89,7 @@ export interface BenchmarkGame {
   startingPlayer: PlayerId;
   winnerPlayer: PlayerId | null;
   winnerDeck: BenchmarkDeckId | null;
-  resultReason: "deck-exhaustion" | "life" | null;
+  resultReason: GameResultReason | null;
   turns: number;
   actions: number;
   completed: boolean;

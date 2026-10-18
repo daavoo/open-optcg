@@ -110,6 +110,7 @@ let observation = service.create({
   seed: config.seed,
   ...(config.seedMode ? { seedMode: config.seedMode } : {}),
   startingPlayer: config.startingPlayer,
+  ...(config.timeLimit ? { timeLimit: config.timeLimit } : {}),
 });
 
 const chains: Chain[] = [];
@@ -199,6 +200,7 @@ function replay(local: GameService, chain: Chain): GameObservation {
     seed: config.seed,
     ...(config.seedMode ? { seedMode: config.seedMode } : {}),
     startingPlayer: config.startingPlayer,
+    ...(config.timeLimit ? { timeLimit: config.timeLimit } : {}),
   });
   for (const actionId of match.actions) {
     if (node.revision + 1 === chain.revision) break;

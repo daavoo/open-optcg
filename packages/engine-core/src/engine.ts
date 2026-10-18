@@ -36,6 +36,7 @@ import {
   type PlayerId,
   type PublicEvent,
   type ResolvedDeck,
+  type TimeLimit,
 } from "@one-piece-sim/protocol";
 import {
   applyMechanicReactions,
@@ -107,6 +108,12 @@ import {
   handOverPendingEffect,
 } from "./pending.js";
 import { offerDonReturnChoice, resumeStartOfTurn } from "./turn.js";
+import {
+  callTimeIfDue,
+  initialTimeLimit,
+  noteLifeDrawn,
+  observeTimeLimit,
+} from "./time-limit.js";
 
 export interface Callback<T> {
   handle(event: T): void;
@@ -293,8 +300,14 @@ export function createGame(input: {
    * `observe`) takes the same database again.
    */
   cards?: CardDatabase;
+  /**
+   * The tournament time limit, off when absent; see `time-limit.ts`. Kept on
+   * the state, so it is part of what a replay must pass to reproduce the game.
+   */
+  timeLimit?: TimeLimit;
 }): GameState {
   const db = input.cards ?? defaultCardDatabase;
+  const timeLimit = initialTimeLimit(input.timeLimit);
   const swapSeedSlots =
     input.seedMode === "matchup" && seedKeyOf(input.p1) > seedKeyOf(input.p2);
   const p1SeedSlot: PlayerId = swapSeedSlots ? "p2" : "p1";
@@ -318,7 +331,7 @@ export function createGame(input: {
     ...openingStageEvents(p1.player, "p1"),
     ...openingStageEvents(p2.player, "p2"),
   ];
-  return {
+  const state: GameState = {
     protocolVersion: PROTOCOL_VERSION,
     rulesVersion: RULES_VERSION,
     gameId: input.gameId,
@@ -332,15 +345,21 @@ export function createGame(input: {
     players: { p1: p1.player, p2: p2.player },
     winner: null,
     resultReason: null,
+    ...(timeLimit ? { timeLimit } : {}),
     pendingEffect: null,
     pendingEffectResume: null,
     donReturn: null,
     activeAttack: null,
     pendingTrigger: null,
     oncePerTurn: [],
-    eventSequence: events.length,
+    eventSequence: 0,
     events,
   };
+  // A limit of one turn calls time as the game begins: turn 1 is already
+  // under way, and nothing else ever starts it.
+  callTimeIfDue(state, events);
+  state.eventSequence = events.length;
+  return state;
 }
 
 function openingStageEvents(
@@ -581,6 +600,9 @@ export function applyOfferedAction(
   // just offered, a Trigger its damage opened, a reaction drained above -- is
   // answered before the turn it was run ahead of goes on.
   resumeStartOfTurn(state, events);
+  // Last, so the Life cards every step above moved -- a Trigger's damage
+  // settled after the handler, say -- are all counted.
+  noteLifeDrawn(state, events);
   state.revision += 1;
   state.eventSequence += events.length;
   state.events = [...history, ...events];
@@ -1022,6 +1044,9 @@ export function observe(
     phase: state.phase,
     winner: state.winner,
     resultReason: state.resultReason,
+    ...(state.timeLimit
+      ? { timeLimit: observeTimeLimit(state, state.timeLimit) }
+      : {}),
     self: {
       hand: self.hand.map((instance) => {
         const card = db.require(instance.cardNumber);

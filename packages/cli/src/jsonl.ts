@@ -14,6 +14,9 @@ function dispatch(request: ProtocolRequest): unknown {
       return service.create({
         ...resolveMatchDecks(request.params),
         seed: request.params.seed,
+        ...(request.params.timeLimit
+          ? { timeLimit: request.params.timeLimit }
+          : {}),
       });
     case "game.observe":
       return service.observe(request.params.gameId, request.params.playerId);

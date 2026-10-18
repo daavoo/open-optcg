@@ -53,10 +53,16 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 
-/** Why a match stopped. The first two are the engine's; the rest are the session's. */
+/** Why a match stopped. The first three are the engine's; the rest are the session's. */
 export type MatchEndReason =
   | "life"
   | "deck-exhaustion"
+  /**
+   * The engine's own time limit (`TimeLimit`): §8.2 of the floor rules, which
+   * picks a winner. Not `"time-limit"` below, the session's wall-clock
+   * ceiling, which voids the match instead.
+   */
+  | "time"
   | "resign"
   | "timeout"
   /**

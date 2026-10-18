@@ -5,6 +5,7 @@
  * Split out of `engine.ts` so the action handlers can reach it without
  * importing the module that dispatches them; see `board.ts`.
  */
+import { callTimeIfDue, endOnTimeIfDue } from "./time-limit.js";
 import {
   cards as defaultCardDatabase,
   type CardDatabase,
@@ -343,6 +344,10 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
     events.push({ type: "game-ended", winner, reason: "deck-exhaustion" });
     return;
   }
+  // The third turn after time was called ends the game (§8.2). After the
+  // deck-out check, because a game the rules have already decided is not
+  // "not finished" and goes to no procedure.
+  if (endOnTimeIfDue(state, events)) return;
   // "Take an extra turn after this one" (OP05-119): the next turn goes back to
   // the seat that booked it, and the booking is spent. Everything else about
   // the handover is the ordinary one -- the same Refresh, Draw and DON!! steps,
@@ -359,6 +364,7 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
   state.turn += 1;
   pruneOncePerTurn(state);
   events.push({ type: "turn-ended", playerId: activePlayer, nextPlayerId });
+  callTimeIfDue(state, events);
   if (askStartOfTurn(state, nextPlayerId, events)) return;
   events.push(...drawForTurn(state, nextPlayerId));
 }

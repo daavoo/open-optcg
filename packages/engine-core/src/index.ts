@@ -126,6 +126,7 @@ export {
   collectCardInstances,
   eventText,
   formatCompactStat,
+  gameEndText,
   restrictionClause,
   seat,
   seatOwns,

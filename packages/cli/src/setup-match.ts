@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { GameService } from "@one-piece-sim/engine-core";
+import { GameService, gameEndText } from "@one-piece-sim/engine-core";
 import type {
   GameObservation,
   LegalAction,
@@ -180,7 +180,7 @@ try {
 
 if (observation.phase === "finished") {
   console.log(
-    `\nGame over: ${observation.winner?.toUpperCase()} wins by ${observation.resultReason}.`,
+    `\nGame over: ${observation.winner?.toUpperCase()} wins ${gameEndText(observation.resultReason ?? "card-effect", observation.timeLimit?.decidedBy)}.`,
   );
 } else {
   console.log("Match ended.");

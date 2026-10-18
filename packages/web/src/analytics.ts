@@ -25,7 +25,11 @@ import {
   resolveDeck,
   type DeckManifest,
 } from "@one-piece-sim/decks";
-import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
+import type {
+  GameResultReason,
+  PlayerId,
+  PublicEvent,
+} from "@one-piece-sim/protocol";
 
 export const ANALYTICS_DECK_IDS = FORMAT_DECK_IDS;
 export const ANALYTICS_REPORT_VERSION = 1;
@@ -38,7 +42,7 @@ export interface AnalyticsGame {
   seed: string;
   /** Null when the game hit the action ceiling without a winner. */
   winner: Seat | null;
-  reason: "deck-exhaustion" | "life" | null;
+  reason: GameResultReason | null;
   turns: number;
   actions: number;
   /** Card numbers each side played, activated, or countered with. */

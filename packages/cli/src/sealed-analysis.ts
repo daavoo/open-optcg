@@ -43,7 +43,11 @@ import {
   type SealedPool,
   resolveDeck,
 } from "@one-piece-sim/decks";
-import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
+import type {
+  GameResultReason,
+  PlayerId,
+  PublicEvent,
+} from "@one-piece-sim/protocol";
 
 export const SEALED_ANALYSIS_SCHEMA_VERSION = 1;
 /** Below this a bucket's win rate is noise, so the impact split leaves it out. */
@@ -99,7 +103,7 @@ export interface SealedAnalysisGame {
   p1PacksOpened: number;
   p2PacksOpened: number;
   winnerPlayer: PlayerId | null;
-  resultReason: "deck-exhaustion" | "life" | null;
+  resultReason: GameResultReason | null;
   turns: number;
   actions: number;
   completed: boolean;

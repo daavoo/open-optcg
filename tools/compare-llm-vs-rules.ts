@@ -100,6 +100,7 @@ let observation = service.create({
   seed: config.seed,
   ...(config.seedMode ? { seedMode: config.seedMode } : {}),
   startingPlayer: config.startingPlayer,
+  ...(config.timeLimit ? { timeLimit: config.timeLimit } : {}),
 });
 /**
  * The rules agent whose opinion this seat is compared against.

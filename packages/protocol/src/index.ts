@@ -34,6 +34,65 @@ export interface ResolvedDeck {
   seedKey?: string;
 }
 
+/**
+ * A tournament time limit, counted in turns.
+ *
+ * Bandai's "Sanctioned Tournaments Floor Rules" (Ver. 1.6.0, §8.2): when a
+ * match's time runs out, the turn in progress becomes turn 0, three more turns
+ * are played, and a game still going after them is decided by the procedures
+ * in {@link TimeLimitProcedure}. The engine has no clock -- a game must replay
+ * from its seed and its actions -- so time is called when a given turn begins
+ * rather than when minutes have passed.
+ */
+export interface TimeLimit {
+  /**
+   * The turn on whose start time is called, on the engine's own counter: every
+   * player's turn is one turn, so turn 1 is the first player's first turn and
+   * turn 2 the second player's. An extra turn (OP05-119) is a turn too.
+   */
+  turns: number;
+}
+
+/** How many turns follow the one on which time is called (§8.2). */
+export const TIME_LIMIT_ADDITIONAL_TURNS = 3;
+
+export const timeLimitSchema = z.object({
+  turns: z.number().int().min(1),
+});
+
+/**
+ * Which of §8.2's procedures decided a game on time, in the order they are
+ * tried: more Life cards, then more cards left in the deck, then more
+ * Characters, then whoever last drew a card from their Life area.
+ *
+ * `"final-turn"` is not Bandai's: it is what decides a game in which all four
+ * tie, which needs both players on equal Life with neither ever having taken a
+ * Life card into hand. The floor rules stop at procedure 4 and the protocol has
+ * no draw, so the player whose turn ended the game loses -- the same tiebreak
+ * the engine already uses for a simultaneous deck-out (OP15-022).
+ */
+export type TimeLimitProcedure =
+  "life" | "deck" | "characters" | "life-drawn" | "final-turn";
+
+/** Why a game finished, as the engine reports it. */
+export type GameResultReason = "deck-exhaustion" | "life" | "time";
+
+/** What every seat may see of a game's time limit. */
+export interface TimeLimitObservation {
+  /** The turn on whose start time is called: turn 0 of the extra turns. */
+  calledOnTurn: number;
+  /** The last turn; the game is decided when it ends. */
+  finalTurn: number;
+  called: boolean;
+  /**
+   * Turns still to begin after the current one before the game is decided:
+   * 3 on the turn time is called, 0 on the final turn. `null` until then.
+   */
+  turnsLeft: number | null;
+  /** The procedure that decided the game, once time has decided it. */
+  decidedBy: TimeLimitProcedure | null;
+}
+
 export const requestSchema = z.discriminatedUnion("method", [
   z.object({
     v: z.literal(PROTOCOL_VERSION),
@@ -43,6 +102,7 @@ export const requestSchema = z.discriminatedUnion("method", [
       p1Deck: z.string(),
       p2Deck: z.string(),
       seed: z.string(),
+      timeLimit: timeLimitSchema.optional(),
     }),
   }),
   z.object({
@@ -1371,6 +1431,16 @@ export type PublicEvent =
     }
   | { type: "turn-ended"; playerId: PlayerId; nextPlayerId: PlayerId }
   /**
+   * Time was called (see `TimeLimit`): this turn is turn 0, and the game is
+   * decided when `finalTurn` ends unless something ends it sooner.
+   */
+  | {
+      type: "time-called";
+      turn: number;
+      turnPlayerId: PlayerId;
+      finalTurn: number;
+    }
+  /**
    * A player was granted an extra turn after the current one -- OP05-119
    * Monkey.D.Luffy. The turn itself arrives as an ordinary `turn-ended` whose
    * `nextPlayerId` is the same seat; this is the moment it was booked.
@@ -1388,8 +1458,12 @@ export type PublicEvent =
        * OP09-118 Gol.D.Roger, which wins outright when the opponent activates
        * a [Blocker] with either player at 0 Life. Neither of the other two
        * describes it: no Life was taken and no deck ran out.
+       *
+       * `"time"` is a game decided on its time limit (`TimeLimit`).
        */
-      reason: "deck-exhaustion" | "life" | "card-effect";
+      reason: "deck-exhaustion" | "life" | "card-effect" | "time";
+      /** With `reason: "time"`, the §8.2 procedure that decided it. */
+      procedure?: TimeLimitProcedure;
     };
 
 /**
@@ -1752,7 +1826,12 @@ export interface GameObservation {
   turnPlayer: PlayerId;
   phase: Phase;
   winner: PlayerId | null;
-  resultReason: "deck-exhaustion" | "life" | null;
+  resultReason: GameResultReason | null;
+  /**
+   * The game's time limit, public to both seats. Absent from a game created
+   * without one.
+   */
+  timeLimit?: TimeLimitObservation;
   self: {
     hand: Array<{
       instanceId: string;

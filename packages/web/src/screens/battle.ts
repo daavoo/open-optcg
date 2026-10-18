@@ -55,6 +55,7 @@ import {
   cardLabel,
   collectCardInstances,
   formatCompactStat,
+  gameEndText,
   reorderAction,
   restrictionClause,
   seat,
@@ -452,7 +453,8 @@ export function createBattleScreen(
     if (
       !result ||
       result.reason === "life" ||
-      result.reason === "deck-exhaustion"
+      result.reason === "deck-exhaustion" ||
+      result.reason === "time"
     ) {
       return "";
     }
@@ -1556,7 +1558,7 @@ export function createBattleScreen(
     active: GameObservation,
   ): string {
     if (active.phase === "finished")
-      return `<div class="result"><p class="eyebrow">Match complete</p><h2>${active.winner?.toUpperCase()} wins</h2><p>${active.resultReason?.replace("-", " ")}</p><button class="primary" id="result-new">New match</button></div>`;
+      return `<div class="result"><p class="eyebrow">Match complete</p><h2>${active.winner?.toUpperCase()} wins</h2><p>${active.resultReason ? `Won ${gameEndText(active.resultReason, active.timeLimit?.decidedBy)}` : ""}</p><button class="primary" id="result-new">New match</button></div>`;
     if (!playerIsActive)
       return `<div class="waiting"><span class="compass"></span><h2>Opponent thinking</h2><p>The board will advance automatically.</p></div>`;
     const effectAction = actions.find(
@@ -3463,10 +3465,15 @@ export function createBattleScreen(
           icon: "rotate-ccw",
           label: `${seat(event.playerId, viewer)} will take an extra turn`,
         };
+      case "time-called":
+        return {
+          icon: "hourglass",
+          label: `Time called: decided at the end of turn ${event.finalTurn}`,
+        };
       case "game-ended":
         return {
           icon: "crown",
-          label: `${seat(event.winner, viewer)} won by ${event.reason.replace("-", " ")}`,
+          label: `${seat(event.winner, viewer)} won ${gameEndText(event.reason, event.procedure)}`,
         };
     }
   }
