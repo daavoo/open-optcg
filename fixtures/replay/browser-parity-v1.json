@@ -6,7 +6,7 @@
     "p2": "(Green) Roronoa Zoro - Starter Deck 32"
   },
   "rules": {
-    "rulesVersion": "st31-st32-st33-st34-st35-st36-1.4",
+    "rulesVersion": "st31-st32-st33-st34-st35-st36-1.5",
     "cardDataHash": "9062759732a90d4d0087e741c0eb43e8c3ad13941fe51fb6caa623a0fc111392",
     "programHash": "4df31edb995d4163b040d0c9d41c0818ce6b04060918c4283b7bc1ced1685f13"
   },
@@ -184,7 +184,7 @@
   ],
   "final": {
     "revision": 170,
-    "stateHash": "d0c1f64b222e2e207b0f56227f772c1937657854d74cf01309a2301cbc282cf9",
+    "stateHash": "8db170b0e74c194058d4870cd2f9a8a5626d66ae65226458ede4e4172ec41f95",
     "winner": "p2",
     "resultReason": "life"
   }

@@ -158,8 +158,9 @@ export const op05MainMechanics: SetMechanics = {
                 bind: "op05-waste-bury",
                 count: "all",
                 effect: {
-                  kind: "move",
+                  kind: "order-to-bottom",
                   binding: "op05-waste-bury",
+                  byOwner: true,
                   to: { player: "owner", zone: "deck", position: "bottom" },
                 },
               },

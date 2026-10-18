@@ -273,7 +273,7 @@ export const op14TriggerMechanics: SetMechanics = {
               bind: "op14-hawkins-rest",
               count: "all",
               effect: {
-                kind: "move",
+                kind: "order-to-bottom",
                 binding: "op14-hawkins-rest",
                 to: { player: "self", zone: "deck", position: "bottom" },
               },
