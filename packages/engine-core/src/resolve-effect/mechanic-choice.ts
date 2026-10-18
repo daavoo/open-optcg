@@ -68,7 +68,8 @@ export function resolveMechanicChoiceEffect({
       playerId:
         (result.pending.kind === "cards" ||
         result.pending.kind === "choice" ||
-        result.pending.kind === "optional"
+        result.pending.kind === "optional" ||
+        result.pending.kind === "order-to-bottom"
           ? result.pending.chooserPlayerId
           : undefined) ?? result.pending.execution.context.sourcePlayerId,
       choice: result.pending,

@@ -224,7 +224,8 @@ export function mechanicPendingEffect(
     playerId:
       (choice.kind === "cards" ||
       choice.kind === "choice" ||
-      choice.kind === "optional"
+      choice.kind === "optional" ||
+      choice.kind === "order-to-bottom"
         ? choice.chooserPlayerId
         : undefined) ?? invocation.context.sourcePlayerId,
     sourceCardNumber: invocation.context.source.cardNumber,
