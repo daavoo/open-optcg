@@ -739,6 +739,20 @@ test("the deck picker opens on Community, and each shelf filters on its own", as
   ).not.toHaveCount(0);
 });
 
+test("the lobby opens on the decks the last visit left", async ({ page }) => {
+  await openSetup(page);
+  await pickDeck(page, "p1", "(Blue) Kuzan - Starter Deck 33");
+  await pickDeck(page, "p2", "(Black) Marshall.D.Teach - Starter Deck 27");
+  await page.reload();
+  await enterSetup(page);
+  await expect(page.locator("#p1-deck")).toHaveValue(
+    "(Blue) Kuzan - Starter Deck 33",
+  );
+  await expect(page.locator("#p2-deck")).toHaveValue(
+    "(Black) Marshall.D.Teach - Starter Deck 27",
+  );
+});
+
 test("exports the match trace, the single save artifact", async ({ page }) => {
   await openMatch(page);
   await page.getByRole("button", { name: /Keep these cards/ }).click();

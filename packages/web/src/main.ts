@@ -30,6 +30,7 @@ import {
 import { inspectExportedMatch, type RawLlmRecord } from "./diagnostics.js";
 import { parseScorerReview, type ScorerReview } from "./scorer-review.js";
 import { forgetMatch, rememberMatch, resumableMatch } from "./match-resume.js";
+import { rememberedSetupDecks, rememberSetupDecks } from "./setup-decks.js";
 import { replayTurnStarts, replayViewer, takeoverConfig } from "./replay.js";
 import { beginSimulation } from "./simulate.js";
 import { boardViewer } from "./viewer.js";
@@ -274,6 +275,8 @@ interface Store {
 /** Set once a fetched learned model has failed to arrive; see `learnedModelAvailable`. */
 let learnedModelMissing = false;
 
+const initialSavedDecks = loadSavedDecks();
+
 const store: Store = {
   game: null,
   worker: new Worker(
@@ -281,8 +284,10 @@ const store: Store = {
       new Blob([__WORKER_SOURCE__], { type: "text/javascript" }),
     ),
   ),
-  savedDecks: loadSavedDecks(),
-  setupDecks: { ...DEFAULT_SETUP_DECKS },
+  savedDecks: initialSavedDecks,
+  setupDecks: rememberedSetupDecks(localStorage, DEFAULT_SETUP_DECKS, (id) =>
+    Boolean(deckManifests[id] ?? initialSavedDecks[id]),
+  ),
   online: initialOnlineState(serverOrigin()),
   seatPilots: { p1: "you", p2: "ai" },
   cardDetailCard: null,
@@ -651,6 +656,7 @@ const setupDeps: SetupContext = {
   refreshLobby: () => {
     renderSetup();
   },
+  persistSetupDecks,
   scorerAvailable: learnedModelAvailable,
   randomSeed,
   applyTheme,
@@ -691,6 +697,9 @@ function stopClockTick(): void {
 }
 
 function renderSetup(): void {
+  // Every other way a pick changes -- a deck saved from the editor, a deleted
+  // save falling back to the default -- comes back through the lobby here.
+  persistSetupDecks();
   app.innerHTML = setupScreen.render(setupDeps);
   hydrateIcons();
   setupScreen.bind(setupDeps);
@@ -817,6 +826,10 @@ function beginOnlineMatch(assignment: {
   }, 1000);
   applyTheme();
   renderSetup();
+}
+
+function persistSetupDecks(): void {
+  rememberSetupDecks(localStorage, store.setupDecks);
 }
 
 /** Pull the lobby's two deck fields into {@link Store.setupDecks}. */

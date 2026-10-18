@@ -49,6 +49,8 @@ export interface SetupContext {
     rejoin(): void;
   };
   setupDecks: Record<PlayerId, string>;
+  /** Write `setupDecks` to storage, so the next visit opens on these picks. */
+  persistSetupDecks(): void;
   /**
    * Who plays each seat: the person at this screen, or an agent.
    *
@@ -450,6 +452,7 @@ function markController(kind: ControllerKind): void {
  */
 function setDeck(ctx: SetupContext, seat: PlayerId, deckId: string): void {
   ctx.setupDecks[seat] = deckId;
+  ctx.persistSetupDecks();
   const field = document.querySelector<HTMLInputElement>(`#${seat}-deck`);
   if (field) field.value = deckId;
   const choice = field?.closest(".deck-choice");
