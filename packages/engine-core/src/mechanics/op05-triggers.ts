@@ -117,8 +117,9 @@ export const op05TriggerMechanics: SetMechanics = {
           bind: "op05-waste-trigger",
           count: "all",
           effect: {
-            kind: "move",
+            kind: "order-to-bottom",
             binding: "op05-waste-trigger",
+            byOwner: true,
             to: { player: "owner", zone: "deck", position: "bottom" },
           },
         },

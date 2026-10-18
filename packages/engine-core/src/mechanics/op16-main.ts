@@ -918,7 +918,7 @@ export const op16MainMechanics: SetMechanics = {
                 bind: "op16-buddha-rest",
                 count: "all",
                 effect: {
-                  kind: "move",
+                  kind: "order-to-bottom",
                   binding: "op16-buddha-rest",
                   to: { player: "self", zone: "deck", position: "bottom" },
                 },
@@ -1286,7 +1286,7 @@ export const op16MainMechanics: SetMechanics = {
                 bind: "op16-flashy-rest",
                 count: "all",
                 effect: {
-                  kind: "move",
+                  kind: "order-to-bottom",
                   binding: "op16-flashy-rest",
                   to: { player: "self", zone: "deck", position: "bottom" },
                 },

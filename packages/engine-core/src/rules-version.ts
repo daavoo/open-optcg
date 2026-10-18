@@ -31,5 +31,11 @@
  * damage started waiting for the end of the Damage Step -- after the Trigger
  * and every [Double Attack] point (Bandai's OP-05 Q&A, OP05-098). A recorded
  * action list answers the Trigger and the watcher in the other order.
+ *
+ * Bumped to 1.5 when cards placed at the bottom of a deck "in any order" by
+ * OP05-058, OP14-010, OP15-101, OP16-059, OP16-077 and OP17-041 started being
+ * ordered by a player -- by each owner for OP05-058 and OP17-041 (Bandai's
+ * OP05-058#2). A recorded action list meets an order prompt it never
+ * answered.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.4";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.5";

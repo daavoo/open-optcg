@@ -1271,8 +1271,9 @@ export const op17OnPlayMechanics: SetMechanics = {
                 bind: "op17-wangzhi-bottom",
                 count: "all",
                 effect: {
-                  kind: "move",
+                  kind: "order-to-bottom",
                   binding: "op17-wangzhi-bottom",
+                  byOwner: true,
                   to: { player: "opponent", zone: "deck", position: "bottom" },
                 },
               },

@@ -707,9 +707,18 @@ describe("FAQ OP05 Blue", () => {
     it("OP05-058#1: the turn player trims their hand first, then the opponent", () => {
       const game = waste("faq-op05-058-1");
       useEvent(game, "OP05-058");
+      // Who answers each hand trim; the bury's ordering comes first (#2).
       const order: string[] = [];
       while (game.state.pendingEffect) {
-        order.push(game.player);
+        const trimming = game
+          .legalActions()
+          .some(
+            (action) =>
+              action.type === "resolve-effect" &&
+              action.option.kind === "card" &&
+              action.option.zone === "hand",
+          );
+        if (trimming) order.push(game.player);
         game.play({ type: "resolve-effect" });
       }
       expect(order[0]).toBe("p1");
@@ -719,29 +728,46 @@ describe("FAQ OP05 Blue", () => {
       expect(game.state.players.p2.hand).toHaveLength(5);
     });
 
-    // Engine disagrees: the bury is a `select` of "all" that moves the cards
-    // in board order (mechanics/op05-main.ts), so neither player is asked how
-    // to order their own Characters under their deck. The first decision the
-    // Event asks for is p1's hand trim. Offering the order is a new decision
-    // for every "place at the bottom in any order" clause, not a fix to this
-    // card.
-    it.fails(
-      "OP05-058#2: each owner orders their own Characters under their deck, turn player first",
-      () => {
-        const game = waste("faq-op05-058-2");
-        useEvent(game, "OP05-058");
-        // The first decision the Event asks for is p1 ordering its two bodies.
-        expect(game.player).toBe("p1");
-        const cards = game
-          .legalActions()
-          .flatMap((action) =>
-            action.type === "resolve-effect" && action.option.kind === "card"
-              ? [action.option.card.instanceId]
-              : [],
-          );
-        expect(cards).toEqual(expect.arrayContaining(["mine-1", "mine-2"]));
-      },
-    );
+    /** The one `order-to-bottom` offer, reordered by `order`. */
+    const reorder = (game: Game, order: string) => {
+      const offer = game
+        .legalActions()
+        .find(
+          (action) =>
+            action.type === "resolve-effect" && action.option.kind === "order",
+        );
+      if (offer?.type !== "resolve-effect" || offer.option.kind !== "order") {
+        throw new Error("no order to choose");
+      }
+      const cards = offer.option.cards.map((card) => card.instanceId);
+      game.submit({
+        ...offer,
+        actionId: offer.actionId.replace(/order:[\d,]+$/, order),
+        optionId: order,
+      });
+      return cards;
+    };
+
+    it("OP05-058#2: each owner orders their own Characters under their deck, turn player first", () => {
+      const game = waste("faq-op05-058-2");
+      useEvent(game, "OP05-058");
+
+      // p1 orders its two bodies first, then p2 its own.
+      expect(game.player).toBe("p1");
+      expect(reorder(game, "order:1,0")).toEqual(["mine-1", "mine-2"]);
+      expect(game.player).toBe("p2");
+      expect(reorder(game, "order:1,0")).toEqual(["theirs-1", "theirs-2"]);
+      settle(game);
+
+      expect(ids(game.state.players.p1.deck).slice(-2)).toEqual([
+        "mine-2",
+        "mine-1",
+      ]);
+      expect(ids(game.state.players.p2.deck).slice(-2)).toEqual([
+        "theirs-2",
+        "theirs-1",
+      ]);
+    });
   });
 });
 
