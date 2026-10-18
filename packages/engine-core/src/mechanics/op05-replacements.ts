@@ -34,17 +34,16 @@ export const op05ReplacementMechanics: SetMechanics = {
     ],
     [
       // OP05-030 Donquixote Rosinante: on the opponent's turn, a rested
-      // Character is saved by trashing this one. Not itself -- a Rosinante that
-      // is the rested body under threat cannot trash itself for itself, the
-      // same line OP15-094 Zoro's `excludesSelf` draws. Its [Blocker] is
-      // printed text.
+      // Character is saved by trashing this one -- itself included: a rested
+      // Rosinante that would be K.O.'d may be trashed instead, which is then
+      // no K.O. (OP05-030#1, #3 in Bandai's Q&A). Its [Blocker] is printed
+      // text.
       "OP05-030",
       {
         opponentEffectOnly: false,
         oncePerTurn: false,
         opponentTurnOnly: true,
         protects: { category: "character", rested: true },
-        excludesSelf: true,
         label: "Trash Donquixote Rosinante",
         cost: { kind: "trash-self" },
       },

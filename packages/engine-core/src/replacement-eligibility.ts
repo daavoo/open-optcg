@@ -309,9 +309,12 @@ export function eligibleReplacements(
  * when the same protector would have been offered for it too -- read before the
  * cost is paid, since paying can itself leave the offer unaffordable.
  *
- * A replacement that acts on the threatened card rather than paying for it --
- * OP11-101's redirect, OP05-001's power penalty -- does its work to one card,
- * so it covers only that one.
+ * OP11-101's redirect acts on the threatened card rather than paying for it,
+ * and moves one attack onto one card, so it covers only that one. OP05-001's
+ * power penalty is also paid on the threatened card, but Bandai rules that one
+ * use spares every Character the K.O. takes at once, each taking the −1000
+ * (OP05-001#3): the offer paths bind the covered cards beside the threatened
+ * one, and the penalty lands on all of them.
  */
 export function replacementCoveredTargets(
   state: GameState,
@@ -322,9 +325,7 @@ export function replacementCoveredTargets(
   db: CardDatabase,
   removalKind: "ko" | "off-field",
 ): string[] {
-  if (entry.redirect !== undefined || entry.cost.kind === "power-penalty") {
-    return [];
-  }
+  if (entry.redirect !== undefined) return [];
   return candidates.filter((instanceId) => {
     const card = state.players[protectedPlayerId].board.find(
       (candidate) => candidate.instanceId === instanceId,
