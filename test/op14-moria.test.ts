@@ -52,7 +52,6 @@ function answer(game: Game, ...preferred: string[]): void {
 /** Spend `fodder` on the Leader's [Activate: Main]. */
 function spend(game: Game, fodder: string): void {
   game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-  game.play({ type: "resolve-effect", optionId: "apply" });
   game.play({ type: "resolve-effect", optionId: fodder });
 }
 

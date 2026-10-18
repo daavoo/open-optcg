@@ -2488,10 +2488,15 @@ export function continueExecution(
       for (const instanceId of instanceIds) {
         // A Leader has no BoardCard to write the flag on, so it keeps its
         // granted keywords on the player -- see `leaderUnblockableUntilTurn`.
-        // Three are reachable: [Unblockable] (OP17-115), [Double Attack]
-        // (OP15-056, OP16-003) and [Banish] (ST28-002). [Blocker] and [Rush]
-        // are Character-only in the printed pool, and one reaching here would
-        // be silently dropped, so it throws instead.
+        // Three change what the Leader does: [Unblockable] (OP17-115),
+        // [Double Attack] (OP15-056, OP16-003) and [Banish] (ST28-002).
+        // [Rush] can reach a Leader too -- OP15-111 Mont Blanc Noland gives it
+        // to "1 of your [Kalgara] cards", and OP08-098 is a [Kalgara] Leader --
+        // and the Leader gains it, but [Rush] only lifts the bar on attacking
+        // the turn a card is played, which a Leader never is, so there is no
+        // flag to keep. [Blocker] has no Leader representation and is never
+        // given to one in the printed pool; one reaching here would be
+        // silently dropped, so it throws instead.
         const leaderPlayerId = (["p1", "p2"] as const).find(
           (playerId) => instanceId === `${playerId}-leader`,
         );
@@ -2505,7 +2510,10 @@ export function continueExecution(
               expiresAtTurn;
           } else if (effect.keyword === "Banish") {
             state.players[leaderPlayerId].leaderBanishUntilTurn = expiresAtTurn;
-          } else {
+          } else if (
+            effect.keyword !== "Rush" &&
+            effect.keyword !== "Rush: Character"
+          ) {
             throw new Error(`LEADER_KEYWORD_UNSUPPORTED: ${effect.keyword}`);
           }
           events.push({

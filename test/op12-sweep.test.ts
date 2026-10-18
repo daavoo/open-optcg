@@ -639,7 +639,6 @@ describe("OP12-091 Poker", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "Poker" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     for (const id of ["t1", "t2", "t3"]) {
       game.play({ type: "resolve-effect", optionId: id });
     }
@@ -678,7 +677,6 @@ describe("OP12-101 Jewelry Bonney", () => {
       .build();
 
     game.play({ type: "activate-main", summary: "Jewelry Bonney" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     resolveAll(game);
     expect(boardCard(game, "p1", "bonney")?.rested).toBe(true);
     expect(currentPower(game.state, "p1", "p1-leader")).toBe(6_000);

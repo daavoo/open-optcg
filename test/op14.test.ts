@@ -2885,7 +2885,6 @@ describe("OP14-079 Crocodile (Leader)", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "mr9" });
     game.play({ type: "resolve-effect", optionId: "victim" });
     game.play({ type: "resolve-effect", optionId: "apply" });
@@ -2955,7 +2954,6 @@ describe("OP14-080 Gecko Moria (Leader)", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "kumacy" });
 
     expect(currentPower(game.state, "p1", "p1-leader")).toBe(6000);
@@ -3087,13 +3085,11 @@ describe("OP14-083 Ms. Wednesday", () => {
 
     // The Leader is what makes a 0-cost Character exist at all.
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "mr9" });
     game.play({ type: "resolve-effect", optionId: "victim" });
     game.play({ type: "resolve-effect", optionId: "skip" });
 
     game.play({ type: "activate-main", sourceInstanceId: "wednesday" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "victim" });
 
     expect(game.state.players.p2.board[0]?.powerModifiers).toContainEqual(
@@ -3316,7 +3312,6 @@ describe("OP14-090 Mr.1(Daz.Bonez)", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "mr9" });
     game.play({ type: "resolve-effect", optionId: "victim" });
     game.play({ type: "resolve-effect", optionId: "skip" });
@@ -3606,7 +3601,6 @@ describe("OP14-098 Crescent Cutlass", () => {
       .build();
 
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "mr9" });
     game.play({ type: "resolve-effect", optionId: "victim" });
     game.play({ type: "resolve-effect", optionId: "skip" });
