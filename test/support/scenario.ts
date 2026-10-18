@@ -13,6 +13,7 @@ import type {
   LegalAction,
   PlayerId,
   PublicEvent,
+  TimeLimit,
 } from "@one-piece-sim/protocol";
 import { resolveDeck } from "@one-piece-sim/decks";
 
@@ -113,6 +114,7 @@ class Scenario {
   #seed = "scenario";
   #gameId?: string;
   #startingPlayer?: PlayerId;
+  #timeLimit?: TimeLimit;
   #keepHands = false;
   #turn?: { turn: number; active?: PlayerId };
   #setups: Setup[] = [];
@@ -138,6 +140,15 @@ class Scenario {
 
   startingPlayer(player: PlayerId): this {
     this.#startingPlayer = player;
+    return this;
+  }
+
+  /**
+   * Plays the game under a tournament time limit: time is called when turn
+   * `turns` begins. A game setting like the seed, so it goes to `createGame`.
+   */
+  timeLimit(turns: number): this {
+    this.#timeLimit = { turns };
     return this;
   }
 
@@ -441,6 +452,7 @@ class Scenario {
       p2: resolveDeck(this.#p2Deck),
       seed: this.#seed,
       ...(this.#startingPlayer ? { startingPlayer: this.#startingPlayer } : {}),
+      ...(this.#timeLimit ? { timeLimit: this.#timeLimit } : {}),
     });
 
     if (this.#keepHands) {

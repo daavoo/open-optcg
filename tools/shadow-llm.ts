@@ -81,6 +81,7 @@ let observation = service.create({
   seed: config.seed,
   ...(config.seedMode ? { seedMode: config.seedMode } : {}),
   startingPlayer: config.startingPlayer,
+  ...(config.timeLimit ? { timeLimit: config.timeLimit } : {}),
 });
 
 /**
@@ -159,6 +160,7 @@ function replayTo(revision: number): GameObservation {
     seed: config.seed,
     ...(config.seedMode ? { seedMode: config.seedMode } : {}),
     startingPlayer: config.startingPlayer,
+    ...(config.timeLimit ? { timeLimit: config.timeLimit } : {}),
   });
   for (const actionId of match.actions) {
     if (scratch.revision === revision) break;

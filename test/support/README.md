@@ -49,6 +49,7 @@ mutation says only that the state shape allowed it.
 | `scenario()`                                      | Starts a builder; defaults to ST31 vs ST32 on seed `scenario`.                  |
 | `.decks(p1, p2)` `.seed(s)` `.gameId(id)`         | Match setup, as `createGame` takes it.                                          |
 | `.startingPlayer(p)`                              | Who acts first; the engine defaults to `p1`.                                    |
+| `.timeLimit(turns)`                               | Plays under the tournament time limit: time is called as that turn begins.      |
 | `.keepBothHands()`                                | Takes both mulligan decisions as `keep`.                                        |
 | `.atTurn(n, { active })`                          | Passes turns until that turn (implies `keepBothHands()`).                       |
 | `.withLeader/Board/Stage/Hand/Trash/DeckTop`      | Labelled setup for a zone.                                                      |

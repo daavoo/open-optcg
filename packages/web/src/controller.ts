@@ -11,6 +11,7 @@ import type {
   MatchResult,
   PlayerId,
   PublicEvent,
+  TimeLimit,
 } from "@one-piece-sim/protocol";
 
 export type ControllerKind =
@@ -53,6 +54,12 @@ export interface MatchConfig {
   seed: string;
   seedMode?: "matchup";
   startingPlayer: PlayerId | "random";
+  /**
+   * The tournament time limit the game was played under (see `TimeLimit`).
+   * The app never sets one; a trace from a timed game -- the training bridge
+   * plays under one -- carries it so the replay ends where the game did.
+   */
+  timeLimit?: TimeLimit;
 }
 
 export interface TraceCheckpoint {
@@ -327,6 +334,7 @@ export class BrowserGameController {
       seed: this.config.seed,
       ...(this.config.seedMode ? { seedMode: this.config.seedMode } : {}),
       startingPlayer: this.config.startingPlayer,
+      ...(this.config.timeLimit ? { timeLimit: this.config.timeLimit } : {}),
     });
   }
 }

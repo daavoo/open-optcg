@@ -13,7 +13,7 @@ Games are split into two groups that alternate: the GPU scores one group's
 decisions while the bridge workers play the other's forward. Each decision
 keeps the probability and value of the weights that chose it, so a game can
 span an update; decisions more than `--max-staleness` versions old are not
-trained on. Rewards are the result alone: +1, -1, or 0 for a game cut off.
+trained on. Rewards are the result alone, +1 or -1: see `ppo.outcome`.
 
 Three game kinds share the slots: self-play, `--rules` against a rules agent,
 and `--league` against a frozen checkpoint (`League`), the learner's seat
@@ -40,7 +40,7 @@ from mlx.utils import tree_flatten, tree_map
 from .compact import (AUX_DIM, COMPACT_VERSION, DATA, GLOBAL_NUMBERS, HIDDEN_INDICES, OPTION_NUMBERS, V2_ZONES, ZONES, CompactCorpus,
                       CompactPolicy, CompactScorer, add_lora, collate, globals_of, load_widened, options_of, size_order, zones_of)
 from .evaluate import catalog, deck_variants, head_to_head, paired_difference, play_vs_rules, read_deck_list
-from .ppo import gae
+from .ppo import gae, outcome
 
 
 def learning_rate(schedule: str, iteration: int, iterations: int, peak: float, final: float, start: float, warmup: float) -> float:
@@ -399,7 +399,7 @@ class Rollouts:
                             entry[1] = entry[1] * 0.995 + 1
                 for seat, steps in zip(seats, trajectories):
                     if steps:
-                        steps[-1]["reward"] = 0.0 if truncated else (1.0 if r["winner"] == seat else -1.0)
+                        steps[-1]["reward"] = outcome(r, seat)
                         finished.append(steps)
             if "next" in r:
                 self.begin(slot)

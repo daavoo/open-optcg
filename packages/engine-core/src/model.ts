@@ -1,4 +1,10 @@
-import type { Phase, PlayerId, PublicEvent } from "@one-piece-sim/protocol";
+import type {
+  GameResultReason,
+  Phase,
+  PlayerId,
+  PublicEvent,
+  TimeLimitProcedure,
+} from "@one-piece-sim/protocol";
 import type { MechanicInvocation, MechanicPendingChoice } from "./mechanics.js";
 
 import type { RngState } from "@one-piece-sim/protocol";
@@ -1399,7 +1405,26 @@ export interface GameState {
   phase: Phase;
   players: Record<PlayerId, PlayerState>;
   winner: PlayerId | null;
-  resultReason: "deck-exhaustion" | "life" | null;
+  resultReason: GameResultReason | null;
+  /**
+   * The tournament time limit this game is played under, and what deciding it
+   * needs to remember. See `time-limit.ts`.
+   *
+   * Absent from a game created without one, so an untimed game serializes and
+   * hashes exactly as it did before the setting existed -- which is also why
+   * the Life tracker below lives here rather than on the players: it is only
+   * kept when something will read it.
+   */
+  timeLimit?: {
+    turns: number;
+    /**
+     * The player who last moved a card from their own Life area into their
+     * hand -- §8.2's fourth procedure. Absent until one has.
+     */
+    lifeDrawnLast?: PlayerId;
+    /** The procedure that decided the game, once time has decided it. */
+    decidedBy?: TimeLimitProcedure;
+  };
   pendingEffect: PendingEffect | null;
   /**
    * Reactions waiting for the current pending effect to finish.

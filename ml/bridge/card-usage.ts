@@ -20,7 +20,7 @@ import {
   observe,
   toGameAction,
 } from "@one-piece-sim/engine-core";
-import type { PlayerId } from "@one-piece-sim/protocol";
+import type { PlayerId, TimeLimit } from "@one-piece-sim/protocol";
 import { resolveTrainingDeck, trainingManifest } from "./decks.js";
 
 interface Row {
@@ -64,7 +64,12 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".jsonl"))) {
     .trim()
     .split("\n");
   const header = JSON.parse(head!) as {
-    config: { p1Deck: string; p2Deck: string; seed: string };
+    config: {
+      p1Deck: string;
+      p2Deck: string;
+      seed: string;
+      timeLimit?: TimeLimit;
+    };
     scorer: { seat: PlayerId; won: boolean };
   };
   const me = header.scorer.seat;
@@ -80,6 +85,7 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".jsonl"))) {
     p2: resolveTrainingDeck(header.config.p2Deck),
     seed: header.config.seed,
     startingPlayer: "random",
+    ...(header.config.timeLimit ? { timeLimit: header.config.timeLimit } : {}),
   });
   const instance = new Map<string, string>();
   const drawn = new Set<string>();

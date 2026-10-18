@@ -11,10 +11,10 @@ picks up each update between steps, so a trajectory can span weight versions;
 every decision keeps the probability its own version gave it, and decisions
 more than `--max-staleness` versions old are not trained on.
 
-The reward is the result alone: +1 for a win, -1 for a loss, 0 for a game cut
-off at the action cap. With no discount the value head is a win-probability
-estimate (scaled to [-1, 1]) for the seat to move, which is also what the
-behaviour-cloning warm start already taught it.
+The reward is the result alone: +1 for a win, -1 for a loss; `outcome` says
+how a game cut off at the action cap is scored. With no discount the value
+head is a win-probability estimate (scaled to [-1, 1]) for the seat to move,
+which is also what the behaviour-cloning warm start already taught it.
 """
 
 from __future__ import annotations
@@ -292,18 +292,17 @@ class Pool:
                 if not steps:
                     continue
                 self.results["games"] += 1
+                reward = outcome(result, steps[0]["seat"])
                 if result["truncated"] or result["winner"] is None:
                     self.results["truncated"] += 1
-                    outcome = 0.0
                 else:
-                    outcome = 1.0 if result["winner"] == steps[0]["seat"] else -1.0
                     prefix = "self_" if snapshot is not None else ""
-                    self.results[prefix + ("won" if outcome > 0 else "lost")] += 1
+                    self.results[prefix + ("won" if reward > 0 else "lost")] += 1
                     if snapshot is None:
                         self.results["uniform_w"] += weight
                         self.results["uniform_ww"] += weight * weight
-                        self.results["uniform_won"] += weight * (outcome > 0)
-                steps[-1]["reward"] = outcome
+                        self.results["uniform_won"] += weight * (reward > 0)
+                steps[-1]["reward"] = reward
                 finished.append(steps)
             # A replacement can end before its first real decision; settle it too.
             pending = self._launch(ended, snapshots)
@@ -965,6 +964,25 @@ def rollout_gain(rollouts: list[tuple[float, float, float]], window: int) -> tup
     recent, recent_var = rollout_rate(rollouts[-window:])
     before, before_var = rollout_rate(rollouts[-2 * window : -window])
     return recent - before, (recent_var + before_var) ** 0.5
+
+
+def outcome(result: dict, seat: str) -> float:
+    """The reward a finished bridge game pays `seat`: +1 for a win, -1 for a loss.
+
+    A game the engine decided -- on Life, on deck-out, or on the tournament
+    time limit the bridge plays under -- has a winner. A game cut off at the
+    bridge's action cap has none, and with the time limit on only a turn that
+    never ends reaches the cap, so `capped` names the seat whose turn it was:
+    that seat lost and the other won, which leaves a stall worth no more than
+    a loss. 0 is left for a result with neither field, which only a game the
+    engine threw on produces.
+    """
+    if result.get("winner") is not None and not result.get("truncated"):
+        return 1.0 if result["winner"] == seat else -1.0
+    capped = result.get("capped")
+    if capped is None:
+        return 0.0
+    return -1.0 if capped == seat else 1.0
 
 
 def gae(records: list[dict], lam: float) -> tuple[np.ndarray, np.ndarray]:

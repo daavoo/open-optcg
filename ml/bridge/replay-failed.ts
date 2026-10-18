@@ -16,11 +16,19 @@ import {
   observe,
   toGameAction,
 } from "@one-piece-sim/engine-core";
+import type { TimeLimit } from "@one-piece-sim/protocol";
 import { resolveTrainingDeck } from "./decks.js";
 
 interface FailedGame {
   error: string;
-  spec: { id: number; p1: string; p2: string; seed: string };
+  spec: {
+    id: number;
+    p1: string;
+    p2: string;
+    seed: string;
+    /** Absent from a record written before the bridge played under one. */
+    timeLimit?: TimeLimit;
+  };
   taken: string[];
 }
 
@@ -35,6 +43,7 @@ let state = createGame({
   p2: resolveTrainingDeck(spec.p2),
   seed: spec.seed,
   startingPlayer: "random",
+  ...(spec.timeLimit ? { timeLimit: spec.timeLimit } : {}),
 });
 console.log(`${spec.p1} vs ${spec.p2}, seed ${spec.seed}: ${entry.error}`);
 for (const [index, actionId] of taken.entries()) {

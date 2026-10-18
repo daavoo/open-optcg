@@ -2,6 +2,7 @@ import type {
   PlayerId,
   PublicEvent,
   ResolvedDeck,
+  TimeLimit,
 } from "@one-piece-sim/protocol";
 import { GameService } from "./service.js";
 import { findOfferedAction } from "./offered-action.js";
@@ -17,6 +18,12 @@ export interface ReplayFixture {
    */
   decks: { p1: string; p2: string };
   actions: readonly string[];
+  /**
+   * The time limit the game was played under, absent for an untimed one. A
+   * setting rather than a rule, so the rules stamp does not cover it: replayed
+   * without it, a timed game plays on past the turn that decided it.
+   */
+  timeLimit?: TimeLimit;
   /**
    * The rules this game was recorded under. See `provenance.ts`.
    *
@@ -60,6 +67,7 @@ export function replayActions(
     p1: resolveDeck(fixture.decks.p1),
     p2: resolveDeck(fixture.decks.p2),
     seed: fixture.seed,
+    ...(fixture.timeLimit ? { timeLimit: fixture.timeLimit } : {}),
   });
   const checkpoints: ReplayCheckpoint[] = [];
   for (const actionId of fixture.actions) {

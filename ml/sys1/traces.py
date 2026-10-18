@@ -85,6 +85,10 @@ def write_trace(game: dict, path: Path, checkpoint: str | None) -> list[dict]:
         "events": [],
         "scorer": {"checkpoint": checkpoint, "seat": learner, "won": game["winner"] == learner},
     }
+    # The bridge's games are timed; replayed without the limit, the app plays
+    # the game on past the turn that decided it.
+    if "timeLimit" in game["trace"]:
+        header["config"]["timeLimit"] = game["trace"]["timeLimit"]
     lines = annotated(game)
     path.write_text("\n".join(json.dumps(line) for line in [header, *lines]) + "\n")
     return [line for line in lines if "scorer" in line]

@@ -2,6 +2,7 @@ import type {
   LegalAction,
   PlayerId,
   ResolvedDeck,
+  TimeLimit,
 } from "@one-piece-sim/protocol";
 import {
   applyOfferedAction,
@@ -56,6 +57,7 @@ export class GameService {
     seed: string;
     seedMode?: "seat" | "matchup";
     startingPlayer?: PlayerId | "random";
+    timeLimit?: TimeLimit;
   }) {
     const gameId = `g-${++this.#sequence}`;
     const state = createGame({ gameId, ...params });

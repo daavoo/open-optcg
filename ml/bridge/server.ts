@@ -23,10 +23,12 @@
  * the outcomes differ by what the action changed, not by the draws.
  *
  * A finished game reports `done`, `winner` and `truncated` instead of a
- * decision; Python resets it with a new pairing when it wants another. A game
- * reset with `"record": true` also reports `trace`: every action taken, in the
- * app's trace format less the header, with the offered list on each decision
- * Python made, so a caller can join what its model thought onto the move.
+ * decision, and `capped` when the action cap cut it off; Python resets it with
+ * a new pairing when it wants another. A game reset with `"record": true` also
+ * reports `trace`: every action taken, in the app's trace format less the
+ * header, with the offered list on each decision Python made, so a caller can
+ * join what its model thought onto the move. The trace carries the game's
+ * `timeLimit`, which the header's config needs for the app to replay it.
  */
 import { writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
@@ -118,6 +120,25 @@ function pack(decision: CompactDecision) {
   };
 }
 
+/**
+ * The tournament time limit every training and evaluation game is played
+ * under (`TimeLimit`, Bandai's floor rules §8.2): time is called when turn 20
+ * begins, three more turns are played, and a game still going is decided on
+ * Life, then deck, then Characters, then who last drew from Life.
+ *
+ * It gives a game that would otherwise run to the action cap a real winner, so
+ * a seat that is behind gains nothing by stalling. 20 is past where natural
+ * games end: time is called in about 1% of rules-agent games and about 2.5% of
+ * the learned model's self-play, so it is a safety net and not a new way games
+ * usually end. Counted in the engine's turns, where each player's turn is one.
+ */
+const TRAINING_TIME_LIMIT = { turns: 20 } as const;
+
+/**
+ * The last resort for a turn that never ends, which the time limit cannot
+ * reach: a loop inside one turn. A game cut off here reports `capped`, the
+ * seat whose turn it was, which the trainer scores as that seat's loss.
+ */
 const MAX_ACTIONS = 1500;
 
 /**
@@ -163,7 +184,11 @@ interface Game {
   /** Every action taken, when the game was reset with `record`. */
   log?: RecordedAction[];
   /** How the game was made and every action id taken: enough to replay it. */
-  spec: ResetSpec & { p1: string; p2: string };
+  spec: ResetSpec & {
+    p1: string;
+    p2: string;
+    timeLimit: typeof TRAINING_TIME_LIMIT;
+  };
   taken: string[];
 }
 
@@ -289,13 +314,23 @@ async function advance(id: number, game: Game) {
     };
   }
   game.pending = [];
+  const truncated = game.state.phase !== "finished";
   return {
     id,
     done: true,
     winner: game.state.winner,
-    truncated: game.state.phase !== "finished",
+    truncated,
+    ...(truncated ? { capped: game.state.turnPlayerId } : {}),
     turn: game.state.turn,
-    ...(game.log ? { trace: { rules: rulesStamp(), actions: game.log } } : {}),
+    ...(game.log
+      ? {
+          trace: {
+            rules: rulesStamp(),
+            timeLimit: TRAINING_TIME_LIMIT,
+            actions: game.log,
+          },
+        }
+      : {}),
   };
 }
 
@@ -315,6 +350,7 @@ async function reset(spec: ResetSpec) {
       p2: resolveTrainingDeck(p2),
       seed: spec.seed,
       startingPlayer: "random",
+      timeLimit: TRAINING_TIME_LIMIT,
     }),
     actions: 0,
     rules: Object.fromEntries(
@@ -325,7 +361,7 @@ async function reset(spec: ResetSpec) {
     ),
     pending: [],
     ...(spec.record ? { log: [] } : {}),
-    spec: { ...spec, p1, p2 },
+    spec: { ...spec, p1, p2, timeLimit: TRAINING_TIME_LIMIT },
     taken: [],
   };
   games.set(spec.id, game);
