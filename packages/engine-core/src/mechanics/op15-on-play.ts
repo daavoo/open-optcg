@@ -1026,7 +1026,7 @@ export const op15OnPlayMechanics: SetMechanics = {
                       bind: "op15-kalgara-rest",
                       count: "all",
                       effect: {
-                        kind: "move",
+                        kind: "order-to-bottom",
                         binding: "op15-kalgara-rest",
                         to: {
                           player: "self",

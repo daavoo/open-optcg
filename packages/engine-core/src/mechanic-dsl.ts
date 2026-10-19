@@ -1547,6 +1547,15 @@ export type MechanicEffect =
        * order itself is.
        */
       alternate?: MoveDestination;
+      /**
+       * Each owner orders their own cards, the turn player first, rather than
+       * the controller ordering them all: OP05-058 It's a Waste of Human
+       * Life!! buries both sides' Characters (Bandai's OP05-058#2), and
+       * OP17-041 Wang Zhi prints "of the owner's choosing". A clause that
+       * says neither leaves it to its controller -- OP06-099 Aisa decides
+       * where the opponent's Life card goes.
+       */
+      byOwner?: true;
     }
   /**
    * "Rest up to a total of N of your opponent's Characters or DON!! cards" --
@@ -2420,6 +2429,12 @@ export type MechanicPendingChoice =
       /** The node's second destination, where it has one. */
       alternate?: MoveDestination;
       instanceIds: string[];
+      /**
+       * The cards' owner, when that is not the program's controller: each
+       * owner orders their own (Bandai's OP05-058#2, and OP17-041's printed
+       * "of the owner's choosing").
+       */
+      chooserPlayerId?: PlayerId;
     }
   /**
    * The `pick-from-hand` node's `"blind"` choice: one option per position in

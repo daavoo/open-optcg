@@ -1107,6 +1107,28 @@ export function continueExecution(
     }
     if (effect.kind === "order-to-bottom") {
       const instanceIds = execution.bindings[effect.binding] ?? [];
+      // `byOwner`: each owner orders their own cards, the turn player first.
+      // Cards of two owners become two placements, one per owner, queued so
+      // the turn player's runs first; each is then this node again with one
+      // owner, which the rest of this branch answers.
+      const ownerOf = (instanceId: string): PlayerId =>
+        effect.byOwner
+          ? (findCardZone(state, instanceId)?.playerId ??
+            execution.context.sourcePlayerId)
+          : execution.context.sourcePlayerId;
+      const owners = [...new Set(instanceIds.map(ownerOf))];
+      if (owners.length > 1) {
+        const first = state.turnPlayerId;
+        for (const owner of [opponentOf(first), first]) {
+          const bind = `${effect.binding}-${owner}`;
+          execution.bindings[bind] = instanceIds.filter(
+            (instanceId) => ownerOf(instanceId) === owner,
+          );
+          execution.queue.unshift({ ...effect, binding: bind });
+        }
+        continue;
+      }
+      const owner = owners[0] ?? execution.context.sourcePlayerId;
       const placeAll = () => {
         execution.queue.unshift({
           kind: "move",
@@ -1149,6 +1171,9 @@ export function continueExecution(
           to: effect.to,
           ...(effect.alternate ? { alternate: effect.alternate } : {}),
           instanceIds: [...instanceIds],
+          ...(owner !== execution.context.sourcePlayerId
+            ? { chooserPlayerId: owner }
+            : {}),
         },
         events,
         signals,
