@@ -127,15 +127,30 @@ const chambresSwap: MechanicEffect = {
 /**
  * EB01-051 Finger Pistol's `[Main]`, shared with its `[Trigger]` for the same
  * reason {@link chambresSwap} is.
+ *
+ * The two cards off the deck are a cost, and a cost is paid in full or not at
+ * all: Bandai's Q&A (EB01-051#1) rules that a deck of 1 or fewer cannot pay
+ * it, so the K.O. is gated on the deck rather than `trash-top` milling what is
+ * there and resolving anyway.
  */
 const fingerPistolKo: MechanicEffect = {
-  kind: "optional",
-  effect: {
-    kind: "sequence",
-    effects: [
-      { kind: "trash-top", player: "self", count: 2 },
-      koCostAtMost(5, "eb01-finger-pistol"),
-    ],
+  kind: "if",
+  condition: {
+    kind: "zone-count",
+    player: "self",
+    zone: "deck",
+    operator: "gte",
+    value: 2,
+  },
+  then: {
+    kind: "optional",
+    effect: {
+      kind: "sequence",
+      effects: [
+        { kind: "trash-top", player: "self", count: 2 },
+        koCostAtMost(5, "eb01-finger-pistol"),
+      ],
+    },
   },
 };
 

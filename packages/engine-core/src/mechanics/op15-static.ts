@@ -12,8 +12,8 @@ import {
 } from "../static-abilities.js";
 import {
   attachedDon,
-  boardHasName,
   fieldDon,
+  fieldHasName,
   isNamedOrSelf,
   leaderHasType,
   ownLeaderPower,
@@ -321,14 +321,16 @@ export const op15StaticAbilities: readonly StaticAbility[] = [
       when: (context) => fieldDon(context) <= 6,
     },
   },
-  // OP15-050 Bobby Funk: +3000 while its controller has a [Kelly Funk]
-  // Character. Read live, so the buff leaves with the brother.
+  // OP15-050 Bobby Funk: +3000 while its controller has a [Kelly Funk] on the
+  // field -- a Leader treated as having every name counts, as it does for
+  // EB02-012 Gaimon's [Sarfunkel] (Bandai's EB02-012#1). Read live, so the
+  // buff leaves with the brother.
   {
     cardNumber: "OP15-050",
     scope: "self",
     power: {
       kind: "add",
-      value: (context) => (boardHasName(context, "Kelly Funk") ? 3000 : 0),
+      value: (context) => (fieldHasName(context, "Kelly Funk") ? 3000 : 0),
     },
   },
   // OP15-013 Pincers: −2 cost in hand while its controller's Leader is at 0

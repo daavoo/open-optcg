@@ -528,6 +528,11 @@ export const eb01BattleMechanics: SetMechanics = {
       // `power: 0`: the body leaves the fight instead of surviving it. The
       // reveal is a real gamble -- `deck-top-cost` reads the card the player has
       // just turned over, and a cheap one means the card did nothing.
+      //
+      // The bottom-of-deck placement sits inside the cost gate with the bounce:
+      // Bandai's Q&A (EB01-029#1) rules that a revealed card of cost 3 or less
+      // goes back face-down on top of the deck, so the "Then" belongs to the
+      // conditional sentence rather than standing on its own.
       "EB01-029",
       {
         cost: 1,
@@ -546,35 +551,44 @@ export const eb01BattleMechanics: SetMechanics = {
                   value: 4,
                 },
                 then: {
-                  kind: "choose",
-                  selector: {
-                    player: "self",
-                    zone: "board",
-                    category: "character",
-                  },
-                  bind: "eb01-029",
-                  min: 0,
-                  max: 1,
-                  effect: {
-                    kind: "move",
-                    binding: "eb01-029",
-                    to: { player: "owner", zone: "hand" },
-                  },
-                },
-              },
-              {
-                kind: "select",
-                selector: {
-                  player: "self",
-                  zone: "deck",
-                  position: "top",
-                },
-                bind: "eb01-029-bottom",
-                count: "all",
-                effect: {
-                  kind: "move",
-                  binding: "eb01-029-bottom",
-                  to: { player: "self", zone: "deck", position: "bottom" },
+                  kind: "sequence",
+                  effects: [
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "self",
+                        zone: "board",
+                        category: "character",
+                      },
+                      bind: "eb01-029",
+                      min: 0,
+                      max: 1,
+                      effect: {
+                        kind: "move",
+                        binding: "eb01-029",
+                        to: { player: "owner", zone: "hand" },
+                      },
+                    },
+                    {
+                      kind: "select",
+                      selector: {
+                        player: "self",
+                        zone: "deck",
+                        position: "top",
+                      },
+                      bind: "eb01-029-bottom",
+                      count: "all",
+                      effect: {
+                        kind: "move",
+                        binding: "eb01-029-bottom",
+                        to: {
+                          player: "self",
+                          zone: "deck",
+                          position: "bottom",
+                        },
+                      },
+                    },
+                  ],
                 },
               },
             ],

@@ -2292,6 +2292,13 @@ export interface MechanicProgramInvocation {
    * (OP10-058#3). See `leftFieldBeforeActivating`.
    */
   onField?: true;
+  /**
+   * A field reaction answering its own card leaving the field -- see
+   * `ReactionRule.answersOwnExit`. Its card is in the trash by the time it is
+   * dispatched, which is the point, so `leftFieldBeforeActivating` must not
+   * hold it to still being on the field.
+   */
+  answersOwnExit?: true;
 }
 
 /**

@@ -11,7 +11,7 @@ import {
 import { fieldDonCount, returnDonToDeck } from "../don.js";
 import { drawCards, mechanicPendingEffect } from "../effects.js";
 import { counterEventPower, opponentOf } from "../board.js";
-import { triggerFranky } from "../pending.js";
+import { handOverPendingEffect, triggerFranky } from "../pending.js";
 import { effectiveCost } from "../queries.js";
 import { eventActivationCost } from "../hand-price.js";
 import { type ActionContext } from "./context.js";
@@ -179,6 +179,12 @@ export function applyActivateCounterEvent({
           dispatched.pending,
           dispatched.continuations,
         );
+        // A step the text gives to the attacker -- EB01-028's "your opponent
+        // returns 1 of their active Characters", which Bandai's Q&A
+        // (EB01-028#1) says the attacker chooses -- is answered by that seat,
+        // not by the defender who played the Event. The resume above is what
+        // brings the decision back to the defender afterwards.
+        handOverPendingEffect(state);
       }
     }
   } else {

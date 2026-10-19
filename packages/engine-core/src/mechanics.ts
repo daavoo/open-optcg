@@ -909,11 +909,26 @@ export function continueExecution(
       // nothing else would show it, and this one is shown twice over already:
       // the Event's own `event-activated` says it was played, and the
       // protection itself arrives as a replacement offer the defender answers.
+      //
+      // The Characters covered are the ones on the field now (see
+      // `installedReplacements`), so a second copy adds the bodies that have
+      // arrived since rather than replacing the first copy's list.
+      const earlier = (player.installedReplacements ?? []).find(
+        (entry) =>
+          entry.cardNumber === effect.cardNumber &&
+          entry.expiresAtTurn >= state.turn,
+      );
+      const protects = [
+        ...new Set([
+          ...(earlier?.protects ?? []),
+          ...player.board.map((card) => card.instanceId),
+        ]),
+      ];
       player.installedReplacements = [
         ...(player.installedReplacements ?? []).filter(
           (entry) => entry.cardNumber !== effect.cardNumber,
         ),
-        { cardNumber: effect.cardNumber, expiresAtTurn },
+        { cardNumber: effect.cardNumber, expiresAtTurn, protects },
       ];
       continue;
     }
@@ -2412,6 +2427,16 @@ export function continueExecution(
           : undefined;
         if (!ownerId || !target) {
           throw new Error(`MISSING_MECHANIC_CARD: ${instanceId}`);
+        }
+        // A Character under a "cannot be rested" effect stays active whoever's
+        // effect asks: Bandai's Q&A (EB02-011#4) rules that the restriction
+        // holds against the effects of either player's other cards. Nothing
+        // happened, so nothing is reported.
+        if (
+          ((target as Partial<BoardCard>).cannotRestUntilTurn ?? -1) >=
+          state.turn
+        ) {
+          continue;
         }
         target.rested = true;
         // `character-rested` is what OP10-036 Perona's DON!! refund watches for,

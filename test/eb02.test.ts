@@ -521,6 +521,8 @@ describe("EB02-010 Monkey.D.Luffy (Leader)", () => {
   it("returns two DON!! to set two active and buffs itself into the next turn", () => {
     const game = table("eb02-010-activate")
       .withLeader("p1", "EB02-010")
+      // EB02-017 Nami is {Straw Hat Crew}, so the "only" condition holds.
+      .withBoard("p1", [character("nami", "EB02-017")])
       .withDon("p1", { active: 4, rested: 4 })
       .build();
 
@@ -554,7 +556,9 @@ describe("EB02-010 Monkey.D.Luffy (Leader)", () => {
     expect(currentPower(game.state, "p1", "p1-leader")).toBe(5_000);
   });
 
-  it("pays out on an empty board, which the printed 'only' reads as true", () => {
+  it("pays the cost and does nothing on an empty board", () => {
+    // Bandai's Q&A EB02-010#1: with no Characters the DON!! −2 is paid and
+    // nothing else happens. See `test/faq-eb01-eb02.test.ts`.
     const game = table("eb02-010-empty-board")
       .withLeader("p1", "EB02-010")
       .withDon("p1", { active: 4, rested: 4 })
@@ -564,7 +568,7 @@ describe("EB02-010 Monkey.D.Luffy (Leader)", () => {
     applyOptional(game);
     settle(game);
 
-    expect(currentPower(game.state, "p1", "p1-leader")).toBe(6_000);
+    expect(currentPower(game.state, "p1", "p1-leader")).toBe(5_000);
   });
 });
 
@@ -1348,8 +1352,10 @@ describe("EB02-030 And That's When Somebody Makes Fun of Their Friend's Dream!!!
 
     game.play({ type: "activate-counter-event", eventInstanceId: "event" });
 
+    // It covers the Characters on the field now, and no later arrival --
+    // Bandai's Q&A EB02-030#1, pinned in `test/faq-eb01-eb02.test.ts`.
     expect(game.state.players.p1.installedReplacements).toEqual([
-      { cardNumber: "EB02-030", expiresAtTurn: 12 },
+      { cardNumber: "EB02-030", expiresAtTurn: 12, protects: ["wall"] },
     ]);
     // It is not a Counter: the battle's own numbers are untouched.
     expect(game.state.activeAttack?.counterPower).toBe(0);
@@ -2261,7 +2267,9 @@ describe("EB02-052 Enel", () => {
     expect(currentPower(game.state, "p1", "enel")).toBe(12_000);
   });
 
-  it("buys the +1000 alone at four Life", () => {
+  it("buys nothing at four Life", () => {
+    // Bandai's Q&A EB02-052#1: the Life condition gates the +1000 too. See
+    // `test/faq-eb01-eb02.test.ts`.
     const game = table("eb02-052-high-life")
       .withBoard("p1", [character("enel", "EB02-052", { playedTurn: 1 })])
       .withHand("p1", [instance("fodder", "EB02-001")])
@@ -2278,7 +2286,7 @@ describe("EB02-052 Enel", () => {
     settle(game);
 
     expect(game.state.players.p1.life).toHaveLength(4);
-    expect(currentPower(game.state, "p1", "enel")).toBe(12_000);
+    expect(currentPower(game.state, "p1", "enel")).toBe(11_000);
   });
 
   it("is not offered on an empty hand", () => {
@@ -2694,12 +2702,13 @@ describe("EB02-059 Without Your Help I Can't Become the King of the Pirates!!!!"
     expect(boardNumbers(game, "p1")).toEqual(["EB02-029"]);
   });
 
-  it("reaches a [Sanji] of any colour, which the second branch names", () => {
+  it("does not reach a [Sanji] of another colour", () => {
+    // Bandai's Q&A EB02-059#1: "yellow" qualifies the [Sanji] branch too. See
+    // `test/faq-eb01-eb02.test.ts`.
     const game = defending("eb02-059-sanji")
       .withHand("p1", [
         instance("event", "EB02-059"),
-        // OP12-070 Sanji is a 3-cost purple Character, so only the name branch
-        // admits it.
+        // OP12-070 Sanji is a 3-cost purple Character.
         instance("sanji", "OP12-070"),
       ])
       .withBoard("p1", [character("wall", "EB02-029")])
@@ -2709,10 +2718,10 @@ describe("EB02-059 Without Your Help I Can't Become the King of the Pirates!!!!"
       .build();
 
     game.play({ type: "activate-counter-event", eventInstanceId: "event" });
-    game.play({ type: "resolve-effect", optionId: "sanji" });
+    expect(effectOptions(game.state)).not.toContain("sanji");
     settle(game);
 
-    expect(boardNumbers(game, "p1").sort()).toEqual(["EB02-029", "OP12-070"]);
+    expect(boardNumbers(game, "p1")).toEqual(["EB02-029"]);
   });
 });
 

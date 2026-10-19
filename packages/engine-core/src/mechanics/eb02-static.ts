@@ -7,7 +7,6 @@ import { fieldDonCount } from "../don.js";
 import { type StaticAbility, opponentOf } from "../static-abilities.js";
 import {
   attachedDon,
-  boardHasName,
   fieldHasName,
   leaderHasType,
   leaderMulticolored,
@@ -51,14 +50,15 @@ export const eb02StaticAbilities: readonly StaticAbility[] = [
   // EB02-012 Gaimon: "If you have a [Sarfunkel], this Character gains
   // [Blocker]." The other half of the joke is EB02-014 Sarfunkel, whose
   // `[On Play]` plays this out of hand for free -- so the pair is a 2-cost play
-  // that leaves a 1000 Blocker behind. `hasCardName` rather than the card
-  // number, so an alias printed by a later [Sarfunkel] would count.
+  // that leaves a 1000 Blocker behind. A name match rather than the card
+  // number, so an alias printed by a later [Sarfunkel] would count, and read
+  // over the whole field so a Leader with every card name counts too.
   {
     cardNumber: "EB02-012",
     scope: "self",
     keyword: {
       keyword: "Blocker",
-      when: (context) => boardHasName(context, "Sarfunkel"),
+      when: (context) => fieldHasName(context, "Sarfunkel"),
     },
   },
   // EB02-019 Roronoa Zoro: "If your opponent has 2 or more Characters, this
