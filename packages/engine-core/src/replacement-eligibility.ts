@@ -224,12 +224,25 @@ export function eligibleReplacements(
       continue;
     }
     // The price is the *removing* player's board, so it is counted on their
-    // side and only the active Characters count: resting a rested Character
-    // pays nothing, and an offer that pays nothing cancels a removal for free.
+    // side and only the Characters that can actually be rested count: resting
+    // a rested Character pays nothing, an effect can bar the rest outright
+    // (OP07-029#2), and an offer that pays nothing cancels a removal for
+    // free. The selector is the one the payment step chooses from, so the
+    // offer and the payment cannot disagree.
     if (entry.cost.kind === "rest-opponent-characters") {
-      const payable = state.players[
-        targetPlayerId === "p1" ? "p2" : "p1"
-      ].board.filter((card) => !card.rested).length;
+      const payable = selectCards(
+        state,
+        { sourcePlayerId: targetPlayerId, source: protector },
+        {
+          player: "opponent",
+          zone: "board",
+          category: "character",
+          rested: false,
+          canRest: true,
+        },
+        {},
+        db,
+      ).length;
       if (payable < entry.cost.count) continue;
     }
     if (entry.cost.kind === "bottom-deck-own-character") {

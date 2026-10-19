@@ -3272,9 +3272,9 @@ describe("OP07-085 Stussy", () => {
 
     game.play({ type: "play-card", cardNumber: "OP07-085" });
     applyOptional(game);
-    // The Stussy just played is not a legal cost: "1 of your Characters" is
-    // filtered with the source excluded, or the card would eat itself.
-    expect(effectOptions(game.state)).not.toContain(
+    // The Stussy just played is a legal cost too (Bandai's OP07-085#1): the
+    // cost names any of its controller's Characters, with no exception.
+    expect(effectOptions(game.state)).toContain(
       game.state.players.p1.board.find(
         (card) => card.cardNumber === "OP07-085",
       )!.instanceId,
@@ -3286,7 +3286,8 @@ describe("OP07-085 Stussy", () => {
     expect(game.state.players.p2.board).toHaveLength(0);
   });
 
-  it("cannot buy the K.O. with no other body of its own", () => {
+  it("with no other body of its own, trashes itself to buy the K.O.", () => {
+    // Bandai's OP07-085#1: Stussy alone on the board can pay with itself.
     const game = table("op07-085-alone")
       .bareTable()
       .withHand("p1", [instance("stussy", "OP07-085")])
@@ -3294,9 +3295,13 @@ describe("OP07-085 Stussy", () => {
       .build();
 
     game.play({ type: "play-card", cardNumber: "OP07-085" });
+    applyOptional(game);
+    game.play({ type: "resolve-effect", optionId: "stussy" });
+    game.play({ type: "resolve-effect", optionId: "huge" });
     settleDeclining(game);
 
-    expect(game.state.players.p2.board).toHaveLength(1);
+    expect(game.state.players.p1.board).toHaveLength(0);
+    expect(game.state.players.p2.board).toHaveLength(0);
   });
 });
 

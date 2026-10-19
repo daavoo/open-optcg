@@ -747,8 +747,10 @@ export const op07OnPlayMechanics: SetMechanics = {
       //
       // The cost is one of the controller's *own* Characters, and the removal
       // it buys has no ceiling at all -- the only such clause in the set. The
-      // payoff is nested inside the cost so a board of one (this card, just
-      // played) cannot buy it for free.
+      // payoff is nested inside the cost so declining it buys nothing. Stussy
+      // itself is a legal payment (Bandai's OP07-085#1): the cost names any of
+      // its controller's Characters with no exception, so a board of one --
+      // this card, just played -- can still trade it for the K.O.
       "OP07-085",
       {
         effect: {
@@ -759,7 +761,6 @@ export const op07OnPlayMechanics: SetMechanics = {
               player: "self",
               zone: "board",
               category: "character",
-              excludeSource: true,
             },
             bind: "op07-stussy-cost",
             min: 1,

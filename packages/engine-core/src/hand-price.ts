@@ -146,20 +146,6 @@ const STATIC_HAND_DISCOUNTS: readonly {
           boardPower(state, playerId, card, db) >= 8000,
       ),
   },
-  // OP07-064 Sanji: "[printed text omitted -- pnpm card:text OP07-064]"
-  //
-  // The Purple Foxy package's catch-up clause, on the one card that reads it in
-  // the *hand* rather than on the field -- a 6-cost 6000 Blocker for 3 is what
-  // a deck that has spent its DON!! down gets to do with the turn. "At least 2
-  // less" is a margin between the two fields, which is what makes it a subtract
-  // rather than a comparison against a constant.
-  {
-    cardNumber: "OP07-064",
-    amount: 3,
-    when: (state, playerId) =>
-      fieldDonCount(state, playerId) <=
-      fieldDonCount(state, playerId === "p1" ? "p2" : "p1") - 2,
-  },
   // OP16-015 Monkey.D.Luffy: "[printed text omitted -- pnpm card:text OP16-015]"Ace"[printed text omitted -- pnpm card:text OP16-015]"
   //
   // "Includes", not "is": a substring of the printed name, which is how this

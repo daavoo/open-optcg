@@ -27,7 +27,7 @@ const BUDGET: Readonly<Record<string, number>> = {
   "actions/activate-counter-event.ts": 9,
   "actions/attack.ts": 9,
   "effects.ts": 9,
-  "hand-price.ts": 8,
+  "hand-price.ts": 7,
   "removal.ts": 9,
   "static-abilities.ts": 7,
   "don.ts": 6,
