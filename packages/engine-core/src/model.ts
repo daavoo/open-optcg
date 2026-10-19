@@ -5,7 +5,11 @@ import type {
   PublicEvent,
   TimeLimitProcedure,
 } from "@one-piece-sim/protocol";
-import type { MechanicInvocation, MechanicPendingChoice } from "./mechanics.js";
+import type {
+  MechanicEffect,
+  MechanicInvocation,
+  MechanicPendingChoice,
+} from "./mechanics.js";
 
 import type { RngState } from "@one-piece-sim/protocol";
 import { RULES_VERSION } from "./rules-version.js";
@@ -310,9 +314,19 @@ export interface PlayerState {
    * turn is dropped rather than paid late.
    */
   endOfTurnCardActions?: readonly {
-    kind: "bury" | "set-active" | "trash";
+    kind: "bury" | "set-active";
     instanceId: string;
     turn: number;
+  }[];
+  /**
+   * Steps booked for the end of the turn by `at-end-of-turn-effect`, each run
+   * by `endTurn` as its card's own program -- so it can ask, as OP06-006
+   * Saga's choice of {FILM} Character does. Absent when nothing is booked.
+   */
+  endOfTurnPrograms?: readonly {
+    turn: number;
+    source: { instanceId: string; cardNumber: string };
+    effect: MechanicEffect;
   }[];
   /**
    * DON!! this player owes back at the end of the turn, down to the opponent's

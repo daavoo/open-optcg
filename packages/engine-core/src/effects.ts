@@ -33,6 +33,7 @@ import {
   type MechanicEffect,
   type MechanicInvocation,
   type MechanicPendingChoice,
+  type MechanicProgram,
 } from "./mechanics.js";
 import type { CardInstance, GameState, PendingEffect } from "./model.js";
 import {} from "./removal.js";
@@ -757,6 +758,22 @@ export function createOnEndOfYourTurnResult(
   }
   const mechanicProgram = getOnEndOfYourTurnMechanicProgram(source.cardNumber);
   if (!mechanicProgram) return { pending: null, events: [] };
+  return runEndOfTurnProgram(state, playerId, source, mechanicProgram, db);
+}
+
+/**
+ * Runs `program` as `source`'s at the end of `playerId`'s turn: an
+ * `[End of Your Turn]` clause, or a step a clause booked for then
+ * (`PlayerState.endOfTurnPrograms`). A choice it raises is marked as an
+ * end-of-turn one, so `endTurn` is re-entered once it is answered.
+ */
+export function runEndOfTurnProgram(
+  state: GameState,
+  playerId: PlayerId,
+  source: CardInstance,
+  mechanicProgram: MechanicProgram,
+  db: CardDatabase = defaultCardDatabase,
+): OnPlayResult {
   const invocation = {
     context: { sourcePlayerId: playerId, source },
     program: mechanicProgram,

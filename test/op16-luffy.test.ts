@@ -567,7 +567,18 @@ describe("OP16 Green/Blue Luffy rules", () => {
         action.type === "resolve-effect" && action.optionId === "usopp",
     );
     state = second.state;
-    expect(second.events).toEqual([
+    // Both are p2's, so p2 orders them under its deck (Bandai's OP06-058#1);
+    // nothing has moved until it does.
+    expect(second.events).toEqual([]);
+    expect(state.pendingEffect?.playerId).toBe("p2");
+    const ordered = submitMatchingResult(
+      state,
+      (action) =>
+        action.type === "resolve-effect" &&
+        action.optionId.startsWith("order:"),
+    );
+    state = ordered.state;
+    expect(ordered.events).toEqual([
       {
         type: "card-moved",
         playerId: "p2",

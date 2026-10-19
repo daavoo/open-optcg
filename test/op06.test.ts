@@ -430,7 +430,6 @@ describe("OP06-006 Saga", () => {
       attackerInstanceId: "saga",
       targetInstanceId: "p2-leader",
     });
-    game.play({ type: "resolve-effect", optionId: "price" });
     settleDeclining(game);
 
     // 5000 printed, +1000 from the clause, +1000 from the DON!! it needed.
@@ -440,6 +439,8 @@ describe("OP06-006 Saga", () => {
 
     declineDefence(game);
     game.pass();
+    // Which {FILM} Character pays is chosen then (Bandai's OP06-006#1).
+    game.play({ type: "resolve-effect", optionId: "price" });
 
     expect(
       game.state.players.p1.trash.map((card) => card.cardNumber),
@@ -1782,21 +1783,16 @@ describe("OP06-043 Aramaki", () => {
     expect(activationOffered(game, "OP06-043")).toBe(false);
   });
 
-  it("pays nothing when no cheap body is on either board", () => {
+  it("is not offered when no cheap body is on either board", () => {
     const game = table("op06-043-no-target")
       .bareTable()
       .withBoard("p1", [character("aramaki", "OP06-043")])
       .withHand("p1", [instance("fodder", "ST32-004")])
       .build();
 
-    game.play({ type: "activate-main", summary: "OP06-043" });
-    applyOptional(game);
-    game.play({ type: "resolve-effect", optionId: "fodder" });
-    settleDeclining(game);
-
-    // Both payments are mandatory once taken: with nothing to bury the clause
-    // cannot be paid for and the power never lands.
-    expect(currentPower(game.state, "p1", "aramaki")).toBe(8_000);
+    // The bury is part of the cost, and a cost that cannot be paid cannot be
+    // activated (Q&A OP06-043#1): no hand card spent for nothing.
+    expect(activationOffered(game, "OP06-043")).toBe(false);
   });
 });
 
@@ -4514,12 +4510,10 @@ describe("OP06-116 Reject", () => {
 
     expect(game.state.players.p2.life).toHaveLength(0);
     expect(game.state.players.p2.hand).toHaveLength(1);
-    // The Life card the second bullet costs is paid whether or not the damage
-    // landed, which is what the printed sentence says.
     expect(game.state.players.p1.life).toHaveLength(1);
   });
 
-  it("deals no damage while the opponent is above one Life", () => {
+  it("does nothing while the opponent is above one Life", () => {
     const game = table("op06-116-safe")
       .bareTable()
       .withHand("p1", [instance("event", "OP06-116")])
@@ -4532,7 +4526,9 @@ describe("OP06-116 Reject", () => {
     settleDeclining(game);
 
     expect(game.state.players.p2.life).toHaveLength(2);
-    expect(game.state.players.p1.life).toHaveLength(1);
+    // The Life card the branch pays sits behind the same condition as the
+    // damage (Q&A OP06-116#1): off 1 Life, p1 keeps it.
+    expect(game.state.players.p1.life).toHaveLength(2);
   });
 
   it("draws a card off a Life card", () => {

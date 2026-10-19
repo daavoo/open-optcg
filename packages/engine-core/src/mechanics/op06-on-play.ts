@@ -12,7 +12,11 @@
  * Kouzuki Momonosuke. Their programs stay in the modules named after that deck,
  * the same split every earlier whole-set import kept.
  */
-import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
+import {
+  SOURCE_BINDING,
+  type MechanicCondition,
+  type MechanicEffect,
+} from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { lookAndAdd, payFromHand } from "./shared.js";
 import {
@@ -48,6 +52,15 @@ const drawTwoTrashTwo: MechanicEffect = {
     trashFromHand(2, "op06-draw-trash"),
   ],
 };
+
+/** Whether a `choose` over the trash bound a card to `binding`. */
+const pickedFromTrash = (binding: string): MechanicCondition => ({
+  kind: "selector-count",
+  player: "self",
+  selector: { zone: "trash", binding },
+  operator: "gte",
+  value: 1,
+});
 
 export const op06OnPlayMechanics: SetMechanics = {
   onPlay: [
@@ -759,39 +772,59 @@ export const op06OnPlayMechanics: SetMechanics = {
                 min: 0,
                 max: 1,
                 effect: {
-                  kind: "choice",
-                  branches: [
-                    {
-                      id: "rest-small",
-                      label: "Play the cheaper card rested",
-                      effect: {
-                        kind: "sequence",
-                        effects: [
-                          { kind: "play", binding: "op06-moria-big" },
-                          {
-                            kind: "play",
-                            binding: "op06-moria-small",
-                            rested: true,
-                          },
-                        ],
+                  kind: "if",
+                  condition: {
+                    kind: "all-of",
+                    conditions: [
+                      pickedFromTrash("op06-moria-big"),
+                      pickedFromTrash("op06-moria-small"),
+                    ],
+                  },
+                  then: {
+                    kind: "choice",
+                    branches: [
+                      {
+                        id: "rest-small",
+                        label: "Play the cheaper card rested",
+                        effect: {
+                          kind: "sequence",
+                          effects: [
+                            { kind: "play", binding: "op06-moria-big" },
+                            {
+                              kind: "play",
+                              binding: "op06-moria-small",
+                              rested: true,
+                            },
+                          ],
+                        },
                       },
-                    },
-                    {
-                      id: "rest-big",
-                      label: "Play the costlier card rested",
-                      effect: {
-                        kind: "sequence",
-                        effects: [
-                          {
-                            kind: "play",
-                            binding: "op06-moria-big",
-                            rested: true,
-                          },
-                          { kind: "play", binding: "op06-moria-small" },
-                        ],
+                      {
+                        id: "rest-big",
+                        label: "Play the costlier card rested",
+                        effect: {
+                          kind: "sequence",
+                          effects: [
+                            {
+                              kind: "play",
+                              binding: "op06-moria-big",
+                              rested: true,
+                            },
+                            { kind: "play", binding: "op06-moria-small" },
+                          ],
+                        },
                       },
-                    },
-                  ],
+                    ],
+                  },
+                  // One card found is played active: "play the other card
+                  // rested" names a second card, and with none there is
+                  // nothing to rest (Q&A OP06-086#1).
+                  else: {
+                    kind: "sequence",
+                    effects: [
+                      { kind: "play", binding: "op06-moria-big" },
+                      { kind: "play", binding: "op06-moria-small" },
+                    ],
+                  },
                 },
               },
             },

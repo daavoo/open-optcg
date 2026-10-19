@@ -457,13 +457,11 @@ export const op06YamatoMechanics: SetMechanics = {
       // Trigger over, which is why "0 Life cards" is reachable at all: the card
       // is in the hand or resolving, and the Life zone behind it is empty.
       //
-      // "[printed text omitted -- pnpm card:text OP06-115]" is inside the "you may", not after
-      // it -- the whole clause is one decision, and a player who declines the
-      // Life card does not pay the discard. The trash is mandatory once taken,
-      // so it is a `select` over the hand rather than a `choose`... except the
-      // player picks which card goes, so it is a `choose` with `min: 1`. A hand
-      // that cannot pay skips the whole nested sequence, which is the same
-      // guarantee `payFromHand` gives.
+      // The discard is what follows the Life card, not a cost for it: an
+      // empty hand still banks the deck's top card (Q&A OP06-115#1), and
+      // simply has nothing to trash afterwards -- the `choose` skips. A player
+      // who declines the Life card does not discard either, since the trash
+      // is the second half of the one "you may".
       "OP06-115",
       {
         effect: {
@@ -478,33 +476,33 @@ export const op06YamatoMechanics: SetMechanics = {
           then: {
             kind: "optional",
             effect: {
-              kind: "choose",
-              selector: { player: "self", zone: "hand" },
-              bind: "disappear-trigger-cost",
-              min: 1,
-              max: 1,
-              effect: {
-                kind: "sequence",
-                effects: [
-                  {
-                    kind: "select",
-                    selector: { player: "self", zone: "deck", position: "top" },
-                    bind: "disappear-new-life",
-                    count: 1,
-                    effect: {
-                      kind: "move",
-                      binding: "disappear-new-life",
-                      to: { player: "self", zone: "life", position: "top" },
-                      faceUp: false,
-                    },
+              kind: "sequence",
+              effects: [
+                {
+                  kind: "select",
+                  selector: { player: "self", zone: "deck", position: "top" },
+                  bind: "disappear-new-life",
+                  count: 1,
+                  effect: {
+                    kind: "move",
+                    binding: "disappear-new-life",
+                    to: { player: "self", zone: "life", position: "top" },
+                    faceUp: false,
                   },
-                  {
+                },
+                {
+                  kind: "choose",
+                  selector: { player: "self", zone: "hand" },
+                  bind: "disappear-trigger-cost",
+                  min: 1,
+                  max: 1,
+                  effect: {
                     kind: "move",
                     binding: "disappear-trigger-cost",
                     to: { player: "self", zone: "trash" },
                   },
-                ],
-              },
+                },
+              ],
             },
           },
         },

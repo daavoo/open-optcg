@@ -115,15 +115,24 @@ export function applyBlock({
       db,
     );
     events.push(...watchers.events);
+    const onBlock = onBlockInvocation(state, activePlayer, blocker);
     if (watchers.pending && watchers.invocation) {
+      // The `[On Block]` waits behind the watcher's question rather than
+      // taking the slot over the top of it, which would drop the watcher:
+      // OP06-048 Zeff's mill resolves first and the blocker's `[On Block]`
+      // after it (Q&A OP06-048#2).
       state.pendingEffect = mechanicPendingEffect(
         watchers.invocation,
         watchers.pending,
-        watchers.continuations,
+        onBlock
+          ? [...watchers.continuations, onBlock.invocation]
+          : watchers.continuations,
       );
       state.pendingEffectResume = { phase: "counter", playerId: activePlayer };
       state.phase = "main";
       state.activePlayer = attack.attackerPlayerId;
+      if (onBlock) state.oncePerTurn.push(onBlock.oncePerTurnKey);
+      return;
     }
     // "[On Block] …" -- OP10-077 Bellamy, OP12-081 Sabo. The window opens
     // because *this* card blocked, which is why it is dispatched here and not
@@ -133,7 +142,6 @@ export function applyBlock({
     // A program that suspends on a choice resumes into the Counter step, which
     // is where the block hands the battle next -- the same `pendingEffectResume`
     // seam a `[When Attacking]` program uses to hand back the Block step.
-    const onBlock = onBlockInvocation(state, activePlayer, blocker);
     if (onBlock) {
       const dispatched = dispatchMechanicInvocations(
         state,

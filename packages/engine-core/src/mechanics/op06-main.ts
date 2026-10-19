@@ -153,10 +153,24 @@ export const sharkArrows: MechanicEffect = {
  * sentence. "In any order" is about where they land in the deck, which for two
  * cards going under it is not a decision worth asking.
  */
+// Both picks first, then one placement: the two go under the deck together,
+// in the order their owner chooses (Bandai's OP06-056#1).
 export const murakumoSword: MechanicEffect = {
   kind: "sequence",
   effects: [
-    buryOpponentCostAtMost(2, "op06-murakumo-first"),
+    {
+      kind: "choose",
+      selector: {
+        player: "opponent",
+        zone: "board",
+        category: "character",
+        maxCost: 2,
+      },
+      bind: "op06-murakumo-first",
+      min: 0,
+      max: 1,
+      effect: { kind: "sequence", effects: [] },
+    },
     {
       kind: "choose",
       selector: {
@@ -169,11 +183,14 @@ export const murakumoSword: MechanicEffect = {
       bind: "op06-murakumo-second",
       min: 0,
       max: 1,
-      effect: {
-        kind: "move",
-        binding: "op06-murakumo-second",
-        to: { player: "owner", zone: "deck", position: "bottom" },
-      },
+      effect: { kind: "sequence", effects: [] },
+    },
+    {
+      kind: "order-to-bottom",
+      binding: "op06-murakumo-first",
+      also: ["op06-murakumo-second"],
+      byOwner: true,
+      to: { player: "owner", zone: "deck", position: "bottom" },
     },
   ],
 };
@@ -415,8 +432,9 @@ export const op06MainMechanics: SetMechanics = {
             min: 0,
             max: 2,
             effect: {
-              kind: "move",
+              kind: "order-to-bottom",
               binding: "op06-gravity",
+              byOwner: true,
               to: { player: "owner", zone: "deck", position: "bottom" },
             },
           },
@@ -471,8 +489,8 @@ export const op06MainMechanics: SetMechanics = {
       //
       // The second branch is Yellow's own shape: it only reaches for the win
       // while the opponent is on their last Life card, and the Life card it
-      // then adds to the hand is the price -- both halves of that branch, as
-      // the printed bullet reads them.
+      // then adds to the hand is the price. The price sits inside the same
+      // condition: off 1 Life the branch does nothing at all (Q&A OP06-116#1).
       "OP06-116",
       {
         cost: 4,
@@ -489,21 +507,21 @@ export const op06MainMechanics: SetMechanics = {
                 id: "damage",
                 label: "Deal 1 damage while your opponent is on 1 Life",
                 effect: {
-                  kind: "sequence",
-                  effects: [
-                    {
-                      kind: "if",
-                      condition: {
-                        kind: "zone-count",
-                        player: "opponent",
-                        zone: "life",
-                        operator: "eq",
-                        value: 1,
-                      },
-                      then: { kind: "deal-damage", player: "opponent" },
-                    },
-                    lifeTopToHand,
-                  ],
+                  kind: "if",
+                  condition: {
+                    kind: "zone-count",
+                    player: "opponent",
+                    zone: "life",
+                    operator: "eq",
+                    value: 1,
+                  },
+                  then: {
+                    kind: "sequence",
+                    effects: [
+                      { kind: "deal-damage", player: "opponent" },
+                      lifeTopToHand,
+                    ],
+                  },
                 },
               },
             ],
@@ -842,49 +860,64 @@ export const op06MainMechanics: SetMechanics = {
       // +3000, which turns an 8000 Blocker into a body that trades up.
       //
       // Both payments are mandatory once the clause is taken, so the `choose`
-      // that names the buried Character is `min: 1` -- with nothing cheap on
-      // either board the clause cannot be paid for at all, and the `choose`
-      // then skips rather than handing over the power for one card.
+      // that names the buried Character is `min: 1`. A cost that cannot be paid
+      // cannot be activated (Q&A OP06-043#1), so the outer `if` withholds the
+      // offer while neither field holds a cheap enough Character -- rather than
+      // taking the hand card and spending the turn's use for nothing.
       "OP06-043",
       {
         oncePerTurn: true,
         requires: { handCards: 1 },
         program: {
           effect: {
-            kind: "optional",
-            effect: payFromHand(
-              { player: "self", zone: "hand" },
-              "op06-aramaki-cost",
-              1,
-              {
-                kind: "choose",
-                selector: {
-                  player: "either",
-                  zone: "board",
-                  category: "character",
-                  maxCost: 2,
+            kind: "if",
+            condition: {
+              kind: "selector-count",
+              player: "either",
+              selector: { zone: "board", category: "character", maxCost: 2 },
+              operator: "gte",
+              value: 1,
+            },
+            then: {
+              kind: "optional",
+              effect: payFromHand(
+                { player: "self", zone: "hand" },
+                "op06-aramaki-cost",
+                1,
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "either",
+                    zone: "board",
+                    category: "character",
+                    maxCost: 2,
+                  },
+                  bind: "op06-aramaki-bury",
+                  min: 1,
+                  max: 1,
+                  effect: {
+                    kind: "sequence",
+                    effects: [
+                      {
+                        kind: "move",
+                        binding: "op06-aramaki-bury",
+                        to: {
+                          player: "owner",
+                          zone: "deck",
+                          position: "bottom",
+                        },
+                      },
+                      {
+                        kind: "modify-power",
+                        binding: SOURCE_BINDING,
+                        amount: 3_000,
+                        expiresAfterTurns: 0,
+                      },
+                    ],
+                  },
                 },
-                bind: "op06-aramaki-bury",
-                min: 1,
-                max: 1,
-                effect: {
-                  kind: "sequence",
-                  effects: [
-                    {
-                      kind: "move",
-                      binding: "op06-aramaki-bury",
-                      to: { player: "owner", zone: "deck", position: "bottom" },
-                    },
-                    {
-                      kind: "modify-power",
-                      binding: SOURCE_BINDING,
-                      amount: 3_000,
-                      expiresAfterTurns: 0,
-                    },
-                  ],
-                },
-              },
-            ),
+              ),
+            },
           },
         },
       },

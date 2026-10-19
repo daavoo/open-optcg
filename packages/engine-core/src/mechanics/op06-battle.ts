@@ -115,20 +115,23 @@ export const op06BattleMechanics: SetMechanics = {
                 expiresAfterTurns: 1,
               },
               {
-                kind: "choose",
-                selector: {
-                  player: "self",
-                  zone: "board",
-                  category: "character",
-                  type: "FILM",
-                },
-                bind: "op06-saga-price",
-                min: 1,
-                max: 1,
+                kind: "at-end-of-turn-effect",
                 effect: {
-                  kind: "at-end-of-turn",
-                  binding: "op06-saga-price",
-                  action: "trash",
+                  kind: "choose",
+                  selector: {
+                    player: "self",
+                    zone: "board",
+                    category: "character",
+                    type: "FILM",
+                  },
+                  bind: "op06-saga-price",
+                  min: 1,
+                  max: 1,
+                  effect: {
+                    kind: "move",
+                    binding: "op06-saga-price",
+                    to: { player: "self", zone: "trash" },
+                  },
                 },
               },
             ],
@@ -350,9 +353,10 @@ export const op06BattleMechanics: SetMechanics = {
       // A `choice` of two `move`s rather than `order-to-bottom`'s `alternate`,
       // because the card has to arrive face-up and that node's move carries no
       // `faceUp` -- a face-down Life card would hide a Trigger both players are
-      // entitled to see. "With 0 power" is read after DON!!
-      // (`maxCurrentPower`), so a body this deck has spent DON!! on is no
-      // longer eligible, which is the printed reading.
+      // entitled to see. "With 0 power" is read after DON!! and is exact: a
+      // body this deck has spent DON!! on is no longer eligible, and neither
+      // is one an effect has pushed below 0 (Q&A OP06-103#1), so the current
+      // power is bounded on both sides.
       "OP06-103",
       {
         oncePerTurn: false,
@@ -370,6 +374,7 @@ export const op06BattleMechanics: SetMechanics = {
                   player: "self",
                   zone: "board",
                   category: "character",
+                  minCurrentPower: 0,
                   maxCurrentPower: 0,
                 },
                 bind: "op06-kawamatsu",

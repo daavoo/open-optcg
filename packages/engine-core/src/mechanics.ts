@@ -1105,7 +1105,30 @@ export function continueExecution(
       }
       continue;
     }
+    if (effect.kind === "at-end-of-turn-effect") {
+      const player = state.players[execution.context.sourcePlayerId];
+      player.endOfTurnPrograms = [
+        ...(player.endOfTurnPrograms ?? []),
+        {
+          turn: state.turn,
+          source: {
+            instanceId: execution.context.source.instanceId,
+            cardNumber: execution.context.source.cardNumber,
+          },
+          effect: effect.effect,
+        },
+      ];
+      continue;
+    }
     if (effect.kind === "order-to-bottom") {
+      if (effect.also) {
+        const { also, ...placement } = effect;
+        execution.bindings[effect.binding] = [effect.binding, ...also].flatMap(
+          (bind) => execution.bindings[bind] ?? [],
+        );
+        execution.queue.unshift(placement);
+        continue;
+      }
       const instanceIds = execution.bindings[effect.binding] ?? [];
       // `byOwner`: each owner orders their own cards, the turn player first.
       // Cards of two owners become two placements, one per owner, queued so
