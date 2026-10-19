@@ -82,11 +82,11 @@ export const op07StaticAbilities: readonly StaticAbility[] = [
   // OP07-064 Sanji: two or more DON!! behind the opponent makes this card
   // in hand 3 cheaper.
   //
-  // The price paid to play it is `hand-price.ts`'s entry for the same clause;
-  // this layer is the other half, which "cost N or less" clauses reading a
-  // hand see -- ST10-001 Trafalgar Law's activation plays it as a cost-3
-  // card (Bandai's OP07-064#1). `costZone: "hand"`, so the body on the field
-  // is priced at its printed 6 again.
+  // A cost layer rather than a hand price, so both the price paid to play it
+  // and a "cost N or less" clause reading the hand see it -- ST10-001
+  // Trafalgar Law's activation plays it as a cost-3 card (Bandai's
+  // OP07-064#1). `costZone: "hand"`, so the body on the field is priced at
+  // its printed 6 again.
   {
     cardNumber: "OP07-064",
     scope: "self",

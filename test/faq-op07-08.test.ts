@@ -1658,52 +1658,42 @@ describe("FAQ OP-08", () => {
       expect(game.state.players.p1.trash).toHaveLength(1);
     });
 
-    // Engine disagrees: `resolveBattle` (battle.ts) dispatches the
-    // Life-card-moved reactions as the damage lands, before it opens the
-    // [Trigger] window, so Bonney's two cards are drawn before Tempest Kick's
-    // [Trigger] is even offered -- and she still draws though the [Trigger]
-    // then K.O.s her. The ruling resolves the [Trigger] first and the draw
-    // only if Bonney is still on the field. Deferring the reaction past the
-    // Trigger window moves every Life-removal watcher (OP11-041 Nami,
-    // OP12-099 Kalgara, P-117 Nami) and the resume bookkeeping around both
-    // windows, which is more than a card fix.
-    it.fails(
-      "OP08-105#4: a [Trigger] that K.O.s Bonney resolves first, so she draws nothing",
-      () => {
-        // The ruling: the [Trigger] resolves before the draw, and the draw needs
-        // Bonney still on the field. p2's top Life card is OP07-096 Tempest
-        // Kick, whose [Trigger] K.O.s a cost-3 Character.
-        const game = bonneyTable("faq-op08-105-4")
-          .withLife("p2", [
-            instance("kick", "OP07-096"),
-            ...copies(2, "FIX-001", "p2-life"),
-          ])
-          .build();
+    // The Life watcher waits for the Damage Step, so the [Trigger] resolves
+    // first and Bonney, K.O.'d by it, is not there to draw (#51).
+    it("OP08-105#4: a [Trigger] that K.O.s Bonney resolves first, so she draws nothing", () => {
+      // The ruling: the [Trigger] resolves before the draw, and the draw needs
+      // Bonney still on the field. p2's top Life card is OP07-096 Tempest
+      // Kick, whose [Trigger] K.O.s a cost-3 Character.
+      const game = bonneyTable("faq-op08-105-4")
+        .withLife("p2", [
+          instance("kick", "OP07-096"),
+          ...copies(2, "FIX-001", "p2-life"),
+        ])
+        .build();
 
-        attack(game, "bonney", "p2-leader");
-        while (
-          game.state.activeAttack &&
-          !offered(game, "resolve-trigger").length
-        ) {
-          if (game.state.pendingEffect) game.play({ type: "resolve-effect" });
-          else game.pass();
-        }
-        expect(game.player).toBe("p2");
-        game.play(
-          (action) =>
-            action.type === "resolve-trigger" &&
-            action.summary.includes("Activate"),
-        );
-        while (game.state.pendingEffect && game.player === "p2") {
-          if (cardOptions(game).includes("bonney")) choose(game, "bonney");
-          else game.play({ type: "resolve-effect" });
-        }
-        finishBattle(game);
-        expect(ids(game.state.players.p1.trash)).toContain("bonney");
-        expect(game.state.players.p1.hand).toEqual([]);
-        expect(game.state.players.p1.deck).toHaveLength(3);
-      },
-    );
+      attack(game, "bonney", "p2-leader");
+      while (
+        game.state.activeAttack &&
+        !offered(game, "resolve-trigger").length
+      ) {
+        if (game.state.pendingEffect) game.play({ type: "resolve-effect" });
+        else game.pass();
+      }
+      expect(game.player).toBe("p2");
+      game.play(
+        (action) =>
+          action.type === "resolve-trigger" &&
+          action.summary.includes("Activate"),
+      );
+      while (game.state.pendingEffect && game.player === "p2") {
+        if (cardOptions(game).includes("bonney")) choose(game, "bonney");
+        else game.play({ type: "resolve-effect" });
+      }
+      finishBattle(game);
+      expect(ids(game.state.players.p1.trash)).toContain("bonney");
+      expect(game.state.players.p1.hand).toEqual([]);
+      expect(game.state.players.p1.deck).toHaveLength(3);
+    });
   });
 
   it("OP08-114#1: behind on Life, S-Hawk has +2000 outside any battle", () => {
