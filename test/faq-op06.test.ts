@@ -194,42 +194,39 @@ describe("FAQ OP-06: Red", () => {
     expect(ids(game.state.players.p2.trash)).not.toContain("p2-life");
   });
 
-  // The engine names the {FILM} Character that pays when the [When Attacking]
-  // resolves, not when the turn ends (`at-end-of-turn` in mechanic-dsl.ts). A
-  // player who named Saga itself and then lost Saga pays nothing at the end of
-  // the turn; the ruling makes them trash another {FILM} Character then.
-  it.fails(
-    "OP06-006#1: Saga leaving the field after its [When Attacking] still costs another {FILM} Character at the end of the turn",
-    () => {
-      const game = table("faq-op06-006-1")
-        .withBoard("p1", [
-          character("saga", "OP06-006"),
-          character("film", "OP06-008"),
-          character("filler-1", "FIX-001"),
-          character("filler-2", "FIX-001"),
-          character("filler-3", "FIX-001"),
-        ])
-        .withGivenDon("p1", "saga", 1)
-        .withHand("p1", [instance("newcomer", "FIX-002")])
-        .withLife("p2", lifeCards("p2", 3))
-        .withDeckTop("p2", deckCards("p2", 2))
-        .build();
+  // The {FILM} Character that pays is chosen when the turn ends, from what is
+  // on the field then (`at-end-of-turn-effect`).
+  it("OP06-006#1: Saga leaving the field after its [When Attacking] still costs another {FILM} Character at the end of the turn", () => {
+    const game = table("faq-op06-006-1")
+      .withBoard("p1", [
+        character("saga", "OP06-006"),
+        character("film", "OP06-008"),
+        character("filler-1", "FIX-001"),
+        character("filler-2", "FIX-001"),
+        character("filler-3", "FIX-001"),
+      ])
+      .withGivenDon("p1", "saga", 1)
+      .withHand("p1", [instance("newcomer", "FIX-002")])
+      .withLife("p2", lifeCards("p2", 3))
+      .withDeckTop("p2", deckCards("p2", 2))
+      .build();
 
-      attack(game, "saga", "p2-leader");
-      choose(game, "saga");
-      decline(game);
-      noDefence(game);
+    attack(game, "saga", "p2-leader");
+    decline(game);
+    noDefence(game);
 
-      // A sixth Character needs room: Saga is the one that goes.
-      game.play({ type: "play-card", cardNumber: "FIX-002" });
-      choose(game, "saga");
-      decline(game);
-      expect(ids(game.state.players.p1.board)).not.toContain("saga");
+    // A sixth Character needs room: Saga is the one that goes.
+    game.play({ type: "play-card", cardNumber: "FIX-002" });
+    choose(game, "saga");
+    decline(game);
+    expect(ids(game.state.players.p1.board)).not.toContain("saga");
 
-      game.pass();
-      expect(ids(game.state.players.p1.board)).not.toContain("film");
-    },
-  );
+    // The turn ends, and the one {FILM} Character left is the one that pays.
+    game.pass();
+    choose(game, "film");
+    expect(ids(game.state.players.p1.board)).not.toContain("film");
+    expect(ids(game.state.players.p1.trash)).toContain("film");
+  });
 
   describe("OP06-009 Shuraiya", () => {
     it("OP06-009#1: with 1 DON!! given, the copied 5000 base attacks at 6000", () => {
@@ -568,6 +565,10 @@ describe("FAQ OP-06: Blue", () => {
         if (guard++ > 20) throw new Error("activation never settled");
         if (effectOptions(game).includes("big-reiju")) {
           choose(game, "big-reiju");
+        } else if (effectOptions(game).includes("reaction:big-reiju")) {
+          // The Leader's draw and OP06-069's [On Play] were both set off by
+          // the one activation, so p1 orders them: the [On Play] first.
+          game.play({ type: "resolve-effect", optionId: "reaction:big-reiju" });
         } else {
           game.play({ type: "resolve-effect" });
         }
@@ -703,20 +704,14 @@ describe("FAQ OP-06: Blue", () => {
         ])
         .build();
 
-    // The engine moves each Character under the deck as p1 picks it, so the
-    // order is p1's pick order and p2 is never asked. An `order-to-bottom`
-    // with a chooser is what would hand the decision to the owner.
-    it.fails(
-      "OP06-056#1: the owner orders the two Characters going under their deck",
-      () => {
-        const game = swordTable("faq-op06-056-1");
-        game.play({ type: "activate-main", sourceCardNumber: "OP06-056" });
-        choose(game, "two");
-        choose(game, "one");
-        expect(game.state.pendingEffect).not.toBeNull();
-        expect(game.player).toBe("p2");
-      },
-    );
+    it("OP06-056#1: the owner orders the two Characters going under their deck", () => {
+      const game = swordTable("faq-op06-056-1");
+      game.play({ type: "activate-main", sourceCardNumber: "OP06-056" });
+      choose(game, "two");
+      choose(game, "one");
+      expect(game.state.pendingEffect).not.toBeNull();
+      expect(game.player).toBe("p2");
+    });
 
     it("OP06-056#2: the activating player is not shown the owner's deck order", () => {
       const game = swordTable("faq-op06-056-2");
@@ -742,22 +737,17 @@ describe("FAQ OP-06: Blue", () => {
         ])
         .build();
 
-    // As OP06-056: one `choose` moves both cards in p1's pick order, and the
-    // owner is never asked.
-    it.fails(
-      "OP06-058#1: the owner orders the two Characters going under their deck",
-      () => {
-        const game = tigerTable("faq-op06-058-1");
-        game.play({ type: "activate-main", sourceCardNumber: "OP06-058" });
-        choose(game, "first");
-        choose(game, "second");
-        if (effectOptions(game).includes("done")) {
-          game.play({ type: "resolve-effect", optionId: "done" });
-        }
-        expect(game.state.pendingEffect).not.toBeNull();
-        expect(game.player).toBe("p2");
-      },
-    );
+    it("OP06-058#1: the owner orders the two Characters going under their deck", () => {
+      const game = tigerTable("faq-op06-058-1");
+      game.play({ type: "activate-main", sourceCardNumber: "OP06-058" });
+      choose(game, "first");
+      choose(game, "second");
+      if (effectOptions(game).includes("done")) {
+        game.play({ type: "resolve-effect", optionId: "done" });
+      }
+      expect(game.state.pendingEffect).not.toBeNull();
+      expect(game.player).toBe("p2");
+    });
 
     it("OP06-058#2: the activating player is not shown the owner's deck order", () => {
       const game = tigerTable("faq-op06-058-2");
@@ -876,10 +866,10 @@ describe("FAQ OP-06: Purple", () => {
         .build();
 
       attack(game, "saga", "p1-leader");
-      choose(game, "schneider");
       decline(game);
       noDefence(game);
       game.pass();
+      choose(game, "schneider");
       expect(game.state.activePlayer).toBe("p1");
       // The DON!! still on Saga adds nothing on p1's turn.
       expect(currentPower(game.state, "p2", "saga", false)).toBe(6_000);
@@ -1130,32 +1120,27 @@ describe("FAQ OP-06: Black", () => {
       expect(only?.rested).toBe(false);
     });
 
-    // The engine queues the two `[On Play]`s in the order the cards were
-    // played and runs them in that order; the player is not asked.
-    it.fails(
-      "OP06-086#2: the player orders the [On Play]s of the two Characters",
-      () => {
-        const game = table("faq-op06-086-2")
-          .withHand("p1", [instance("moria", "OP06-086")])
-          .withTrash("p1", [
-            instance("ryuma", "OP06-036"),
-            instance("taralan", "OP06-089"),
-          ])
-          .withBoard("p2", [character("victim", "FIX-001", { rested: true })])
-          .withDeckTop("p1", deckCards("p1", 3))
-          .build();
+    it("OP06-086#2: the player orders the [On Play]s of the two Characters", () => {
+      const game = table("faq-op06-086-2")
+        .withHand("p1", [instance("moria", "OP06-086")])
+        .withTrash("p1", [
+          instance("ryuma", "OP06-036"),
+          instance("taralan", "OP06-089"),
+        ])
+        .withBoard("p2", [character("victim", "FIX-001", { rested: true })])
+        .withDeckTop("p1", deckCards("p1", 3))
+        .build();
 
-        game.play({ type: "play-card", cardNumber: "OP06-086" });
-        choose(game, "ryuma");
-        choose(game, "taralan");
-        game.play({ type: "resolve-effect", optionId: "rest-small" });
+      game.play({ type: "play-card", cardNumber: "OP06-086" });
+      choose(game, "ryuma");
+      choose(game, "taralan");
+      game.play({ type: "resolve-effect", optionId: "rest-small" });
 
-        expect(
-          game.state.pendingEffect?.kind === "mechanic-choice" &&
-            game.state.pendingEffect.choice.kind === "order-reactions",
-        ).toBe(true);
-      },
-    );
+      expect(
+        game.state.pendingEffect?.kind === "mechanic-choice" &&
+          game.state.pendingEffect.choice.kind === "order-reactions",
+      ).toBe(true);
+    });
 
     it("OP06-086#3: a Character trashed to make room for the second one never runs its [On Play]", () => {
       const game = table("faq-op06-086-3")

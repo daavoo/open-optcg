@@ -276,13 +276,10 @@ function collectPayoff(effect: MechanicEffect, kinds: Set<PayoffKind>): void {
       else kinds.add("other");
       return;
     case "at-end-of-turn":
-      kinds.add(
-        effect.action === "set-active"
-          ? "set-active"
-          : effect.action === "bury"
-            ? "to-deck"
-            : "trash",
-      );
+      kinds.add(effect.action === "set-active" ? "set-active" : "to-deck");
+      return;
+    case "at-end-of-turn-effect":
+      walk(effect.effect);
       return;
     case "rest":
     case "rest-opponent-cards":

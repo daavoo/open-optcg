@@ -33,6 +33,7 @@ import {
 
 import {
   createOnEndOfYourTurnResult,
+  runEndOfTurnProgram,
   createOnStartOfYourTurnResult,
   mechanicPendingEffect,
 } from "./effects.js";
@@ -239,10 +240,7 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
     }
     endingPlayer.board.splice(index, 1);
     endingPlayer.activeDon.push(...(card.attachedDon ?? []));
-    // OP06-006 Saga's price is a trash rather than a bury: the {FILM} body it
-    // costs goes to the trash, where that deck's own clauses can play it again.
-    const zone = owed.kind === "trash" ? "trash" : "deck";
-    endingPlayer[zone].push({
+    endingPlayer.deck.push({
       instanceId: card.instanceId,
       cardNumber: card.cardNumber,
     });
@@ -252,11 +250,14 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
       cardInstanceId: card.instanceId,
       cardNumber: card.cardNumber,
       from: "board",
-      to: zone,
-      ...(zone === "deck" ? { position: "bottom" as const } : {}),
+      to: "deck",
+      position: "bottom",
     });
   }
   delete endingPlayer.endOfTurnCardActions;
+  // A booked step `endTurn` did not reach -- one made for a turn that has
+  // passed. Dropped so two otherwise identical positions do not hash apart.
+  delete endingPlayer.endOfTurnPrograms;
   // OP08-101 Charlotte Angel's booked Life card, paid before the DON!! is
   // squared up below so the two orders of the same turn's bookings stay the
   // order the cards are printed in: the Life card comes off the deck first,
@@ -564,6 +565,31 @@ export function endTurn(
       booked.activeDon.push(...booked.restedDon.splice(0, booking.count));
     }
     delete state.endOfTurnDonActivation;
+  }
+  // Steps a clause booked for the end of this turn (OP06-006 Saga's price),
+  // one at a time and re-entered after each, like the registry below.
+  const booked = player.endOfTurnPrograms?.find(
+    (booking) => booking.turn === state.turn,
+  );
+  if (booked) {
+    player.endOfTurnPrograms = player.endOfTurnPrograms!.filter(
+      (booking) => booking !== booked,
+    );
+    const result = runEndOfTurnProgram(
+      state,
+      playerId,
+      booked.source,
+      { effect: booked.effect },
+      db,
+    );
+    events.push(...result.events);
+    if (result.pending) {
+      state.pendingEffect = result.pending;
+      state.activePlayer = result.pending.playerId;
+      return;
+    }
+    endTurn(state, events, db);
+    return;
   }
   // Declarative `[End of Your Turn]` registry (currently just OP17-047 Shiki).
   // One instance at a time, oldest board position first; `endTurn` re-enters

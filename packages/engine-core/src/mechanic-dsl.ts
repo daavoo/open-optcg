@@ -1556,6 +1556,13 @@ export type MechanicEffect =
        * where the opponent's Life card goes.
        */
       byOwner?: true;
+      /**
+       * Further bindings whose cards join `binding`'s, for a clause that picks
+       * its cards in separate choices and places them together: OP06-056
+       * Murakumo picks a cost-2 and a cost-1 Character, then places both "in
+       * any order" (Bandai's OP06-056#1).
+       */
+      also?: readonly string[];
     }
   /**
    * "Rest up to a total of N of your opponent's Characters or DON!! cards" --
@@ -2131,19 +2138,18 @@ export type MechanicEffect =
   | {
       kind: "at-end-of-turn";
       binding: string;
-      /**
-       * `"trash"` is OP06-006 Saga's price: the power it takes on its own
-       * attack costs its controller one {FILM} body when the turn ends.
-       *
-       * The card is chosen when the clause resolves rather than when the debt
-       * is paid, which is the approximation the two `"bury"` cards already
-       * take -- and a wider one here, because their text names "that Character"
-       * and this one names any of a group. A booking that deferred a whole
-       * program to the end of the turn, rather than a card and an action, is
-       * what would let it be exact.
-       */
-      action: "bury" | "set-active" | "trash";
+      action: "bury" | "set-active";
     }
+  /**
+   * Book a whole step for the end of this turn, decided then rather than now.
+   *
+   * OP06-006 Saga's price: "trash 1 of your {FILM} type Characters at the end
+   * of this turn" names any of a group, and which one is chosen when the turn
+   * ends -- from whatever is on the field then. Bandai's OP06-006#1 has Saga
+   * leave the field after its [When Attacking] and another {FILM} Character
+   * still go. See `PlayerState.endOfTurnPrograms`, which `endTurn` runs.
+   */
+  | { kind: "at-end-of-turn-effect"; effect: MechanicEffect }
   /**
    * "[printed text omitted -- pnpm card:text <card>]" -- OP11-010, OP11-014, OP11-082,
    * OP11-084 and OP11-119.
@@ -2302,6 +2308,15 @@ export interface MechanicProgramInvocation {
    */
   onField?: true;
   /**
+   * Set off by a program that stopped for a choice and has not finished. Held
+   * behind what was already waiting, and joined to whatever the same program
+   * sets off later as one batch for its controller to order once it does:
+   * OP06-068 Vinsmoke Reiju's DON!! −1 wakes the Leader, and the OP06-069 it
+   * then plays may resolve its [On Play] first (Bandai's OP06-042#2). Read
+   * by `resolveMechanicChoiceEffect`; cleared by `dispatchMechanicInvocations`.
+   */
+  duringEffect?: true;
+  /**
    * A field reaction answering its own card leaving the field -- see
    * `ReactionRule.answersOwnExit`. Its card is in the trash by the time it is
    * dispatched, which is the point, so `leftFieldBeforeActivating` must not
@@ -2326,6 +2341,8 @@ export interface OnPlayHandlerInvocation {
   orderGroup?: string;
   /** As on `MechanicProgramInvocation`. */
   onField?: true;
+  /** As on `MechanicProgramInvocation`. */
+  duringEffect?: true;
 }
 
 export type MechanicInvocation =

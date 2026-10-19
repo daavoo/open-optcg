@@ -37,5 +37,11 @@
  * ordered by a player -- by each owner for OP05-058 and OP17-041 (Bandai's
  * OP05-058#2). A recorded action list meets an order prompt it never
  * answered.
+ *
+ * Bumped to 1.6 for Bandai's OP-06 Q&A: what a program sets off before it
+ * stops for a choice is held until it finishes and ordered with the rest
+ * (OP06-042#2); OP06-056 and OP06-058 ask the owner to order the Characters
+ * they bury; and OP06-006 Saga chooses the {FILM} Character it trashes when
+ * the turn ends. A recorded action list meets prompts it never answered.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.5";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.6";

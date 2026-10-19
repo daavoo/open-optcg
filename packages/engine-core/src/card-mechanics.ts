@@ -1039,9 +1039,9 @@ export function dispatchMechanicInvocations(
   queued: readonly MechanicInvocation[],
   db: CardDatabase = defaultCardDatabase,
 ): MechanicDispatchResult {
-  const continuations = queued.filter(
-    (invocation) => !leftFieldBeforeActivating(state, invocation),
-  );
+  const continuations = queued
+    .filter((invocation) => !leftFieldBeforeActivating(state, invocation))
+    .map(withoutDuringEffect);
   const events: PublicEvent[] = [];
   while (continuations.length > 0) {
     // A point of effect damage parked by `dealDamage` is still owed its
@@ -1117,8 +1117,10 @@ export function dispatchMechanicInvocations(
     // Leader's draw that triggered beside OP10-090 Franky's [On K.O.] goes
     // before the [On Play] of the Character that [On K.O.] played
     // (OP10-042#3).
-    continuations.push(...getMechanicSignalInvocations(state, result.signals));
+    const raised = getMechanicSignalInvocations(state, result.signals);
     if (result.pending) {
+      // Still resolving: what it set off so far waits for the rest of it.
+      continuations.push(...raised.map(duringEffect));
       return {
         pending: result.pending,
         invocation,
@@ -1126,8 +1128,24 @@ export function dispatchMechanicInvocations(
         events,
       };
     }
+    continuations.push(...raised);
   }
   return { pending: null, invocation: null, continuations: [], events };
+}
+
+/** Marks a clause as set off by a program that has not finished. */
+export const duringEffect = (
+  invocation: MechanicInvocation,
+): MechanicInvocation => ({ ...invocation, duringEffect: true });
+
+/** The same clause, no longer held for the program that set it off. */
+export function withoutDuringEffect(
+  invocation: MechanicInvocation,
+): MechanicInvocation {
+  if (invocation.duringEffect !== true) return invocation;
+  const released = { ...invocation };
+  delete released.duringEffect;
+  return released;
 }
 
 /**

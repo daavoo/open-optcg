@@ -6,7 +6,10 @@
  */
 import {
   dispatchMechanicInvocations,
+  duringEffect,
   getMechanicSignalInvocations,
+  orderSimultaneous,
+  withoutDuringEffect,
 } from "../card-mechanics.js";
 import { mechanicPendingEffect } from "../effects.js";
 import {
@@ -41,12 +44,26 @@ export function resolveMechanicChoiceEffect({
   } else {
     result = resolveMechanicChoice(state, effect.choice, optionId);
   }
-  // Already waiting first, then what this step set off (OP10-042#3).
-  const continuations = [
-    ...ordered,
-    ...(effect.continuations ?? []),
-    ...getMechanicSignalInvocations(state, result.signals),
-  ];
+  // Already waiting first, then what this program set off (OP10-042#3).
+  // What it set off before it stopped is held with what it sets off now, and
+  // once it finishes they go to its controller as one batch (OP06-042#2).
+  const waiting = (effect.continuations ?? []).filter(
+    (invocation) => invocation.duringEffect !== true,
+  );
+  const held = (effect.continuations ?? []).filter(
+    (invocation) => invocation.duringEffect === true,
+  );
+  const raised = getMechanicSignalInvocations(state, result.signals);
+  const continuations = result.pending
+    ? [...ordered, ...waiting, ...held, ...raised.map(duringEffect)]
+    : [
+        ...ordered,
+        ...waiting,
+        ...orderSimultaneous(state, [
+          ...held.map(withoutDuringEffect),
+          ...raised,
+        ]),
+      ];
   if (result.pending) {
     state.pendingEffect = {
       ...effect,

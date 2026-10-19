@@ -430,7 +430,6 @@ describe("OP06-006 Saga", () => {
       attackerInstanceId: "saga",
       targetInstanceId: "p2-leader",
     });
-    game.play({ type: "resolve-effect", optionId: "price" });
     settleDeclining(game);
 
     // 5000 printed, +1000 from the clause, +1000 from the DON!! it needed.
@@ -440,6 +439,8 @@ describe("OP06-006 Saga", () => {
 
     declineDefence(game);
     game.pass();
+    // Which {FILM} Character pays is chosen then (Bandai's OP06-006#1).
+    game.play({ type: "resolve-effect", optionId: "price" });
 
     expect(
       game.state.players.p1.trash.map((card) => card.cardNumber),

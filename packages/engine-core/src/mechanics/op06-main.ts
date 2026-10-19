@@ -153,10 +153,24 @@ export const sharkArrows: MechanicEffect = {
  * sentence. "In any order" is about where they land in the deck, which for two
  * cards going under it is not a decision worth asking.
  */
+// Both picks first, then one placement: the two go under the deck together,
+// in the order their owner chooses (Bandai's OP06-056#1).
 export const murakumoSword: MechanicEffect = {
   kind: "sequence",
   effects: [
-    buryOpponentCostAtMost(2, "op06-murakumo-first"),
+    {
+      kind: "choose",
+      selector: {
+        player: "opponent",
+        zone: "board",
+        category: "character",
+        maxCost: 2,
+      },
+      bind: "op06-murakumo-first",
+      min: 0,
+      max: 1,
+      effect: { kind: "sequence", effects: [] },
+    },
     {
       kind: "choose",
       selector: {
@@ -169,11 +183,14 @@ export const murakumoSword: MechanicEffect = {
       bind: "op06-murakumo-second",
       min: 0,
       max: 1,
-      effect: {
-        kind: "move",
-        binding: "op06-murakumo-second",
-        to: { player: "owner", zone: "deck", position: "bottom" },
-      },
+      effect: { kind: "sequence", effects: [] },
+    },
+    {
+      kind: "order-to-bottom",
+      binding: "op06-murakumo-first",
+      also: ["op06-murakumo-second"],
+      byOwner: true,
+      to: { player: "owner", zone: "deck", position: "bottom" },
     },
   ],
 };
@@ -415,8 +432,9 @@ export const op06MainMechanics: SetMechanics = {
             min: 0,
             max: 2,
             effect: {
-              kind: "move",
+              kind: "order-to-bottom",
               binding: "op06-gravity",
+              byOwner: true,
               to: { player: "owner", zone: "deck", position: "bottom" },
             },
           },
