@@ -37,8 +37,9 @@ import mlx.optimizers as optim
 import numpy as np
 from mlx.utils import tree_flatten, tree_map
 
-from .compact import (AUX_DIM, COMPACT_VERSION, DATA, GLOBAL_NUMBERS, HIDDEN_INDICES, OPTION_NUMBERS, V2_ZONES, ZONES, CompactCorpus,
-                      CompactPolicy, CompactScorer, add_lora, collate, globals_of, load_widened, options_of, size_order, zones_of)
+from .compact import (AUX_DIM, CARD_NUMBERS, COMPACT_VERSION, DATA, GLOBAL_NUMBERS, HIDDEN_INDICES, OPTION_NUMBERS, V2_ZONES, ZONES,
+                      CompactCorpus, CompactPolicy, CompactScorer, add_lora, cards_of, collate, globals_of, load_widened, options_of,
+                      size_order, zones_of)
 from .evaluate import catalog, deck_variants, head_to_head, paired_difference, play_vs_rules, read_deck_list
 from .ppo import gae, outcome
 
@@ -116,6 +117,7 @@ class LivePolicy(CompactPolicy):
         self.zones = ZONES
         self.globs = GLOBAL_NUMBERS
         self.opts = OPTION_NUMBERS
+        self.card_nums = CARD_NUMBERS
         self.render = None
         self._forward = mx.compile(lambda b: self.model(b), inputs=[self.model.state])
 
@@ -635,7 +637,8 @@ def main() -> None:
     config = json.loads((init / "config.json").read_text())
     if zones_of(config) not in (V2_ZONES, ZONES):
         raise SystemExit(f"{init} reads {zones_of(config)} zones; train from a compact version 2 or {COMPACT_VERSION} checkpoint")
-    if globals_of(config) < GLOBAL_NUMBERS or zones_of(config) < ZONES or options_of(config) < OPTION_NUMBERS:
+    if (globals_of(config) < GLOBAL_NUMBERS or zones_of(config) < ZONES or options_of(config) < OPTION_NUMBERS
+            or cards_of(config) < CARD_NUMBERS):
         # An older start, widened to read the current version (`load_widened`).
         # An adapter cannot be: it trains low-rank updates over a base that
         # stays at its own version in the app and never reads what was added.
@@ -643,7 +646,7 @@ def main() -> None:
             raise SystemExit(f"{init} reads compact version {config.get('compact_version', 1)}; "
                              f"an adapter needs a compact version {COMPACT_VERSION} base")
         config = {**config, "compact_version": COMPACT_VERSION, "globals": GLOBAL_NUMBERS, "zones": ZONES,
-                  "options": OPTION_NUMBERS}
+                  "options": OPTION_NUMBERS, "card_numbers": CARD_NUMBERS}
     if args.aux_hidden:
         config = {**config, "aux": AUX_DIM}
     model = CompactScorer(config["cards"], config["d"], config["layers"], config["heads"], compute=getattr(mx, args.compute),

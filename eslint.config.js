@@ -9,7 +9,9 @@ export default tseslint.config(
   // one run in three with "a type that cannot be resolved".
   // `ml/.venv` is the Python training virtualenv. Packages in it can ship
   // bundled browser JS, which lints as thousands of errors in code nobody here
-  // wrote or maintains.
+  // wrote or maintains. `ml/checkpoints` and `ml/data` are gitignored run
+  // artefacts, often symlinks into another checkout, and can hold one-off
+  // scripts written against that checkout's tree; tsconfig excludes them too.
   // `.claude/worktrees` and `worktrees` both hold agent worktrees: whole extra
   // checkouts of this repo. Git ignores them per-machine
   // (`.git/info/exclude`), which eslint does not read, and linting a few dozen
@@ -25,6 +27,8 @@ export default tseslint.config(
       "dist-tsc/**",
       "node_modules/**",
       "ml/.venv/**",
+      "ml/checkpoints/**",
+      "ml/data/**",
       ".claude/worktrees/**",
       "worktrees/**",
       ".scratch/**",

@@ -25,6 +25,9 @@ import {
   type CompactPack,
 } from "@one-piece-sim/agents/scorer";
 import {
+  CARD_CONDITIONAL_COLUMN,
+  CARD_COUNTER_COLUMN,
+  CARD_NUMBERS,
   GLOBAL_NUMBERS,
   OPTION_COST_COLUMN,
   OPTION_NUMBERS,
@@ -33,13 +36,16 @@ import {
   V2_GLOBAL_NUMBERS,
   V2_ZONES,
   V3_OPTION_NUMBERS,
+  V4_CARD_NUMBERS,
+  V4_GLOBAL_NUMBERS,
   ZONES,
   leaderPrior,
 } from "../packages/agents/src/scorer/compact.js";
+import { deckManifests } from "@one-piece-sim/decks";
 import { PAYOFF_KINDS } from "@one-piece-sim/protocol";
 import { roundHalf } from "../packages/agents/src/scorer/compact-model.js";
 import type { Tensor } from "../packages/agents/src/scorer/model.js";
-import { character, scenario, submit } from "./support/index.js";
+import { character, instance, scenario, submit } from "./support/index.js";
 
 const ROWS = new Map(
   [...cardRegistry.keys()].sort().map((number, row) => [number, row]),
@@ -48,11 +54,13 @@ const CARDS = [...ROWS.keys()];
 
 /** A one-layer, width-8 model's tensors from a fixed sequence, each a
     multiple of 2^-10 so float16 holds it exactly; `zones` is its zone table,
-    `globals` the global numbers it reads and `options` its option numbers. */
+    `globals` the global numbers it reads, `options` its option numbers and
+    `cardNumbers` its card numbers. */
 function tinyTensors(
   zones: number = ZONES.length,
   globals: number = GLOBAL_NUMBERS,
   options: number = OPTION_NUMBERS,
+  cardNumbers: number = CARD_NUMBERS,
 ): Map<string, Tensor> {
   const d = 8;
   let seed = 7;
@@ -85,7 +93,7 @@ function tinyTensors(
   add("zone.weight", [zones, d]);
   add("type.weight", [11, d]);
   add("kind.weight", [12, d]);
-  mlp("card_num", 20);
+  mlp("card_num", cardNumbers);
   mlp("glob", globals);
   mlp("option_num", options);
   for (const name of ["option_card", "searched_card", "ptr1", "ptr2"])
@@ -108,15 +116,16 @@ const TINY_CONFIG = { d: 8, layers: 1, heads: 2, cards: CARDS.length };
 
 /** `tinyTensors` as a model; 16 zones is a model of the version-1 encoding,
     31 global numbers one of the version-2 encoding, 28 option numbers one of
-    the version-3 encoding. */
+    the version-3 encoding, 20 card numbers one of the version-4 encoding. */
 function tinyModel(
   zones: number = ZONES.length,
   globals: number = GLOBAL_NUMBERS,
   options: number = OPTION_NUMBERS,
+  cardNumbers: number = CARD_NUMBERS,
 ): CompactModel {
   return new CompactModel(
     TINY_CONFIG,
-    tinyTensors(zones, globals, options),
+    tinyTensors(zones, globals, options, cardNumbers),
     CARDS,
     zones === V1_ZONES ? zones : undefined,
   );
@@ -151,7 +160,8 @@ describe("compact scorer encoding", () => {
     const decision = compactDecision(observation, offered, ROWS);
     expect(decision.options).toHaveLength(offered.length);
     expect(decision.global).toHaveLength(GLOBAL_NUMBERS);
-    for (const row of decision.cards) expect(row).toHaveLength(22);
+    for (const row of decision.cards)
+      expect(row).toHaveLength(2 + CARD_NUMBERS);
     for (const row of decision.options) {
       expect(row).toHaveLength(5 + OPTION_NUMBERS);
       for (const ptr of [row[2]!, row[3]!]) {
@@ -235,21 +245,24 @@ describe("compact scorer encoding, version 2", () => {
     );
   });
 
-  it("estimates the opponent's unseen cards from the catalog by their Leader alone", () => {
+  it("estimates the opponent's unseen cards from their Leader's prior alone", () => {
     const { observation, offered } = battlePosition();
     const decision = compactDecision(observation, offered, ROWS);
     const prior = leaderPrior(observation.opponent.leader.cardNumber);
     expect(prior.size).toBeGreaterThan(0);
-    const expected = (number: string) =>
-      decision.cards.find(
-        (row) => row[1] === zoneOf("op-unseen") && row[0] === ROWS.get(number),
-      )?.[2 + 8];
-    // The defender on their board is one copy fewer still unseen.
-    expect(expected("ST32-002")).toBeCloseTo(prior.get("ST32-002")! - 1, 6);
-    for (const row of decision.cards.filter(
-      (r) => r[1] === zoneOf("op-unseen"),
-    ))
-      expect(row[2 + 8]).toBeGreaterThanOrEqual(0.25);
+    const inView = (number: string) =>
+      [...observation.opponent.board, ...observation.opponent.trash].filter(
+        (entry) => entry.cardNumber === number,
+      ).length;
+    const expected = [...prior]
+      .map(([number, copies]) => [number, copies - inView(number)] as const)
+      .filter(([, copies]) => copies >= 0.25);
+    const unseen = decision.cards.filter((r) => r[1] === zoneOf("op-unseen"));
+    expect(unseen).toHaveLength(expected.length);
+    for (const [number, copies] of expected)
+      expect(
+        unseen.find((row) => row[0] === ROWS.get(number))?.[2 + 8],
+      ).toBeCloseTo(copies, 6);
   });
 
   it("names the opponent's attackers since their turn began, and the hits on my Leader", async () => {
@@ -315,8 +328,18 @@ describe("compact scorer encoding, version 2", () => {
       ...decision,
       cards: decision.cards.filter((row) => row[1]! < V1_ZONES),
     };
-    const model = tinyModel(V1_ZONES, V2_GLOBAL_NUMBERS, V3_OPTION_NUMBERS);
-    const full = tinyModel(V1_ZONES, V2_GLOBAL_NUMBERS, V3_OPTION_NUMBERS);
+    const model = tinyModel(
+      V1_ZONES,
+      V2_GLOBAL_NUMBERS,
+      V3_OPTION_NUMBERS,
+      V4_CARD_NUMBERS,
+    );
+    const full = tinyModel(
+      V1_ZONES,
+      V2_GLOBAL_NUMBERS,
+      V3_OPTION_NUMBERS,
+      V4_CARD_NUMBERS,
+    );
     expect(model.score(decision).probs).toEqual(full.score(v1).probs);
   });
 });
@@ -369,7 +392,10 @@ describe("compact scorer encoding, version 3", () => {
   it("closes the global row with each Leader's base power and spent reaction", () => {
     const { before, observation } = secondLuffyPayment();
     const tail = (o: typeof observation) =>
-      compactDecision(o, o.legalActions, ROWS).global.slice(V2_GLOBAL_NUMBERS);
+      compactDecision(o, o.legalActions, ROWS).global.slice(
+        V2_GLOBAL_NUMBERS,
+        V4_GLOBAL_NUMBERS,
+      );
     // OP09-061 prints 5000; the opponent's ST32 Leader prints none of either.
     const theirs = observation.opponent.leader.power / 1000;
     expect(tail(before)).toEqual([5, 0, theirs, 0]);
@@ -435,7 +461,12 @@ describe("compact scorer encoding, version 3", () => {
       cards: decision.cards.filter((row) => row[1]! < V2_ZONES),
     };
     expect(v2.cards.length).toBeLessThan(decision.cards.length);
-    const model = tinyModel(V2_ZONES, V2_GLOBAL_NUMBERS, V3_OPTION_NUMBERS);
+    const model = tinyModel(
+      V2_ZONES,
+      V2_GLOBAL_NUMBERS,
+      V3_OPTION_NUMBERS,
+      V4_CARD_NUMBERS,
+    );
     expect(model.score(decision).probs).toEqual(model.score(v2).probs);
   });
 
@@ -444,6 +475,7 @@ describe("compact scorer encoding, version 3", () => {
       compactVersion: number,
       globals: number,
       options: number = V3_OPTION_NUMBERS,
+      cardNumbers: number = V4_CARD_NUMBERS,
     ): CompactPack => ({
       kind: "compact",
       version: 1,
@@ -453,9 +485,10 @@ describe("compact scorer encoding, version 3", () => {
       cards: CARDS,
       ...packed(
         tinyTensors(
-          globals === GLOBAL_NUMBERS ? ZONES.length : V2_ZONES,
+          globals === V2_GLOBAL_NUMBERS ? V2_ZONES : ZONES.length,
           globals,
           options,
+          cardNumbers,
         ),
       ),
     });
@@ -467,13 +500,14 @@ describe("compact scorer encoding, version 3", () => {
     );
     for (const model of [
       loadCompact(pack(2, V2_GLOBAL_NUMBERS)),
-      loadCompact(pack(3, GLOBAL_NUMBERS)),
-      loadCompact(pack(4, GLOBAL_NUMBERS, OPTION_NUMBERS)),
+      loadCompact(pack(3, V4_GLOBAL_NUMBERS)),
+      loadCompact(pack(4, V4_GLOBAL_NUMBERS, OPTION_NUMBERS)),
+      loadCompact(pack(5, GLOBAL_NUMBERS, OPTION_NUMBERS, CARD_NUMBERS)),
     ])
       expect(model.score(decision).probs).toHaveLength(decision.options.length);
-    expect(() => loadCompact(pack(5, GLOBAL_NUMBERS, OPTION_NUMBERS))).toThrow(
-      "COMPACT_ENCODING_MISMATCH",
-    );
+    expect(() =>
+      loadCompact(pack(6, GLOBAL_NUMBERS, OPTION_NUMBERS, CARD_NUMBERS)),
+    ).toThrow("COMPACT_ENCODING_MISMATCH");
   });
 });
 
@@ -544,8 +578,219 @@ describe("compact scorer encoding, version 4", () => {
         row.slice(0, OPTION_INDEX + V3_OPTION_NUMBERS),
       ),
     };
-    const model = tinyModel(ZONES.length, GLOBAL_NUMBERS, V3_OPTION_NUMBERS);
+    const model = tinyModel(
+      ZONES.length,
+      V4_GLOBAL_NUMBERS,
+      V3_OPTION_NUMBERS,
+      V4_CARD_NUMBERS,
+    );
     expect(model.score(decision).probs).toEqual(model.score(v3).probs);
+  });
+});
+
+/** The version-5 global numbers: [timed, called, turns left / 3, turns to
+    the call / 10], then [held DON!!, extra turns, On Play negated] for me
+    and for the opponent. */
+const v5Globals = (observation: ReturnType<typeof observe>) =>
+  compactDecision(observation, observation.legalActions, ROWS).global.slice(
+    V4_GLOBAL_NUMBERS,
+  );
+
+/** The card row of `instanceId`'s token, after [row, zone]. */
+function cardNumbersOf(
+  observation: ReturnType<typeof observe>,
+  zone: (typeof ZONES)[number],
+  number: string,
+): number[] {
+  const row = compactDecision(
+    observation,
+    observation.legalActions,
+    ROWS,
+  ).cards.find((r) => r[1] === zoneOf(zone) && r[0] === ROWS.get(number));
+  if (!row) throw new Error(`no ${zone} token for ${number}`);
+  return row.slice(2);
+}
+
+/** A Thousand Sunny in p1's Stage area, ready to rest for its gift. */
+function sunnyPosition() {
+  return scenario()
+    .decks(
+      "(Red) Monkey.D.Luffy - Starter Deck 31",
+      "(Green) Roronoa Zoro - Starter Deck 32",
+    )
+    .seed("scorer-compact-sunny")
+    .atTurn(7, { active: "p1" })
+    .withBoard("p1", [character("luffy", "ST31-004", { playedTurn: 7 })])
+    .withStage("p1", { instanceId: "sunny", cardNumber: "ST31-005" })
+    .withDon("p1", { rested: 7 })
+    .build();
+}
+
+describe("compact scorer encoding, version 5", () => {
+  it("says a game is timed, and how many turns remain until time is called", () => {
+    const game = scenario().timeLimit(8).atTurn(5, { active: "p1" }).build();
+    expect(v5Globals(observe(game.state, "p1")).slice(0, 4)).toEqual([
+      1, 0, 0, 0.3,
+    ]);
+  });
+
+  it("says time is called, and how many turns follow this one", () => {
+    const game = scenario().timeLimit(8).atTurn(9, { active: "p1" }).build();
+    const observation = observe(game.state, "p1");
+    expect(observation.timeLimit?.turnsLeft).toBe(2);
+    expect(v5Globals(observation).slice(0, 4)).toEqual([1, 1, 2 / 3, 0]);
+  });
+
+  it("writes zeros for an untimed game and sides with no flags", () => {
+    const { observation } = battlePosition();
+    expect(v5Globals(observation)).toEqual(new Array(10).fill(0));
+  });
+
+  it("carries each side's On Play negation", () => {
+    // OP09-081 Marshall.D.Teach's own text: his side never gets an [On Play].
+    const game = scenario()
+      .withLeader("p1", "OP09-081")
+      .atTurn(3, { active: "p1" })
+      .build();
+    expect(v5Globals(observe(game.state, "p1")).slice(4)).toEqual([
+      0, 0, 1, 0, 0, 0,
+    ]);
+    expect(v5Globals(observe(game.state, "p2")).slice(4)).toEqual([
+      0, 0, 0, 0, 0, 1,
+    ]);
+  });
+
+  it("flags a Stage rested once it has paid for its activation", () => {
+    const game = sunnyPosition();
+    const before = observe(game.state, "p1");
+    expect(cardNumbersOf(before, "my-stage", "ST31-005")[3]).toBe(0);
+    game.play({ type: "activate-main", sourceCardNumber: "ST31-005" });
+    game.play({ optionId: "p1-leader" });
+    const after = observe(game.state, "p1");
+    expect(after.self.stage?.rested).toBe(true);
+    const mine = cardNumbersOf(after, "my-stage", "ST31-005");
+    expect(mine[3]).toBe(1);
+    expect(mine[9]).toBe(after.self.stage?.dormantAbility ? 1 : 0);
+    // Across the table: rested is public, the dormant reason is not.
+    const theirs = cardNumbersOf(
+      observe(game.state, "p2"),
+      "op-stage",
+      "ST31-005",
+    );
+    expect(theirs[3]).toBe(1);
+    expect(theirs[9]).toBe(0);
+  });
+
+  it("marks a Blocker the card's own text can switch on", () => {
+    const { observation } = battlePosition();
+    // ST31-003 Brook prints a conditional [Blocker].
+    const brook = cardNumbersOf(observation, "my-board", "ST31-003");
+    const conditional = brook.slice(
+      CARD_CONDITIONAL_COLUMN,
+      CARD_CONDITIONAL_COLUMN + 6,
+    );
+    expect(conditional).toEqual([1, 0, 0, 0, 0, 0]);
+    // A Leader with nothing conditional writes zeros there.
+    const leader = cardNumbersOf(
+      observation,
+      "op-leader",
+      observation.opponent.leader.cardNumber,
+    );
+    expect(
+      leader.slice(CARD_CONDITIONAL_COLUMN, CARD_CONDITIONAL_COLUMN + 6),
+    ).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it("writes a hand card's granted Counter as its change from the printed one", () => {
+    // OP16-118 Portgas.D.Ace makes every 8000-power Character in hand a 2000
+    // Counter; OP17-008 Jozu prints none.
+    const game = scenario()
+      .decks(
+        "(Red) Edward.Newgate - Official Feature Deck",
+        "(Purple) Charlotte Katakuri - Starter Deck 34",
+      )
+      .seed("scorer-compact-counter")
+      .atTurn(12, { active: "p2" })
+      .bareTable()
+      .withHand("p1", [instance("jozu", "OP17-008")])
+      .withBoard("p1", [character("ace", "OP16-118")])
+      .withBoard("p2", [character("attacker", "OP17-005")])
+      .build();
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "p1-leader",
+    });
+    const jozu = cardNumbersOf(
+      observe(game.state, "p1"),
+      "my-hand",
+      "OP17-008",
+    );
+    expect(jozu[CARD_COUNTER_COLUMN]).toBe(2);
+  });
+
+  it("expects a list for a Leader the catalog has no deck for", () => {
+    // OP09-022 Lim fronts no catalog deck; tournament lists give it a prior.
+    expect(
+      Object.values(deckManifests).some((m) => m.leader === "OP09-022"),
+    ).toBe(false);
+    expect(leaderPrior("OP09-022").size).toBeGreaterThan(10);
+    const game = scenario()
+      .withLeader("p2", "OP09-022")
+      .atTurn(3, { active: "p1" })
+      .build();
+    const decision = compactDecision(
+      observe(game.state, "p1"),
+      observe(game.state, "p1").legalActions,
+      ROWS,
+    );
+    expect(
+      decision.cards.filter((row) => row[1] === zoneOf("op-unseen")).length,
+    ).toBeGreaterThan(10);
+  });
+
+  it("has a prior for every selectable deck's Leader", () => {
+    for (const manifest of Object.values(deckManifests))
+      expect(leaderPrior(manifest.leader).size).toBeGreaterThan(0);
+  });
+
+  it("is read by a version-4 model exactly as the version-4 decision", () => {
+    const game = sunnyPosition();
+    game.play({ type: "activate-main", sourceCardNumber: "ST31-005" });
+    game.play({ optionId: "p1-leader" });
+    const observation = observe(game.state, "p1");
+    const decision = compactDecision(
+      observation,
+      observation.legalActions,
+      ROWS,
+    );
+    const stage = zoneOf("my-stage");
+    const v4 = {
+      ...decision,
+      global: decision.global.slice(0, V4_GLOBAL_NUMBERS),
+      cards: decision.cards.map((row) =>
+        row
+          .slice(0, 2 + V4_CARD_NUMBERS)
+          .map((v, i) => (row[1] === stage && (i === 5 || i === 11) ? 0 : v)),
+      ),
+    };
+    expect(v4.cards.some((row) => row[1] === stage)).toBe(true);
+    const model = tinyModel(
+      ZONES.length,
+      V4_GLOBAL_NUMBERS,
+      OPTION_NUMBERS,
+      V4_CARD_NUMBERS,
+    );
+    expect(model.score(decision).probs).toEqual(model.score(v4).probs);
+    // And the Stage's flag reaches a version-5 model.
+    const v5 = tinyModel();
+    const unrested = {
+      ...decision,
+      cards: decision.cards.map((row) =>
+        row[1] === stage ? row.map((v, i) => (i === 5 ? 0 : v)) : row,
+      ),
+    };
+    expect(v5.score(decision).probs).not.toEqual(v5.score(unrested).probs);
   });
 });
 

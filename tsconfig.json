@@ -44,5 +44,12 @@
     "ml/**/*.ts",
     "vitest.config.ts"
   ],
-  "exclude": ["dist", "dist-tsc", "node_modules"]
+  "exclude": [
+    "dist",
+    "dist-tsc",
+    "node_modules",
+    "ml/checkpoints",
+    "ml/data",
+    "ml/.venv"
+  ]
 }

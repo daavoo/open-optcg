@@ -12,7 +12,13 @@
  * Linear weights arrive transposed to (in, out) as `<name>.w`/`<name>.b`
  * (`sys1/export_compact.py`); embeddings and layer norms keep their names.
  */
-import { POOLED_ZONES, type CompactDecision } from "./compact.js";
+import {
+  CARD_NUMBERS,
+  POOLED_ZONES,
+  STAGE_COLUMNS,
+  ZONES,
+  type CompactDecision,
+} from "./compact.js";
 import { CpuMatmul, type Tensor } from "./model.js";
 
 export interface CompactConfig {
@@ -29,6 +35,10 @@ const OPTION_INDEX = 5;
 /** An option number that is a card row (a searched card's), not a quantity. */
 const OPTION_ROW_COLUMN = 22;
 const LAYER_NORM_EPS = 1e-5;
+const STAGE_ZONES: readonly number[] = [
+  ZONES.indexOf("my-stage"),
+  ZONES.indexOf("op-stage"),
+];
 
 function erf(x: number): number {
   // Abramowitz and Stegun 7.1.26, |error| < 1.5e-7: well inside float16 weights.
@@ -129,6 +139,10 @@ export class CompactModel {
       option input layer the same way. */
   readonly #options: number;
 
+  /** Card numbers past this are dropped before scoring, read off the card
+      number input layer the same way. */
+  readonly #cardNumbers: number;
+
   constructor(
     config: CompactConfig,
     tensors: Map<string, Tensor>,
@@ -144,6 +158,7 @@ export class CompactModel {
     this.#v1 = zones !== undefined;
     this.#globals = this.#t("glob.layers.0.w").shape[0]!;
     this.#options = this.#t("option_num.layers.0.w").shape[0]!;
+    this.#cardNumbers = this.#t("card_num.layers.0.w").shape[0]!;
   }
 
   /** Card number to its row, as the encoder (`compactDecision`) needs it. */
@@ -256,10 +271,25 @@ export class CompactModel {
    * Older models read a newer decision with what they never saw dropped.
    * Each version appends: zones after every earlier token, so dropping them
    * leaves every option's card pointer where it was, (version 3) global
-   * numbers after every earlier one, and (version 4) option numbers after
-   * every earlier one.
+   * numbers after every earlier one, (version 4) option numbers after every
+   * earlier one, and (version 5) card numbers after every earlier one. Version
+   * 5 also fills a Stage's rested and dormant columns, which an older model
+   * only ever saw at 0, so they are cleared for it.
    */
   #known(input: CompactDecision): CompactDecision {
+    if (this.#cardNumbers < CARD_NUMBERS) {
+      const width = CARD_INDEX + this.#cardNumbers;
+      input = {
+        ...input,
+        cards: input.cards.map((row) =>
+          STAGE_ZONES.includes(row[1]!)
+            ? row
+                .slice(0, width)
+                .map((v, i) => (STAGE_COLUMNS.includes(i - CARD_INDEX) ? 0 : v))
+            : row.slice(0, width),
+        ),
+      };
+    }
     if (input.global.length > this.#globals)
       input = { ...input, global: input.global.slice(0, this.#globals) };
     const optionRow = OPTION_INDEX + this.#options;
