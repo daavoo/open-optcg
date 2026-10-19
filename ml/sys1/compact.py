@@ -34,7 +34,7 @@ from mlx.utils import tree_flatten
 DATA = Path(__file__).resolve().parent.parent / "data"
 
 # Must match bridge/compact.ts.
-COMPACT_VERSION = 4
+COMPACT_VERSION = 5
 ZONES = 28
 # Version 2 appends zones after every version-1 token (bridge/compact.ts), so
 # a model trained on the first 16 reads a version-2 decision with the rest
@@ -62,7 +62,19 @@ AUX_DIM = len(HIDDEN_INDICES)
 TYPES = 11
 KINDS = 12
 CARD_INDEX = 2  # [row, zone]
-CARD_NUMBERS = 20
+# Version 5 appends one flag per keyword a card's own text can switch on
+# (`conditionalKeywords`) and a hand card's Counter change after every
+# version-4 card number: an older checkpoint reads a version-5 decision with
+# them dropped (`CompactPolicy`), and starts a version-5 run with zero weight
+# on them (`load_widened`).
+V4_CARD_NUMBERS = 20
+CARD_NUMBERS = V4_CARD_NUMBERS + 6 + 1
+# Version 5 also fills a Stage's rested and dormant flags (card number columns
+# 3 and 9, where `inPlay` puts them), which every earlier version left 0: an
+# older checkpoint has them cleared again (`known_cards`), so it reads a Stage
+# as it was trained to. A run widened from one sees them.
+STAGE_ZONES = (3, 6)
+STAGE_COLUMNS = (3, 9)
 OPTION_INDEX = 5  # [type, kind, ptr1, ptr2, row]
 # Version 4 appends what an optional costs, by amount (DON!! returned, hand
 # cards trashed, DON!! rested), and one flag per payoff kind it buys
@@ -74,7 +86,11 @@ PAYOFF_KINDS = 16
 OPTION_NUMBERS = V3_OPTION_NUMBERS + 3 + PAYOFF_KINDS
 # An option number that is a card row (a searched card's), not a quantity.
 OPTION_ROW_COLUMN = 22
-GLOBAL_NUMBERS = 35
+# Version 5 appends the time limit (timed, called, turns left after the call,
+# turns until it is called) and, per side, DON!! held through the next
+# Refresh, extra turns owed and On Play negated.
+GLOBAL_NUMBERS = 45
+V4_GLOBAL_NUMBERS = 35
 # Version 3 appends each Leader's base power and whether its once-per-turn
 # reaction is spent after every version-2 global number, so an older
 # checkpoint reads a version-3 decision with them dropped (`CompactPolicy`),
@@ -117,7 +133,8 @@ class CompactCorpus:
 
     @classmethod
     def from_records(cls, records: list[dict]) -> "CompactCorpus":
-        cards = [np.asarray(r["compact"]["cards"], dtype=np.float32).reshape(-1, CARD_INDEX + CARD_NUMBERS) for r in records]
+        width = next((len(r["compact"]["cards"][0]) for r in records if len(r["compact"]["cards"])), CARD_INDEX + CARD_NUMBERS)
+        cards = [np.asarray(r["compact"]["cards"], dtype=np.float32).reshape(-1, width) for r in records]
         options = [np.asarray(r["compact"]["options"], dtype=np.float32) for r in records]
         card_rows = np.concatenate(cards)
         option_rows = np.concatenate(options)
@@ -184,7 +201,7 @@ def collate(corpus: CompactCorpus, indices: np.ndarray, extras: dict[str, np.nda
     C = fit(int(max(cs[d + 1] - cs[d] for d in indices)), CARD_BUCKETS)
     K = fit(int(max(os_[d + 1] - os_[d] for d in indices)), OPTION_BUCKETS)
     card_idx = np.full((B, C, CARD_INDEX), -1, dtype=np.int32)
-    card_num = np.zeros((B, C, CARD_NUMBERS), dtype=np.float32)
+    card_num = np.zeros((B, C, corpus.card_num.shape[1]), dtype=np.float32)
     card_mask = np.zeros((B, C), dtype=bool)
     option_idx = np.full((B, K, 6), -1, dtype=np.int32)
     option_num = np.zeros((B, K, corpus.option_num.shape[1]), dtype=np.float32)
@@ -304,13 +321,13 @@ class CompactScorer(nn.Module):
     whatever this was."""
 
     def __init__(self, cards: int, d: int = 256, layers: int = 4, heads: int = 8, compute=mx.float32, zones: int = ZONES,
-                 aux: int = 0, globs: int = GLOBAL_NUMBERS, opts: int = OPTION_NUMBERS):
+                 aux: int = 0, globs: int = GLOBAL_NUMBERS, opts: int = OPTION_NUMBERS, card_nums: int = CARD_NUMBERS):
         super().__init__()
         self.compute = compute
         # The last row is a card with no row: an unknown number.
         self.card = nn.Embedding(cards + 1, d)
         self.zone = nn.Embedding(zones, d)
-        self.card_num = mlp(CARD_NUMBERS, d)
+        self.card_num = mlp(card_nums, d)
         self.glob = mlp(globs, d)
         self.type = nn.Embedding(TYPES, d)
         self.kind = nn.Embedding(KINDS, d)
@@ -414,6 +431,32 @@ def options_of(config: dict) -> int:
     return config.get("options", V3_OPTION_NUMBERS if config.get("compact_version", 1) < 4 else OPTION_NUMBERS)
 
 
+def cards_of(config: dict) -> int:
+    """The card numbers a checkpoint was trained with: 20 before version 5."""
+    return config.get("card_numbers", V4_CARD_NUMBERS if config.get("compact_version", 1) < 5 else CARD_NUMBERS)
+
+
+def card_rows(decision: dict) -> np.ndarray:
+    """A decision's card rows as (cards, width), whatever its card width."""
+    cards = np.asarray(decision["compact"]["cards"], dtype=np.float32)
+    return cards.reshape(-1, cards.shape[-1] if cards.ndim == 2 else CARD_INDEX + CARD_NUMBERS)
+
+
+def known_cards(decisions: list[dict], card_nums: int) -> list[dict]:
+    """`decisions` with card numbers past `card_nums` dropped, and a Stage's
+    version-5 flags cleared, for a checkpoint trained before version 5."""
+    if card_nums >= CARD_NUMBERS:
+        return decisions
+    out = []
+    for d in decisions:
+        cards = card_rows(d)[:, : CARD_INDEX + card_nums].copy()
+        stage = np.isin(cards[:, 1], STAGE_ZONES)
+        for column in STAGE_COLUMNS:
+            cards[stage, CARD_INDEX + column] = 0
+        out.append({**d, "compact": {**d["compact"], "cards": cards}})
+    return out
+
+
 def known_options(decisions: list[dict], opts: int) -> list[dict]:
     """`decisions` with option numbers past `opts` dropped; they come after
     every earlier one."""
@@ -434,14 +477,15 @@ def known_globals(decisions: list[dict], globs: int) -> list[dict]:
 def load_widened(model: "CompactScorer", path: Path, strict: bool = True) -> None:
     """`path`'s weights into `model`, widened from an older checkpoint's.
 
-    The global and option input layers get zero columns for the numbers they
-    never saw, so those change nothing until they train. The zone table gets a row for each
+    The global, option and card-number input layers get zero columns for the
+    numbers they never saw, so those change nothing until they train. The zone table gets a row for each
     version-3 zone, copied from the opponent-side zone counting the same thing
     (`V3_ZONE_INIT`). That start is not exact -- a version-3 decision carries
     tokens in those zones, and they join the sequence whatever their row says
     -- so the run's first evaluation is the version-2 model's on new input."""
     weights = dict(mx.load(str(path)))
-    for key, layer in (("glob.layers.0.weight", model.glob.layers[0]), ("option_num.layers.0.weight", model.option_num.layers[0])):
+    for key, layer in (("glob.layers.0.weight", model.glob.layers[0]), ("option_num.layers.0.weight", model.option_num.layers[0]),
+                       ("card_num.layers.0.weight", model.card_num.layers[0])):
         have, want = weights[key], layer.weight.shape
         if have.shape[1] < want[1]:
             weights[key] = mx.concatenate([have, mx.zeros((have.shape[0], want[1] - have.shape[1]), dtype=have.dtype)], axis=1)
@@ -460,7 +504,7 @@ def known_zones(decisions: list[dict], zones: int) -> list[dict]:
         return decisions
     out = []
     for d in decisions:
-        cards = np.asarray(d["compact"]["cards"], dtype=np.float32).reshape(-1, CARD_INDEX + CARD_NUMBERS)
+        cards = card_rows(d)
         options = np.asarray(d["compact"]["options"], dtype=np.float32).copy()
         # Before version 2 "no searched card" was row 0, not -1.
         if zones <= V1_ZONES:
@@ -480,8 +524,9 @@ class CompactPolicy:
         self.zones = zones_of(config)
         self.globs = globals_of(config)
         self.opts = options_of(config)
+        self.card_nums = cards_of(config)
         self.model = CompactScorer(config["cards"], config["d"], config["layers"], config["heads"], zones=self.zones,
-                                   aux=config.get("aux", 0), globs=self.globs, opts=self.opts)
+                                   aux=config.get("aux", 0), globs=self.globs, opts=self.opts, card_nums=self.card_nums)
         if config.get("lora"):
             add_lora(self.model, config["lora"]["rank"], config["lora"]["alpha"])
         self.model.load_weights(str(checkpoint / "weights.safetensors"))
@@ -496,8 +541,8 @@ class CompactPolicy:
         decisions; each chunk's rows are padded to a multiple of 32 (repeats
         of its last row, dropped after) so the compiled forward pass sees a
         few batch shapes, not a new one every call."""
-        corpus = CompactCorpus.from_records(
-            known_options(known_globals(known_zones(decisions, self.zones), self.globs), self.opts))
+        corpus = CompactCorpus.from_records(known_cards(
+            known_options(known_globals(known_zones(decisions, self.zones), self.globs), self.opts), self.card_nums))
         probs: list[np.ndarray] = [np.empty(0)] * len(decisions)
         values = np.zeros(len(decisions), dtype=np.float32)
         order = size_order(corpus, np.arange(len(decisions)))
@@ -595,7 +640,7 @@ def train(args) -> None:
         model.save_weights(str(out / "weights.safetensors"))
         (out / "config.json").write_text(json.dumps({
             "model": "compact", "compact_version": COMPACT_VERSION, "zones": ZONES, "globals": GLOBAL_NUMBERS,
-            "options": OPTION_NUMBERS,
+            "options": OPTION_NUMBERS, "card_numbers": CARD_NUMBERS,
             "cards": cards,
             "card_init": args.card_init,
             "d": args.d, "layers": args.layers, "heads": args.heads, "teacher": args.teacher, "data": args.data,

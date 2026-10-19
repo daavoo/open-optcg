@@ -205,9 +205,8 @@ export function loadCompact(
 ): CompactModel {
   if (pack.version !== 1) throw new Error("COMPACT_PACK_VERSION");
   // Every version since 1 only appends -- zones in 2, zones and global numbers
-  // in 3, option numbers in 4 -- so an older model reads a newer decision with
-  // those dropped
-  // (`CompactModel`'s `#known`).
+  // in 3, option numbers in 4, card numbers in 5 -- so an older model reads a
+  // newer decision with those dropped (`CompactModel`'s `#known`).
   if (
     !Number.isInteger(pack.compactVersion) ||
     pack.compactVersion < 1 ||

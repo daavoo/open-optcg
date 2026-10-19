@@ -19,14 +19,16 @@
 import { deckManifests } from "@one-piece-sim/decks";
 import {
   PAYOFF_KINDS,
+  TIME_LIMIT_ADDITIONAL_TURNS,
   type ActionCost,
   type GameObservation,
   type LegalAction,
   type PayoffKind,
 } from "@one-piece-sim/protocol";
+import { LEADER_PRIORS } from "./leader-priors.js";
 import { historyFacts, turnStart } from "./render.js";
 
-export const COMPACT_VERSION = 4;
+export const COMPACT_VERSION = 5;
 
 export const ZONES = [
   "my-leader",
@@ -115,8 +117,23 @@ const CARD_ZONES = [
   "don",
 ];
 
+/** The card numbers a version-1 to -4 model was trained on: the first 20.
+    Version 5 appends the keywords a card's own text can switch on
+    (`CARD_CONDITIONAL_COLUMN`) and a hand card's Counter change
+    (`CARD_COUNTER_COLUMN`), so dropping them is the older decision. Version 5
+    also fills a Stage's rested (column 3) and dormant (column 9) flags, which
+    every earlier version left 0; an older model reads them as 0 again
+    (`CompactModel`'s `#known`). */
+export const V4_CARD_NUMBERS = 14 + KEYWORDS.length;
+/** Version 5: one column per `KEYWORDS` entry, 1 where the card prints it
+    conditionally (`conditionalKeywords`). */
+export const CARD_CONDITIONAL_COLUMN = V4_CARD_NUMBERS;
+/** Version 5: a hand card's Counter less its printed Counter, in thousands. */
+export const CARD_COUNTER_COLUMN = CARD_CONDITIONAL_COLUMN + KEYWORDS.length;
 /** Width of a card row after [row, zone]. */
-export const CARD_NUMBERS = 14 + KEYWORDS.length;
+export const CARD_NUMBERS = CARD_COUNTER_COLUMN + 1;
+/** The card number columns a Stage fills from version 5: rested, dormant. */
+export const STAGE_COLUMNS: readonly number[] = [3, 9];
 /** The option number that is a card row (a searched card's), not a quantity. */
 export const OPTION_ROW_COLUMN = 22;
 /** Zones a model sums into one token each instead of reading a token a card:
@@ -133,16 +150,19 @@ export const OPTION_COST_COLUMN = V3_OPTION_NUMBERS;
 export const OPTION_PAYOFF_COLUMN = OPTION_COST_COLUMN + 3;
 /** Width of an option row after [type, kind, ptr1, ptr2, row]. */
 export const OPTION_NUMBERS = OPTION_PAYOFF_COLUMN + PAYOFF_KINDS.length;
-export const GLOBAL_NUMBERS = 30 + PHASES.length;
 /** The global numbers a version-1 or -2 model was trained on: the first 31.
-    Version 3 appends the rest, so dropping them is the older decision. */
+    Version 3 appends Leader numbers, so dropping them is the older decision. */
 export const V2_GLOBAL_NUMBERS = 26 + PHASES.length;
+/** The global numbers a version-3 or -4 model was trained on: the first 35.
+    Version 5 appends the time limit and per-side state flags. */
+export const V4_GLOBAL_NUMBERS = 30 + PHASES.length;
+export const GLOBAL_NUMBERS = V4_GLOBAL_NUMBERS + 10;
 
 /**
  * What a seat knows that the observation does not carry: its own deck list,
  * which every player holds in their hand before the game. The opponent's list
- * is never passed -- it is hidden -- and is estimated from the catalog by
- * their Leader instead (`leaderPrior`).
+ * is never passed -- it is hidden -- and is estimated from published lists
+ * by their Leader instead (`leaderPrior`).
  */
 export interface CompactContext {
   ownDeck?: Record<string, number>;
@@ -152,19 +172,29 @@ const priors = new Map<string, Map<string, number>>();
 
 /**
  * The expected copies of each card in a deck fronted by `leader`: the mean of
- * the catalog's lists with that Leader, or empty when the catalog has none.
- * Public knowledge -- the lists are the catalog's -- so a seat may read it.
+ * every list we hold for that Leader -- the catalog's, the training pool's and
+ * public tournament results (`leader-priors.ts`) -- or, for a Leader that file
+ * does not name, of the catalog's lists, or empty when neither has one.
+ * Public knowledge -- published decklists -- so a seat may read it.
  */
 export function leaderPrior(leader: string): Map<string, number> {
   let prior = priors.get(leader);
   if (!prior) {
     prior = new Map();
-    const lists = Object.values(deckManifests).filter(
-      (manifest) => manifest.leader === leader,
-    );
-    for (const list of lists)
-      for (const [number, count] of Object.entries(list.cards))
-        prior.set(number, (prior.get(number) ?? 0) + count / lists.length);
+    const known = LEADER_PRIORS[leader];
+    if (known) {
+      for (const pair of known[1].split(" ")) {
+        const [number, copies] = pair.split(":");
+        if (number && copies) prior.set(number, Number(copies));
+      }
+    } else {
+      const lists = Object.values(deckManifests).filter(
+        (manifest) => manifest.leader === leader,
+      );
+      for (const list of lists)
+        for (const [number, count] of Object.entries(list.cards))
+          prior.set(number, (prior.get(number) ?? 0) + count / lists.length);
+    }
     priors.set(leader, prior);
   }
   return prior;
@@ -189,7 +219,7 @@ function modifierTotal(entry: BoardCard | Leader): number {
   );
 }
 
-/** [power, don, modifiers, rested, sick, noattack, negated, cost delta, count, dormant, attacker, target, mine, lasting], keywords. */
+/** [power, don, modifiers, rested, sick, noattack, negated, cost delta, count, dormant, attacker, target, mine, lasting], keywords, conditional keywords, counter delta. */
 function inPlay(
   entry: BoardCard | Leader,
   instanceId: string,
@@ -221,7 +251,25 @@ function inPlay(
     ...KEYWORDS.map((keyword) =>
       entry.effectiveKeywords.includes(keyword as never) ? 1 : 0,
     ),
+    // Version 5: what the card's own text can switch on, whether or not it
+    // holds now -- a [Blocker] the opponent's DON!! may still buy.
+    ...KEYWORDS.map((keyword) =>
+      entry.conditionalKeywords?.includes(keyword as never) ? 1 : 0,
+    ),
+    0,
   ];
+}
+
+/**
+ * A Stage: `plain`, plus (version 5) its rested and dormant flags in the
+ * columns `inPlay` gives them. A Stage such as ST31-005 Thousand Sunny is
+ * activated by resting it, so rested is "already used this turn".
+ */
+function stageRow(stage: NonNullable<Side["stage"]>, mine: boolean): number[] {
+  const row = plain(1, mine);
+  row[STAGE_COLUMNS[0]!] = stage.rested ? 1 : 0;
+  row[STAGE_COLUMNS[1]!] = "dormantAbility" in stage ? 1 : 0;
+  return row;
 }
 
 function plain(count: number, mine: boolean, costDelta = 0): number[] {
@@ -241,6 +289,38 @@ function resources(side: Side, hand: number): number[] {
     side.restedDon,
     side.donDeckCount,
     side.trash.length / 10,
+  ];
+}
+
+/**
+ * Version 5: [DON!! held through the next Refresh, extra turns owed, On Play
+ * negated] of a side. The hold (OP10-033 Nami) is the one term of next turn's
+ * DON!! the rest of the row cannot give; an owed extra turn (OP05-119) means
+ * the side moves twice; a negated [On Play] (OP09-081's text or its
+ * activation) makes every On Play body a vanilla one.
+ */
+function sideFlags(side: Side): number[] {
+  return [
+    side.donHeldFromRefresh ?? 0,
+    side.extraTurns ?? 0,
+    side.onPlayNegated ? 1 : 0,
+  ];
+}
+
+/**
+ * Version 5: [timed, time called, turns left after the call / 3, turns until
+ * time is called / 10]. A timed game ends on a fixed turn and is decided by
+ * Life, then deck, then Characters -- each already in the row -- so how near
+ * that turn is changes what a turn is worth. All 0 in an untimed game.
+ */
+function timeLimit(observation: GameObservation): number[] {
+  const limit = observation.timeLimit;
+  if (!limit) return [0, 0, 0, 0];
+  return [
+    1,
+    limit.called ? 1 : 0,
+    limit.called ? (limit.turnsLeft ?? 0) / TIME_LIMIT_ADDITIONAL_TURNS : 0,
+    limit.called ? 0 : Math.max(0, limit.calledOnTurn - observation.turn) / 10,
   ];
 }
 
@@ -487,13 +567,13 @@ export function compactDecision(
     "my-leader",
     inPlay(self.leader, myLeader, turn, battle, true),
   );
-  for (const entry of self.hand)
-    add(
-      entry.instanceId,
-      entry.cardNumber,
-      "my-hand",
-      plain(1, true, entry.currentCost - entry.cost),
-    );
+  for (const entry of self.hand) {
+    const numbers = plain(1, true, entry.currentCost - entry.cost);
+    // Three cards grant Counter to cards still in hand (OP16-118, OP17-063,
+    // OP17-118); the card vector knows only the printed figure.
+    numbers[CARD_COUNTER_COLUMN] = k(entry.currentCounter - entry.counter);
+    add(entry.instanceId, entry.cardNumber, "my-hand", numbers);
+  }
   for (const entry of self.board)
     add(
       entry.instanceId,
@@ -506,7 +586,7 @@ export function compactDecision(
       self.stage.instanceId,
       self.stage.cardNumber,
       "my-stage",
-      plain(1, true),
+      stageRow(self.stage, true),
     );
   add(
     opLeader,
@@ -526,7 +606,7 @@ export function compactDecision(
       opponent.stage.instanceId,
       opponent.stage.cardNumber,
       "op-stage",
-      plain(1, false),
+      stageRow(opponent.stage, false),
     );
   const counted = (
     list: { cardNumber: string }[],
@@ -620,6 +700,9 @@ export function compactDecision(
     // later one full price).
     ...leaderSpent(self.leader),
     ...leaderSpent(opponent.leader),
+    ...timeLimit(observation),
+    ...sideFlags(self),
+    ...sideFlags(opponent),
   ];
 
   const ptr = (instanceId: string | undefined) =>
