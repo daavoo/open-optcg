@@ -53,6 +53,17 @@ export interface TimeLimit {
   turns: number;
 }
 
+/**
+ * The time limit the learned model is trained and evaluated under, and the
+ * one every local match in the app is played under, so the model never meets
+ * a game whose time-limit inputs it was not trained on. Time is called when
+ * turn 20 begins: past where natural games end, so it decides a stalled game
+ * rather than changing how most games finish.
+ */
+export const STANDARD_TIME_LIMIT: Readonly<TimeLimit> = Object.freeze({
+  turns: 20,
+});
+
 /** How many turns follow the one on which time is called (§8.2). */
 export const TIME_LIMIT_ADDITIONAL_TURNS = 3;
 

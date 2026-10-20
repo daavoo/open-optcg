@@ -20,7 +20,11 @@ import {
   openSealedPool,
   poolFromDeckList,
 } from "../sealed-mode.js";
-import type { ControllerKind, MatchConfig } from "../controller.js";
+import {
+  newLocalMatch,
+  type ControllerKind,
+  type MatchConfig,
+} from "../controller.js";
 import { exportDeckList, type EditableDeck } from "../deck-editor.js";
 import {
   bindCatalogFilters,
@@ -512,7 +516,7 @@ export function startMatch(state: SealedState, ctx: SealedContext): void {
   const p1 = sealedDeckManifest({ cards: run.deck }, run.pool);
   const opponentDeck = autoBuildSealedDeckGrape(run.opponentPool);
   const p2 = sealedDeckManifest(opponentDeck, run.opponentPool);
-  const config: MatchConfig = {
+  const config = newLocalMatch({
     p1Deck: p1.id,
     p2Deck: p2.id,
     p1CustomDeck: p1,
@@ -521,6 +525,6 @@ export function startMatch(state: SealedState, ctx: SealedContext): void {
     p2Controller: run.opponentController,
     seed: ctx.randomSeed(),
     startingPlayer: "random",
-  };
+  });
   ctx.beginMatch(config);
 }

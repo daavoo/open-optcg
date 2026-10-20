@@ -1,10 +1,17 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { BrowserGameController } from "../packages/web/src/controller.js";
+import {
+  BrowserGameController,
+  newLocalMatch,
+} from "../packages/web/src/controller.js";
 import { rulesSeatLeader } from "../packages/web/src/rules-seat.js";
 import { deckManifests, SEALED_LEADER } from "@one-piece-sim/decks";
 import { registeredDecks } from "@one-piece-sim/agents/local";
 import { rulesStamp } from "@one-piece-sim/engine-core";
+import {
+  STANDARD_TIME_LIMIT,
+  TIME_LIMIT_ADDITIONAL_TURNS,
+} from "@one-piece-sim/protocol";
 import type { MatchConfig } from "../packages/web/src/controller.js";
 
 const config = {
@@ -112,6 +119,69 @@ describe("BrowserGameController", () => {
       ...trace.initialEvents,
       ...trace.checkpoints.flatMap((checkpoint) => checkpoint.events),
     ]).toEqual(controller.observe("p1").publicEvents);
+  });
+});
+
+describe("the time limit a match is played under", () => {
+  it("starts every new local match timed at the limit training uses", () => {
+    const fresh = newLocalMatch(config);
+    expect(fresh.timeLimit).toEqual(STANDARD_TIME_LIMIT);
+    expect(STANDARD_TIME_LIMIT).toEqual({ turns: 20 });
+
+    const controller = new BrowserGameController(fresh);
+    expect(controller.activeObservation.timeLimit).toMatchObject({
+      calledOnTurn: STANDARD_TIME_LIMIT.turns,
+      called: false,
+    });
+    // The save carries the limit, so the match resumes and replays timed.
+    const saved = controller.save();
+    expect(saved.config.timeLimit).toEqual(STANDARD_TIME_LIMIT);
+    expect(
+      BrowserGameController.load(saved).activeObservation.timeLimit,
+    ).toMatchObject({ calledOnTurn: STANDARD_TIME_LIMIT.turns });
+  });
+
+  it("loads a save without the field untimed, as it was played", () => {
+    // `config` has no `timeLimit`: the shape of every save and trace the app
+    // wrote before it started timing its matches.
+    const played = new BrowserGameController(config);
+    const keep = played.activeObservation.legalActions.find(
+      (action) =>
+        action.type === "mulligan-decision" && action.decision === "keep",
+    )!;
+    played.act(keep.actionId);
+    const saved = played.save();
+    expect(saved.config).not.toHaveProperty("timeLimit");
+
+    const loaded = BrowserGameController.load(saved);
+    expect(loaded.activeObservation).not.toHaveProperty("timeLimit");
+    expect(loaded.activeObservation.stateHash).toBe(
+      played.activeObservation.stateHash,
+    );
+  });
+
+  it("ends a new local match on time once it runs past the limit", () => {
+    // Both seats keep their hands and end every turn: nobody takes a Life, so
+    // only the limit can finish the game.
+    const controller = new BrowserGameController(newLocalMatch(config));
+    for (let step = 0; step < 500; step += 1) {
+      const observation = controller.activeObservation;
+      if (observation.phase === "finished") break;
+      const action =
+        observation.legalActions.find(
+          (candidate) =>
+            candidate.type === "pass" ||
+            (candidate.type === "mulligan-decision" &&
+              candidate.decision === "keep"),
+        ) ?? observation.legalActions[0]!;
+      controller.act(action.actionId);
+    }
+    const final = controller.activeObservation;
+    expect(final.phase).toBe("finished");
+    expect(final.resultReason).toBe("time");
+    expect(final.turn).toBe(
+      STANDARD_TIME_LIMIT.turns + TIME_LIMIT_ADDITIONAL_TURNS,
+    );
   });
 });
 

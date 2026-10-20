@@ -1180,8 +1180,11 @@ test("persistent End turn control passes priority", async ({ page }) => {
   await enterMainPhase(page);
   // The seam says the turn and whose it is, and nothing else: the phase and the
   // step were a second sentence in a place with room for one.
-  // The dot between the two is drawn by the stylesheet, so the text is the pair.
-  await expect(page.locator(".turn-status")).toHaveText("Turn 1Your turn");
+  // The dot between the two is drawn by the stylesheet, so the text is the
+  // pair -- and, under it, where the match's time limit falls.
+  await expect(page.locator(".turn-status")).toHaveText(
+    "Turn 1Your turnTime is called at turn 20",
+  );
   const endTurn = page.getByRole("button", { name: "End turn", exact: true });
   await expect(endTurn).toHaveClass(/end-turn-available/);
   // The cost area is drawn as the cards in it, so a count is a card count, and
@@ -1213,8 +1216,10 @@ test("persistent End turn control passes priority", async ({ page }) => {
   );
   await page.locator('[data-instance="p1-leader"]').click();
   await expect(endTurn).toHaveClass(/end-turn-ready/);
-  // The turn line holds its own two halves and nothing else.
-  await expect(page.locator(".turn-status")).toHaveText("Turn 1Your turn");
+  // The turn line holds its own two halves and the time limit, nothing else.
+  await expect(page.locator(".turn-status")).toHaveText(
+    "Turn 1Your turnTime is called at turn 20",
+  );
 
   // Freeze before handing over, so "Opponent thinking" is a state the test can
   // assert on rather than one the AI races past.

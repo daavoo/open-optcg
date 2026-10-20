@@ -5,13 +5,14 @@ import {
   type RulesStamp,
 } from "@one-piece-sim/engine-core";
 import { resolveMatchDecks, type DeckManifest } from "@one-piece-sim/decks";
-import type {
-  ClockView,
-  GameObservation,
-  MatchResult,
-  PlayerId,
-  PublicEvent,
-  TimeLimit,
+import {
+  STANDARD_TIME_LIMIT,
+  type ClockView,
+  type GameObservation,
+  type MatchResult,
+  type PlayerId,
+  type PublicEvent,
+  type TimeLimit,
 } from "@one-piece-sim/protocol";
 
 export type ControllerKind =
@@ -56,10 +57,23 @@ export interface MatchConfig {
   startingPlayer: PlayerId | "random";
   /**
    * The tournament time limit the game was played under (see `TimeLimit`).
-   * The app never sets one; a trace from a timed game -- the training bridge
-   * plays under one -- carries it so the replay ends where the game did.
+   * Every local match the app starts sets it (`newLocalMatch`). Optional
+   * because a save or trace made before then has none, and must replay
+   * untimed, as it was played; the field decides that, not this build.
    */
   timeLimit?: TimeLimit;
+}
+
+/**
+ * A match the app is starting, as opposed to one it is loading: played under
+ * `STANDARD_TIME_LIMIT`, the limit the learned model was trained under, so
+ * every seat -- the model's, a rules agent's, a person's -- plays the same
+ * game the model learned. A loaded save keeps whatever its config recorded.
+ */
+export function newLocalMatch(
+  config: Omit<MatchConfig, "timeLimit">,
+): MatchConfig {
+  return { ...config, timeLimit: { ...STANDARD_TIME_LIMIT } };
 }
 
 export interface TraceCheckpoint {

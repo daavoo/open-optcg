@@ -330,6 +330,20 @@
   font-weight: 400;
   transform: translateX(-50%);
 }
+/* The time limit, hung under the line rather than set in the grid: as a row
+   it would lift the turn off the table's centre line it is aligned to. */
+.turn-limit {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 0.15rem;
+  color: var(--mist);
+  font-size: 0.72em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  transform: translateX(-50%);
+}
 
 /* What is left of the top bar: an online match's clock and the spectator
    bar. */
