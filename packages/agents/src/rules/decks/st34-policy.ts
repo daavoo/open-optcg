@@ -517,13 +517,13 @@ export function createSt34RulesPolicy(): RulesPolicy {
     // reveal as knowledge *for both players*, so the first guess of a turn buys
     // the answer to every later one.
     //
-    // Oven is the one to open with because its ramp is unconditional: the engine
-    // adds the rested DON!! outside the `matched` branch, so a wrong guess still
-    // pays for the rest. The other two pay only on a match, and their costs are
-    // paid up front whatever happens -- Perospero trashes a card from hand
-    // before the guess is even offered, and Cognac is a 6-cost Event that is
-    // gone either way. Guessing blind with those is buying a one-in-ten shot
-    // with a whole card, which is why they wait for the answer.
+    // Oven is the one to open with because its price is only its own rest: a
+    // wrong guess pays out neither the K.O. nor the DON!!, but no card is spent
+    // on it. The other two also pay only on a match, and their costs are
+    // cards -- Perospero trashes one from hand before the guess is even
+    // offered, and Cognac is a 6-cost Event that is gone either way. Guessing
+    // blind with those is buying a one-in-ten shot with a whole card, which is
+    // why they wait for the answer.
     //
     // `knowledge.opponentDeckTop` is the observation's own record of it and
     // stays valid until that card leaves the top, so a look taken during the
@@ -543,7 +543,7 @@ export function createSt34RulesPolicy(): RulesPolicy {
           activation,
           knowsDeckTop
             ? "Cash a cost guess whose answer is already known."
-            : "Open with Oven: its ramp is paid whether the guess lands or not, and its reveal answers the next guess.",
+            : "Open with Oven: a wrong guess costs only its rest, and its reveal answers the next guess.",
         );
     }
 

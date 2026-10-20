@@ -892,7 +892,15 @@ export function getMechanicSignalInvocations(
           continue;
         }
         const key = `${state.turn}:${playerId}:${rule.cardNumber}:reaction`;
-        if (rule.oncePerTurn && state.oncePerTurn.includes(key)) continue;
+        const copyKey = (instanceId: string): string =>
+          `${state.turn}:${playerId}:${instanceId}:reaction`;
+        if (
+          rule.oncePerTurn &&
+          !rule.oncePerCopy &&
+          state.oncePerTurn.includes(key)
+        ) {
+          continue;
+        }
         if (
           rule.condition !== undefined &&
           !conditionMatches(
@@ -906,6 +914,13 @@ export function getMechanicSignalInvocations(
           continue;
         }
         const armed = sources.filter((source) => {
+          if (
+            rule.oncePerTurn &&
+            rule.oncePerCopy &&
+            state.oncePerTurn.includes(copyKey(source.instanceId))
+          ) {
+            return false;
+          }
           if (rule.sourceAttachedDon === undefined) return true;
           const attached = (source as { attachedDon?: readonly string[] })
             .attachedDon;
@@ -920,8 +935,11 @@ export function getMechanicSignalInvocations(
             ...(rule.oncePerTurn ? { spendsOncePerTurn: true as const } : {}),
             ...(source === exited ? { answersOwnExit: true as const } : {}),
           });
+          if (rule.oncePerTurn && rule.oncePerCopy) {
+            state.oncePerTurn.push(copyKey(source.instanceId));
+          }
         }
-        if (rule.oncePerTurn) state.oncePerTurn.push(key);
+        if (rule.oncePerTurn && !rule.oncePerCopy) state.oncePerTurn.push(key);
       }
     }
   }

@@ -11,7 +11,7 @@ import {
 import { fieldDonCount, returnDonToDeck } from "../don.js";
 import { drawCards, mechanicPendingEffect } from "../effects.js";
 import { counterEventPower, opponentOf } from "../board.js";
-import { handOverPendingEffect, triggerFranky } from "../pending.js";
+import { handOverPendingEffect } from "../pending.js";
 import { effectiveCost } from "../queries.js";
 import { eventActivationCost } from "../hand-price.js";
 import { type ActionContext } from "./context.js";
@@ -37,7 +37,6 @@ export function applyActivateCounterEvent({
     playerId: activePlayer,
     cardNumber: eventCard.cardNumber,
   });
-  triggerFranky(state, activePlayer, events);
   if (eventCard.cardNumber === "OP12-057") {
     player.restedDon.push(...player.activeDon.splice(0, 1));
     state.activeAttack.counterPower += 4000;

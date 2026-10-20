@@ -2928,6 +2928,36 @@ export function continueExecution(
     // chosen order, a protector picked first would be gone before the other
     // target was asked about, so the targets with a replacement on offer are
     // asked about before the ones without; each group keeps its chosen order.
+    // For the same reason, a replacement is payable for one target only if it
+    // was payable before any of them left: the first Character into the trash
+    // does not count toward a trash-sized cost for the second (Bandai's
+    // OP11-001#3, Koby's three trash cards). Each target's protectors are read
+    // once, on the node's first pass, and the leftover node a replacement
+    // prompt queues inherits that reading.
+    if (!effect.remainder && !effect.skipReplacements) {
+      for (const instanceId of instanceIds) {
+        const ownerId = (["p1", "p2"] as const).find((candidate) =>
+          state.players[candidate].board.some(
+            (card) => card.instanceId === instanceId,
+          ),
+        );
+        const threatened = ownerId
+          ? state.players[ownerId].board.find(
+              (card) => card.instanceId === instanceId,
+            )
+          : undefined;
+        execution.bindings[koProtectorsKey(instanceId)] =
+          ownerId && threatened
+            ? eligibleReplacements(
+                state,
+                execution.context.sourcePlayerId,
+                ownerId,
+                threatened,
+                db,
+              ).map(({ protector }) => protector.instanceId)
+            : [];
+      }
+    }
     const koOrder = (() => {
       if (effect.skipReplacements || instanceIds.length < 2) return instanceIds;
       const offered = instanceIds.filter((instanceId) => {
@@ -2996,6 +3026,8 @@ export function continueExecution(
         const threatened = state.players[ownerId].board.find(
           (card) => card.instanceId === instanceId,
         );
+        const protectorsBefore =
+          execution.bindings[koProtectorsKey(instanceId)];
         const eligible =
           effect.skipReplacements || !threatened
             ? []
@@ -3005,6 +3037,10 @@ export function continueExecution(
                 ownerId,
                 threatened,
                 db,
+              ).filter(
+                ({ protector }) =>
+                  protectorsBefore === undefined ||
+                  protectorsBefore.includes(protector.instanceId),
               );
         if (eligible.length > 0 && threatened) {
           // The rest of this node's targets ride on each branch, because
@@ -3166,6 +3202,13 @@ export function continueExecution(
 }
 
 export const SOURCE_BINDING = "source";
+
+/**
+ * The binding a `knock-out` node keeps each target's eligible protectors
+ * under, read before any of its targets is removed.
+ */
+const koProtectorsKey = (instanceId: string): string =>
+  `knock-out-protectors:${instanceId}`;
 
 export function executeMechanicProgram(
   state: GameState,

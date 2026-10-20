@@ -416,6 +416,17 @@ export interface ActivateMainProgram {
       match: Omit<CardSelector, "player" | "zone">;
       count: number;
     };
+    /**
+     * A cost paid with particular Life cards -- OP11-022 Shirahoshi's Leader
+     * turns the top one face-up, which it cannot do to a card already face-up
+     * (Bandai's OP11-022#1: the ability cannot be activated). `lifeCards`
+     * counts the zone and cannot tell the two apart. The same field
+     * `OnOpponentAttackProgram` carries.
+     */
+    lifeCardsMatching?: {
+      match: Omit<CardSelector, "player" | "zone">;
+      count: number;
+    };
   };
   program: MechanicProgram;
 }

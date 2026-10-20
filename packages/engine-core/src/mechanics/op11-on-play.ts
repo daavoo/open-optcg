@@ -543,8 +543,11 @@ export const op11OnPlayMechanics: SetMechanics = {
           kind: "choose",
           selector: { player: "self", zone: "hand" },
           bind: "op11-caribou-trash",
-          min: 2,
+          // A printed count with no "up to", so `exhaustive`: a hand of one
+          // trashes that one (Bandai's OP11-083#1).
+          min: 0,
           max: 2,
+          exhaustive: true,
           effect: {
             kind: "move",
             binding: "op11-caribou-trash",

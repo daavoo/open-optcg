@@ -155,12 +155,15 @@ describe("OP11-022 Shirahoshi (Leader)", () => {
     expect(offered(game)).not.toContain("longjaw");
   });
 
-  it("is reported inert, and plays nothing, when the top Life card is already face-up", () => {
+  // Bandai's OP11-022 Q&A #1: the cost turns a face-down card face-up, so
+  // with the top Life card already face-up the ability cannot be activated --
+  // and it is not offered, which keeps its [Once Per Turn] for later in the
+  // turn, once a {Neptunian} has turned the card back face-down.
+  it("is not offered when the top Life card is already face-up", () => {
     const game = table("op11-022-face-up")
       .withHand("p1", [instance("scaled", "OP11-026")])
       .withLife("p1", [instance("life-1", COST_2, { faceUp: true })])
       .build();
-    const restedBefore = game.state.players.p1.restedDon.length;
 
     const activation = game
       .legalActions()
@@ -169,13 +172,7 @@ describe("OP11-022 Shirahoshi (Leader)", () => {
           action.type === "activate-main" &&
           action.sourceInstanceId === "p1-leader",
       );
-    expect(activation).toMatchObject({ selectsNothing: true });
-
-    game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
-    answer(game, "apply");
-
-    expect(onBoard(game, "p1", "scaled")).toBeUndefined();
-    expect(game.state.players.p1.restedDon).toHaveLength(restedBefore);
+    expect(activation).toBeUndefined();
   });
 });
 

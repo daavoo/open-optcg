@@ -82,20 +82,27 @@ export const op11MainMechanics: SetMechanics = {
               kind: "sequence",
               effects: [
                 { kind: "rest", binding: SOURCE_BINDING },
+                // The DON!! sits inside the guess with the K.O.: a wrong guess
+                // pays out neither (Bandai's OP11-066#1).
                 guessDeckTopCost({
-                  kind: "choose",
-                  selector: {
-                    player: "opponent",
-                    zone: "board",
-                    category: "character",
-                    maxBaseCost: 3,
-                  },
-                  bind: "op11-oven-ko",
-                  min: 0,
-                  max: 1,
-                  effect: { kind: "knock-out", binding: "op11-oven-ko" },
+                  kind: "sequence",
+                  effects: [
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "opponent",
+                        zone: "board",
+                        category: "character",
+                        maxBaseCost: 3,
+                      },
+                      bind: "op11-oven-ko",
+                      min: 0,
+                      max: 1,
+                      effect: { kind: "knock-out", binding: "op11-oven-ko" },
+                    },
+                    { kind: "add-don", player: "self", count: 1, rested: true },
+                  ],
                 }),
-                { kind: "add-don", player: "self", count: 1, rested: true },
               ],
             },
           },
@@ -266,7 +273,16 @@ export const op11MainMechanics: SetMechanics = {
       "OP11-022",
       {
         oncePerTurn: true,
-        requires: { activeDon: 1 },
+        // The cost turns the top Life card face-up, so an already face-up top
+        // card cannot pay it and the ability is not offered (Bandai's
+        // OP11-022#1).
+        requires: {
+          activeDon: 1,
+          lifeCardsMatching: {
+            match: { position: "top", faceUp: false },
+            count: 1,
+          },
+        },
         program: turnLifeFaceUp("op11-shirahoshi-cost", {
           kind: "sequence",
           effects: [
