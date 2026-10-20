@@ -345,8 +345,7 @@
   transform: translateX(-50%);
 }
 
-/* What is left of the top bar: an online match's clock and the spectator
-   bar. */
+/* What is left of the top bar: the spectator bar. */
 .topbar {
   position: absolute;
   z-index: 40;
@@ -360,11 +359,6 @@
   border-radius: 10px;
   background: rgba(10, 10, 11, 0.82);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
-}
-.topbar > .match-clock:first-child {
-  margin-left: 0;
-  padding-left: 0;
-  border-left: 0;
 }
 .status-dot {
   width: 0.42rem;
@@ -407,38 +401,4 @@
 }
 .mobile-only {
   display: none;
-}
-
-/* The match clock, in the topbar of an online match.
- *
- * Two faces, because a chess clock is only meaningful against the other one:
- * "4:12" says nothing until you can see the opponent has 11:40. Only ever
- * rendered where a server is running a clock -- a local match has none, and
- * there is nobody to be unfair to. */
-.match-clock {
-  display: flex;
-  gap: 0.55rem;
-  padding-left: 0.55rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-}
-.match-clock span {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.1;
-}
-.match-clock small {
-  color: var(--muted);
-  font: 700 0.55rem var(--font-display);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.match-clock b {
-  color: var(--parchment);
-  font: 700 0.85rem var(--font-display);
-  font-variant-numeric: tabular-nums;
-}
-/* The running side is the one being spent, so it is the one drawn as live. */
-.match-clock .clock-ticking b {
-  color: var(--gold, #e8c46a);
 }

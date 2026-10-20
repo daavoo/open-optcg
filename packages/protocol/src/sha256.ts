@@ -12,10 +12,9 @@ const utf8 = new TextEncoder();
  * `process.getBuiltinModule` rather than an import so the browser bundle -- one
  * file, built for `platform: "browser"` -- never sees a `node:` specifier.
  *
- * Taken only once it has reproduced a known digest: workerd also exposes a
- * `process` with Node's shape under its Node compatibility layer, and a
- * runtime that offers the function but not a working `createHash` behind it
- * -- or none at all, as in the browser -- takes the JavaScript path.
+ * Taken only once it has reproduced a known digest: a runtime that offers the
+ * function but not a working `createHash` behind it -- or none at all, as in
+ * the browser -- takes the JavaScript path.
  */
 const nativeCrypto = ((): typeof import("node:crypto") | undefined => {
   try {

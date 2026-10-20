@@ -97,9 +97,8 @@ export function replayViewer(config: MatchConfig): PlayerId {
  * The config of the match a spectator takes over at `seat`.
  *
  * That seat becomes the human one. The other keeps its controller, except that
- * a seat the file recorded as a person over the network cannot be reconnected
- * from a replay, so a rules agent takes it -- and a second human seat, which
- * this page cannot pilot two of, is handed to a rules agent too.
+ * a second human seat, which this page cannot pilot two of, is handed to a
+ * rules agent.
  */
 export function takeoverConfig(
   config: MatchConfig,
@@ -111,8 +110,6 @@ export function takeoverConfig(
     ...config,
     [`${seat}Controller`]: "human",
     [`${other}Controller`]:
-      otherController === "online" || otherController === "human"
-        ? "rules"
-        : otherController,
+      otherController === "human" ? "rules" : otherController,
   };
 }

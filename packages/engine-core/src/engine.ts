@@ -1271,13 +1271,12 @@ export function observe(
  * The hash used to cover the whole state, event log included, which made
  * hashing both the most expensive step of an observation and one that grew
  * with every action taken -- the log only ever gets longer. What the hash is
- * *for* is unchanged: confirming that a replay reproduced the recorded game,
- * and that two seats of an online match agree on where they are. Two states
- * that agree on every zone, `revision`, `eventSequence` and `rngState` were
- * reached by the same actions under the same rules, so a divergence shows up
- * here just as it did before -- and `publicEvents` travels beside the hash in
- * the same observation, so a caller that wants to compare the narration still
- * can.
+ * *for* is unchanged: confirming that a replay reproduced the recorded game.
+ * Two states that agree on every zone, `revision`, `eventSequence` and
+ * `rngState` were reached by the same actions under the same rules, so a
+ * divergence shows up here just as it did before -- and `publicEvents` travels
+ * beside the hash in the same observation, so a caller that wants to compare
+ * the narration still can.
  *
  * Changing what is hashed changes every hash: `pnpm fixtures:record` re-records
  * the replay fixtures, and traces recorded by an older build report as

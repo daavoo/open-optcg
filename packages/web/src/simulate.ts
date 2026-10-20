@@ -60,13 +60,12 @@ export const DEFAULT_SIMULATION_PACE_MS = SIMULATION_PACES[0]!.ms;
  *
  * Read off the config rather than set by the lobby, so every route into a
  * match -- the lobby, a resumed match, a trace taken over -- gets the same
- * answer from the same place. An online seat does not count: a person over the
- * network is playing, and this page has no business pacing their game.
+ * answer from the same place.
  */
 export function isSimulation(config: MatchConfig): boolean {
   return (["p1", "p2"] as const).every((player) => {
     const controller = config[`${player}Controller`];
-    return controller !== "human" && controller !== "online";
+    return controller !== "human";
   });
 }
 

@@ -27,7 +27,6 @@ function model(overrides: Partial<HistoryModel> = {}): HistoryModel {
     steps: [],
     records: [],
     viewer: "p1",
-    canRewind: true,
     ...overrides,
   };
 }
@@ -177,16 +176,6 @@ describe("match history", () => {
     expect(fold).toContain("revealed Wang Zhi");
     expect(fold).not.toContain("history-reset");
     expect(fold).not.toContain("<button");
-  });
-
-  it("leaves the Reset out of a match that cannot be wound back", () => {
-    // A standing button on a list with no rewind is a promise the screen
-    // cannot keep, so an online seat gets the reading surface alone.
-    const html = renderHistoryList(
-      model({ steps: [step(drew, 1)], canRewind: false }),
-    );
-    expect(html).not.toContain("history-reset");
-    expect(html).not.toContain("data-history-action");
   });
 
   it("draws one action as one entry, with its steps folded under it", () => {

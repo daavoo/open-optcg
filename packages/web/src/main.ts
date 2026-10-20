@@ -24,7 +24,6 @@ import {
 import {
   BrowserGameController,
   type MatchConfig,
-  type MatchGame,
   type SavedMatch,
 } from "./controller.js";
 import { inspectExportedMatch, type RawLlmRecord } from "./diagnostics.js";
@@ -60,15 +59,6 @@ import {
 } from "./learned-model.js";
 import * as setupScreen from "./screens/setup.js";
 import type { SeatPilot, SetupContext } from "./screens/setup.js";
-import {
-  heldSeat,
-  initialOnlineState,
-  type OnlineState,
-  onlineAvailable,
-  OnlineMatch,
-  rememberSeat,
-  serverOrigin,
-} from "./online.js";
 import { createBattleScreen, type BattleContext } from "./screens/battle.js";
 import {
   initialBattleState,
@@ -233,13 +223,8 @@ function nextCustomDeckId(): string {
  * inventory comment near the top of this file for how each field was sorted).
  */
 interface Store {
-  /**
-   * The match on screen, local or online.
-   *
-   * `MatchGame` rather than the local controller: the board reads both through
-   * the same members, and what they cannot both do is in `capabilities`.
-   */
-  game: MatchGame | null;
+  /** The match on screen. */
+  game: BrowserGameController | null;
   worker: Worker;
   savedDecks: Record<string, SavedDeck>;
   setupDecks: Record<PlayerId, string>;
@@ -269,7 +254,6 @@ interface Store {
   editor: EditorState;
   sealed: SealedState;
   analytics: AnalyticsState;
-  online: OnlineState;
 }
 
 /** Set once a fetched learned model has failed to arrive; see `learnedModelAvailable`. */
@@ -288,7 +272,6 @@ const store: Store = {
   setupDecks: rememberedSetupDecks(localStorage, DEFAULT_SETUP_DECKS, (id) =>
     Boolean(deckManifests[id] ?? initialSavedDecks[id]),
   ),
-  online: initialOnlineState(serverOrigin()),
   seatPilots: { p1: "you", p2: "ai" },
   cardDetailCard: null,
   cardDetailInstance: null,
@@ -436,11 +419,9 @@ const battleDeps: BattleContext = {
   onBoardPainted: () => {
     // After the paint, not before: the board may still take a forced pass or
     // two on its way to the screen, and the position remembered should be the
-    // one shown. Only a local match: online the server holds the position and
-    // online.ts remembers the seat.
-    // Not a replay: the remembered match is the one to be picked back up, and
-    // a trace being watched is nobody's match to resume.
-    if (store.game instanceof BrowserGameController && !store.battle.replay)
+    // one shown. Not a replay: the remembered match is the one to be picked
+    // back up, and a trace being watched is nobody's match to resume.
+    if (store.game && !store.battle.replay)
       rememberMatch(localStorage, store.game);
   },
   renderCardDetailDialog: (powerDetails?: ObservedPowerDetails) =>
@@ -592,14 +573,8 @@ const homeDeps: HomeContext = {
 /** Leaving a match for any menu screen abandons the AI's turn loop: bump the
     sequence so a late worker answer is discarded, and drop anything queued. */
 function leaveMatch(): void {
-  stopClockTick();
   store.battle.replay = null;
   store.battle.simulation = null;
-  // A match the player walks away from is a match they are still seated at, as
-  // far as the server is concerned -- the clock keeps running. Closing the
-  // socket says so plainly rather than leaving it open on a screen nobody is
-  // looking at; the seat is still remembered, so they can come back to it.
-  if (store.game instanceof OnlineMatch) store.game.close();
   store.battle.agentSession += 1;
   store.battle.workerSequence += 1;
   store.battle.aiPending = false;
@@ -633,25 +608,9 @@ function showHome(): void {
   hydrateIcons();
 }
 
-/** The lobby's online slice: a seat-link match, and the way back to it. */
-const onlineDeps = {
-  state: store.online,
-  rejoin: () => {
-    const seat = heldSeat();
-    if (!seat) {
-      store.online.heldSeat = false;
-      renderSetup();
-      return;
-    }
-    store.online.error = null;
-    beginOnlineMatch({ ...seat });
-  },
-};
-
 const setupDeps: SetupContext = {
   savedDecks: store.savedDecks,
   setupDecks: store.setupDecks,
-  online: onlineDeps,
   seatPilots: store.seatPilots,
   refreshLobby: () => {
     renderSetup();
@@ -678,24 +637,6 @@ const setupDeps: SetupContext = {
   deleteDeck: deleteSavedDeck,
 };
 
-/* ---------------------------------------------------------------------------
-   Online play
-   --------------------------------------------------------------------------- */
-
-/**
- * The clock's second hand.
- *
- * Only the clock is repainted, not the board: a board rebuilt once a second
- * would take any open menu with it. Runs only while an online match is on
- * screen.
- */
-let clockTick: number | null = null;
-
-function stopClockTick(): void {
-  if (clockTick !== null) window.clearInterval(clockTick);
-  clockTick = null;
-}
-
 function renderSetup(): void {
   // Every other way a pick changes -- a deck saved from the editor, a deleted
   // save falling back to the default -- comes back through the lobby here.
@@ -707,124 +648,6 @@ function renderSetup(): void {
 
 function showSetup(): void {
   leaveMatch();
-  store.online.error = null;
-  store.online.connecting = null;
-  // A seat held from before -- a refresh, a closed tab, a dropped connection --
-  // is the first thing to try. The referee treats a second socket with the same
-  // token as a reconnect, so this puts the player back in their game.
-  const seat = heldSeat();
-  if (seat) {
-    beginOnlineMatch({ ...seat });
-    return;
-  }
-  renderSetup();
-}
-
-/** Seat the player at a match: from a seat link, or back at a held seat. */
-function beginOnlineMatch(assignment: {
-  matchId: string;
-  seat: PlayerId;
-  token: string;
-  opponentDeckId: string;
-  /** Set when coming back to a held seat, whose deck may not be the one the
-      lobby is currently showing. */
-  ownDeckId?: string;
-}): void {
-  const ownDeckId = assignment.ownDeckId ?? store.setupDecks.p1;
-  const match = new OnlineMatch({
-    matchId: assignment.matchId,
-    seat: assignment.seat,
-    token: assignment.token,
-    ownDeckId,
-    opponentDeckId: assignment.opponentDeckId,
-    onChange: () => {
-      // A match the player has already left behind still gets its messages
-      // until the socket closes; they are not about anything on screen.
-      if (store.game !== match) return;
-      if (match.status === "error") {
-        store.online.error = match.error;
-        store.online.connecting = null;
-        store.game = null;
-        stopClockTick();
-        // Only when the seat itself is gone -- a refused token, a rules
-        // mismatch, a match the server no longer has. A connection that
-        // dropped is not that: the referee holds the seat for its token while
-        // the clock runs, so the seat stays and the lobby offers it back.
-        // Throwing it away here was how a flaky network became a loss.
-        if (match.seatLost) rememberSeat(null);
-        store.online.heldSeat = heldSeat() !== null;
-        match.close();
-        renderSetup();
-        return;
-      }
-      // A finished match is no longer a seat to come back to, but it stays on
-      // screen: the result modal is the only thing that says how it ended, since
-      // a resignation or a timeout leaves the position looking playable.
-      if (match.status === "finished") {
-        rememberSeat(null);
-        store.online.heldSeat = false;
-        stopClockTick();
-        if (match.ready) {
-          renderGame();
-          return;
-        }
-        // Ended before a position ever arrived -- a no-show against an opponent
-        // who never appeared. There is no board to draw it on.
-        store.online.connecting = null;
-        store.online.error =
-          match.result?.reason === "no-show"
-            ? "Your opponent never sat down."
-            : "That match is over.";
-        store.game = null;
-        renderSetup();
-        return;
-      }
-      if (match.status === "reconnecting") {
-        store.online.connecting = "connecting";
-        renderSetup();
-        return;
-      }
-      // Nothing to draw a board with yet: the lobby holds the screen and says
-      // what the match is waiting for.
-      if (!match.ready || match.status === "waiting-for-opponent") {
-        store.online.connecting =
-          match.status === "waiting-for-opponent"
-            ? "waiting-for-opponent"
-            : "connecting";
-        renderSetup();
-        return;
-      }
-      store.online.connecting = null;
-      // Not `renderGame`: a frame is an action arriving, and the board has to be
-      // told whose it was before it redraws over it.
-      battle.absorbFrame();
-      // A refusal is reported after the board is correct again, the same way the
-      // local board reports an engine error -- and over a board the player can
-      // carry on from, rather than by sending them back to the lobby.
-      const refused = match.takeRefusal();
-      if (refused) window.alert(refused);
-    },
-  });
-  resetBattleUiState();
-  store.online.connecting = "connecting";
-  store.online.error = null;
-  store.game = match;
-  // Remembered before connecting, so a refresh during the handshake still finds
-  // the seat.
-  rememberSeat({
-    matchId: assignment.matchId,
-    seat: assignment.seat,
-    token: assignment.token,
-    ownDeckId,
-    opponentDeckId: assignment.opponentDeckId,
-  });
-  store.online.heldSeat = true;
-  match.connect();
-  stopClockTick();
-  clockTick = window.setInterval(() => {
-    if (store.game === match) battle.tickClock();
-  }, 1000);
-  applyTheme();
   renderSetup();
 }
 
@@ -838,14 +661,9 @@ function readDeckSelects(): void {
   store.setupDecks.p2 = valueOfOptional("p2-deck") ?? store.setupDecks.p2;
 }
 
-/** Starts `config` and switches to the board. Shared by the constructed lobby
-    and sealed mode, which build their `MatchConfig` very differently but both
-    land here to reset the same per-match UI state. */
 /**
- * Clear the per-match UI, whoever is about to referee the match.
- *
- * Shared by the local lobby and the online one: a stale notice or a leftover
- * selection from the previous game is the same bug either way.
+ * Clear the per-match UI: a stale notice or a leftover selection from the
+ * previous game must not carry over into the next.
  */
 function resetBattleUiState(): void {
   store.battle.llmDebugRecords.splice(0);
@@ -858,6 +676,9 @@ function resetBattleUiState(): void {
   store.cardDetailInstance = null;
 }
 
+/** Starts `config` and switches to the board. Shared by the constructed lobby
+    and sealed mode, which build their `MatchConfig` very differently but both
+    land here to reset the same per-match UI state. */
 function beginMatch(config: MatchConfig): void {
   store.game = new BrowserGameController(config);
   // A match with an agent in both seats is one nobody at this page is playing,
@@ -1273,52 +1094,11 @@ if (learnedModelIsFetched()) {
   });
 }
 
-/**
- * A seat link: `/play#m=<match>&s=<seat>&t=<token>`.
- *
- * This is "play a friend from a link" -- one person builds a match and sends the
- * other their half. The token is in the fragment rather than the query so it
- * stays out of request logs and `Referer` headers on the way, and it is read
- * here and then wiped from the address bar, so a screenshot of the tab does not
- * hand the seat to whoever sees it.
- */
-function seatFromLink(): {
-  matchId: string;
-  seat: PlayerId;
-  token: string;
-} | null {
-  // A build with no match server cannot sit at any seat, and a link naming one
-  // is a link copied off the deploy that issued it. Left in the address bar
-  // rather than consumed and wiped, so it is still there to paste where it
-  // works.
-  if (!onlineAvailable()) return null;
-  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  const matchId = params.get("m");
-  const seat = params.get("s");
-  const token = params.get("t");
-  if (!matchId || !token || (seat !== "p1" && seat !== "p2")) return null;
-  window.history.replaceState(null, "", window.location.pathname);
-  return { matchId, seat, token };
-}
-
 /* Before the browser's own cache is read, so a pack the player imported still
    overrides a bundled build's text card for card. */
 loadBuiltInPrintedText();
 
 void restoreCachedAssets().then(() => {
-  // Read before the gate, because reading it wipes it from the address bar: a
-  // player who follows a seat link before loading a pack still lands at that
-  // seat once the pack is in.
-  const link = seatFromLink();
-  const start = (): void => {
-    if (!link) {
-      goHome();
-      return;
-    }
-    // Straight to the board. The deck ids are the match's to state -- they
-    // arrive in `welcome` -- so the lobby has nothing to ask about first.
-    beginOnlineMatch({ ...link, opponentDeckId: "" });
-  };
-  if (assetsReady()) start();
-  else showAssetGate(start);
+  if (assetsReady()) goHome();
+  else showAssetGate(goHome);
 });

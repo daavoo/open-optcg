@@ -1,11 +1,8 @@
 /**
  * The human seat: what a person is shown, and how they pick a move.
  *
- * Extracted from `setup-match.ts` so it is not welded to the offline match
- * loop. An online seat is the same person reading the same frame -- the only
- * difference is that the frame arrived over a WebSocket instead of coming back
- * from a call -- and two implementations of "here is your board, choose an
- * action" would drift the moment one of them learned to show something new.
+ * Kept apart from the match loop in `setup-match.ts`, which only has to hand
+ * it an observation.
  *
  * Takes an observation and returns one of its own legal actions, or null for
  * "I am done". It knows nothing about where either came from.

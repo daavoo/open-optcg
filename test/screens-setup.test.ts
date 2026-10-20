@@ -5,7 +5,6 @@ import {
   type SeatPilot,
   type SetupContext,
 } from "../packages/web/src/screens/setup.js";
-import { initialOnlineState } from "../packages/web/src/online.js";
 
 /** The chosen pilot's card, matched inside one tag so the sibling card's
     `data-controller` cannot satisfy it. */
@@ -18,10 +17,6 @@ function pickedCard(kind: "rules" | "scorer"): RegExp {
 function stubContext(overrides: Partial<SetupContext> = {}): SetupContext {
   return {
     savedDecks: {},
-    online: {
-      state: initialOnlineState("https://match.test"),
-      rejoin: () => undefined,
-    },
     setupDecks: {
       p1: "(Red) Monkey.D.Luffy - Starter Deck 31",
       p2: "(Yellow) Eustass Kid - Starter Deck 36",
@@ -259,61 +254,5 @@ describe("who plays each seat", () => {
     );
     expect(html).not.toContain('data-controller="rules"');
     expect(html).toContain('class="hub-face hub-play" title="Start match"');
-  });
-});
-
-describe("the lobby's online seat", () => {
-  it("offers no opponent but an agent or the person at this screen", () => {
-    // A person over the network is reached by a seat link, never from here, so
-    // a build with a match server draws the same form as one without.
-    const withServer = render(stubContext());
-    const without = render(
-      stubContext({
-        online: { ...stubContext().online, state: initialOnlineState("") },
-      }),
-    );
-    for (const html of [withServer, without]) {
-      expect(html).not.toContain("data-opponent-kind");
-      expect(html).not.toContain('id="online-find"');
-      expect(html).toContain('aria-label="Who plays the right deck"');
-    }
-  });
-
-  it("offers the way back to a seat this browser still holds", () => {
-    // A dropped connection is not a lost match -- the referee holds the seat
-    // for its token while the clock runs -- so the lobby must show the way back.
-    const html = render(
-      stubContext({
-        online: {
-          ...stubContext().online,
-          state: {
-            ...initialOnlineState("https://match.test"),
-            heldSeat: true,
-          },
-        },
-      }),
-    );
-    expect(html).toContain('id="online-rejoin"');
-    expect(html).toContain(
-      'title="Start match" aria-label="Start match" type="submit"',
-    );
-  });
-
-  it("holds the start button while a seat is still connecting", () => {
-    const html = render(
-      stubContext({
-        online: {
-          ...stubContext().online,
-          state: {
-            ...initialOnlineState("https://match.test"),
-            connecting: "waiting-for-opponent",
-          },
-        },
-      }),
-    );
-    expect(html).toMatch(
-      /title="Joining" aria-label="Joining" type="button" disabled/,
-    );
-    expect(html).toContain("Waiting for your opponent to sit down…");
   });
 });

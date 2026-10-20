@@ -1,13 +1,9 @@
 /**
  * Whether a deck may be played, and why not.
  *
- * These rules used to live in the web deck editor, which was the only place a
- * deck was built. An online match has a second place: a client submits a deck
- * it built and the server must decide, and a server that trusted the editor's
- * verdict would be trusting the client. Two implementations of "is this deck
- * legal" is the worst of the options -- they would drift, and the one that
- * mattered would be the one nobody was reading -- so there is one, here, above
- * the rules engine and below both callers.
+ * One implementation of "is this deck legal", above the rules engine and below
+ * every caller -- the web deck editor, sealed play and the deck tooling -- so
+ * no two of them can drift apart.
  *
  * Nothing in this file touches the DOM or the engine. It reads printed card
  * data and says what is wrong in sentences a player can act on.

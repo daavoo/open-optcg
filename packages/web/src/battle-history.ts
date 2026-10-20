@@ -79,14 +79,6 @@ export interface HistoryModel {
   /** Instance ids to card numbers, so a step can name the cards it moved. */
   names?: CardInstanceNames;
   /**
-   * Whether this match can be wound back at all.
-   *
-   * An online seat cannot, and a standing "Reset" button on every entry of a
-   * list that has no reset is worse than no button: it is a promise the screen
-   * cannot keep. The buttons are left out entirely rather than disabled.
-   */
-  canRewind?: boolean;
-  /**
    * What the button on an entry says it does: "Reset" while a match is being
    * played, since winding back discards what came after, and "Jump" while a
    * trace is being replayed, since the file still holds it.
@@ -269,13 +261,7 @@ function entryActor(lead: PublicEvent, band: HistoryBand): PlayerId | null {
  * backwards is not a sequence at all.
  */
 export function renderHistoryList(model: HistoryModel): string {
-  const {
-    steps,
-    viewer,
-    names,
-    canRewind = false,
-    rewindVerb = "Reset",
-  } = model;
+  const { steps, viewer, names, rewindVerb = "Reset" } = model;
   const attached = new Map<number, LlmDebugRecord[]>();
   const unattached: LlmDebugRecord[] = [];
   for (const record of model.records) {
@@ -338,7 +324,7 @@ export function renderHistoryList(model: HistoryModel): string {
         entry,
         viewer,
         names,
-        canRewind && leadsAction && discards > 0 ? discards : null,
+        leadsAction && discards > 0 ? discards : null,
         rewindVerb,
       ),
     );

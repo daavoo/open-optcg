@@ -6,16 +6,6 @@ declare const __BUILT_IN_PRINTED_TEXT__: Readonly<
   Record<string, { effect: string; trigger: string }>
 > | null;
 /**
- * Where this build's match server is: `""` when it has none, `"self"` for the
- * origin serving the page, or an absolute origin. Set by
- * `pnpm web:build:server`; see `tools/build-web.ts`.
- *
- * A build with no server does not offer online play, because there is nothing
- * behind it: the GitHub Pages site and the `wrangler` deploy are the same
- * bundle, and only one of them has a Worker.
- */
-declare const __MATCH_SERVER__: string;
-/**
  * True when the build inlined a System-1 scorer model pack into the worker
  * (`ml/sys1/export_web.py` output at
  * `packages/web/src/scorer-model.json`). Gates the "Learned model" opponent

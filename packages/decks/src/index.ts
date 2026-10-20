@@ -64,8 +64,8 @@ import { st30LuffyAceManifest } from "./st30-luffy-ace-manifest.js";
 import { op17LuffyAceManifest } from "./op17-luffy-ace-manifest.js";
 
 export type { DeckFormat } from "@one-piece-sim/cards";
-// Whether a deck may be played at all. Shared by the deck editor and the online
-// referee, which is why it is here rather than in either of them.
+// Whether a deck may be played at all. Shared by the deck editor, sealed play
+// and the deck tooling, which is why it is here rather than in any of them.
 export {
   copyLimit,
   isEventRestricted,

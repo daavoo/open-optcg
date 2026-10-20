@@ -113,13 +113,9 @@ describe("takeoverConfig", () => {
   });
 
   it("gives a rules agent the seat it cannot pilot", () => {
-    // Two human seats in one page, and a seat that was a person over the
-    // network, are both seats nothing here can play.
+    // Two human seats in one page is a seat nothing here can play.
     expect(
       takeoverConfig({ ...config, p2Controller: "human" }, "p1").p2Controller,
-    ).toBe("rules");
-    expect(
-      takeoverConfig({ ...config, p2Controller: "online" }, "p1").p2Controller,
     ).toBe("rules");
   });
 

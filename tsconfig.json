@@ -21,7 +21,6 @@
       "@one-piece-sim/cards": ["./packages/cards/src/index.ts"],
       "@one-piece-sim/decks": ["./packages/decks/src/index.ts"],
       "@one-piece-sim/engine-core": ["./packages/engine-core/src/index.ts"],
-      "@one-piece-sim/referee": ["./packages/referee/src/index.ts"],
       "@one-piece-sim/agents": ["./packages/agents/src/index.ts"],
       "@one-piece-sim/agents/local": ["./packages/agents/src/rules/local.ts"],
       "@one-piece-sim/agents/llm": ["./packages/agents/src/llm/index.ts"],

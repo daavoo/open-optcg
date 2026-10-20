@@ -7,9 +7,7 @@ import {
 import { resolveMatchDecks, type DeckManifest } from "@one-piece-sim/decks";
 import {
   STANDARD_TIME_LIMIT,
-  type ClockView,
   type GameObservation,
-  type MatchResult,
   type PlayerId,
   type PublicEvent,
   type TimeLimit,
@@ -27,15 +25,7 @@ export type ControllerKind =
   | "random"
   | "first"
   /** The System-1 scorer running in the worker. See `@one-piece-sim/agents/scorer`. */
-  | "scorer"
-  /**
-   * A person on the other end of a network, refereed by the server.
-   *
-   * Nothing in the browser pilots this seat, which is the point of naming it:
-   * the board must not start an agent for it, and must not expect its
-   * observation to be readable.
-   */
-  | "online";
+  | "scorer";
 
 export interface MatchConfig {
   p1Deck: string;
@@ -121,72 +111,6 @@ export interface MatchTrace extends SavedMatch {
   checkpoints: readonly TraceCheckpoint[];
 }
 
-/**
- * What the board screen needs from a match, whoever is refereeing it.
- *
- * `BrowserGameController` and `OnlineMatch` both satisfy this. It exists so the
- * board has one code path: offline the frame arrives because `act` returned,
- * online because the server sent one, and everything above that line is the
- * same. `capabilities` is how the two differ honestly -- an online match cannot
- * take a move back, so the button is not rendered rather than rendered and
- * failing.
- */
-export interface MatchGame {
-  readonly config: MatchConfig;
-  readonly activeObservation: GameObservation;
-  readonly latestActionEvents: readonly PublicEvent[];
-  readonly canUndo: boolean;
-  readonly capabilities: {
-    readonly undo: boolean;
-    readonly rewind: boolean;
-    readonly trace: boolean;
-    /** Whether a seat in this match may be piloted by an agent in this page. */
-    readonly ai: boolean;
-    /**
-     * Whether `act` has already changed the position by the time it returns.
-     *
-     * True locally, false online, where the server decides and sends a frame.
-     * The board reads this instead of assuming: code that took a forced action
-     * in a loop, re-reading the position each time, would never terminate
-     * against a server.
-     */
-    readonly appliesImmediately: boolean;
-  };
-  /**
-   * The clock, when a server is running one. Absent for a local match, which
-   * has no clock at all -- there is nobody to be unfair to.
-   */
-  readonly clock?: ClockView | null;
-  /**
-   * How the match ended, when the session decided it rather than the engine.
-   *
-   * A resignation, a timeout and a no-show are all outcomes the engine knows
-   * nothing about: the position is untouched and still looks playable, so
-   * without this the board would draw a live game over a match that is over.
-   * Null while the game is running, and absent entirely for a local match,
-   * whose only ending is one the engine reached.
-   */
-  readonly result?: MatchResult | null;
-  /**
-   * Who took the action the latest events belong to.
-   *
-   * Local matches do not need it: the board applies the action itself and
-   * already knows. Online it is the missing half of `latestActionEvents` --
-   * without it the board cannot tell its own consequences from its opponent's,
-   * which is the difference between "here is what they did" and silence.
-   */
-  readonly lastActionActor?: PlayerId | null;
-  observe(playerId: PlayerId): GameObservation;
-  act(actionId: string): unknown;
-  /**
-   * Give up. Present only where there is an opponent to give up to; a local
-   * match against an agent has "New game" instead.
-   */
-  resign?: () => void;
-  rewindTo(actionCount: number): unknown;
-  trace(): MatchTrace;
-}
-
 export class BrowserGameController {
   #service = new GameService();
   #activeObservation: GameObservation;
@@ -244,15 +168,6 @@ export class BrowserGameController {
     }
     return controller;
   }
-
-  /** Everything a local match can do; see `MatchGame.capabilities`. */
-  readonly capabilities = {
-    undo: true,
-    rewind: true,
-    trace: true,
-    ai: true,
-    appliesImmediately: true,
-  } as const;
 
   get activeObservation(): GameObservation {
     return structuredClone(this.#activeObservation);
