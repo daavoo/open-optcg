@@ -2518,17 +2518,3 @@ export interface GameObservation {
   publicEvents: PublicEvent[];
   stateHash: string;
 }
-
-// --- Online session ----------------------------------------------------------
-// The wire between a networked seat and the match refereeing it. See
-// `session.ts`; the referee that speaks it is `@one-piece-sim/referee`.
-export {
-  clientMessageSchema,
-  rulesStampSchema,
-  type ClientMessage,
-  type ClockView,
-  type MatchEndReason,
-  type MatchResult,
-  type ServerMessage,
-  type SessionErrorCode,
-} from "./session.js";

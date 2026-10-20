@@ -702,22 +702,3 @@
   justify-content: flex-end;
   gap: 0.6rem;
 }
-
-/* The end of an online match, when the engine does not say so itself: a
- * resignation, a timeout, a no-show. The position behind this is untouched and
- * still looks playable, so this modal is the only thing on screen that says the
- * match is over -- which is why it takes the whole command surface rather than
- * sitting in a corner. */
-.match-over-modal {
-  align-items: center;
-  gap: 0.6rem;
-  text-align: center;
-}
-.match-over-modal h2 {
-  margin: 0;
-  font: 800 1.1rem var(--font-display);
-  letter-spacing: 0.04em;
-}
-.match-over-modal p {
-  margin: 0;
-}

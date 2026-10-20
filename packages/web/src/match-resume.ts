@@ -10,9 +10,8 @@
  * The home screen offers it back as "Resume".
  *
  * One match, not a history: the key is overwritten by the next match and
- * cleared when the game reaches a result. Online matches are not kept here at
- * all -- the server holds the position, and the seat is remembered by
- * online.ts -- and neither is anything the engine has finished.
+ * cleared when the game reaches a result: nothing the engine has finished is
+ * kept.
  *
  * `Storage` is a parameter rather than `window.localStorage` so the module
  * runs, and is tested, without a browser. Every access is guarded: a private

@@ -20,7 +20,6 @@ packages/protocol      shared types and the JSONL process API schema
 packages/cards         card records and their derived rules (per-set modules); no printed text
 packages/decks         deck manifests, sealed pools, deck provenance
 packages/agents        AI opponents: rules policies, the learned model, an LLM agent for evaluation only
-packages/referee       online 1v1: referee and match host, reached by seat links
 packages/web           the browser app (built into one HTML file)
 packages/cli           terminal play
 tools/                 build, data fetching, simulation and analysis scripts
@@ -85,8 +84,6 @@ test — not the whole engine.
 ```sh
 pnpm test:card ST35        # one deck's card tests
 pnpm test:engine           # the rules-kernel tests only
-pnpm test:session          # the online session layer (referee, clock, workerd)
-pnpm referee:local --app   # the app and the match server on one origin, locally
 pnpm lint:changed          # eslint on files changed vs the merge base
 pnpm test -- engine.test   # any vitest filename filter
 pnpm verify                # the full gate CI runs

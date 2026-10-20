@@ -4,10 +4,5 @@ packages:
 
 onlyBuiltDependencies:
   - esbuild
-  # `workerd` is the real Workers runtime, which Miniflare downloads in a
-  # postinstall. Without this the Durable Object smoke test has no runtime to
-  # run in; nothing else in the repo needs it.
-  - workerd
 allowBuilds:
   esbuild: true
-  workerd: true

@@ -53,31 +53,8 @@ const textFlag = process.argv.find(
 const textPackPath = textFlag?.includes("=")
   ? textFlag.slice(textFlag.indexOf("=") + 1)
   : undefined;
-/**
- * Where this build's match server is, and whether it has one at all.
- *
- * Online play needs a server, and the standalone file has none. A page cannot
- * tell at runtime whether the origin serving it has a Worker behind it -- both
- * are its own origin over https -- so the build says which it is.
- *
- * `--match-server` alone means "the origin serving this page", which is the
- * deploy `wrangler.toml` describes. `--match-server=https://…` names another,
- * for an app hosted apart from its server. Absent, the build has no server and
- * a seat link is left in the address bar rather than opened against nothing.
- *
- * A build with a server is written as `dist/pages/index.html`, the directory
- * `wrangler.toml` serves in front of the Worker. It is the same art-free
- * bundle as the standalone file: the deploy publishes nothing of Bandai's, and
- * a player loads an asset pack into the app exactly as they do offline.
- */
-const matchServer =
-  process.argv
-    .find((argument) => argument.startsWith("--match-server="))
-    ?.slice("--match-server=".length) ??
-  (process.argv.includes("--match-server") ? "self" : "");
-
 const root = process.cwd();
-const outputDir = join(root, matchServer ? "dist/pages" : "dist");
+const outputDir = join(root, "dist");
 const webRoot = join(root, "packages/web/src");
 const assetRoot = join(webRoot, "assets");
 /**
@@ -450,7 +427,6 @@ const appBuild = await build({
     __ANALYTICS_WORKER_SOURCE__: JSON.stringify(analyticsWorkerSource),
     __BUILT_IN_CARD_ART__: JSON.stringify(builtInCardArt),
     __BUILT_IN_PRINTED_TEXT__: JSON.stringify(builtInPrintedText),
-    __MATCH_SERVER__: JSON.stringify(matchServer),
     __SCORER_AVAILABLE__: scorerPack ? "true" : "false",
     __LEARNED_MODEL__: JSON.stringify(learnedModel),
   },
@@ -586,7 +562,7 @@ if (!html.includes(analyticsWorkerSource.slice(0, 80))) {
   throw new Error("WEB_ARTIFACT_MISSING_INLINE_ANALYTICS_WORKER");
 }
 
-const output = join(outputDir, matchServer ? "index.html" : "open-optcg.html");
+const output = join(outputDir, "open-optcg.html");
 await mkdir(outputDir, { recursive: true });
 await writeFile(output, html);
 if (learnedModelFile && learnedModel) {

@@ -10,7 +10,6 @@ import {
   type ControllerKind,
   type MatchConfig,
 } from "../controller.js";
-import type { OnlineState } from "../online.js";
 import type { SavedDeck } from "../deck-labels.js";
 import {
   bindDeckPickerShelves,
@@ -35,23 +34,6 @@ export type SeatPilot = "you" | "ai";
 
 export interface SetupContext {
   savedDecks: Record<string, SavedDeck>;
-  /**
-   * An online match this browser sat down at from a seat link.
-   *
-   * The lobby starts none -- a seat link is the only way into one -- but it is
-   * where the player lands while one connects and after one drops, so it says
-   * which, and offers the way back.
-   */
-  online: {
-    state: OnlineState;
-    /**
-     * Sit back down at the seat this browser is still holding.
-     *
-     * A dropped connection is not a lost match: the referee holds a seat for
-     * its token as long as the clock runs, so the lobby offers the way back.
-     */
-    rejoin(): void;
-  };
   setupDecks: Record<PlayerId, string>;
   /** Write `setupDecks` to storage, so the next visit opens on these picks. */
   persistSetupDecks(): void;
@@ -150,7 +132,7 @@ export function render(ctx: SetupContext): string {
     settings: "",
   };
   const simulating = pilots.p1 === "ai" && pilots.p2 === "ai";
-  const start = renderStartControls(ctx, simulating);
+  const start = renderStartCell(simulating);
   return `
     <main class="setup-shell">
       <div class="lobby-main">
@@ -167,9 +149,8 @@ export function render(ctx: SetupContext): string {
               ${deckChoiceButton(ctx.savedDecks, "p2", ctx.setupDecks.p2)}
             </div>
           </div>
-          ${renderHub(start.cell)}
+          ${renderHub(start)}
           ${fixedControllerField("p1-controller", pilots.p1 === "ai" ? browserAgent(ctx) : "human")}
-          ${start.below ? `<div class="lobby-online">${start.below}</div>` : ""}
           <input type="file" id="trace-input" accept=".json,.jsonl,application/json" hidden />
         </form>
       </div>
@@ -272,47 +253,16 @@ function renderHub(startCell: string): string {
 }
 
 /**
- * The start control: the play cell on the hub's flat face, and whatever an
- * online seat has to say under the columns.
+ * The play cell on the hub's flat face: one word on the cell, the title saying
+ * what pressing it does, and a wrapper so the cell sits on the mark's flat face
+ * the way the board's End turn does (`.hub-command`, shell.css).
  *
- * One place, because a seat that is still connecting has to replace the button
- * rather than sit beside it: starting a local match over a live one is the one
- * thing a player in that position must not be nudged into. The cell is what
- * the hub prints; the way back to a held seat and the connection's status are
- * prose and rows, and go below the columns where there is room for them.
+ * With nobody at the table it does not start a match anyone is in, it asks
+ * what two agents are to do.
  */
-function renderStartControls(
-  ctx: SetupContext,
-  simulating: boolean,
-): { cell: string; below: string } {
-  const { state } = ctx.online;
-  // One word on the cell, the title saying what pressing it does, and a
-  // wrapper so the cell sits on the mark's flat face the way the board's End
-  // turn does (`.hub-command`, shell.css).
-  const cell = (word: string, label: string, attrs: string): string =>
-    `<span class="hub-command"><button class="hub-face hub-play" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" ${attrs}>${escapeHtml(word)}</button></span>`;
-  if (state.connecting) {
-    return {
-      cell: cell("Wait", "Joining", 'type="button" disabled'),
-      below: `<div class="ai-status"><span></span>${state.connecting === "connecting" ? "Joining the match…" : "Waiting for your opponent to sit down…"}</div>`,
-    };
-  }
-  // A seat this browser still holds sits under the start button: the match is
-  // live and its clock is running, so the way back has to be on screen.
-  const rejoin = state.heldSeat
-    ? `<button class="primary wide" type="button" id="online-rejoin">${icon("play", "Rejoin your match")}Rejoin your match</button>
-    <p class="muted small">Your clock is still running in it.</p>`
-    : "";
-  // The title says what pressing it does: with nobody at the table it does not
-  // start a match anyone is in, it asks what two agents are to do.
-  return {
-    cell: cell(
-      "Play",
-      simulating ? "AI vs AI" : "Start match",
-      'type="submit"',
-    ),
-    below: `${rejoin}${state.error ? `<p class="trace-payload-warning">${escapeHtml(state.error)}</p>` : ""}`,
-  };
+function renderStartCell(simulating: boolean): string {
+  const label = simulating ? "AI vs AI" : "Start match";
+  return `<span class="hub-command"><button class="hub-face hub-play" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" type="submit">Play</button></span>`;
 }
 
 function renderOwnPicker(ctx: SetupContext): string {
@@ -614,9 +564,6 @@ export function bind(ctx: SetupContext): void {
     if (picked === undefined) return;
     toggleAppDialog("agents-choice", false);
     ctx.simulateMatchup(picked);
-  });
-  document.querySelector("#online-rejoin")?.addEventListener("click", () => {
-    ctx.online.rejoin();
   });
   document
     .querySelectorAll<HTMLElement>("[data-seat-pilot]")

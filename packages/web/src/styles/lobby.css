@@ -786,26 +786,6 @@
   }
 }
 
-/* What an online seat has to say, under the columns: the way back to a held
-   seat, the connection's status, why it dropped. A dark panel, because it is
-   prose and rows on a drawing, and it is the one part of this page that is
-   still a form. */
-.lobby-online {
-  display: grid;
-  gap: 0.6rem;
-  width: min(100%, 26rem);
-  margin-inline: auto;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--hairline-strong);
-  border-radius: 10px;
-  background: rgba(18, 17, 19, 0.88);
-  box-shadow: var(--lift-lifted);
-  color: var(--parchment);
-}
-.lobby-online .muted {
-  color: var(--mist);
-}
-
 /* The hub: the board's honeycomb, in the board's own place.
 
    The element carries `.board-hub` (shell.css) rather than restating its
@@ -875,18 +855,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-/* Nothing to press -- an online seat still connecting -- so the cell
-   goes quiet the way the board's Waiting cell does: the rim and the glyph
-   fade into the ink. */
-.lobby-hub .hub-play[disabled] {
-  background: rgba(255, 255, 255, 0.22);
-  color: #6b6a70;
-  cursor: default;
-}
-.lobby-hub .hub-play[disabled]::before {
-  background: #0a0a0b;
-}
-
 /* What two agents are for: the two answers side by side (the trace dialog's
    pair, `.trace-choice-options`), and under them how many games the second
    one plays -- the analytics page's own size control. */

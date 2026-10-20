@@ -25,8 +25,7 @@ import type {
   PlayerId,
   PublicEvent,
 } from "@one-piece-sim/protocol";
-import type { ClockView, MatchResult } from "@one-piece-sim/protocol";
-import type { ControllerKind, MatchGame } from "../controller.js";
+import type { BrowserGameController, ControllerKind } from "../controller.js";
 import { buildDiagnosticsJsonl } from "../diagnostics.js";
 import { assetUrl } from "../assets.js";
 import {
@@ -91,14 +90,8 @@ import type {
 
 /** The live match, as a holder the battle view can also clear. */
 export interface MatchHolder {
-  /**
-   * The match on screen, local or online.
-   *
-   * Typed as `MatchGame` rather than as the local controller so the board has
-   * one code path for both. What the two cannot both do is in
-   * `MatchGame.capabilities`, and this screen reads it rather than assuming.
-   */
-  game: MatchGame | null;
+  /** The match on screen. */
+  game: BrowserGameController | null;
 }
 
 /** What the battle view shares rather than owns. */
@@ -135,19 +128,6 @@ export interface BattleScreen {
   render(): void;
   /** Drop any card/DON selection, for a caller leaving the match. */
   clearSelection(): void;
-  /**
-   * Take in a position that arrived from a server, with the steps that produced
-   * it, and redraw. For an online match; a local one applies its own actions.
-   */
-  absorbFrame(): void;
-  /**
-   * Repaint just the clock.
-   *
-   * A clock has to move every second, and the board must not: repainting it
-   * would rebuild every card in the DOM once a second and take any open menu
-   * with it. So the caller ticks this instead.
-   */
-  tickClock(): void;
 }
 
 /**
@@ -199,7 +179,7 @@ export function createBattleScreen(
     return state.replay ?? state.simulation;
   }
 
-  function viewerFor(controller: MatchGame): PlayerId {
+  function viewerFor(controller: BrowserGameController): PlayerId {
     // Shared with the theme, which paints the two halves of the table for the
     // same two seats: see `viewer.ts` for the rule and why it lives there.
     return boardViewer(
@@ -217,12 +197,8 @@ export function createBattleScreen(
     let active = ctx.match.game.activeObservation;
     // A Block step with nothing to block is not a decision, so it is taken for
     // the player rather than shown as a one-button modal.
-    //
-    // Offline this can loop: `act` returns the next position, so several forced
-    // passes clear in one pass of this function. Online it must not -- the
-    // position does not change until the server sends a frame, and looping here
-    // would send the same action forever. Sending it once is enough: the frame
-    // that answers re-renders, and this runs again on the new position.
+    // `act` returns the next position, so several forced passes clear in one
+    // pass of this function.
     const forcedPass = () =>
       active.phase === "block" &&
       active.legalActions.length === 1 &&
@@ -232,23 +208,18 @@ export function createBattleScreen(
     // A replay supplies every action from the file, including the forced
     // passes the board took for the player when the match was played. Taking
     // one here would apply it twice and put the rest of the file out of step.
-    if (state.replay) {
-      // Nothing: the file is the only thing that advances a replay.
-    } else if (ctx.match.game.capabilities.appliesImmediately) {
+    if (!state.replay) {
       for (let pass = forcedPass(); pass; pass = forcedPass()) {
         ctx.match.game.act(pass.actionId);
         clearMainSelection();
         active = ctx.match.game.activeObservation;
       }
-    } else {
-      const pass = forcedPass();
-      if (pass) ctx.match.game.act(pass.actionId);
     }
     const viewer = viewerFor(ctx.match.game);
     // A payment the player has already composed answers its own pool prompts.
     // Returning here rather than falling through: `performAction` re-renders,
-    // and the next prompt -- locally the very next position, online the next
-    // frame -- comes back through this same check until the plan runs out.
+    // and the next prompt comes back through this same check until the plan
+    // runs out.
     if (spendDonReturnPlan(active)) return;
     const observation = ctx.match.game.observe(viewer);
     const playerIsActive = active.activePlayer === viewer;
@@ -338,7 +309,6 @@ export function createBattleScreen(
       records: state.llmDebugRecords,
       viewer,
       names: instanceNames(historySteps, observation),
-      canRewind: ctx.match.game.capabilities.rewind,
       // In a replay the file still holds every action, so going back to an
       // earlier point throws nothing away and the button is not a reset.
       rewindVerb: state.replay ? "Jump" : "Reset",
@@ -351,8 +321,7 @@ export function createBattleScreen(
       </main>
       ${renderBoardHub(active, observation, viewer, endTurnAction, hasOtherActions, playerIsActive)}
       ${boardTargeting() ? "" : renderHandToggle(observation, active)}
-      ${renderTopbar(viewer)}
-      ${renderSessionResult(ctx.match.game.result ?? null, viewer)}
+      ${renderTopbar()}
       ${state.battleNotice ? renderBattleNotice(state.battleNotice, viewer, active) : ""}
       ${state.historyOpen ? renderHistoryModal(history) : ""}
       ${watchedNotice}
@@ -393,102 +362,6 @@ export function createBattleScreen(
       state.historyPinnedToLatest = list.scrollTop < 48;
       state.historyScroll = list.scrollTop;
     });
-  }
-
-  /**
-   * Both clocks, and the countdown on the one that is running.
-   *
-   * A server-run match has a real time limit, so not showing it would be a rule
-   * the player cannot see. Rendered from the frame's absolute deadline rather
-   * than from a number counting down in the page: the deadline is the server's,
-   * and a frame that arrived late must not extend it.
-   */
-  function renderClock(clock: ClockView | null, viewer: PlayerId): string {
-    if (!clock) return "";
-    const remaining = (seat: PlayerId): number => {
-      const bank = clock.bankMs[seat];
-      // The seat on the clock is spending its bank right now; the deadline is
-      // the only thing that knows how much of it is left.
-      if (!clock.running || clock.deadlineMs === null) return bank;
-      const onClock = seat === activeSeatOnClock(clock, viewer);
-      return onClock ? Math.max(0, clock.deadlineMs - Date.now()) : bank;
-    };
-    const face = (ms: number): string => {
-      const total = Math.ceil(ms / 1000);
-      return `${String(Math.floor(total / 60))}:${String(total % 60).padStart(2, "0")}`;
-    };
-    const opponent: PlayerId = viewer === "p1" ? "p2" : "p1";
-    return `<div class="match-clock" aria-label="Time remaining">
-      <span class="clock-you ${clock.running && activeSeatOnClock(clock, viewer) === viewer ? "clock-ticking" : ""}"><small>You</small><b>${face(remaining(viewer))}</b></span>
-      <span class="clock-them ${clock.running && activeSeatOnClock(clock, viewer) === opponent ? "clock-ticking" : ""}"><small>Them</small><b>${face(remaining(opponent))}</b></span>
-    </div>`;
-  }
-
-  /** Whose clock is running, which is whose decision it is. */
-  function activeSeatOnClock(
-    clock: ClockView,
-    viewer: PlayerId,
-  ): PlayerId | null {
-    if (!clock.running || !ctx.match.game) return null;
-    return ctx.match.game.activeObservation.activePlayer === viewer
-      ? viewer
-      : viewer === "p1"
-        ? "p2"
-        : "p1";
-  }
-
-  /**
-   * How an online match ended, when the engine does not say so itself.
-   *
-   * A resignation, a timeout and a no-show leave the position alone -- the board
-   * still looks playable -- so this is the only thing on screen that says the
-   * match is over. Drawn as a modal, not a banner, because there is nothing left
-   * to do on the board behind it.
-   */
-  function renderSessionResult(
-    result: MatchResult | null,
-    viewer: PlayerId,
-  ): string {
-    // An ending the engine reached is already drawn by the board itself.
-    if (
-      !result ||
-      result.reason === "life" ||
-      result.reason === "deck-exhaustion" ||
-      result.reason === "time"
-    ) {
-      return "";
-    }
-    const outcome =
-      result.winner === null
-        ? "No result"
-        : result.winner === viewer
-          ? "You win"
-          : "You lose";
-    const because = {
-      resign:
-        result.winner === viewer ? "Your opponent resigned." : "You resigned.",
-      timeout:
-        result.winner === viewer
-          ? "Your opponent ran out of time."
-          : "You ran out of time.",
-      "no-show": "Your opponent never sat down.",
-      superseded:
-        "The server was updated, so this match could not be finished. Nobody wins it.",
-      "time-limit":
-        "This match hit the ninety-minute limit, so it ends with no winner.",
-    }[result.reason];
-    // The action list arrives with the result, so the end of the match is the
-    // first and only moment this seat can save a replayable record of it -- and
-    // the server keeps none, so it is the only copy there will be.
-    const exportTrace = ctx.match.game?.capabilities.trace
-      ? `<button class="action-button secondary" id="match-over-trace" type="button"><b>Download trace</b></button>`
-      : "";
-    return `<aside class="command-surface decision-modal match-over-modal" role="dialog" aria-modal="true" aria-labelledby="match-over-title">
-      <h2 id="match-over-title">${escapeHtml(outcome)}</h2>
-      <p class="muted">${escapeHtml(because)}</p>
-      ${exportTrace}
-      <button class="action-button" id="match-over-exit" type="button"><b>Back to the menu</b></button>
-    </aside>`;
   }
 
   /* -------------------------------------------------------------------------
@@ -863,33 +736,21 @@ export function createBattleScreen(
     return `<small class="turn-limit">${text}</small>`;
   }
 
-  /* The lower-left cell is the match's own secondary control. A local match
-     can export its trace; an online match cannot -- the server holds the
-     record -- and what it offers instead is to resign. Neither match has both,
-     so they take the same face rather than growing the cluster a cell.
+  /* The lower-left cell is the match's own secondary control: exporting its
+     trace.
 
-     It is drawn at every width. It used to be `desktop-secondary`, hidden
-     below 760px, which on a phone meant a trace could not be exported from
-     the board it was recorded on -- and, once an online match took the same
-     face, that a phone could not resign at all. The cluster has the room: the
-     cell stands on a face the mark already owns. */
+     It is drawn at every width, so a trace can be exported from a phone, the
+     board it was recorded on. The cluster has the room: the cell stands on a
+     face the mark already owns. */
   function renderHubSecondary(): string {
-    const game = ctx.match.game!;
-    if (game.capabilities.trace) {
-      return `<button class="hub-face hub-trace" id="trace" type="button" title="Export trace">${icon("download", "Export trace")}</button>`;
-    }
-    if (game.resign) {
-      return `<button class="hub-face hub-trace" id="resign" type="button" title="Resign">${icon("flag", "Resign")}</button>`;
-    }
-    return "";
+    return `<button class="hub-face hub-trace" id="trace" type="button" title="Export trace">${icon("download", "Export trace")}</button>`;
   }
 
   /* The strip across the top holds what belongs to the match rather than to
-     the board: the replay or simulation controls, and an online match's
-     clock. Drawn only when there is something to put in it. */
-  function renderTopbar(viewer: PlayerId): string {
-    const clock = renderClock(ctx.match.game!.clock ?? null, viewer);
-    const bar = `${renderReplayBar()}${renderSimulationBar()}${clock}`;
+     the board: the replay or simulation controls. Drawn only when there is
+     something to put in it. */
+  function renderTopbar(): string {
+    const bar = `${renderReplayBar()}${renderSimulationBar()}`;
     return bar ? `<header class="topbar">${bar}</header>` : "";
   }
 
@@ -3945,7 +3806,7 @@ export function createBattleScreen(
     document.querySelector("#result-new")?.addEventListener("click", () => {
       ctx.goHome();
     });
-    if (ctx.match.game?.capabilities.rewind) {
+    if (ctx.match.game) {
       // Hovering or focusing a Reset marks everything it would discard, so the
       // cost of the click is on screen before it is paid rather than in a
       // count in the dialog that follows it.
@@ -4277,34 +4138,21 @@ export function createBattleScreen(
           renderGame();
         });
       });
-    document
-      .querySelector("#match-over-exit")
-      ?.addEventListener("click", () => {
-        ctx.goHome();
-      });
-    document.querySelector("#resign")?.addEventListener("click", () => {
-      // A confirm, because there is no undo online and a misclick would hand the
-      // opponent the game.
-      if (!window.confirm("Resign this match? Your opponent wins.")) return;
-      ctx.match.game?.resign?.();
+    document.querySelector("#trace")?.addEventListener("click", () => {
+      if (!ctx.match.game) return;
+      // The trace is the single artefact for saving a match: the engine trace
+      // with every model call joined onto the decision that produced it.
+      // Loading that file back from the lobby resumes the match from this one
+      // file.
+      downloadText(
+        "open-optcg-trace.jsonl",
+        buildDiagnosticsJsonl({
+          trace: ctx.match.game.trace(),
+          llmRecords: structuredClone(state.llmDebugRecords),
+          exportedAt: new Date().toISOString(),
+        }),
+      );
     });
-    for (const id of ["#trace", "#match-over-trace"]) {
-      document.querySelector(id)?.addEventListener("click", () => {
-        if (!ctx.match.game) return;
-        // The trace is the single artefact for saving a match: the engine trace
-        // with every model call joined onto the decision that produced it.
-        // Loading that file back from the lobby resumes the match from this one
-        // file.
-        downloadText(
-          "open-optcg-trace.jsonl",
-          buildDiagnosticsJsonl({
-            trace: ctx.match.game.trace(),
-            llmRecords: structuredClone(state.llmDebugRecords),
-            exportedAt: new Date().toISOString(),
-          }),
-        );
-      });
-    }
     document
       .querySelector("#clear-selection")
       ?.addEventListener("click", () => {
@@ -4386,7 +4234,7 @@ export function createBattleScreen(
         }
         // A fixed `DON!! −N` has no count to submit -- the pool prompts are
         // already on offer -- so the plan starts answering them here rather
-        // than waiting for a frame that will never come.
+        // than waiting for a position change that will never come.
         if (composition.prepaid) spendDonReturnPlan(game.activeObservation);
       });
     document.querySelector("#increase-don")?.addEventListener("click", () => {
@@ -4586,14 +4434,9 @@ export function createBattleScreen(
   function performDonAttachments(targetInstanceId: string): void {
     if (!ctx.match.game) return;
     try {
-      // One at a time against a server. Each attachment is its own action at its
-      // own revision, so a loop would send several for the position before them
-      // and the server would rightly reject all but the first. The player clicks
-      // again; the count picker is a local convenience, not a rule.
-      const attachments = ctx.match.game.capabilities.appliesImmediately
-        ? state.donAttachCount
-        : 1;
-      for (let attached = 0; attached < attachments; attached += 1) {
+      // The count picker is a convenience, not a rule: each attachment is its
+      // own action, taken against the position the one before it left.
+      for (let attached = 0; attached < state.donAttachCount; attached += 1) {
         const action = ctx.match.game.activeObservation.legalActions.find(
           (candidate) =>
             candidate.type === "attach-don" &&
@@ -4609,17 +4452,6 @@ export function createBattleScreen(
     }
   }
 
-  /**
-   * Fold one action's consequences into what the board is showing.
-   *
-   * Split out of `performAction` because an action is not always something this
-   * page did. Locally every action comes through the click that caused it --
-   * the player's, and the agent's, which the worker hands back the same way.
-   * Online the opponent's actions arrive as frames from the server with no
-   * click behind them, and this used to run only on click: the board redrew to
-   * the new position with no "here is what they did" modal and no battle
-   * result. Same derivation, two callers.
-   */
   /**
    * Whether a panel the player has not acknowledged is holding the screen.
    *
@@ -4637,6 +4469,7 @@ export function createBattleScreen(
     return state.opponentNotice !== null || state.automaticNotice !== null;
   }
 
+  /** Fold one action's consequences into what the board is showing. */
   function absorbAction(
     actor: PlayerId,
     viewer: PlayerId,
@@ -4661,13 +4494,8 @@ export function createBattleScreen(
       return;
     }
     const opponentActed = actor !== viewer;
-    // Appended, not replaced, while a notice is still on screen.
-    //
-    // Offline the opponent is an agent that does not move until the player
-    // dismisses the modal. Online they are a person taking their turn at their
-    // own pace, and a second action arriving before the first was read used to
-    // overwrite it -- the player dismissed one notice having never seen the
-    // other, on a board that had already moved twice.
+    // Appended, not replaced, while a notice is still on screen, so a second
+    // action landing before the first was read cannot overwrite it.
     state.opponentNotice =
       opponentActed && newEvents.length > 0
         ? [...(state.opponentNotice ?? []), ...newEvents]
@@ -4731,57 +4559,17 @@ export function createBattleScreen(
       // whether or not the events for it have arrived yet, so this sits
       // outside the branch below rather than inside `absorbAction`.
       state.bottomOrder = null;
-      // Online, `act` has sent a request and nothing else: the events belong to
-      // the *previous* action until the server answers, so reading them here
-      // would show the last thing that happened as though it were this one.
-      // `absorbFrame` does it when the answer arrives, for both seats' actions.
-      if (ctx.match.game.capabilities.appliesImmediately) {
-        absorbAction(
-          before.activePlayer,
-          viewer,
-          viewerEvents(ctx.match.game.latestActionEvents, viewer),
-        );
-      }
+      absorbAction(
+        before.activePlayer,
+        viewer,
+        viewerEvents(ctx.match.game.latestActionEvents, viewer),
+      );
       clearMainSelection();
       state.choiceModalHidden = false;
       renderGame();
     } catch (error) {
       window.alert(error instanceof Error ? error.message : String(error));
     }
-  }
-
-  /**
-   * A position arrived from the server: show what got us here, then redraw.
-   *
-   * The caller is whatever is holding the socket; see `MatchGame.lastActionActor`
-   * for why the actor has to come with the events.
-   */
-  function absorbFrame(): void {
-    const game = ctx.match.game;
-    if (!game) return;
-    const actor = game.lastActionActor;
-    const viewer = viewerFor(game);
-    if (actor) {
-      absorbAction(
-        actor,
-        viewer,
-        viewerEvents(game.latestActionEvents, viewer),
-      );
-      if (actor !== viewer) state.choiceModalHidden = false;
-      // If that action handed the decision over, its steps go to the history
-      // drawer and not into a modal.
-      //
-      // The modal exists so the board cannot move under a player who has not
-      // read it, and offline that costs nothing: the agent does not act until it
-      // is dismissed. Online the opponent is a person and the clock is running
-      // -- this player's clock, now that it is their decision -- so a modal over
-      // their own options would charge them time to close. Their turn, their
-      // screen; the history drawer holds the record.
-      if (game.activeObservation.activePlayer === viewer) {
-        state.opponentNotice = null;
-      }
-    }
-    renderGame();
   }
 
   function activeController(): ControllerKind | null {
@@ -4822,10 +4610,6 @@ export function createBattleScreen(
       return;
     const controller = activeController();
     if (!controller || controller === "human") return;
-    // An online opponent is a person on the other end of the network. Nothing in
-    // this page pilots them, and starting an agent for them would play their
-    // turn for them.
-    if (!ctx.match.game.capabilities.ai || controller === "online") return;
     state.aiPending = true;
     const observation = ctx.match.game.activeObservation;
     const player = observation.activePlayer;
@@ -4907,24 +4691,8 @@ export function createBattleScreen(
     renderGame();
   });
 
-  /**
-   * Redraw the clock in place.
-   *
-   * Replaces one element rather than the board, so a menu the player has open
-   * stays open and no card is rebuilt. Silent when there is no clock or no
-   * board on screen, which is every local match and every menu screen.
-   */
-  function tickClock(): void {
-    const clock = ctx.match.game?.clock;
-    const element = document.querySelector(".match-clock");
-    if (!clock || !element || !ctx.match.game) return;
-    element.outerHTML = renderClock(clock, viewerFor(ctx.match.game));
-  }
-
   return {
     render: renderGame,
     clearSelection: clearMainSelection,
-    tickClock,
-    absorbFrame,
   };
 }

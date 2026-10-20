@@ -32,14 +32,6 @@ describe("isSimulation", () => {
     expect(isSimulation({ ...base, p1Controller: "human" })).toBe(false);
     expect(isSimulation({ ...base, p2Controller: "human" })).toBe(false);
   });
-
-  it("is not a simulation when a seat is a person over the network", () => {
-    // The referee's match is somebody's game, whatever this page would rather
-    // be doing with the board; pacing it here would pace it for them.
-    expect(
-      isSimulation({ ...base, p1Controller: "human", p2Controller: "online" }),
-    ).toBe(false);
-  });
 });
 
 describe("beginSimulation", () => {

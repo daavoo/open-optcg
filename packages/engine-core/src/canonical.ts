@@ -2,8 +2,8 @@ import { sha256Hex } from "./sha256.js";
 
 /**
  * Canonical JSON: the same value always serializes to the same text, whatever
- * order its keys were inserted in. `hashState` is built on it, and every trace,
- * fixture and online session compares those hashes.
+ * order its keys were inserted in. `hashState` is built on it, and every trace
+ * and fixture compares those hashes.
  *
  * This used to rebuild the value as a key-sorted copy and hand it to
  * `JSON.stringify`, which allocated a second object graph the size of the game

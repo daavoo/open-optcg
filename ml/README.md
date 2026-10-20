@@ -144,9 +144,7 @@ pnpm web:build            # or --with-art for a personal copy with card images
 
 The build inlines the pack into the worker and the match setup offers a
 "Learned model" opponent, the default when present. The pack is gitignored;
-`pnpm model:fetch` downloads the published one instead. To play from a Python
-checkpoint over the local match server instead:
-`pnpm exec tsx ml/bridge/play.ts`.
+`pnpm model:fetch` downloads the published one instead.
 
 ### Publishing it
 

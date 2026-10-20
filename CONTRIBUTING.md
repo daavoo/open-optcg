@@ -41,7 +41,6 @@ packages/protocol      shared types and the JSONL process API schema
 packages/cards         card records and their derived rules; no printed text
 packages/decks         deck manifests, sealed pools, deck provenance
 packages/agents        AI opponents: rules policies, the learned model's seat, and the LLM agent kept for evaluation (docs/llm-evaluation.md)
-packages/referee       online 1v1: referee and match host, reached by seat links
 packages/web           the browser app (built into one HTML file)
 packages/cli           terminal play
 tools/                 build, data fetching, simulation and analysis scripts
@@ -175,16 +174,6 @@ the Pages workflow serves beside the app, and the bookmark fetches and runs it
 on Bandai's card list. `pnpm assets:download` writes the same pack from a
 checkout.
 
-## Online play
-
-A 1v1 over the network runs through a server-side referee (a Cloudflare
-Worker), so neither client ever holds the other's hand. `pnpm referee:local
---app` serves the app and the server on one origin for local play, and
-`pnpm test:session` runs that layer's tests. A match is reached by a seat link
-rather than from the lobby, and the plain `pnpm web:build` has no server, so it
-leaves a seat link unopened. [docs/online-play.md](docs/online-play.md) is the
-map of what exists and what is still missing.
-
 ## Releases
 
 The game is the hosted page and nothing else: every push to `main` redeploys
@@ -208,7 +197,7 @@ A diff does not show a panel that draws the same card twice, a heading that
 repeats the row under it, or a surface nothing ever renders, so look at a
 changed screen in the running app, from a position the engine actually
 produced. The app is a single file and the Playwright suite already drives it:
-`pnpm web:build && pnpm web:build:server`, then a throwaway spec in `test/e2e/`
+`pnpm web:build`, then a throwaway spec in `test/e2e/`
 (`testDir` is `./e2e`) that opens `dist/open-optcg.html` and drives the app to
 the position. Delete the spec before committing, unless the position is worth
 asserting on for good. Screenshots do not go in PRs or the repository.

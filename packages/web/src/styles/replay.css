@@ -5,8 +5,7 @@
    same strip: `.spectator-bar` is what both are, and the mode's own class
    carries what only it has.
 
-   The bar sits in `.topbar` beside an online clock, and
-   wears that bar's dark graphite rather than a paper dialog's cream: it is a
+   The bar sits in `.topbar`, and wears that bar's dark graphite rather than a paper dialog's cream: it is a
    control on the board, not a question about it. */
 .spectator-bar {
   display: flex;
