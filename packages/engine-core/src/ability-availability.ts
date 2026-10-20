@@ -159,6 +159,18 @@ function unmetRequirement(
   ) {
     return `${count(requires.handCardsMatching.count, "particular card")} in hand, which its text names`;
   }
+  if (
+    requires.lifeCardsMatching !== undefined &&
+    selectCards(
+      state,
+      { sourcePlayerId: playerId, source },
+      { ...requires.lifeCardsMatching.match, player: "self", zone: "life" },
+      {},
+      db,
+    ).length < requires.lifeCardsMatching.count
+  ) {
+    return `${count(requires.lifeCardsMatching.count, "particular Life card")}, which its text names`;
+  }
   return undefined;
 }
 

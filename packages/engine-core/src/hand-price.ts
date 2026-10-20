@@ -1,7 +1,6 @@
 import {
   cards,
   hasCardName,
-  hasCardType,
   hasCardTypeIncluding,
   type CardDatabase,
 } from "@one-piece-sim/cards";
@@ -78,23 +77,6 @@ function boardPower(
  * in common: two read the opponent's board, one reads the player's own, and one
  * reads the Leader's name and the DON!! count.
  */
-/**
- * Every rested card a player has on the field: the four areas Bandai's own
- * Refresh Phase rule enumerates -- Leader, Character, Stage and cost -- so a
- * rested DON!! counts. The same reading `rested-cards` takes in `mechanics.ts`,
- * repeated here rather than imported: that module reaches most of the engine,
- * and a hand price should not pull it in for a four-line count.
- */
-function restedCardCount(state: GameState, playerId: PlayerId): number {
-  const player = state.players[playerId];
-  return (
-    (player.leaderRested ? 1 : 0) +
-    player.board.filter((card) => card.rested).length +
-    (player.stage?.rested ? 1 : 0) +
-    player.restedDon.length
-  );
-}
-
 const STATIC_HAND_DISCOUNTS: readonly {
   cardNumber: string;
   amount: number;
@@ -113,21 +95,6 @@ const STATIC_HAND_DISCOUNTS: readonly {
     cardNumber: "OP17-013",
     amount: 2,
     when: opponentHasHighPowerCharacter,
-  },
-  // OP11-023 Arlong: "[printed text omitted -- pnpm card:text OP11-023]"
-  //
-  // Three conditions at once, and every one of them is a board state the Green
-  // Fish-Man deck reaches on purpose: it rests the opponent's cards with half its
-  // clauses and spends its own Life with the other half. A 7-cost 7000 body for 4
-  // is the payoff. "Rested cards" counts the four areas Bandai's Refresh Phase
-  // rule enumerates, DON!! included, which is what `restedCardCount` reads.
-  {
-    cardNumber: "OP11-023",
-    amount: 3,
-    when: (state, playerId) =>
-      hasCardType(state.players[playerId].leaderCardNumber, "Fish-Man") &&
-      state.players[playerId].life.length <= 3 &&
-      restedCardCount(state, playerId === "p1" ? "p2" : "p1") >= 5,
   },
   // OP16-005 Thatch: "[printed text omitted -- pnpm card:text OP16-005]"Whitebeard Pirates"[printed text omitted -- pnpm card:text OP16-005]"
   //

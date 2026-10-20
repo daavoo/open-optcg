@@ -13,7 +13,7 @@ import { bankDamagedLifeCard, dealDamage } from "./life.js";
 
 import type { CardInstance, GameState } from "./model.js";
 
-import { opponentOf, leaderInstanceId } from "./board.js";
+import { leaderInstanceId } from "./board.js";
 
 export function attachDon(
   state: GameState,
@@ -65,53 +65,6 @@ export function addPowerModifier(
   if (!target) throw new Error(`MISSING_POWER_TARGET: ${targetInstanceId}`);
   target.powerModifiers ??= [];
   target.powerModifiers.push(modifier);
-}
-
-export function triggerFranky(
-  state: GameState,
-  eventPlayerId: PlayerId,
-  events: PublicEvent[],
-): void {
-  const frankyPlayerId = opponentOf(eventPlayerId);
-  if (state.activeAttack?.attackerPlayerId !== frankyPlayerId) return;
-  // [Once Per Turn] is per copy, not per card number: two Frankys each get their
-  // own activation, so the key has to name the instance. Keyed by card number,
-  // the four copies ST31 runs shared one use between them -- the same shape every
-  // other [Once Per Turn] in the engine keys per instance
-  // (`:activate-main`, `:on-opponent-attack`, `:leader-watcher`, `:redirect`).
-  const franky = state.players[frankyPlayerId].board.find(
-    (card) =>
-      card.cardNumber === "OP11-012" &&
-      !state.oncePerTurn.includes(
-        `${state.turn}:${frankyPlayerId}:${card.instanceId}:franky`,
-      ),
-  );
-  if (!franky) return;
-  state.oncePerTurn.push(
-    `${state.turn}:${frankyPlayerId}:${franky.instanceId}:franky`,
-  );
-  for (const character of state.players[frankyPlayerId].board) {
-    addPowerModifier(
-      state,
-      frankyPlayerId,
-      character.instanceId,
-      2000,
-      state.turn,
-      franky,
-    );
-    events.push({
-      type: "power-changed",
-      playerId: frankyPlayerId,
-      targetInstanceId: character.instanceId,
-      amount: 2000,
-      expiresAtTurn: state.turn,
-      sourceCardNumber: franky.cardNumber,
-      sourceInstanceId: franky.instanceId,
-    });
-  }
-  // No second bump for an attacking Character: the +2000 above is a modifier on
-  // the card, and `battleAttackPower` reads the card. This used to add it again
-  // by hand to keep the frozen attack scalar in step with the board.
 }
 
 /**

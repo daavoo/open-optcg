@@ -8,6 +8,36 @@ import { camieTrashBothLives } from "./reaction-shared.js";
 
 export const op11ReactionRules: readonly ReactionRule[] = [
   {
+    // OP11-012 Franky: `pnpm card:text OP11-012`.
+    //
+    // On its controller's turn the opponent's only Events are Counters, so this
+    // is a reply to the defence: every Character, the attacker included, gains
+    // +2000 for the turn. A reaction rather than part of the Event's
+    // activation, because the Event resolves first (Bandai's OP11-012#2): a
+    // Counter that K.O.s a Character does so before the +2000, and one that
+    // K.O.s Franky itself leaves nothing to give it (#3).
+    cardNumber: "OP11-012",
+    controller: "board",
+    signal: { kind: "event-activated", activatedBy: "opponent" },
+    ownTurn: true,
+    oncePerTurn: true,
+    oncePerCopy: true,
+    program: {
+      effect: {
+        kind: "select",
+        selector: { player: "self", zone: "board", category: "character" },
+        bind: "op11-franky-buff",
+        count: "all",
+        effect: {
+          kind: "modify-power",
+          binding: "op11-franky-buff",
+          amount: 2_000,
+          expiresAfterTurns: 0,
+        },
+      },
+    },
+  },
+  {
     // OP11-102 Camie: "[printed text omitted -- pnpm card:text OP11-102]"
     //
     // Two rules for one printed clause -- an Event and a Trigger are different

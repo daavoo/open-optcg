@@ -74,7 +74,6 @@ const LEGACY_IMPERATIVE_CARDS: readonly string[] = [
   "OP10-109",
   "OP10-111",
   "OP11-009",
-  "OP11-012",
   "OP11-062",
   "OP11-079",
   "OP12-031",

@@ -13,7 +13,7 @@ import {
 } from "@one-piece-sim/cards";
 import type { PlayerId } from "@one-piece-sim/protocol";
 import type { BoardCard, GameState } from "../model.js";
-import { leaderHasType, turnPlayer } from "./static-shared.js";
+import { leaderHasType, restedCardCount, turnPlayer } from "./static-shared.js";
 import type {
   AbilityContext,
   RemovalImmunity,
@@ -38,6 +38,28 @@ const handSize = (context: AbilityContext): number =>
   context.state.players[context.playerId].hand.length;
 
 export const op11StaticAbilities: readonly StaticAbility[] = [
+  // OP11-023 Arlong: −3 cost in hand behind a {Fish-Man} Leader, at 3 or
+  // fewer Life, with the opponent showing 5 or more rested cards -- every one
+  // a board state the Green Fish-Man deck reaches on purpose.
+  //
+  // A cost layer rather than a hand price, so both the price paid to play it
+  // and a "cost N or less" clause reading the hand see it: OP11-035 Fisher
+  // Tiger plays it as a cost-4 Character (Bandai's OP11-023#1).
+  // `costZone: "hand"`, so the body on the field is priced at its printed 7.
+  {
+    cardNumber: "OP11-023",
+    scope: "self",
+    costZone: "hand",
+    cost: (context) =>
+      leaderHasType(context, "Fish-Man") &&
+      context.state.players[context.playerId].life.length <= 3 &&
+      restedCardCount({
+        ...context,
+        playerId: context.playerId === "p1" ? "p2" : "p1",
+      }) >= 5
+        ? -3
+        : 0,
+  },
   // OP11-001 Koby (Leader): "[printed text omitted -- pnpm card:text OP11-001]"
   //
   // That sentence is [Rush: Character], granted by the Leader to a whole type

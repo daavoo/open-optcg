@@ -13,7 +13,7 @@ import {
 import { addDonFromDeck, returnDonToDeck } from "../don.js";
 import { mechanicPendingEffect } from "../effects.js";
 import { leaderInstanceId } from "../board.js";
-import { handOverPendingEffect, triggerFranky } from "../pending.js";
+import { handOverPendingEffect } from "../pending.js";
 import { type CardInstance } from "../model.js";
 import { type MechanicEffect, type MechanicProgram } from "../mechanics.js";
 import { eventActivationCost } from "../hand-price.js";
@@ -155,7 +155,6 @@ export function applyActivateMain({
       playerId: activePlayer,
       cardNumber: eventCard.cardNumber,
     });
-    triggerFranky(state, activePlayer, events);
     if (program.donMinus) {
       returnDonToDeck(state, activePlayer, program.donMinus, eventCard, events);
     }

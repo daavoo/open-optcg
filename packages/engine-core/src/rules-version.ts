@@ -43,5 +43,12 @@
  * (OP06-042#2); OP06-056 and OP06-058 ask the owner to order the Characters
  * they bury; and OP06-006 Saga chooses the {FILM} Character it trashes when
  * the turn ends. A recorded action list meets prompts it never answered.
+ *
+ * Bumped to 1.7 for Bandai's OP-11 Q&A: OP11-012 Franky's +2000 waits for
+ * the Event it answers, a K.O. of several Characters reads each one's
+ * replacements before any of them leaves (OP11-001#3), OP11-066 Oven's DON!!
+ * needs the guess to land, and OP11-022 Shirahoshi's Leader is not offered
+ * with its top Life card face-up. A recorded action list can meet an offer
+ * that is no longer made.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.6";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.7";

@@ -194,6 +194,14 @@ export interface ReactionRule {
    */
   opponentTurn?: boolean;
   oncePerTurn: boolean;
+  /**
+   * Keys `[Once Per Turn]` by the reacting copy rather than by card number, so
+   * each copy on the board has its own use -- OP11-012 Franky, which ST31 runs
+   * four of. Every copy on the field when the signal lands answers it, and a
+   * copy that has not answered yet keeps its use for a later signal that turn.
+   * Board-scoped rules only; a Leader has one copy anyway.
+   */
+  oncePerCopy?: true;
   maxHandSize?: number;
   /** DON!! that must be given to the Leader, for a `[DON!! xN]` clause. */
   leaderAttachedDon?: number;
