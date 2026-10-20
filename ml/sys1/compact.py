@@ -594,8 +594,15 @@ def train(args) -> None:
     if args.card_init:
         # A compact checkpoint's own card table: what it learned of every card.
         source = dict(mx.load(str(Path(args.card_init) / "weights.safetensors")))["card.weight"]
-        if source.shape != model.card.weight.shape:
-            raise SystemExit(f"--card-init's card table is {source.shape}, this model's {model.card.weight.shape}")
+        target = model.card.weight.shape
+        if source.shape[0] != target[0] or source.shape[1] > target[1]:
+            raise SystemExit(f"--card-init's card table is {source.shape}, this model's {target}")
+        if source.shape[1] < target[1]:
+            # A wider student keeps the narrower table in its leading columns
+            # and starts the rest at its own initialisation, scaled down so
+            # the copied columns dominate each card's first vector.
+            rest = model.card.weight[:, source.shape[1] :] * 0.1
+            source = mx.concatenate([source.astype(rest.dtype), rest], axis=1)
         model.card.weight = source
     if args.teacher:
         vectors = teacher_card_vectors(Path(args.teacher))
