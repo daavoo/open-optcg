@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import signal
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +30,7 @@ import mlx.core as mx
 import mlx.nn as nn
 import mlx.optimizers as optim
 import numpy as np
-from mlx.utils import tree_flatten
+from mlx.utils import tree_flatten, tree_unflatten
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
@@ -590,12 +591,22 @@ def train(args) -> None:
     print(f"{len(train_idx)} train / {len(val_idx)} val decisions from {len(games)} games", flush=True)
 
     cards = len(json.loads((DATA / "cards.json").read_text()))
+    # A fixed seed makes the student's initial weights, and so a run and its
+    # resumption, reproducible.
+    mx.random.seed(0)
     model = CompactScorer(cards, args.d, args.layers, args.heads)
     if args.card_init:
         # A compact checkpoint's own card table: what it learned of every card.
         source = dict(mx.load(str(Path(args.card_init) / "weights.safetensors")))["card.weight"]
-        if source.shape != model.card.weight.shape:
-            raise SystemExit(f"--card-init's card table is {source.shape}, this model's {model.card.weight.shape}")
+        target = model.card.weight.shape
+        if source.shape[0] != target[0] or source.shape[1] > target[1]:
+            raise SystemExit(f"--card-init's card table is {source.shape}, this model's {target}")
+        if source.shape[1] < target[1]:
+            # A wider student keeps the narrower table in its leading columns
+            # and starts the rest at its own initialisation, scaled down so
+            # the copied columns dominate each card's first vector.
+            rest = model.card.weight[:, source.shape[1] :] * 0.1
+            source = mx.concatenate([source.astype(rest.dtype), rest], axis=1)
         model.card.weight = source
     if args.teacher:
         vectors = teacher_card_vectors(Path(args.teacher))
@@ -614,6 +625,19 @@ def train(args) -> None:
         [args.warmup],
     )
     optimizer = optim.AdamW(learning_rate=schedule, weight_decay=0.01)
+    # A resumed run loads its optimizer state before the step is compiled:
+    # the compiled step captures `optimizer.state` as it is defined.
+    resume_dir = Path(args.out) / "resume"
+    start, order, cursor, resumed = 1, None, 0, None
+    if (resume_dir / "state.json").exists():
+        resumed = json.loads((resume_dir / "state.json").read_text())
+        if resumed["steps"] != steps:
+            raise SystemExit(f"{resume_dir} was a {resumed['steps']}-step run, this one is {steps}")
+        model.load_weights(str(resume_dir / "weights.safetensors"))
+        optimizer.state = tree_unflatten(list(mx.load(str(resume_dir / "optimizer.safetensors")).items()))
+        mx.eval(model.parameters(), optimizer.state)
+        rng.bit_generator.state = resumed["rng"]
+        order, cursor, start = np.load(resume_dir / "order.npy"), resumed["cursor"], resumed["step"] + 1
     grad_fn = nn.value_and_grad(model, lambda m, b: distill_loss(m, b, args.value_coef))
     state = [model.state, optimizer.state]
 
@@ -646,11 +670,36 @@ def train(args) -> None:
             "d": args.d, "layers": args.layers, "heads": args.heads, "teacher": args.teacher, "data": args.data,
         }))
 
-    print("before training:", evaluate(), flush=True)
+    # Everything a stopped run needs to continue as if it had not stopped:
+    # the weights, the optimizer's moments and step (which also places the
+    # learning-rate schedule), the shuffled order and the position in it, and
+    # the generator that draws the next order. Written every
+    # `--resume-every` steps and when the process is asked to stop.
+    def save_resume(i: int, order: np.ndarray, cursor: int) -> None:
+        resume_dir.mkdir(parents=True, exist_ok=True)
+        model.save_weights(str(resume_dir / "weights.safetensors"))
+        mx.save_safetensors(str(resume_dir / "optimizer.safetensors"), dict(tree_flatten(optimizer.state)))
+        np.save(resume_dir / "order.npy", order)
+        (resume_dir / "state.json").write_text(json.dumps({
+            "step": i, "cursor": cursor, "steps": steps, "rng": rng.bit_generator.state,
+        }))
+
+    if resumed is not None:
+        print(f"resumed at step {start}/{steps}", flush=True)
+    else:
+        print("before training:", evaluate(), flush=True)
+
+    stop = {"asked": False}
+
+    def ask_stop(signum, frame) -> None:
+        stop["asked"] = True
+
+    signal.signal(signal.SIGTERM, ask_stop)
+    signal.signal(signal.SIGINT, ask_stop)
     t0 = time.perf_counter()
-    order = rng.permutation(train_idx)
-    cursor = 0
-    for i in range(1, steps + 1):
+    if order is None:
+        order = rng.permutation(train_idx)
+    for i in range(start, steps + 1):
         if cursor + args.batch > len(order):
             order, cursor = rng.permutation(train_idx), 0
         group = order[cursor : cursor + args.batch]
@@ -658,11 +707,16 @@ def train(args) -> None:
         loss, stats = step(collate(corpus, group))
         mx.eval(loss, stats)
         if i % 500 == 0:
-            rate = i * args.batch / (time.perf_counter() - t0)
+            rate = (i - start + 1) * args.batch / (time.perf_counter() - t0)
             print(f"step {i}/{steps} loss {loss.item():.4f} agree {stats[2].item():.3f} {rate:.0f} decisions/s", flush=True)
         if i % args.eval_every == 0:
             print("val", {**evaluate(), "step": i}, flush=True)
             save(Path(args.out) / f"step-{i:06d}")
+        if stop["asked"] or i % args.resume_every == 0:
+            save_resume(i, order, cursor)
+            if stop["asked"]:
+                print(f"stopped at step {i}/{steps}; run the same command again to resume", flush=True)
+                return
     print("val", {**evaluate(), "step": steps}, flush=True)
     save(Path(args.out))
     print(f"saved {args.out}", flush=True)
@@ -686,6 +740,7 @@ def main() -> None:
     t.add_argument("--value-coef", type=float, default=0.5)
     t.add_argument("--val-games", type=int, default=600)
     t.add_argument("--eval-every", type=int, default=5000)
+    t.add_argument("--resume-every", type=int, default=1000, help="steps between resume checkpoints in <out>/resume")
     args = parser.parse_args()
     if args.cmd == "train":
         train(args)
