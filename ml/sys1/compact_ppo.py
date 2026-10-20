@@ -19,6 +19,11 @@ Three game kinds share the slots: self-play, `--rules` against a rules agent,
 and `--league` against a frozen checkpoint (`League`), the learner's seat
 only. `--pilot-decks` narrows the decks the learner is trained piloting while
 its opponents keep drawing from the whole pool: see `Rollouts.next_spec`.
+
+A run can be stopped and continued: it writes `<out>/resume` after every
+`--resume-every` iterations, and after the iteration in progress when it is
+sent SIGTERM or SIGINT, and the same command run again continues from there
+(`resume_identity`, `save_resume`).
 """
 
 from __future__ import annotations
@@ -27,6 +32,8 @@ import argparse
 import json
 import math
 import os
+import shutil
+import signal
 import time
 from functools import partial
 from pathlib import Path
@@ -35,7 +42,7 @@ import mlx.core as mx
 import mlx.nn as nn
 import mlx.optimizers as optim
 import numpy as np
-from mlx.utils import tree_flatten, tree_map
+from mlx.utils import tree_flatten, tree_map, tree_unflatten
 
 from .compact import (AUX_DIM, CARD_NUMBERS, COMPACT_VERSION, DATA, GLOBAL_NUMBERS, HIDDEN_INDICES, OPTION_NUMBERS, V2_ZONES, ZONES,
                       CompactCorpus, CompactPolicy, CompactScorer, add_lora, cards_of, collate, globals_of, load_widened, options_of,
@@ -80,8 +87,9 @@ class League:
         self.rng, self.power, self.decay, self.size = rng, power, decay, size
         self.members: dict[str, dict] = {}
 
-    def add(self, name: str, policy) -> None:
-        self.members[name] = {"policy": policy, "wins": 0.0, "games": 0.0}
+    def add(self, name: str, policy, path: Path | None = None) -> None:
+        # `path`, the member's checkpoint, is what a resumed run reloads it from.
+        self.members[name] = {"policy": policy, "path": str(path.resolve()) if path else None, "wins": 0.0, "games": 0.0}
         if len(self.members) > self.size:
             # The one the learner beats most teaches least. The newcomer has
             # only its prior, so it is not the one judged.
@@ -105,6 +113,18 @@ class League:
 
     def table(self) -> dict[str, list[float]]:
         return {n: [round(self.win_rate(n), 3), round(m["games"], 1)] for n, m in self.members.items()}
+
+    def state(self) -> dict:
+        # In order: `pick` draws an index into the members as they were added.
+        return {"rng": self.rng.bit_generator.state,
+                "members": [[n, m["path"], m["wins"], m["games"]] for n, m in self.members.items()]}
+
+    def restore(self, state: dict, load) -> None:
+        """The members, their results and the generator `state` recorded;
+        `load` reads a member's policy back from its checkpoint."""
+        self.rng.bit_generator.state = state["rng"]
+        self.members = {name: {"policy": load(Path(path)), "path": path, "wins": wins, "games": games}
+                        for name, path, wins, games in state["members"]}
 
 
 class LivePolicy(CompactPolicy):
@@ -496,6 +516,20 @@ class Rollouts:
         self.results = {k: 0 for k in out}
         return out
 
+    def state(self) -> dict:
+        """What accumulates across collections. The games in flight are not
+        part of it: a resumed run starts fresh ones, and since each slot's
+        generation counter carries on, no seed is played twice. The generator
+        is the trainer's own and is saved with it."""
+        return {"generation": self.generation, "results": self.results, "strength": self.strength,
+                "vs_deck": self.vs_deck}
+
+    def restore(self, state: dict) -> None:
+        self.generation = list(state["generation"])
+        self.results = dict(state["results"])
+        self.strength = {d: list(v) for d, v in state["strength"].items()}
+        self.vs_deck = {d: list(v) for d, v in state["vs_deck"].items()}
+
 
 def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarray:
     """Advantages scaled to unit variance: across the batch, or with
@@ -513,6 +547,30 @@ def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarr
                 a = adv[mask]
                 out[mask] = (a - a.mean()) / (a.std() + 1e-8)
     return out.astype(np.float32)
+
+
+# The arguments a resumed run must share with the one it continues: the
+# learning-rate and `--kick` schedules are functions of the iteration and of
+# `--iterations`, the generation counters are one per `--concurrent` slot, the
+# weights saved have the shape `--lora` and `--aux-hidden` give the model, and
+# the league is restored rather than rebuilt from `--league-seed`.
+RESUME_ARGS = ("init", "out", "iterations", "lr", "lr_final", "lr_schedule", "lr_div", "warmup", "kick", "kick_final",
+               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed")
+
+
+def resume_identity(args: argparse.Namespace, schedule: str, lr_final: float) -> dict:
+    """`RESUME_ARGS` as this command gives them, with the schedule's defaults
+    resolved and paths made absolute, so the same run named another way matches."""
+    values = {k: getattr(args, k) for k in RESUME_ARGS}
+    values.update(lr_schedule=schedule, lr_final=lr_final, init=str(Path(args.init).resolve()),
+                  out=str(Path(args.out).resolve()), league_seed=[str(Path(p).resolve()) for p in args.league_seed])
+    return values
+
+
+def resume_mismatches(recorded: dict, current: dict) -> list[str]:
+    """Each argument that differs, as `--flag: recorded -> current`."""
+    return [f"--{k.replace('_', '-')}: {recorded.get(k)!r} -> {current[k]!r}"
+            for k in current if recorded.get(k) != current[k]]
 
 
 def main() -> None:
@@ -619,9 +677,30 @@ def main() -> None:
         help="the --teacher weight at the last iteration, reached linearly from --kick (default: --kick throughout): "
              "the learner copies the specialist first, then improves on it",
     )
+    parser.add_argument("--resume-every", type=int, default=1, help="iterations between resume checkpoints in <out>/resume")
     args = parser.parse_args()
     schedule = args.lr_schedule or ("linear" if args.lr_final is not None else "constant")
     lr_final = args.lr_final if args.lr_final is not None else (args.lr / 10 if schedule == "onecycle" else args.lr)
+
+    # A stopped run left `<out>/resume`; this command continues it, and only
+    # if it is the same run. `resume.old` is the previous one, kept only
+    # while a new one is moved into place (`save_resume`).
+    out = Path(args.out)
+    identity = resume_identity(args, schedule, lr_final)
+    resume_dir, resume = out / "resume", None
+    for candidate in (resume_dir, out / "resume.old"):
+        if (candidate / "state.json").exists():
+            resume = json.loads((candidate / "state.json").read_text())
+            resume_from = candidate
+            break
+    if resume is not None:
+        differ = resume_mismatches(resume["run"], identity)
+        if differ:
+            raise SystemExit(f"{resume_from} continues a run with other arguments:\n  " + "\n  ".join(differ)
+                             + f"\nRun the command that started it to resume, or remove {resume_from} to start over.")
+        if resume["done"]:
+            print(f"{out} finished at iteration {resume['iteration']}/{args.iterations}; nothing to resume", flush=True)
+            return
 
     # An uncapped buffer cache beside the bridge workers pushes the machine into swap.
     mx.set_cache_limit(8 << 30)
@@ -685,9 +764,18 @@ def main() -> None:
         mask[[names.index(c) for c in args.train_cards]] = 1.0
         card_rows = mx.array(mask)
         config = {**config, "trained_cards": sorted(set(config.get("trained_cards", [])) | set(args.train_cards))}
+    if resume is not None:
+        # The model is built as the run built it (widened, adapter, aux head),
+        # then takes the weights it had reached, adapter factors included.
+        model.load_weights(str(resume_from / "weights.safetensors"))
     mx.eval(model.parameters())
     policy = LivePolicy(model)
     optimizer = optim.AdamW(learning_rate=args.lr, weight_decay=0.0)
+    if resume is not None:
+        # Before `apply` is compiled below: it captures `optimizer.state` as it
+        # is defined. The moments and the step continue where they stopped.
+        optimizer.state = tree_unflatten(list(mx.load(str(resume_from / "optimizer.safetensors")).items()))
+        mx.eval(optimizer.state)
     grad_fn = nn.value_and_grad(model, partial(losses, clip=args.clip, value_coef=args.value_coef,
                                                entropy_coef=args.entropy_coef, aux_coef=args.aux_hidden,
                                                kick_coef=1.0 if args.teacher else 0.0))
@@ -723,9 +811,8 @@ def main() -> None:
         mx.eval(model.parameters(), optimizer.state)
         return stats_sum
 
-    out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    history: list[dict] = []
+    history: list[dict] = resume["history"] if resume is not None else []
 
     def save(directory: Path) -> None:
         directory.mkdir(parents=True, exist_ok=True)
@@ -750,11 +837,14 @@ def main() -> None:
         # is tuned to its own deck, and as an opponent it would pilot every
         # other deck worse than the generalist does.
         start = Path(config["lora"]["base"]) if config.get("lora") else init
-        league.add("init", CompactPolicy(start))
-        for seed_path in map(Path, args.league_seed):
-            if seed_path.resolve() == start.resolve():
-                continue
-            league.add(f"{seed_path.parent.name}/{seed_path.name}", CompactPolicy(seed_path))
+        if resume is not None:
+            league.restore(resume["league"], CompactPolicy)
+        else:
+            league.add("init", CompactPolicy(start), start)
+            for seed_path in map(Path, args.league_seed):
+                if seed_path.resolve() == start.resolve():
+                    continue
+                league.add(f"{seed_path.parent.name}/{seed_path.name}", CompactPolicy(seed_path), seed_path)
     teachers = {}
     for spec in args.teacher:
         deck, _, path = spec.partition("=")
@@ -768,14 +858,63 @@ def main() -> None:
                         deck_weights=json.loads(Path(args.deck_weights).read_text()) if args.deck_weights else None,
                         matchup_power=args.matchup_power, deck_power=args.deck_power, teachers=teachers,
                         variants=deck_variants(env) if args.variant_share else None, variant_share=args.variant_share)
-    if args.eval_every > 0:
-        start_eval = play_vs_rules(CompactPolicy(init), eval_env, args.eval_games, seed="ceval-0")
-        print(json.dumps({"iteration": 0, "eval_win_rate": start_eval["win_rate"]}), flush=True)
-    save(out / "iter-0000")
+
+    # Everything that carries from one iteration to the next, so a run that
+    # stops and resumes is the run that did not: the weights, the optimizer's
+    # moments and step, the iteration (which places the learning-rate and
+    # `--kick` schedules and names the snapshots), the log so far, the
+    # generator shared by the rollouts' draws and the update's minibatch
+    # order, the rollouts' counters and deck statistics, and the league's
+    # members, results and generator. Teachers and frozen opponents are
+    # checkpoints read from disk and change nothing as they play. Written to
+    # `resume.new` and then moved into place, so a process killed while
+    # writing leaves the previous one whole.
+    def save_resume(iteration: int, done: bool = False) -> None:
+        new, old = out / "resume.new", out / "resume.old"
+        shutil.rmtree(new, ignore_errors=True)
+        new.mkdir()
+        model.save_weights(str(new / "weights.safetensors"))
+        mx.save_safetensors(str(new / "optimizer.safetensors"), dict(tree_flatten(optimizer.state)))
+        (new / "state.json").write_text(json.dumps({
+            "iteration": iteration, "done": done, "run": identity, "history": history,
+            "rng": rng.bit_generator.state, "rollouts": rollouts.state(),
+            "league": league.state() if league else None,
+        }))
+        shutil.rmtree(old, ignore_errors=True)
+        if resume_dir.exists():
+            resume_dir.rename(old)
+        new.rename(resume_dir)
+        shutil.rmtree(old, ignore_errors=True)
+
+    first = 1
+    if resume is not None:
+        rng.bit_generator.state = resume["rng"]
+        rollouts.restore(resume["rollouts"])
+        first = resume["iteration"] + 1
+        print(f"resumed {out} after iteration {resume['iteration']}/{args.iterations}", flush=True)
+    else:
+        if args.eval_every > 0:
+            start_eval = play_vs_rules(CompactPolicy(init), eval_env, args.eval_games, seed="ceval-0")
+            print(json.dumps({"iteration": 0, "eval_win_rate": start_eval["win_rate"]}), flush=True)
+        save(out / "iter-0000")
+
+    # A stop asked for is taken after the iteration in progress, whose games
+    # and update are half done. A second signal is not caught, for a stop
+    # that cannot wait: the run then resumes from the last iteration saved.
+    stop = {"asked": False}
+
+    def ask_stop(signum, frame) -> None:
+        stop["asked"] = True
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+        signal.signal(signal.SIGINT, signal.default_int_handler)
+
+    signal.signal(signal.SIGTERM, ask_stop)
+    signal.signal(signal.SIGINT, ask_stop)
 
     batch: list[list[dict]] = rollouts.start()
+    iteration = first - 1
     try:
-        for iteration in range(1, args.iterations + 1):
+        for iteration in range(first, args.iterations + 1):
             version = iteration - 1
             t0 = time.perf_counter()
             batch = rollouts.collect(policy, version, args.decisions, batch)
@@ -873,7 +1012,7 @@ def main() -> None:
             if league and args.league_every > 0 and iteration % args.league_every == 0:
                 member = out / "league" / f"iter-{iteration:04d}"
                 save(member)
-                league.add(member.name, CompactPolicy(member))
+                league.add(member.name, CompactPolicy(member), member)
             history.append(entry)
             print(json.dumps(entry), flush=True)
             (out / "config.json").write_text(json.dumps({**config, "init": args.init, "compact_ppo": history}))
@@ -884,8 +1023,16 @@ def main() -> None:
                 if games and won / games >= args.stop_league_win:
                     print(json.dumps({"stopped": iteration, "league_win_rate": won / games}), flush=True)
                     break
-        # Whatever ended the run, `final` is its last weights.
+            if stop["asked"] or iteration % args.resume_every == 0:
+                save_resume(iteration)
+            if stop["asked"] and iteration < args.iterations:
+                print(f"stopped after iteration {iteration}/{args.iterations}; run the same command again to resume",
+                      flush=True)
+                return
+        # Whatever ended the run, `final` is its last weights; the resume
+        # state is marked done, so the same command run again does nothing.
         save(out / "final")
+        save_resume(iteration, done=True)
     finally:
         env.close()
         eval_env.close()

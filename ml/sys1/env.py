@@ -90,6 +90,11 @@ class Worker:
             stdout=subprocess.PIPE,
             text=True,
             bufsize=1,
+            # Out of the caller's process group, so a Ctrl-C meant for the
+            # trainer (which may finish its iteration first: compact_ppo) does
+            # not kill the games under it. The server exits when its stdin
+            # closes, which the caller's exit does.
+            start_new_session=True,
         )
 
     def send(self, request: dict) -> None:

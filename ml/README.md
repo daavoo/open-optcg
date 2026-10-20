@@ -135,6 +135,46 @@ full run.
 7. **Export.** Float16 weights, only the embedding rows the renderer can produce
    (about 2,900 of 50,368), card vectors precomputed: about 14 MB.
 
+### Stopping and resuming
+
+The small scorer's trainers, `sys1.compact train` (distillation) and
+`sys1.compact_ppo` (self-play), can run in sessions rather than one
+uninterrupted night.
+
+- **Stop**: send SIGTERM to the Python process (`kill <pid>`), or press
+  Ctrl-C in its terminal. It finishes the step or iteration in progress,
+  writes `<out>/resume` and exits; a `compact_ppo` iteration can take a few
+  minutes, so wait for the process to exit rather than copying its weights at
+  once. A second signal stops `compact_ppo` without waiting, and the run then
+  resumes from the last iteration written.
+- **Resume**: run the same command again. Redirect its log with `>>`, not
+  `>`, so the resumed run appends to it: `compact_ppo`'s per-iteration JSON
+  lines carry on from the last one, and `grep -c '"decisions"'` still counts
+  the run's iterations.
+- **The same run only**: `compact_ppo` refuses to resume when an argument that
+  defines the run differs from the one recorded (`--iterations`, the
+  learning-rate schedule, `--init`, `--out`, `--concurrent`, `--league`,
+  `--league-seed`, `--kick`, `--lora`, `--aux-hidden`: `RESUME_ARGS`), and
+  lists the differences; `compact train` checks its step count. A script that
+  sizes `--iterations` to the time left must fix it for the whole run instead.
+  Once a `compact_ppo` run has written `final`, its resume state is marked
+  done and the same command does nothing.
+- **What is saved**: the weights (deck-adapter factors included) and the
+  optimizer's moments and step. `compact train` also keeps the shuffled order,
+  the position in it and its generator. `compact_ppo` keeps the iteration
+  (which places the learning-rate and `--kick` schedules and names the
+  snapshots), the log so far, the generator behind the rollouts' draws and
+  the minibatch order, each game slot's seed counter, the deck and matchup
+  statistics behind `--deck-power`, `--close` and `--matchup-power`, and the
+  league's members, PFSP results and generator. `--resume-every` sets how
+  often it is written (`compact_ppo`: every iteration by default).
+
+Games in flight when `compact_ppo` stops are dropped; the resumed run starts
+new ones whose seeds carry on from each slot's counter, so no seed is played
+twice. Rollouts are not bit-for-bit reproducible even uninterrupted (the
+games' timing decides which finish in which batch), so a resumed run follows
+the same schedule rather than the same games.
+
 ### Playing it
 
 ```sh
