@@ -1,9 +1,4 @@
-import {
-  cardAttributes,
-  cards,
-  hasCardName,
-  type CardDatabase,
-} from "@one-piece-sim/cards";
+import { cards, hasCardName, type CardDatabase } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import { fieldDonCount } from "./don.js";
 import type { BoardCard, GameState } from "./model.js";
@@ -62,9 +57,6 @@ export interface ReplacementOption {
   /** A prevention, not a "you may": the K.O. is not on offer beside it. */
   mandatory?: true;
 }
-
-const isSlash = (cardNumber: string, db: CardDatabase): boolean =>
-  cardAttributes(db.require(cardNumber)).includes("Slash");
 
 /**
  * Replacement effects that may apply when `sourcePlayerId`'s effect would K.O.
@@ -195,23 +187,6 @@ export function replacementOptionsFor(
         .map((vergo) => ({
           optionId: `vergo:${optionPrefix}:${vergo.instanceId}`,
           summary: `Return 1 DON!! with Vergo instead of K.O. ${targetName}`,
-        })),
-    );
-  }
-
-  // OP12-027 Koushirou: rest this instead, for a Slash Character of cost <= 5.
-  if (isSlash(target.cardNumber, db) && (definition.cost ?? 0) <= 5) {
-    options.push(
-      ...board
-        .filter(
-          (card) =>
-            card.cardNumber === "OP12-027" &&
-            !card.rested &&
-            card.instanceId !== target.instanceId,
-        )
-        .map((protector) => ({
-          optionId: `protect:${optionPrefix}:${protector.instanceId}`,
-          summary: `Rest Koushirou instead of K.O. ${targetName}`,
         })),
     );
   }

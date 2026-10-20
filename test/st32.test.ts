@@ -449,7 +449,7 @@ describe("implemented ST32 rules", () => {
         state,
         (action) =>
           action.type === "resolve-effect" &&
-          action.optionId === "protect:slash:koushirou",
+          action.optionId === "mechanic:slash:koushirou",
       ),
     );
     expect(state.players.p2.board.map((entry) => entry.instanceId)).toContain(

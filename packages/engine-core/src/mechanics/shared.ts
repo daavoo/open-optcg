@@ -474,12 +474,19 @@ export const guessDeckTopCost = (
  * more) is what makes a hand full of them viable.
  *
  * The payoff is nested inside the cost's `choose` so a board with no
- * [Silvers Rayleigh] cannot buy it, and the whole clause sits behind an
- * `active-don` gate so a player without N active DON!! cannot either:
- * `attach-don` moves as many as there are, zero included, and the payoff after
- * it in the sequence would otherwise resolve for nothing. Outermost, so the
- * Event is not offered at all when the price cannot be met.
+ * [Silvers Rayleigh] cannot buy it, and the whole clause sits behind a gate on
+ * N active DON!! and a [Silvers Rayleigh] on the field: `attach-don` moves as
+ * many as there are, zero included, and the payoff after it in the sequence
+ * would otherwise resolve for nothing. Outermost, so the Event is not offered
+ * at all when the price cannot be met -- Bandai's OP12-016#1/#2, OP12-017#1/#2
+ * and OP12-019#1/#2 rulings say it cannot be activated then.
  */
+const rayleighOnField = {
+  zone: "board",
+  includeLeader: true,
+  name: "Silvers Rayleigh",
+} as const;
+
 export const giveDonToRayleigh = (
   count: number,
   bind: string,
@@ -487,21 +494,23 @@ export const giveDonToRayleigh = (
 ): MechanicEffect => ({
   kind: "if",
   condition: {
-    kind: "active-don",
-    player: "self",
-    operator: "gte",
-    value: count,
+    kind: "all-of",
+    conditions: [
+      { kind: "active-don", player: "self", operator: "gte", value: count },
+      {
+        kind: "selector-count",
+        player: "self",
+        selector: rayleighOnField,
+        operator: "gte",
+        value: 1,
+      },
+    ],
   },
   then: {
     kind: "optional",
     effect: {
       kind: "choose",
-      selector: {
-        player: "self",
-        zone: "board",
-        includeLeader: true,
-        name: "Silvers Rayleigh",
-      },
+      selector: { player: "self", ...rayleighOnField },
       bind,
       min: 1,
       max: 1,

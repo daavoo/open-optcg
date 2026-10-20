@@ -127,6 +127,13 @@ export const restableCards = (player: "self" | "opponent"): CardSelector => ({
 export interface MechanicContext {
   sourcePlayerId: PlayerId;
   source: CardInstance;
+  /**
+   * The program running is the source's `[Trigger]`. Carried on the context
+   * (which a pending choice stores whole) because "using a Character's
+   * effect" -- OP12-081 Koala's Leader -- excludes a Trigger printed on a
+   * Character card, and the card's category alone cannot tell the two apart.
+   */
+  viaTrigger?: true;
 }
 
 export interface CardSelector {
@@ -422,6 +429,12 @@ export interface CardSelector {
    * asked of the same reading the coverage gate uses.
    */
   lacksClause?: string;
+  /**
+   * The mirror of `lacksClause`: the card must print the clause -- OP12-041
+   * Sanji's Leader activates an Event's `[Main]`, so a `[Counter]`-only Event
+   * is not one it can reach (Bandai's OP12-041#5 ruling).
+   */
+  hasClause?: string;
   excludeName?: string;
   /**
    * "…with the same card name as the trashed card" -- EB02-039 GERMA 66, the

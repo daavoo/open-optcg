@@ -1772,9 +1772,15 @@ describe("EB04-009 It's My Student's Farewell. I Want It to Be Proper.", () => {
       .withBoard("p2", [character("jinbe", "ST31-002")])
       .build();
 
-    game.play({ type: "activate-main", summary: "[EB04-009]" });
-    settle(game);
-
+    // Not offered at all: the shared Rayleigh-Event gate asks for a
+    // [Silvers Rayleigh] on the field before the Event can be activated
+    // (Bandai's OP12-016#2 / OP12-017#2 / OP12-019#2 rulings on the same
+    // clause).
+    expect(
+      game
+        .legalActions()
+        .some((action) => action.summary.includes("[EB04-009]")),
+    ).toBe(false);
     expect(currentPower(game.state, "p2", "jinbe")).toBe(6000);
   });
 });

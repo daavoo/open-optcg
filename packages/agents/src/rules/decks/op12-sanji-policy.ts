@@ -53,10 +53,9 @@ const hasLightningTarget = (observation: GameObservation): boolean =>
  * most: OP12-060 Boeuf Burst bounces or draws 2, OP12-078 Brochette Blow draws
  * and shrinks an attacker. OP09-077 Gum-Gum Lightning still pays its own
  * DON!! −2 and K.O.s only up to 1, so with no target it is a card and two
- * DON!! for nothing. OP09-078 Gum-Gum Giant prints only a [Counter], so
- * activated from the main phase it goes to the trash and does nothing at all;
- * OP12-059 Concasser's [Main] is a single draw from a card the deck wants as a
- * Counter.
+ * DON!! for nothing. OP09-078 Gum-Gum Giant prints only a [Counter], so the
+ * Leader cannot activate it at all; OP12-059 Concasser's [Main] is a single
+ * draw from a card the deck wants as a Counter.
  */
 function eventValue(cardNumber: string, observation: GameObservation): number {
   switch (cardNumber) {
@@ -81,8 +80,8 @@ function eventValue(cardNumber: string, observation: GameObservation): number {
  * Which Event the Leader's DON!! −1 activates.
  *
  * Without a rule the ladder takes the first Event offered, which is hand
- * order: a Gum-Gum Giant that does nothing outside a battle, or a Gum-Gum
- * Lightning with nothing to K.O., as readily as a Boeuf Burst.
+ * order: a Gum-Gum Lightning with nothing to K.O. as readily as a Boeuf
+ * Burst.
  */
 export function createOp12SanjiEventModule(): PolicyModule {
   return heuristics("op12-sanji-event", [
@@ -109,7 +108,8 @@ export function createOp12SanjiEventModule(): PolicyModule {
  * The Leader is not activated with no Event in hand worth activating.
  *
  * The DON!! −1 is paid on accepting the clause, before the Event is chosen, so
- * a hand holding only a Gum-Gum Giant spends a DON!! on nothing.
+ * a hand holding only a Gum-Gum Lightning with nothing to K.O. spends a DON!!
+ * on nothing.
  */
 export function createOp12SanjiGateModule(): PolicyModule {
   return heuristics("op12-sanji-gate", [

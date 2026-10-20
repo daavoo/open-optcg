@@ -907,7 +907,7 @@ export function createTriggerResult(
     };
   }
   const invocation = {
-    context: { sourcePlayerId: playerId, source },
+    context: { sourcePlayerId: playerId, source, viaTrigger: true as const },
     program: mechanicProgram,
   };
   const result = executeMechanicProgram(

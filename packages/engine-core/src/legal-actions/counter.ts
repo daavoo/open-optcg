@@ -52,10 +52,13 @@ export function counterActions(
   const legacyCounterEvents = targetInstanceId
     ? player.hand.filter(
         (eventCard) =>
-          (eventCard.cardNumber === "OP04-016" ||
+          // OP12-057 Ice Block Pheasant Peck trashes from hand *after* its
+          // +4000, as an effect rather than a cost, so it needs no other card
+          // in hand (Bandai's OP12-057#1 ruling).
+          (eventCard.cardNumber === "OP12-057" &&
+            player.activeDon.length >= 1) ||
+          ((eventCard.cardNumber === "OP04-016" ||
             eventCard.cardNumber === "OP02-068" ||
-            (eventCard.cardNumber === "OP12-057" &&
-              player.activeDon.length >= 1) ||
             (eventCard.cardNumber === "OP11-079" &&
               player.activeDon.length >= 1) ||
             (eventCard.cardNumber === "OP12-098" &&
@@ -74,18 +77,18 @@ export function counterActions(
               player.hand.some(
                 (discard) => discard.instanceId !== eventCard.instanceId,
               ))) &&
-          (eventCard.cardNumber === "OP11-079" ||
-            [
-              "OP12-098",
-              "OP07-056",
-              "OP15-074",
-              "OP15-075",
-              "OP15-076",
-              "OP15-078",
-            ].includes(eventCard.cardNumber) ||
-            player.hand.some(
-              (discard) => discard.instanceId !== eventCard.instanceId,
-            )),
+            (eventCard.cardNumber === "OP11-079" ||
+              [
+                "OP12-098",
+                "OP07-056",
+                "OP15-074",
+                "OP15-075",
+                "OP15-076",
+                "OP15-078",
+              ].includes(eventCard.cardNumber) ||
+              player.hand.some(
+                (discard) => discard.instanceId !== eventCard.instanceId,
+              ))),
       )
     : [];
   // Counter Events with an entry in the mechanic table. One branch covers
