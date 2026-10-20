@@ -848,7 +848,19 @@ export function createBattleScreen(
       ${renderHubSecondary()}
       <div class="hub-command">${command}</div>
     </div>
-    <p class="turn-status"><span>Turn ${active.turn}</span><b>${active.activePlayer === viewer ? "Your turn" : "Opponent turn"}</b></p>`;
+    <p class="turn-status"><span>Turn ${active.turn}</span><b>${active.activePlayer === viewer ? "Your turn" : "Opponent turn"}</b>${timeLimitLine(active)}</p>`;
+  }
+
+  /* A timed game says so from its first turn, under the turn it is on: the
+     limit decides a game that reaches it, so a player should know where it is
+     before it matters, not learn of it from the notice when time is called. */
+  function timeLimitLine(active: GameObservation): string {
+    const limit = active.timeLimit;
+    if (!limit) return "";
+    const text = limit.called
+      ? `Time called · decided after turn ${limit.finalTurn}`
+      : `Time is called at turn ${limit.calledOnTurn}`;
+    return `<small class="turn-limit">${text}</small>`;
   }
 
   /* The lower-left cell is the match's own secondary control. A local match

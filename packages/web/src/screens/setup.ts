@@ -5,7 +5,11 @@ import {
   RUN_GAME_OPTIONS,
   type RunGames,
 } from "./analytics.js";
-import type { ControllerKind, MatchConfig } from "../controller.js";
+import {
+  newLocalMatch,
+  type ControllerKind,
+  type MatchConfig,
+} from "../controller.js";
 import type { OnlineState } from "../online.js";
 import type { SavedDeck } from "../deck-labels.js";
 import {
@@ -552,7 +556,7 @@ function submitForm(ctx: SetupContext, event: Event): void {
 function startFromForm(ctx: SetupContext): void {
   const p1Deck = valueOf("p1-deck");
   const p2Deck = valueOf("p2-deck");
-  const config: MatchConfig = {
+  const config = newLocalMatch({
     p1Deck,
     p2Deck,
     ...(p1Deck.startsWith("CUSTOM-") && ctx.savedDecks[p1Deck]
@@ -569,7 +573,7 @@ function startFromForm(ctx: SetupContext): void {
     seed: valueOf("seed").trim() || ctx.randomSeed(),
     seedMode: "matchup",
     startingPlayer: valueOf("starting-player") as PlayerId | "random",
-  };
+  });
   ctx.beginMatch(config);
 }
 

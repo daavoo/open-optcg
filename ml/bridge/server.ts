@@ -42,7 +42,11 @@ import {
   type GameState,
 } from "@one-piece-sim/engine-core";
 import { acceptsSimulator, type Agent } from "@one-piece-sim/agents/local";
-import type { LegalAction, PlayerId } from "@one-piece-sim/protocol";
+import {
+  STANDARD_TIME_LIMIT,
+  type LegalAction,
+  type PlayerId,
+} from "@one-piece-sim/protocol";
 import {
   TRAINING_DECK_IDS,
   createTrainingRulesAgent,
@@ -131,8 +135,10 @@ function pack(decision: CompactDecision) {
  * games end: time is called in about 1% of rules-agent games and about 2.5% of
  * the learned model's self-play, so it is a safety net and not a new way games
  * usually end. Counted in the engine's turns, where each player's turn is one.
+ * It is the app's `STANDARD_TIME_LIMIT`, so the model plays the app's games
+ * under the limit it was trained under.
  */
-const TRAINING_TIME_LIMIT = { turns: 20 } as const;
+const TRAINING_TIME_LIMIT = STANDARD_TIME_LIMIT;
 
 /**
  * The last resort for a turn that never ends, which the time limit cannot
