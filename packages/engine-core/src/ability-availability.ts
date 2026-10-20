@@ -105,10 +105,15 @@ function unmetRequirement(
   ) {
     return `${count(requires.handCards, "card")} in hand`;
   }
-  if (
-    requires.restedDon !== undefined &&
-    player.restedDon.length < requires.restedDon
-  ) {
+  // A source that leaves the field to pay its own cost sends its given DON!!
+  // back to the cost area rested before the payout runs, so those count.
+  const restedDon =
+    player.restedDon.length +
+    (requires.restedDonCountsSourceGiven
+      ? ((source as { attachedDon?: readonly string[] }).attachedDon?.length ??
+        0)
+      : 0);
+  if (requires.restedDon !== undefined && restedDon < requires.restedDon) {
     return count(requires.restedDon, "rested DON!! card");
   }
   if (

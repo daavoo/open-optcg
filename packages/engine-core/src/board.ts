@@ -307,14 +307,14 @@ export function counterEventForecastPower(
   const base = counterEventPower(state, playerId, cardNumber, db);
   if (base !== 0) return base;
   const program = getCounterEventProgram(cardNumber);
-  if (!program?.program || program.target || program.powerWhen) return base;
-  const participant = battleParticipant(state, playerId);
-  if (!participant) return 0;
+  if (!program) return base;
   // The Event leaves hand for trash as part of being played, before its
-  // program resolves (see `activate-counter-event.ts`), so a condition that
-  // reads either zone -- OP14-096's "10 cards in your trash" -- has to be
-  // asked about that later state, or a hand that only reaches ten by playing
-  // this Event forecasts one short of what actually resolves.
+  // power or program resolves (see `activate-counter-event.ts`), so a
+  // condition that reads either zone -- OP14-096's "10 cards in your trash",
+  // OP12-059 Concasser's "4 or more Events in your trash" -- has to be asked
+  // about that later state, or a hand that only reaches the count by playing
+  // this Event forecasts one short of what actually resolves (Bandai's
+  // OP12-059#1 ruling: three other Events plus Concasser itself is four).
   const player = state.players[playerId];
   const instanceId = player.hand.find(
     (card) => card.cardNumber === cardNumber,
@@ -332,6 +332,12 @@ export function counterEventForecastPower(
         },
       }
     : state;
+  if (program.powerWhen) {
+    return counterEventPower(asPlayed, playerId, cardNumber, db);
+  }
+  if (!program.program || program.target) return base;
+  const participant = battleParticipant(state, playerId);
+  if (!participant) return 0;
   return resolvedProgramPower(
     program.program.effect,
     asPlayed,

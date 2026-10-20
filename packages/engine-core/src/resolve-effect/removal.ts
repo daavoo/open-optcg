@@ -63,8 +63,7 @@ export function resolveKoCharacter({
     !effect.eligibleInstanceIds.includes(optionId) &&
     !(
       effect.kind === "ko-character" &&
-      (optionId.startsWith("protect:") ||
-        optionId.startsWith("ivankov:") ||
+      (optionId.startsWith("ivankov:") ||
         optionId.startsWith("rosinante:") ||
         optionId.startsWith("vergo:") ||
         optionId.startsWith("dragon:") ||
@@ -102,43 +101,6 @@ export function resolveKoCharacter({
       events.push(...applyAfterRest(state, effect.playerId, effect.afterRest));
     }
     return events;
-  }
-  if (optionId.startsWith("protect:")) {
-    const [, protectedId, protectorId] = optionId.split(":");
-    if (
-      !protectedId ||
-      !protectorId ||
-      !effect.eligibleInstanceIds.includes(protectedId)
-    ) {
-      throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
-    }
-    // The Leader can be the protector: EB03-001 Nefeltari Vivi prints the
-    // clause, and its instance is in no zone -- the same pseudo-card
-    // `eligibleReplacements` offered it as.
-    const protector =
-      protectorId === `${effect.targetPlayerId}-leader`
-        ? ({
-            instanceId: protectorId,
-            cardNumber: targetPlayer.leaderCardNumber,
-          } as (typeof targetPlayer.board)[number])
-        : targetPlayer.board.find((card) => card.instanceId === protectorId);
-    if (!protector || protector.cardNumber !== "OP12-027" || protector.rested) {
-      throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
-    }
-    protector.rested = true;
-    if (effect.resumePhase && effect.resumePlayerId) {
-      state.phase = effect.resumePhase;
-      state.activePlayer = effect.resumePlayerId;
-    }
-    return [
-      {
-        type: "character-rested",
-        playerId: effect.targetPlayerId,
-        cardInstanceId: protector.instanceId,
-        cardNumber: protector.cardNumber,
-        sourceCardNumber: effect.sourceCardNumber,
-      },
-    ];
   }
   if (optionId.startsWith("ivankov:")) {
     const [, protectedId, protectorId] = optionId.split(":");

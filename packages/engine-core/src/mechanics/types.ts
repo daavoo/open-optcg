@@ -384,6 +384,13 @@ export interface ActivateMainProgram {
      */
     restedDon?: number;
     /**
+     * Counts the DON!! given to the source toward `restedDon`, for a cost that
+     * trashes the source itself -- OP12-014 Boa Hancock. Those DON!! return to
+     * the cost area rested when the source leaves, before the payout gives
+     * rested DON!!, so they are on offer to it (Bandai's OP12-014#2 ruling).
+     */
+    restedDonCountsSourceGiven?: boolean;
+    /**
      * Whether DON!! may still be set active by a Character effect this turn --
      * OP10-030 Smoker, whose own text bans it after the first use.
      *

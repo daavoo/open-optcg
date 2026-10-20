@@ -40,18 +40,21 @@ export function applyActivateCounterEvent({
   if (eventCard.cardNumber === "OP12-057") {
     player.restedDon.push(...player.activeDon.splice(0, 1));
     state.activeAttack.counterPower += 4000;
-    state.pendingEffect = {
-      kind: "navy-discard",
-      playerId: activePlayer,
-      sourceCardNumber: eventCard.cardNumber,
-      sourceInstanceId: eventCard.instanceId,
-      eligibleInstanceIds: player.hand.map((card) => card.instanceId),
-      remaining: 1,
-      optional: false,
-      after: { kind: "none" },
-      resumePhase: "counter",
-      resumePlayerId: activePlayer,
-    };
+    // An empty hand has nothing to trash, and the +4000 stands regardless.
+    if (player.hand.length > 0) {
+      state.pendingEffect = {
+        kind: "navy-discard",
+        playerId: activePlayer,
+        sourceCardNumber: eventCard.cardNumber,
+        sourceInstanceId: eventCard.instanceId,
+        eligibleInstanceIds: player.hand.map((card) => card.instanceId),
+        remaining: 1,
+        optional: false,
+        after: { kind: "none" },
+        resumePhase: "counter",
+        resumePlayerId: activePlayer,
+      };
+    }
   } else if (eventCard.cardNumber === "OP12-098") {
     player.restedDon.push(...player.activeDon.splice(0, 1));
     const power = counterEventPower(state, activePlayer, eventCard.cardNumber)!;

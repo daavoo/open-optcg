@@ -616,7 +616,10 @@ describe("ST33 rules", () => {
     });
   });
 
-  it("does not offer Ice Block without a card for its mandatory discard", () => {
+  // The discard comes after the +4000 and is no cost: Ice Block is
+  // activatable as the only card in hand (Bandai's OP12-057#1 ruling, pinned
+  // in `test/faq-op12.test.ts`).
+  it("offers Ice Block as the only card in hand", () => {
     const state = scenario();
     state.phase = "counter";
     // p1 acts -- it is defending -- inside p2's turn, which the
@@ -638,7 +641,7 @@ describe("ST33 rules", () => {
       getLegalActions(state, "p1").some(
         (action) => action.type === "activate-counter-event",
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("uses Ice Block when +3000 would be insufficient", async () => {

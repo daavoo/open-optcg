@@ -47,29 +47,30 @@ const optionIdOf = (action: LegalAction) =>
   action.type === "resolve-effect" ? action.optionId : action.type;
 
 describe("the Leader's activation", () => {
-  it("is not taken with only a Gum-Gum Giant to activate", async () => {
+  it("is not offered with only a Gum-Gum Giant to activate", () => {
+    // OP09-078 prints only a [Counter], and the Leader activates a [Main]
+    // (Bandai's OP12-041#5 ruling): the engine withholds the activation, so
+    // there is nothing for the gate to decline.
     const game = table("sanji-gate")
       .withHand("p1", [instance("giant", "OP09-078")])
       .build();
 
-    expect(game.legalActions().some(leaderActivation)).toBe(true);
-    expect(leaderActivation(await chosen(game))).toBe(false);
-    expect(leaderActivation(await chosen(game, ["op12-sanji-gate"]))).toBe(
-      true,
-    );
+    expect(game.legalActions().some(leaderActivation)).toBe(false);
   });
 
-  it("activates Boeuf Burst rather than the Gum-Gum Giant ahead of it", async () => {
+  it("activates Boeuf Burst rather than a Gum-Gum Lightning with nothing to K.O.", async () => {
     const game = table("sanji-event")
       .withHand("p1", [
-        instance("giant", "OP09-078"),
+        instance("lightning", "OP09-077"),
         instance("boeuf", "OP12-060"),
       ])
       .build();
     game.play({ type: "activate-main", sourceInstanceId: "p1-leader" });
 
     expect(optionIdOf(await chosen(game))).toBe("boeuf");
-    expect(optionIdOf(await chosen(game, ["op12-sanji-event"]))).toBe("giant");
+    expect(optionIdOf(await chosen(game, ["op12-sanji-event"]))).toBe(
+      "lightning",
+    );
   });
 
   it("does not spend the activation on a Gum-Gum Lightning with nothing to K.O.", async () => {

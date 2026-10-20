@@ -217,8 +217,18 @@ describe("the catch-up ramp reads both fields", () => {
 
 describe("OP12-073 buffs a disjunction once", () => {
   covers("OP12-073", "[On Play]");
+  /**
+   * The opponent's DON!! out on their field, so p1 is not ahead: the buff
+   * sits behind the same catch-up condition as the DON!! (Bandai's
+   * OP12-073#1 ruling, pinned in `test/faq-op12.test.ts`).
+   */
+  const level = (state: GameState) => {
+    state.players.p2.activeDon = state.players.p2.donDeck.splice(0);
+  };
+
   it("raises [Donquixote Rosinante] and {Heart Pirates} alike", () => {
     const state = scenario(8);
+    level(state);
     state.players.p1.hand = [inHand("p1-law", "OP12-073")];
     state.players.p1.board = [
       // {Heart Pirates}, matched by the type half.
@@ -241,6 +251,7 @@ describe("OP12-073 buffs a disjunction once", () => {
 
   it("buffs itself, because it is on the board when its own clause runs", () => {
     const state = scenario(8);
+    level(state);
     state.players.p1.hand = [inHand("p1-law", "OP12-073")];
     const played = submit(
       state,

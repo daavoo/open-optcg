@@ -357,6 +357,8 @@ export function selectCards(
         definition.rules.hasPrintedEffect !== selector.noBaseEffect) &&
       (selector.lacksClause === undefined ||
         !definition.rules.clauses.includes(selector.lacksClause)) &&
+      (selector.hasClause === undefined ||
+        definition.rules.clauses.includes(selector.hasClause)) &&
       (selector.excludeName === undefined ||
         definition.name !== selector.excludeName) &&
       (selector.differentColorFromBinding === undefined ||

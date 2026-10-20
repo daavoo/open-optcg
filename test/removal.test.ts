@@ -9,7 +9,19 @@ import {
 } from "@one-piece-sim/engine-core";
 
 import { resolveDeck } from "@one-piece-sim/decks";
+import { registeredReplacementOptions } from "../packages/engine-core/src/mechanics-replacements.js";
 import { setTurnPlayer } from "./support/index.js";
+
+/**
+ * Every replacement on offer for a K.O., hand-written and registered, as the
+ * two offer paths concatenate them. OP12-027 Koushirou is a registry entry.
+ */
+const allReplacementOptions = (
+  ...args: Parameters<typeof replacementOptionsFor>
+) => [
+  ...replacementOptionsFor(...args),
+  ...registeredReplacementOptions(...args),
+];
 
 function game(p1Deck: string, p2Deck: string): GameState {
   return createGame({
@@ -69,7 +81,7 @@ describe("centralised knock-out", () => {
     putOnBoard(state, "p1", "OP12-027", "koushirou");
     const target = state.players.p1.board[0]!;
 
-    expect(replacementOptionsFor(state, "p1", "p1", target, "victim")).toEqual(
+    expect(allReplacementOptions(state, "p1", "p1", target, "victim")).toEqual(
       [],
     );
   });
@@ -83,10 +95,10 @@ describe("centralised knock-out", () => {
     putOnBoard(state, "p1", "OP12-027", "koushirou");
     const target = state.players.p1.board[0]!;
 
-    const options = replacementOptionsFor(state, "p2", "p1", target, "victim");
+    const options = allReplacementOptions(state, "p2", "p1", target, "victim");
 
     expect(options.map((option) => option.optionId)).toEqual([
-      "protect:victim:koushirou",
+      "mechanic:victim:koushirou",
     ]);
   });
 });
@@ -104,7 +116,7 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
     putOnBoard(state, "p1", "OP12-027", "koushirou");
     const target = state.players.p1.board[0]!;
 
-    const options = replacementOptionsFor(
+    const options = allReplacementOptions(
       state,
       "p2",
       "p1",
@@ -113,7 +125,7 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
     );
 
     expect(options).not.toHaveLength(0);
-    expect(options[0]!.optionId).toBe("protect:cheap-zoro:koushirou");
+    expect(options[0]!.optionId).toBe("mechanic:cheap-zoro:koushirou");
   });
 
   it("asks the target's controller, not the removal's source", () => {
@@ -144,7 +156,7 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
       action.type === "resolve-effect" ? [action.optionId] : [],
     );
     expect(sourceOptions).toContain("cheap-zoro");
-    expect(sourceOptions).not.toContain("protect:cheap-zoro:koushirou");
+    expect(sourceOptions).not.toContain("mechanic:cheap-zoro:koushirou");
 
     const picked = applyAction(state, {
       type: "resolve-effect",
@@ -163,7 +175,7 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
     const defenderOptions = getLegalActions(picked, "p1").flatMap((action) =>
       action.type === "resolve-effect" ? [action.optionId] : [],
     );
-    expect(defenderOptions).toContain("protect:cheap-zoro:koushirou");
+    expect(defenderOptions).toContain("mechanic:cheap-zoro:koushirou");
     expect(defenderOptions).toContain("skip");
   });
 
@@ -185,7 +197,7 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
       sourceInstanceId: "trigger-1",
       options: [
         {
-          optionId: "protect:cheap-zoro:koushirou",
+          optionId: "mechanic:cheap-zoro:koushirou",
           summary: "Rest Koushirou instead",
         },
       ],
@@ -198,10 +210,10 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
       actionId: getLegalActions(state, "p1").find(
         (action) =>
           action.type === "resolve-effect" &&
-          action.optionId === "protect:cheap-zoro:koushirou",
+          action.optionId === "mechanic:cheap-zoro:koushirou",
       )!.actionId,
       revision: state.revision,
-      optionId: "protect:cheap-zoro:koushirou",
+      optionId: "mechanic:cheap-zoro:koushirou",
     }).state;
 
     // Koushirou rested, the threatened Character survived, and no pending
@@ -236,7 +248,7 @@ describe("OP12-113 Trigger no longer bypasses replacement effects", () => {
       sourceInstanceId: "trigger-1",
       options: [
         {
-          optionId: "protect:cheap-zoro:koushirou",
+          optionId: "mechanic:cheap-zoro:koushirou",
           summary: "Rest Koushirou instead",
         },
       ],

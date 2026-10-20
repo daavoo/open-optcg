@@ -50,5 +50,11 @@
  * needs the guess to land, and OP11-022 Shirahoshi's Leader is not offered
  * with its top Life card face-up. A recorded action list can meet an offer
  * that is no longer made.
+ *
+ * Bumped to 1.8 for Bandai's OP-12 Q&A: two OP12-027 Koushirou can each save
+ * the other from one K.O., the [Silvers Rayleigh] Events are not offered
+ * without their price, and the OP12-041 Sanji Leader, OP12-057, OP12-059,
+ * OP12-073 and OP12-078 read their gates as printed. A recorded action list
+ * can meet offers that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.7";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.8";

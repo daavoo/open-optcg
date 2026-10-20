@@ -344,7 +344,7 @@ export const op12MainMechanics: SetMechanics = {
       "OP12-014",
       {
         oncePerTurn: false,
-        requires: { restedDon: 1 },
+        requires: { restedDon: 1, restedDonCountsSourceGiven: true },
         program: {
           effect: {
             kind: "optional",
@@ -421,6 +421,7 @@ export const op12MainMechanics: SetMechanics = {
               category: "event",
               type: "Straw Hat Crew",
               maxBaseCost: 3,
+              hasClause: "[Main]",
             },
             count: 1,
           },
@@ -448,6 +449,9 @@ export const op12MainMechanics: SetMechanics = {
                       category: "event",
                       type: "Straw Hat Crew",
                       maxBaseCost: 3,
+                      // Only an Event with a `[Main]` has anything to
+                      // activate here (Bandai's OP12-041#5 ruling).
+                      hasClause: "[Main]",
                     },
                     bind: "op12-sanji-event",
                     min: 0,
@@ -722,9 +726,11 @@ export const op12MainMechanics: SetMechanics = {
             1,
             "op12-observation",
             lookAndAdd(4, "op12-observation-look", {
+              // "red" reads on both halves: a green Character of cost 3 or
+              // more is not on offer (Bandai's OP12-017#4 ruling).
               anyOf: [
                 { color: "Red", category: "event" },
-                { category: "character", minCost: 3 },
+                { color: "Red", category: "character", minCost: 3 },
               ],
             }).effect,
           ),
@@ -977,42 +983,42 @@ export const op12MainMechanics: SetMechanics = {
     [
       // OP12-078 Brochette Blow (3): "[printed text omitted -- pnpm card:text OP12-078]"
       //
-      // Only the draw is behind the catch-up gate; the debuff is not, which is
-      // what the sentence break says.
+      // The catch-up condition gates both sentences: ahead on DON!!, neither
+      // the draw nor the −3000 happens (Bandai's OP12-078#1 ruling).
       "OP12-078",
       {
         cost: 3,
         program: {
           effect: {
-            kind: "sequence",
-            effects: [
-              {
-                kind: "if",
-                condition: {
-                  kind: "field-don-versus",
-                  player: "self",
-                  operator: "lte",
+            kind: "if",
+            condition: {
+              kind: "field-don-versus",
+              player: "self",
+              operator: "lte",
+            },
+            then: {
+              kind: "sequence",
+              effects: [
+                { kind: "draw", player: "self", count: 1 },
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "opponent",
+                    zone: "board",
+                    category: "character",
+                  },
+                  bind: "op12-brochette-debuff",
+                  min: 0,
+                  max: 1,
+                  effect: {
+                    kind: "modify-power",
+                    binding: "op12-brochette-debuff",
+                    amount: -3_000,
+                    expiresAfterTurns: 0,
+                  },
                 },
-                then: { kind: "draw", player: "self", count: 1 },
-              },
-              {
-                kind: "choose",
-                selector: {
-                  player: "opponent",
-                  zone: "board",
-                  category: "character",
-                },
-                bind: "op12-brochette-debuff",
-                min: 0,
-                max: 1,
-                effect: {
-                  kind: "modify-power",
-                  binding: "op12-brochette-debuff",
-                  amount: -3_000,
-                  expiresAfterTurns: 0,
-                },
-              },
-            ],
+              ],
+            },
           },
         },
       },

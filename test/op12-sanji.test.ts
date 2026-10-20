@@ -252,10 +252,13 @@ describe("OP12-059 Concasser", () => {
     expect(ids(game.state.players.p1.trash)).toContain("concasser");
   });
 
-  it("gives nothing with only 3 Events in the trash", () => {
+  // Concasser is itself in the trash by the time its [Counter] resolves, so
+  // three other Events already make four (Bandai's OP12-059#1 ruling); two
+  // are one short.
+  it("gives nothing with only 2 other Events in the trash", () => {
     const game = table("op12-059-counter-short", "p2")
       .withHand("p1", [instance("concasser", "OP12-059")])
-      .withTrash("p1", events(3))
+      .withTrash("p1", events(2))
       .withBoard("p2", [character("oden", "ST32-002")])
       .build();
 
@@ -518,7 +521,9 @@ describe("OP12-078 Brochette Blow", () => {
     expect(currentPower(game.state, "p2", "oden")).toBe(3000);
   });
 
-  it("skips the draw while ahead on DON!!, but still gives −3000", () => {
+  // Ahead on DON!!, neither the draw nor the −3000 happens (Bandai's
+  // OP12-078#1 ruling), so the Event has nothing to do and is not offered.
+  it("does nothing while ahead on DON!!", () => {
     const game = table("op12-078-ahead")
       .withDonDeck("p2", 4)
       .withHand("p1", [instance("brochette", "OP12-078")])
@@ -526,11 +531,16 @@ describe("OP12-078 Brochette Blow", () => {
       .withBoard("p2", [character("oden", "ST32-002")])
       .build();
 
-    game.play({ type: "activate-main", cardNumber: "OP12-078" });
-    answer(game, "oden");
-
-    expect(game.state.players.p1.hand).toEqual([]);
-    expect(currentPower(game.state, "p2", "oden")).toBe(3000);
+    expect(
+      game
+        .legalActions()
+        .some(
+          (action) =>
+            action.type === "activate-main" &&
+            action.sourceCardNumber === "OP12-078",
+        ),
+    ).toBe(false);
+    expect(currentPower(game.state, "p2", "oden")).toBe(6000);
   });
 });
 

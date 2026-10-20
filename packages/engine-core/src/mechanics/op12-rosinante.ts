@@ -322,6 +322,9 @@ export const op12RosinanteMechanics: SetMechanics = {
     [
       // OP12-073 Trafalgar Law: "[printed text omitted -- pnpm card:text OP12-073]"
       //
+      // The catch-up condition gates both sentences: ahead on DON!!, neither
+      // the DON!! nor the +1000 happens (Bandai's OP12-073#1 ruling).
+      //
       // The buff is one `select` over a disjunction rather than two selects, so a
       // Character that is both a [Donquixote Rosinante] and a {Heart Pirates} --
       // which nothing in this list is today, but the pool allows -- gains +1000
@@ -330,43 +333,43 @@ export const op12RosinanteMechanics: SetMechanics = {
       "OP12-073",
       {
         effect: {
-          kind: "sequence",
-          effects: [
-            {
-              kind: "if",
-              condition: {
-                kind: "field-don-versus",
-                player: "self",
-                operator: "lte",
-              },
-              then: {
+          kind: "if",
+          condition: {
+            kind: "field-don-versus",
+            player: "self",
+            operator: "lte",
+          },
+          then: {
+            kind: "sequence",
+            effects: [
+              {
                 kind: "add-don",
                 player: "self",
                 count: 1,
                 rested: false,
               },
-            },
-            {
-              kind: "select",
-              selector: {
-                player: "self",
-                zone: "board",
-                category: "character",
-                anyOf: [
-                  { name: "Donquixote Rosinante" },
-                  { type: "Heart Pirates" },
-                ],
+              {
+                kind: "select",
+                selector: {
+                  player: "self",
+                  zone: "board",
+                  category: "character",
+                  anyOf: [
+                    { name: "Donquixote Rosinante" },
+                    { type: "Heart Pirates" },
+                  ],
+                },
+                bind: "op12-073-buff",
+                count: "all",
+                effect: {
+                  kind: "modify-power",
+                  binding: "op12-073-buff",
+                  amount: 1_000,
+                  expiresAfterTurns: 1,
+                },
               },
-              bind: "op12-073-buff",
-              count: "all",
-              effect: {
-                kind: "modify-power",
-                binding: "op12-073-buff",
-                amount: 1_000,
-                expiresAfterTurns: 1,
-              },
-            },
-          ],
+            ],
+          },
         },
       },
     ],

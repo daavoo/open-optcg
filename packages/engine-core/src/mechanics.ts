@@ -573,6 +573,9 @@ function playSource(
   context: MechanicContext,
   db: CardDatabase,
 ): { bySourceCategory?: string } {
+  // A play by a [Trigger] is not a play by a Character's effect, even when the
+  // Trigger is printed on a Character card (Bandai's OP12-081#1 ruling).
+  if (context.viaTrigger) return {};
   const category = db.get(context.source.cardNumber)?.category;
   return category === undefined ? {} : { bySourceCategory: category };
 }
