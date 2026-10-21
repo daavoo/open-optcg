@@ -216,27 +216,6 @@ export const offFieldReplacementMechanics: SetMechanics = {
       },
     ],
     [
-      // OP13-047 Fossa: "[printed text omitted -- pnpm card:text OP13-047]"
-      //
-      // Toki's shape over the Blue Whitebeard deck: a K.O. only, paid by
-      // trashing the protector, and "a type including" so {Whitebeard Pirates
-      // Allies} bodies are covered. Fossa is {Whitebeard Pirates} himself, and
-      // `excludesSelf` keeps him from answering his own K.O., which would save
-      // nothing.
-      "OP13-047",
-      {
-        opponentEffectOnly: true,
-        oncePerTurn: false,
-        protects: {
-          category: "character",
-          typeIncluding: "Whitebeard Pirates",
-        },
-        excludesSelf: true,
-        label: "Trash Fossa",
-        cost: { kind: "trash-self" },
-      },
-    ],
-    [
       // OP13-046 Vista: "[printed text omitted -- pnpm card:text OP13-046]"Whitebeard Pirates" from your hand
       // instead."
       //

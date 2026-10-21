@@ -742,16 +742,16 @@ describe("OP13-047 Fossa", () => {
     expect(ids(game.state.players.p1.trash)).toEqual(["haruta"]);
   });
 
-  it("does not cover a Character without the type, or himself", () => {
+  it("does not cover a Character without the type", () => {
     const offType = opponentRemoval("op13-047-offtype", "sterry");
     expect(trashFossa(offType)).toBeUndefined();
     resolveAll(offType);
     expect(ids(offType.state.players.p1.trash)).toEqual(["sterry"]);
+  });
 
+  it("covers himself: trashed instead of K.O.'d (Bandai's OP13-047#1)", () => {
     const self = opponentRemoval("op13-047-self", "fossa");
-    expect(trashFossa(self)).toBeUndefined();
-    resolveAll(self);
-    expect(ids(self.state.players.p1.trash)).toEqual(["fossa"]);
+    expect(trashFossa(self)).toBeDefined();
   });
 
   it("does not answer a K.O. in battle", () => {

@@ -56,5 +56,12 @@
  * without their price, and the OP12-041 Sanji Leader, OP12-057, OP12-059,
  * OP12-073 and OP12-078 read their gates as printed. A recorded action list
  * can meet offers that changed.
+ *
+ * Bumped to 1.9 for Bandai's OP-13 Q&A: OP13 K.O. replacements answer
+ * every K.O. including their own card's, an empty board fails "the only
+ * Characters on your field are ...", a battle ends when its attacker leaves
+ * the field, opening Stages are played in turn order, and OP13-119's return
+ * must land for the opponent's play. A recorded action list can meet offers
+ * that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.8";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.9";
