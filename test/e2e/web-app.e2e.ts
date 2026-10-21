@@ -523,9 +523,9 @@ test("a printed DON!! -N is composed on the same surface as a variable one", asy
   // Both pools are on screen at once, counting what they held before the cost
   // was paid -- the engine has already taken the DON!! out of them, so the
   // board alone can no longer say what there was to choose between. The
-  // OP09-061 Leader answers the return with an active and a rested DON!!
-  // from the deck, and those two are not counted: they were not on the field
-  // to pay with.
+  // OP09-061 Leader's answer to the return, an active and a rested DON!! from
+  // the deck, is a [Once Per Turn] reaction put to the player after the
+  // payment, so it is not on the field yet.
   const rows = page.locator(".don-pool-row");
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText("Rested DON!!");
@@ -539,9 +539,9 @@ test("a printed DON!! -N is composed on the same surface as a variable one", asy
   // And the field it describes is the field as it stands, the DON!! deck
   // included: a printed cost is paid before this is asked, so nothing here is
   // still to be added to the pile.
-  await expect(page.locator(".don-return-summary")).toContainText("2 active");
+  await expect(page.locator(".don-return-summary")).toContainText("1 active");
   await expect(page.locator(".don-return-summary")).toContainText(
-    "6 in your DON!! deck",
+    "8 in your DON!! deck",
   );
 
   // The size of a printed cost cannot move, so the steppers move a DON!! from
@@ -556,13 +556,18 @@ test("a printed DON!! -N is composed on the same surface as a variable one", asy
   await expect(page.locator("#don-return-confirm")).toHaveText(
     "Return 2 DON!!",
   );
-  await expect(page.locator(".don-return-summary")).toContainText("1 active");
-  await expect(page.locator(".don-return-summary")).toContainText("3 rested");
+  await expect(page.locator(".don-return-summary")).toContainText("0 active");
+  await expect(page.locator(".don-return-summary")).toContainText("2 rested");
 
   // Confirming answers both pool prompts off the plan, as the variable count
-  // does: the player is back on their turn, not in a second modal.
+  // does: the next question is the Leader's refund, not a second pool modal.
   await page.locator("#don-return-confirm").click();
   await expect(page.locator(".don-pool-list")).toHaveCount(0);
+  await page
+    .getByRole("button", {
+      name: "Apply Monkey.D.Luffy [OP09-061]'s optional effect",
+    })
+    .click();
   await expect(page.locator(".actions-heading")).toHaveCount(0);
   // The split it confirmed is the one the cost area ends up with: the active
   // DON!! the player chose to spend is gone, and a rested one stayed.
@@ -1992,60 +1997,62 @@ test("opponent power changes name the source and target cards", async ({
       "r10:pass-block",
       "r11:pass-counter",
       "r12:trigger:skip",
-      "r13:pass",
-      "r14:play:3:p2-card-29",
-      "r15:attack:p2-leader:p1-leader",
-      "r16:effect:p1-card-29",
-      "r17:pass-block",
-      "r18:pass-counter",
-      "r19:pass",
-      "r20:play:1:p1-card-35",
-      "r21:attack:p1-leader:p2-leader",
-      "r22:pass-block",
-      "r23:pass-counter",
-      "r24:pass",
-      "r25:attach:p2-leader",
-      "r26:play:7:p2-card-6",
-      "r27:effect:p2-card-26",
-      "r28:activate:mechanic-main:p2-leader",
-      "r29:effect:p2-card-6",
-      "r30:attack:p2-card-6:p1-leader",
-      "r31:pass-block",
-      "r32:pass-counter",
-      "r33:trigger:skip",
-      "r34:attack:p2-leader:p1-leader",
-      "r35:pass-block",
-      "r36:pass-counter",
-      "r37:trigger:skip",
-      "r38:pass",
-      "r39:play:1:p1-card-30",
-      "r40:effect:apply",
-      "r41:play:2:p1-card-10",
+      "r13:effect:apply",
+      "r14:pass",
+      "r15:play:3:p2-card-29",
+      "r16:attack:p2-leader:p1-leader",
+      "r17:effect:p1-card-29",
+      "r18:pass-block",
+      "r19:pass-counter",
+      "r20:pass",
+      "r21:play:1:p1-card-35",
+      "r22:attack:p1-leader:p2-leader",
+      "r23:pass-block",
+      "r24:pass-counter",
+      "r25:effect:apply",
+      "r26:pass",
+      "r27:attach:p2-leader",
+      "r28:play:7:p2-card-6",
+      "r29:effect:p2-card-26",
+      "r30:activate:mechanic-main:p2-leader",
+      "r31:effect:p2-card-6",
+      "r32:attack:p2-card-6:p1-leader",
+      "r33:pass-block",
+      "r34:pass-counter",
+      "r35:trigger:skip",
+      "r36:attack:p2-leader:p1-leader",
+      "r37:pass-block",
+      "r38:pass-counter",
+      "r39:trigger:skip",
+      "r40:pass",
+      "r41:play:1:p1-card-30",
       "r42:effect:apply",
-      "r43:effect:p1-card-16",
-      "r44:effect:p2-card-29",
-      "r45:attack:p1-leader:p2-leader",
-      "r46:pass-block",
-      "r47:counter:p2-card-27",
-      "r48:pass-counter",
-      "r49:attack:p1-card-35:p2-card-6",
-      "r50:pass-block",
-      "r51:pass-counter",
-      "r52:pass",
-      "r53:attach:p2-leader",
-      "r54:play:1:p2-card-34",
-      "r55:activate:mechanic-main:p2-leader",
-      "r56:effect:p2-card-26",
-      "r57:attack:p2-leader:p1-leader",
-      "r58:effect:p1-card-25",
-      "r59:pass-block",
-      "r60:pass-counter",
-      "r61:attack:p2-card-34:p1-leader",
-      "r62:effect:p1-card-35",
-      "r63:pass-block",
-      "r64:counter:p1-card-4",
-      "r65:pass-counter",
-      "r66:attack:p2-card-26:p1-card-35",
+      "r43:play:2:p1-card-10",
+      "r44:effect:apply",
+      "r45:effect:p1-card-16",
+      "r46:effect:p2-card-29",
+      "r47:attack:p1-leader:p2-leader",
+      "r48:pass-block",
+      "r49:counter:p2-card-27",
+      "r50:pass-counter",
+      "r51:attack:p1-card-35:p2-card-6",
+      "r52:pass-block",
+      "r53:pass-counter",
+      "r54:pass",
+      "r55:attach:p2-leader",
+      "r56:play:1:p2-card-34",
+      "r57:activate:mechanic-main:p2-leader",
+      "r58:effect:p2-card-26",
+      "r59:attack:p2-leader:p1-leader",
+      "r60:effect:p1-card-25",
+      "r61:pass-block",
+      "r62:pass-counter",
+      "r63:attack:p2-card-34:p1-leader",
+      "r64:effect:p1-card-35",
+      "r65:pass-block",
+      "r66:counter:p1-card-4",
+      "r67:pass-counter",
+      "r68:attack:p2-card-26:p1-card-35",
     ],
     initialEvents: [],
     checkpoints: [],
