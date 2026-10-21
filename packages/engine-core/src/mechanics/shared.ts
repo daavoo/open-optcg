@@ -663,7 +663,8 @@ export const revealTopThen = (
  * `order-to-bottom` is the node for "in any order": it asks a card at a time,
  * and skips asking once the cards left are all the same card. With no
  * `alternate` every card goes back on top, which is a sort of the next N draws
- * rather than a dig past them.
+ * rather than a dig past them; with it, every card goes to one end or the
+ * other, never some to each (Bandai's OP15-066#1).
  */
 export const lookAndReplace = (
   count: number,

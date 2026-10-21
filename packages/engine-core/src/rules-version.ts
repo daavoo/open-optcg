@@ -68,5 +68,12 @@
  * the use kept on a decline and a clause that would do nothing passed over
  * (Bandai's OP07-038#1 and OP12-081#3). A recorded action list meets an
  * apply/skip question it never answered.
+ *
+ * Bumped to 1.11 for the rest of Bandai's OP-15 Q&A: a "top or bottom"
+ * placement sends every card to the same end, "if you have [name]" counts
+ * the Leader and Stage, a [Trigger]'s own card is not in the trash while its
+ * effect resolves, OP15-080 is played only from the trash, and OP15-114's
+ * flip needs a face-down top Life card. A recorded action list can meet
+ * offers that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.10";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.11";

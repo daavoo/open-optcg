@@ -2373,7 +2373,8 @@ describe("OP15 Lucy feature deck", () => {
       .seed("op15-052-later-target")
       .atTurn(12, { active: "p2" })
       .bareTable()
-      .withLife("p2", 2)
+      // Real cards: Wyper's flip needs a face-down Life card to pay with.
+      .withLife("p2", copies(2, "ST32-004", "p2-life"))
       .withBoard("p1", [
         character("rebecca-a", "OP15-053"),
         character("rebecca-b", "OP15-053"),

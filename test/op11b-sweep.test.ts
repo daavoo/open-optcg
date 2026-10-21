@@ -88,8 +88,8 @@ function take(game: Game, ...optionIds: string[]): void {
 
 /**
  * Answers a top-or-bottom placement: `order` names the cards first to last,
- * and the first `atTop` of them stay on top of the deck while the rest go
- * underneath. `reorderAction` composes the split the offer itself does not list.
+ * and `atTop` is every card (all on top) or 0 (all underneath) -- the cards
+ * all go to one end (Bandai's OP15-066#1).
  */
 function placeInOrder(
   game: Game,
@@ -952,7 +952,7 @@ describe("OP11-104 Shirley", () => {
         instance("fourth", COST_4),
       ]);
 
-  it("turns a Life card face-down, adds a {Fish-Man Island} card and splits the rest", () => {
+  it("turns a Life card face-down, adds a {Fish-Man Island} card and buries the rest", () => {
     const game = shirley("op11-104").build();
 
     game.play({ type: "play-card", cardNumber: "OP11-104" });
@@ -961,17 +961,16 @@ describe("OP11-104 Shirley", () => {
     expect(effectOptions(game.state)).toContain("camie");
     expect(effectOptions(game.state)).not.toContain("brook");
     game.play({ type: "resolve-effect", optionId: "camie" });
-    // "Top or bottom ... in any order": one to each end is a legal split.
-    // Keep "rayleigh" on top and send "brook" under.
-    placeInOrder(game, ["rayleigh", "brook"], 1);
+    // The rest all go to one end (Bandai's OP15-066#1); here, underneath.
+    placeInOrder(game, ["rayleigh", "brook"], 0);
 
     expect(game.state.players.p1.life[0]?.faceUp).toBeFalsy();
     expect(ids(game.state.players.p1.hand)).toEqual(["camie"]);
-    expect(ids(game.state.players.p1.deck.slice(0, 2))).toEqual([
+    expect(ids(game.state.players.p1.deck.slice(0, 1))).toEqual(["fourth"]);
+    expect(ids(game.state.players.p1.deck.slice(-2)).sort()).toEqual([
+      "brook",
       "rayleigh",
-      "fourth",
     ]);
-    expect(game.state.players.p1.deck.at(-1)?.instanceId).toBe("brook");
   });
 
   it("can keep both on top, in the order the player picks", () => {

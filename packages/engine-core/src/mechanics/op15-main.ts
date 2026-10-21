@@ -1,12 +1,26 @@
 /** OP15 `[Activate: Main]` programs and `[Main]` Events. */
 import {
+  OWN_CARDS_ZONES,
   SOURCE_BINDING,
+  type CardSelector,
   type MechanicCondition,
   type MechanicProgram,
 } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { embarrassingLock, impactDialKo } from "./op15-shared.js";
 import { lookAndAdd, trashForBattlePower } from "./shared.js";
+
+/**
+ * "If you have [name]" counts every card you have on the field -- Leader,
+ * Characters and Stage -- so a Leader that has every name meets it (Bandai's
+ * OP15-064#1 and OP15-072#1).
+ */
+const haveNamed = (name: string): CardSelector => ({
+  player: "self",
+  zone: OWN_CARDS_ZONES,
+  includeLeader: true,
+  name,
+});
 
 /**
  * OP15-021 "Just Watch Me, Ace!!!": "[printed text omitted -- pnpm card:text OP15-021]"
@@ -775,7 +789,7 @@ export const op15MainMechanics: SetMechanics = {
                   condition: {
                     kind: "selector-count",
                     player: "self",
-                    selector: { zone: "board", name: "Satori" },
+                    selector: haveNamed("Satori"),
                     operator: "gte",
                     value: 1,
                   },
@@ -784,7 +798,7 @@ export const op15MainMechanics: SetMechanics = {
                     condition: {
                       kind: "selector-count",
                       player: "self",
-                      selector: { zone: "board", name: "Hotori" },
+                      selector: haveNamed("Hotori"),
                       operator: "gte",
                       value: 1,
                     },
@@ -830,7 +844,7 @@ export const op15MainMechanics: SetMechanics = {
                   condition: {
                     kind: "selector-count",
                     player: "self",
-                    selector: { zone: "board", name: "Kotori" },
+                    selector: haveNamed("Kotori"),
                     operator: "gte",
                     value: 1,
                   },
@@ -839,7 +853,7 @@ export const op15MainMechanics: SetMechanics = {
                     condition: {
                       kind: "selector-count",
                       player: "self",
-                      selector: { zone: "board", name: "Satori" },
+                      selector: haveNamed("Satori"),
                       operator: "gte",
                       value: 1,
                     },

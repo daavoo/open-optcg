@@ -335,13 +335,13 @@ export type EffectOption =
        */
       destination?: string;
       /**
-       * The second end a split placement may send cards to, as the summary
-       * names it: EB03-023 Kaya and OP11-049 Carrot place each card at the
+       * The second end a placement may send its cards to, as the summary
+       * names it: EB03-023 Kaya and OP11-049 Carrot place their cards at the
        * top *or* the bottom of the deck.
        *
-       * Present only on a split offer, whose id ends `|N`: the first N cards
-       * of the order go to `destination` and the rest here. A caller moving
-       * that split point rewrites `N` the way it rewrites the order.
+       * Present only on such an offer, whose id ends `|N`: the first N cards
+       * of the order go to `destination` and the rest here. N is 0 or every
+       * card -- the cards all go to one end (Bandai's OP15-066#1).
        */
       alternate?: string;
     }

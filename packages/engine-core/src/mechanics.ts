@@ -174,12 +174,14 @@ export function formatOrderOption(order: readonly number[]): string {
  */
 /**
  * The same option with a split point: the first `atPrimary` cards of `order`
- * go to the node's own destination and the rest to its `alternate`.
+ * go to the node's own destination and the rest to its `alternate`. The rules
+ * only allow the two ends -- 0 or every card -- because a "top or bottom"
+ * placement never divides its cards (Bandai's OP15-066#1).
  *
- * Written as one payload rather than as a second action because the two halves
- * are one decision -- EB03-023 Kaya's five cards are ordered *and* divided in
- * the same breath -- and because an option id is the only thing a caller can
- * compose by hand.
+ * Written as one payload rather than as a second action because the end and
+ * the order are one decision -- EB03-023 Kaya's five cards are ordered *and*
+ * sent to one end in the same breath -- and because an option id is the only
+ * thing a caller can compose by hand.
  */
 export function formatSplitOrderOption(
   order: readonly number[],

@@ -342,10 +342,10 @@ export const eb03OnPlayMechanics: SetMechanics = {
     [
       // EB03-023 Kaya: "[printed text omitted -- pnpm card:text EB03-023]"
       //
-      // The first clause in the pool that does not send every looked-at card to
-      // one end of the deck, which is what `alternate` on `order-to-bottom` is
-      // for: the split point and the order are one decision, and the engine
-      // offers its two ends -- all five to the top, all five to the bottom.
+      // Either end of the deck, which is what `alternate` on `order-to-bottom`
+      // is for: the end and the order are one decision, and the engine offers
+      // both -- all five to the top, all five to the bottom. The five are never
+      // divided between the two (Bandai's OP15-066#1).
       "EB03-023",
       {
         effect: {
