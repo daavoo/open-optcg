@@ -175,6 +175,22 @@ twice. Rollouts are not bit-for-bit reproducible even uninterrupted (the
 games' timing decides which finish in which batch), so a resumed run follows
 the same schedule rather than the same games.
 
+### Throughput: `--overlap` and `--schedule`
+
+Each `compact_ppo` iteration logs `collect_breakdown`, where its collection's
+time went on the trainer's side; `--profile` adds the bridge workers' own
+split (engine, encoding, JSON, idle).
+
+- **`--overlap`** keeps the bridge playing the next iteration's games while
+  the update trains, with a snapshot of the weights from before it, on a
+  collector thread of its own. Training and scoring then share the GPU and
+  the GIL, so the update itself runs slower; the iteration is shorter only
+  by what collection cost beyond that. Every decision is trained on one
+  version later than without it, so the part of a game played two updates
+  back is dropped at the default `--max-staleness 1` -- about a third of a
+  batch at `--concurrent 1024` -- and `--overlap` wants `--max-staleness 2`.
+  Off by default.
+
 ### Playing it
 
 ```sh

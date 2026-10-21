@@ -29,11 +29,15 @@ sent SIGTERM or SIGINT, and the same command run again continues from there
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import os
+import queue
 import shutil
 import signal
+import sys
+import threading
 import time
 from functools import partial
 from pathlib import Path
@@ -489,13 +493,15 @@ class Rollouts:
                         })
         return self.env.send_step(actions, nexts)
 
-    def collect(self, policy, version: int, decisions: int, batch: list[list[dict]]) -> list[list[dict]]:
-        """Play until `batch` holds `decisions` decisions from finished games;
-        returns it with nothing left in flight, so the caller may update the
-        weights. Games still running carry on into the next call."""
+    def collect(self, policy, version: int, decisions: int, batch: list[list[dict]],
+                until: threading.Event | None = None) -> list[list[dict]]:
+        """Play until `batch` holds `decisions` decisions from finished games,
+        or until `until` is set; returns it with nothing left in flight, so the
+        caller may update the weights. Games still running carry on into the
+        next call."""
         collected = sum(map(len, batch))
         pending: list[list[int] | None] = [None, None]
-        while collected < decisions:
+        while collected < decisions and not (until is not None and until.is_set()):
             # Group 0 scored while group 1's moves are played, and the other way round.
             for group in (0, 1):
                 if pending[group] is not None:
@@ -540,6 +546,44 @@ class Rollouts:
         self.results = dict(state["results"])
         self.strength = {d: list(v) for d, v in state["strength"].items()}
         self.vs_deck = {d: list(v) for d, v in state["vs_deck"].items()}
+
+
+class Collector:
+    """Every collection on a thread of its own, so that one can run while the
+    main thread trains (`--overlap`).
+
+    MLX streams belong to the thread that made them, and so does what a
+    compiled forward pass traced on one; every policy that scores rollout
+    games (the learner, its snapshot, league members, teachers) is therefore
+    only ever called here. The main thread never touches the rollouts while
+    a job runs: it waits for `result` before reading them.
+    """
+
+    def __init__(self):
+        self.jobs: queue.Queue = queue.Queue()
+        self.done: queue.Queue = queue.Queue()
+        self.thread = threading.Thread(target=self._run, name="collector", daemon=True)
+        self.thread.start()
+
+    def _run(self) -> None:
+        with mx.stream(mx.new_stream(mx.gpu)):
+            while (job := self.jobs.get()) is not None:
+                try:
+                    self.done.put((job(), None))
+                except BaseException as error:  # handed to the main thread, which raises it
+                    self.done.put((None, error))
+
+    def submit(self, job) -> None:
+        self.jobs.put(job)
+
+    def result(self):
+        value, error = self.done.get()
+        if error is not None:
+            raise error
+        return value
+
+    def close(self) -> None:
+        self.jobs.put(None)
 
 
 def breakdown(wall: float, workers: int) -> dict:
@@ -704,6 +748,11 @@ def main() -> None:
              "the learner copies the specialist first, then improves on it",
     )
     parser.add_argument("--resume-every", type=int, default=1, help="iterations between resume checkpoints in <out>/resume")
+    parser.add_argument(
+        "--overlap", action="store_true",
+        help="keep playing the next iteration's games, with the weights from before the update, while the update "
+             "trains; every decision is then a version older when trained on, so pair it with --max-staleness 2",
+    )
     parser.add_argument(
         "--profile", action="store_true",
         help="the bridge workers time their own stages too (engine, encoding, JSON, idle), in collect_breakdown.worker",
@@ -943,14 +992,38 @@ def main() -> None:
     signal.signal(signal.SIGTERM, ask_stop)
     signal.signal(signal.SIGINT, ask_stop)
 
+    # With `--overlap`, every collection runs on the collector's thread: the
+    # one that tops the batch up before an update, with the live weights, and
+    # the one that plays on through the update with `behaviour`, a snapshot
+    # of the weights from before it. A snapshot shares the live model's
+    # arrays, which MLX never changes in place, so taking one copies nothing.
+    collector = Collector() if args.overlap else None
+    if collector is not None:
+        # The trainer gives up the GIL at every GPU wait and needs it back to
+        # queue the next step; at the default 5 ms, a collector busy in Python
+        # holds it that long each time, and the GPU sits idle meanwhile.
+        sys.setswitchinterval(0.0005)
+    # (`compute`, an MLX dtype, does not deep-copy; it is shared as it is.)
+    behaviour = LivePolicy(copy.deepcopy(model, {id(model.compute): model.compute})) if args.overlap else None
+
+    def collect(policy, version: int, batch: list[list[dict]], until: threading.Event | None = None) -> list[list[dict]]:
+        def job():
+            return rollouts.collect(policy, version, args.decisions, batch, until)
+        if collector is None:
+            return job()
+        collector.submit(job)
+        return collector.result()
+
     batch: list[list[dict]] = rollouts.start()
+    overlap: dict = {}
     iteration = first - 1
     try:
         for iteration in range(first, args.iterations + 1):
             version = iteration - 1
             timers.take()
             t0 = time.perf_counter()
-            batch = rollouts.collect(policy, version, args.decisions, batch)
+            carried = sum(map(len, batch))
+            batch = collect(policy, version, batch)
             t1 = time.perf_counter()
             collect_breakdown = breakdown(t1 - t0, args.workers)
 
@@ -960,6 +1033,14 @@ def main() -> None:
                     record["traj"] = traj
                     records.append(record)
             batch = []
+            until = None
+            if collector is not None:
+                # The update's weights are `version` until it ends: the games
+                # go on under a snapshot of them, and what they finish is the
+                # start of the next batch.
+                behaviour.model.update(model.parameters())
+                until = threading.Event()
+                collector.submit(lambda: rollouts.collect(behaviour, version, args.decisions, [], until))
             adv, returns = gae(records, args.lam)
             behind = version - np.array([r["version"] for r in records])
             keep = np.flatnonzero(behind <= args.max_staleness)
@@ -998,6 +1079,11 @@ def main() -> None:
                 if stopped:
                     break
             t2 = time.perf_counter()
+            if collector is not None:
+                until.set()
+                batch = collector.result()
+                overlap = {"overlap_decisions": sum(map(len, batch)),
+                           "overlap_breakdown": breakdown(time.perf_counter() - t1, args.workers)}
             results = rollouts.take_results()
             n = max(n, 1)
             entry = {
@@ -1014,6 +1100,8 @@ def main() -> None:
                 "steps": n, "stopped_early": stopped,
                 "collect_s": round(t1 - t0, 1), "train_s": round(t2 - t1, 1),
                 "decisions_per_s": round(len(records) / max(t1 - t0, 1e-9)),
+                "iter_s": round(time.perf_counter() - t0, 1),
+                **({"carried": carried, **overlap} if collector is not None else {}),
                 "collect_breakdown": collect_breakdown,
                 "lr": float(optimizer.learning_rate.item() if hasattr(optimizer.learning_rate, "item") else optimizer.learning_rate),
             }
@@ -1069,6 +1157,8 @@ def main() -> None:
         save(out / "final")
         save_resume(iteration, done=True)
     finally:
+        if collector is not None:
+            collector.close()
         env.close()
         eval_env.close()
 
