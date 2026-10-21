@@ -578,17 +578,23 @@ describe("OP13-102 Edison", () => {
     ).toBe(true);
   });
 
-  it("still rests, without the draw, at more Life than the opponent", () => {
+  it("neither draws nor rests at more Life than the opponent (Bandai's OP13-102#1)", () => {
     const game = edison("op13-102-more", 3);
-    game.play({ type: "activate-main", summary: "Edison" });
-    game.play({ type: "resolve-effect", optionId: "bb" });
-    resolveAll(game);
+    const offered = game
+      .legalActions()
+      .some(
+        (action) =>
+          action.type === "activate-main" && action.summary.includes("Edison"),
+      );
+    if (offered) {
+      game.play({ type: "activate-main", summary: "Edison" });
+      resolveAll(game);
+    }
 
     expect(game.state.players.p1.hand).toHaveLength(0);
-    expect(ids(game.state.players.p1.trash)).toEqual(["edison"]);
     expect(
       game.state.players.p2.board.find((c) => c.instanceId === "bb")?.rested,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("draws 1 and rests a cost-3-or-less Character off its Life Trigger", () => {

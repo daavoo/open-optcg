@@ -263,7 +263,7 @@ describe("OP13-060 Amatsuki Toki", () => {
     expect(trashIds(game.state, "p1")).toEqual(["buggy"]);
   });
 
-  it("does not cover a Character without the type, or herself", () => {
+  it("does not cover a Character without the type", () => {
     const offType = opponentRemoval("op13-060-offtype")
       .withBoard("p1", [
         character("toki", "OP13-060"),
@@ -276,7 +276,11 @@ describe("OP13-060 Amatsuki Toki", () => {
     offType.play({ type: "resolve-effect", optionId: "brook" });
     expect(trashToki(offType)).toBeUndefined();
     expect(trashIds(offType.state, "p1")).toEqual(["brook"]);
+  });
 
+  // Bandai's OP-13 Q&A (OP13-060#1): Toki may trash herself in place of her
+  // own K.O., and is then trashed rather than K.O.'d.
+  it("covers herself", () => {
     const self = opponentRemoval("op13-060-self")
       .withBoard("p1", [character("toki", "OP13-060")])
       .build();
@@ -284,8 +288,13 @@ describe("OP13-060 Amatsuki Toki", () => {
     self.play({ type: "play-card", cardNumber: "OP16-006" });
     self.play({ type: "resolve-effect", optionId: "apply" });
     self.play({ type: "resolve-effect", optionId: "toki" });
-    expect(trashToki(self)).toBeUndefined();
+    const offer = trashToki(self);
+    expect(offer).toBeDefined();
+    self.submit(offer!);
     expect(trashIds(self.state, "p1")).toEqual(["toki"]);
+    expect(
+      self.state.events.some((event) => event.type === "character-ko"),
+    ).toBe(false);
   });
 });
 

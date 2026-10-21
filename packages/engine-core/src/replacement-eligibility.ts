@@ -527,6 +527,14 @@ export function replacementCostEffect(
       },
     };
   }
+  if (cost.kind === "self-power-penalty") {
+    return {
+      kind: "modify-power",
+      binding: bind,
+      amount: cost.amount,
+      expiresAfterTurns: 0,
+    };
+  }
   if (cost.kind === "leader-power-penalty") {
     return {
       kind: "select",

@@ -986,9 +986,9 @@ export type MechanicCondition =
    *
    * A universal rather than an existential, which `selector-count` cannot
    * express at any threshold: it counts the cards that *do* match and cannot ask
-   * whether any card does not. Vacuously true on an empty board, the way "only"
-   * reads in the rules text -- the clause's payoff is a buff on a card in a
-   * battle, so an empty board cannot benefit from it anyway.
+   * whether any card does not. False on an empty board: Bandai rules "if the
+   * only Characters on your field are X" unmet with no Characters at all
+   * (OP13-097, OP15-001, OP16-022 and EB03-038 in their Q&As).
    */
   | {
       kind: "every-character-matches";

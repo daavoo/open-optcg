@@ -326,10 +326,14 @@ export function createGame(input: {
           : "p2"
         : randomStartingSlot
       : (input.startingPlayer ?? "p1");
+  // The player going first plays their opening Stage first (Bandai's
+  // OP13-079#2, both players on OP13-079 Imu).
+  const seats = { p1: p1.player, p2: p2.player };
+  const secondPlayer = startingPlayer === "p1" ? "p2" : "p1";
   const events: PublicEvent[] = [
     { type: "game-created", activePlayer: startingPlayer },
-    ...openingStageEvents(p1.player, "p1"),
-    ...openingStageEvents(p2.player, "p2"),
+    ...openingStageEvents(seats[startingPlayer], startingPlayer),
+    ...openingStageEvents(seats[secondPlayer], secondPlayer),
   ];
   const state: GameState = {
     protocolVersion: PROTOCOL_VERSION,

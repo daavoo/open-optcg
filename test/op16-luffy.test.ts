@@ -71,6 +71,9 @@ describe("OP16 Green/Blue Luffy rules", () => {
   covers("OP16-022", "[Activate: Main]");
   it("sets at most two DON!! active once per turn", () => {
     let state = leaderScenario();
+    // An {Impel Down} body: an empty board does not satisfy the clause
+    // (OP16-022#1 in Bandai's Q&A).
+    state.players.p1.board = [character("prisoner", "OP16-042")];
     const action = getLegalActions(state, "p1").find(
       (candidate) =>
         candidate.type === "activate-main" &&

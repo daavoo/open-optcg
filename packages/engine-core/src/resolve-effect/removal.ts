@@ -63,10 +63,8 @@ export function resolveKoCharacter({
     !effect.eligibleInstanceIds.includes(optionId) &&
     !(
       effect.kind === "ko-character" &&
-      (optionId.startsWith("ivankov:") ||
-        optionId.startsWith("rosinante:") ||
+      (optionId.startsWith("rosinante:") ||
         optionId.startsWith("vergo:") ||
-        optionId.startsWith("dragon:") ||
         optionId.startsWith("handtrash045:") ||
         optionId.startsWith("mechanic:"))
     )
@@ -101,28 +99,6 @@ export function resolveKoCharacter({
       events.push(...applyAfterRest(state, effect.playerId, effect.afterRest));
     }
     return events;
-  }
-  if (optionId.startsWith("ivankov:")) {
-    const [, protectedId, protectorId] = optionId.split(":");
-    if (!protectedId || !protectorId) {
-      throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
-    }
-    const protectorIndex = targetPlayer.board.findIndex(
-      (card) =>
-        card.instanceId === protectorId && card.cardNumber === "OP13-008",
-    );
-    const [protector] = targetPlayer.board.splice(protectorIndex, 1);
-    if (!protector) throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
-    targetPlayer.restedDon.push(...(protector.attachedDon ?? []));
-    targetPlayer.trash.push({
-      instanceId: protector.instanceId,
-      cardNumber: protector.cardNumber,
-    });
-    if (effect.resumePhase && effect.resumePlayerId) {
-      state.phase = effect.resumePhase;
-      state.activePlayer = effect.resumePlayerId;
-    }
-    return [];
   }
   if (optionId.startsWith("rosinante:")) {
     const [, protectedId] = optionId.split(":");
@@ -364,41 +340,6 @@ export function resolveKoCharacter({
     };
     state.activePlayer = effect.targetPlayerId;
     return [];
-  }
-  if (optionId.startsWith("dragon:")) {
-    const [, protectedId, dragonId] = optionId.split(":");
-    if (!protectedId || !dragonId) {
-      throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
-    }
-    const dragon = targetPlayer.board.find(
-      (card) => card.instanceId === dragonId && card.cardNumber === "OP13-017",
-    );
-    if (!dragon) throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
-    dragon.powerModifiers ??= [];
-    dragon.powerModifiers.push({
-      amount: -2000,
-      expiresAtTurn: state.turn,
-      sourceCardNumber: dragon.cardNumber,
-      sourceInstanceId: dragon.instanceId,
-    });
-    state.oncePerTurn.push(
-      `${state.turn}:${effect.targetPlayerId}:${dragon.instanceId}:replacement`,
-    );
-    if (effect.resumePhase && effect.resumePlayerId) {
-      state.phase = effect.resumePhase;
-      state.activePlayer = effect.resumePlayerId;
-    }
-    return [
-      {
-        type: "power-changed",
-        playerId: effect.targetPlayerId,
-        targetInstanceId: dragon.instanceId,
-        amount: -2000,
-        expiresAtTurn: state.turn,
-        sourceCardNumber: dragon.cardNumber,
-        sourceInstanceId: dragon.instanceId,
-      },
-    ];
   }
   // The target's controller, not this player, decides whether a replacement
   // effect applies. Hand the decision over and come back once it is made.

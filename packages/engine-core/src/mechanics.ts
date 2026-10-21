@@ -1875,17 +1875,6 @@ export function continueExecution(
         effect.player ?? "self",
       );
       const player = state.players[playerId];
-      // "[printed text omitted -- pnpm card:text <card>]" (OP13-028)
-      // binds an effect-driven play out of hand as well as the main-phase
-      // action, the same way the Character ban below does.
-      if (
-        (player.cannotPlayFromHandUntilTurn ?? -1) >= state.turn &&
-        instanceIds.every(
-          (instanceId) => findCardZone(state, instanceId)?.zone === "hand",
-        )
-      ) {
-        continue;
-      }
       // "[printed text omitted -- pnpm card:text <card>]" (OP17-085
       // Dorry, OP17-092 Brogy) binds every play, not only the main-phase action
       // `legal-actions/main.ts` gates -- an effect-driven play is still a play.

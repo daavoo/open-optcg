@@ -337,9 +337,9 @@ describe("ST35 rules", () => {
     expect(state.pendingEffect.kind).toBe("replacement-choice");
     expect(state.activePlayer).toBe("p1");
     const options = getEffectOptions(state).map((option) => option.optionId);
-    expect(options).toContain("ivankov:target:ivankov");
-    expect(options).toContain("dragon:target:dragon");
-    resolveEffect(state, "dragon:target:dragon");
+    expect(options).toContain("mechanic:target:ivankov");
+    expect(options).toContain("mechanic:target:dragon");
+    resolveEffect(state, "mechanic:target:dragon");
     expect(state.players.p1.board.map((card) => card.instanceId)).toContain(
       "target",
     );

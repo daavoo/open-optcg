@@ -8,7 +8,7 @@ import type { GameState, PendingEffect } from "../model.js";
  *
  * `optionId` is opaque by contract to callers, but each resolver knows the shape
  * its own kind produces -- `"skip"`, an instance id, or a prefixed form like
- * `"ivankov:target:ivankov"` -- and validates it, throwing
+ * `"vergo:target:vergo"` -- and validates it, throwing
  * `INVALID_EFFECT_OPTION` rather than resolving something the player did not
  * choose.
  */

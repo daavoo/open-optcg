@@ -840,30 +840,30 @@ export const op13OnPlayMechanics: SetMechanics = {
     [
       // OP13-108 Jewelry Bonney: "[printed text omitted -- pnpm card:text OP13-108]"
       //
-      // The compensation is not conditional on the Leader -- it is a separate
-      // sentence -- so a 9-cost body played behind the wrong Leader still hands a
-      // card over. Yellow's own plan wants their Life low anyway.
+      // The opponent's Life-to-hand is the "Then" of the {Egghead} Leader
+      // condition, not a sentence of its own: Bandai's OP-13 Q&A (OP13-108#1)
+      // has no card handed over behind any other Leader.
       "OP13-108",
       {
         effect: {
-          kind: "sequence",
-          effects: [
-            {
-              kind: "if",
-              condition: {
-                kind: "leader-has-type",
-                player: "self",
-                type: "Egghead",
-              },
-              then: {
+          kind: "if",
+          condition: {
+            kind: "leader-has-type",
+            player: "self",
+            type: "Egghead",
+          },
+          then: {
+            kind: "sequence",
+            effects: [
+              {
                 kind: "grant-keyword",
                 binding: SOURCE_BINDING,
                 keyword: "Rush",
                 expiresAfterTurns: 0,
               },
-            },
-            opponentLifeToTheirHand("op13-bonney-life"),
-          ],
+              opponentLifeToTheirHand("op13-bonney-life"),
+            ],
+          },
         },
       },
     ],
@@ -958,7 +958,8 @@ export const op13OnPlayMechanics: SetMechanics = {
       // The compensation is the *opponent's* play, off their own hand and onto
       // their own board -- which is what `play`'s `player` field is for, and why
       // the choice of card is theirs (`chooser`). "If you do" is what makes it a
-      // consequence rather than a gift: declining the bounce gives them nothing.
+      // consequence rather than a gift: declining the bounce gives them nothing,
+      // and so does a bounce a replacement turned aside.
       "OP13-119",
       {
         effect: {
@@ -992,22 +993,35 @@ export const op13OnPlayMechanics: SetMechanics = {
                       binding: "op13-ace-bounce",
                       to: { player: "owner", zone: "hand" },
                     },
+                    // Only a Character that actually reached the hand earns
+                    // the play: one a replacement kept on the field returned
+                    // nothing (Bandai's OP13-119#2).
                     {
-                      kind: "choose",
-                      selector: {
+                      kind: "if",
+                      condition: {
+                        kind: "selector-count",
                         player: "opponent",
-                        zone: "hand",
-                        category: "character",
-                        maxCost: 4,
+                        selector: { zone: "hand", binding: "op13-ace-bounce" },
+                        operator: "gte",
+                        value: 1,
                       },
-                      chooser: "opponent",
-                      bind: "op13-ace-their-play",
-                      min: 0,
-                      max: 1,
-                      effect: {
-                        kind: "play",
-                        binding: "op13-ace-their-play",
-                        player: "opponent",
+                      then: {
+                        kind: "choose",
+                        selector: {
+                          player: "opponent",
+                          zone: "hand",
+                          category: "character",
+                          maxCost: 4,
+                        },
+                        chooser: "opponent",
+                        bind: "op13-ace-their-play",
+                        min: 0,
+                        max: 1,
+                        effect: {
+                          kind: "play",
+                          binding: "op13-ace-their-play",
+                          player: "opponent",
+                        },
                       },
                     },
                   ],
