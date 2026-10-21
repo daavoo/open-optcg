@@ -147,10 +147,11 @@ export function getMechanicChoiceOptions(
     // list the factorial of it.
     const order = pending.instanceIds.map((_, index) => index);
     if (!pending.alternate) return [formatOrderOption(order)];
-    // With two destinations the engine offers the two ends of the split -- all
-    // to one, all to the other -- because neither is the obvious default the
-    // single-destination case has. Any split in between is a permutation the
-    // caller composes, exactly as the order itself is.
+    // With two destinations the engine offers both ends -- all to one, all to
+    // the other -- because neither is the obvious default the
+    // single-destination case has. The cards are never divided between them
+    // (Bandai's OP15-066#1); the order within the end is the permutation the
+    // caller composes.
     return [
       formatSplitOrderOption(order, 0),
       formatSplitOrderOption(order, order.length),
@@ -494,6 +495,11 @@ export function resolveMechanicChoice(
     const atPrimary = pending.alternate
       ? (parseOrderSplit(optionId, ordered.length) ?? ordered.length)
       : ordered.length;
+    // "Place them at the top or bottom" sends every card to the same end
+    // (Bandai's OP15-066#1): the end is chosen, the cards are not divided.
+    if (atPrimary !== 0 && atPrimary !== ordered.length) {
+      throw new Error(`INVALID_MECHANIC_OPTION: ${optionId}`);
+    }
     execution.bindings[pending.binding] = ordered.slice(0, atPrimary);
     // Two moves rather than one, so each half lands in its own destination --
     // and the alternate's half goes first, because `move` places a binding's

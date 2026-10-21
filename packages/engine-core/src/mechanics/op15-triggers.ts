@@ -196,11 +196,11 @@ export const op15TriggerMechanics: SetMechanics = {
     [
       // OP15-080 Oars: "[printed text omitted -- pnpm card:text OP15-080]"
       //
-      // Oars is itself in the trash by the time this dispatches, and the printed
-      // text does not exclude it from the three cards, so neither does this: a
-      // player who buries their own Oars has paid the cost and has nothing left
-      // to play, which is a bad choice rather than an illegal one. `min: 3`
-      // makes a trash too shallow to pay resolve to nothing.
+      // Oars is itself in the trash by the time this dispatches and may be one
+      // of the three cards, but then it is no longer in the trash and is not
+      // played (Bandai's OP15-080#1) -- so the play re-finds it there rather
+      // than reaching for it wherever it went. `min: 3` makes a trash too
+      // shallow to pay resolve to nothing.
       "OP15-080",
       {
         effect: {
@@ -222,7 +222,17 @@ export const op15TriggerMechanics: SetMechanics = {
                       binding: "op15-oars-cost",
                       to: { player: "self", zone: "deck", position: "bottom" },
                     },
-                    { kind: "play", binding: SOURCE_BINDING },
+                    {
+                      kind: "select",
+                      selector: {
+                        player: "self",
+                        zone: "trash",
+                        binding: SOURCE_BINDING,
+                      },
+                      bind: "op15-oars-self",
+                      count: "all",
+                      effect: { kind: "play", binding: "op15-oars-self" },
+                    },
                   ],
                 },
               },

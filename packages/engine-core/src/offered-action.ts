@@ -23,8 +23,8 @@ import type { KnownCardRef, LegalAction } from "@one-piece-sim/protocol";
  *
  * Carried as already-worded phrases rather than as `MoveDestination`s so this
  * module stays free of the mechanics DSL: the caller that knows the node also
- * knows how to say it. `atPrimary` is how many of `names`, from the front, go
- * to `primary`; the rest go to `alternate`.
+ * knows how to say it. `atPrimary` is how many of `names` go to `primary`:
+ * all of them, or none and they all go to `alternate`.
  */
 export interface OrderDestinations {
   primary: string;
@@ -66,12 +66,7 @@ export function orderSummary(
   if (alternate === undefined || atPrimary >= names.length) {
     return `Place ${listed} at ${primary}${inOrder}`;
   }
-  if (atPrimary <= 0) {
-    return `Place ${listed} at ${alternate}${inOrder}`;
-  }
-  const front = names.slice(0, atPrimary).join(", ");
-  const back = names.slice(atPrimary).join(", ");
-  return `Place ${front} at ${primary} and ${back} at ${alternate}, in that order`;
+  return `Place ${listed} at ${alternate}${inOrder}`;
 }
 
 /**
@@ -94,8 +89,10 @@ function splitOrderId(
 
 /**
  * The split point a caller asked for, when it is one the offer allows: a
- * split offer takes any point from "all to the alternate" (0) to "all to the
- * primary destination" (every card), and an unsplit offer takes none.
+ * split offer takes "all to the alternate" (0) or "all to the primary
+ * destination" (every card) and nothing in between, because a "top or bottom"
+ * placement never divides its cards (Bandai's OP15-066#1); an unsplit offer
+ * takes none.
  */
 function acceptedSplit(
   offered: string | undefined,
@@ -105,7 +102,9 @@ function acceptedSplit(
   if (offered === undefined) return { ok: requested === undefined };
   if (requested === undefined || !/^\d+$/.test(requested)) return { ok: false };
   const atPrimary = Number(requested);
-  return atPrimary <= count ? { ok: true, atPrimary } : { ok: false };
+  return atPrimary === 0 || atPrimary === count
+    ? { ok: true, atPrimary }
+    : { ok: false };
 }
 
 /** Whether two index lists name the same positions, in whatever order. */
@@ -182,8 +181,9 @@ export function reorderAction(
   order: readonly number[],
   /**
    * On a split offer, how many cards from the front of `order` go to the
-   * offer's own destination; the rest go to its alternate. Defaults to the
-   * split the offer was made with.
+   * offer's own destination; the rest go to its alternate. Only 0 and every
+   * card are legal -- the cards all go to one end. Defaults to the split the
+   * offer was made with.
    */
   atPrimary?: number,
 ): LegalAction {
@@ -208,7 +208,7 @@ export function reorderAction(
     );
   }
   const split = atPrimary ?? Number(offeredSplit);
-  if (!Number.isInteger(split) || split < 0 || split > cards.length) {
+  if (split !== 0 && split !== cards.length) {
     throw new Error(`INVALID_SPLIT: ${split}`);
   }
   return restamp(

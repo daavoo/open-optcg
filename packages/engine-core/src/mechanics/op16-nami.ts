@@ -250,49 +250,70 @@ export const op16NamiMechanics: SetMechanics = {
       },
     ],
     [
+      // OP15-114 Wyper: "[printed text omitted -- pnpm card:text OP15-114]"
+      //
+      // The flip is a cost, so a top Life card that is already face-up -- or
+      // no Life at all -- cannot pay it and buys nothing (Bandai's
+      // OP15-114#1). Gated and then a `select` rather than a `choose`: there
+      // is only ever one card it could be, so there is nothing to ask.
       "OP15-114",
       {
         effect: {
           kind: "optional",
           effect: {
-            kind: "select",
-            selector: { player: "self", zone: "life", position: "top" },
-            bind: "face-up-life",
-            count: 1,
-            effect: {
-              kind: "sequence",
-              effects: [
-                { kind: "update", binding: "face-up-life", faceUp: true },
-                {
-                  kind: "select",
-                  selector: { player: "opponent", zone: "board", limit: 5 },
-                  bind: "opponent-board",
-                  count: 5,
-                  effect: {
-                    kind: "sequence",
-                    effects: [
-                      {
-                        kind: "modify-power",
-                        binding: "opponent-board",
-                        amount: -2000,
-                        expiresAfterTurns: 0,
-                      },
-                      {
-                        kind: "select",
-                        selector: {
-                          player: "opponent",
-                          zone: "board",
-                          maxCurrentPower: 0,
-                          limit: 5,
+            kind: "if",
+            condition: {
+              kind: "selector-count",
+              player: "self",
+              selector: { zone: "life", position: "top", faceUp: false },
+              operator: "gte",
+              value: 1,
+            },
+            then: {
+              kind: "select",
+              selector: {
+                player: "self",
+                zone: "life",
+                position: "top",
+                faceUp: false,
+              },
+              bind: "face-up-life",
+              count: 1,
+              effect: {
+                kind: "sequence",
+                effects: [
+                  { kind: "update", binding: "face-up-life", faceUp: true },
+                  {
+                    kind: "select",
+                    selector: { player: "opponent", zone: "board", limit: 5 },
+                    bind: "opponent-board",
+                    count: 5,
+                    effect: {
+                      kind: "sequence",
+                      effects: [
+                        {
+                          kind: "modify-power",
+                          binding: "opponent-board",
+                          amount: -2000,
+                          expiresAfterTurns: 0,
                         },
-                        bind: "zero-power",
-                        count: 5,
-                        effect: { kind: "knock-out", binding: "zero-power" },
-                      },
-                    ],
+                        {
+                          kind: "select",
+                          selector: {
+                            player: "opponent",
+                            zone: "board",
+                            maxCurrentPower: 0,
+                            limit: 5,
+                          },
+                          bind: "zero-power",
+                          count: 5,
+                          effect: { kind: "knock-out", binding: "zero-power" },
+                        },
+                      ],
+                    },
                   },
-                },
-              ],
+                ],
+              },
             },
           },
         },

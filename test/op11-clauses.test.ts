@@ -64,10 +64,9 @@ function resolveAll(game: {
 }
 
 /**
- * Answers a top-or-bottom placement with a caller-composed order: the first
- * `atTop` cards of `order` stay on top of the deck and the rest go underneath.
- * The engine offers only the two all-to-one-end splits, and `reorderAction`
- * composes any other.
+ * Answers a top-or-bottom placement with a caller-composed order: `atTop` is
+ * every card (all on top) or 0 (all underneath) -- the cards all go to one end
+ * (Bandai's OP15-066#1).
  */
 function placeInOrder(
   game: {
@@ -279,13 +278,15 @@ describe("OP11-054 Nami", () => {
     expect(effectOptions(game.state)).not.toContain("done");
     game.play({ type: "resolve-effect", optionId: "d1" });
     game.play({ type: "resolve-effect", optionId: "d3" });
-    // "Top or bottom ... in any order": one to each end is a legal split.
-    placeInOrder(game, [1, 0], 1);
+    // Both go to the same end; here, underneath.
+    placeInOrder(game, [1, 0], 0);
 
     expect(ids(game.state.players.p1.hand)).toEqual(["d2"]);
-    expect(game.state.players.p1.deck[0]?.instanceId).toBe("d3");
-    expect(game.state.players.p1.deck[1]?.instanceId).toBe("rest");
-    expect(game.state.players.p1.deck.at(-1)?.instanceId).toBe("d1");
+    expect(game.state.players.p1.deck[0]?.instanceId).toBe("rest");
+    expect(ids(game.state.players.p1.deck.slice(-2)).sort()).toEqual([
+      "d1",
+      "d3",
+    ]);
   });
 
   it("can put both cards on top, in the order the player picks", () => {
@@ -370,21 +371,25 @@ describe("OP11-049 Carrot", () => {
     expect(
       effectOptions(game.state).every((id) => id.startsWith("order:")),
     ).toBe(true);
-    // A split point past the last card names no placement.
+    // The three go to one end: a split point past the last card names no
+    // placement, and one between them divides the cards.
     const offer = game.action({ type: "resolve-effect" });
     expect(() => reorderAction(offer, [0, 1, 2], 4)).toThrow(/INVALID_SPLIT/);
-    expect(() =>
-      game.submit({
-        ...offer,
-        actionId: offer.actionId.replace(/\|\d+$/, "|4"),
-      }),
-    ).toThrow();
-    // "c" stays on top, "a" then "b" go underneath.
-    placeInOrder(game, [2, 0, 1], 1);
+    expect(() => reorderAction(offer, [0, 1, 2], 1)).toThrow(/INVALID_SPLIT/);
+    for (const split of ["|4", "|1"]) {
+      expect(() =>
+        game.submit({
+          ...offer,
+          actionId: offer.actionId.replace(/\|\d+$/, split),
+        }),
+      ).toThrow();
+    }
+    // All three underneath, "c" first.
+    placeInOrder(game, [2, 0, 1], 0);
 
     const deck = ids(game.state.players.p1.deck);
-    expect(deck.slice(0, 2)).toEqual(["c", "fourth"]);
-    expect(deck.slice(-2)).toEqual(["a", "b"]);
+    expect(deck[0]).toBe("fourth");
+    expect(deck.slice(-3).sort()).toEqual(["a", "b", "c"]);
     expect(game.state.players.p1.hand).toHaveLength(0);
     expect(game.state.players.p1.trash).toHaveLength(0);
   });
@@ -969,16 +974,16 @@ describe("OP11-040 Monkey.D.Luffy", () => {
     // Five looked at, and only the {Straw Hat Crew} one can be added.
     expect(effectOptions(game.state).sort()).toEqual(["done", "hit"]);
     game.play({ type: "resolve-effect", optionId: "hit" });
-    // "miss-c" back on top, the other three underneath in the order picked.
-    placeInOrder(game, [2, 0, 1, 3], 1);
+    // The four misses all go underneath, in the order picked.
+    placeInOrder(game, [2, 0, 1, 3], 0);
 
     expect(game.state.pendingEffect).toBeNull();
-    // Then the turn goes on: the draw takes "miss-c" off the top.
-    expect(ids(game.state.players.p1.hand)).toEqual(["hit", "miss-c"]);
-    expect(ids(game.state.players.p1.deck.slice(0, 1))).toEqual(["sixth"]);
-    expect(ids(game.state.players.p1.deck.slice(-3))).toEqual([
+    // Then the turn goes on: the draw takes "sixth" off the top.
+    expect(ids(game.state.players.p1.hand)).toEqual(["hit", "sixth"]);
+    expect(ids(game.state.players.p1.deck.slice(-4)).sort()).toEqual([
       "miss-a",
       "miss-b",
+      "miss-c",
       "miss-d",
     ]);
     expect(game.state.phase).toBe("main");

@@ -273,6 +273,15 @@ export function selectCards(
       return card;
     }),
   );
+  // A resolving [Trigger] card is parked in the trash while its effect is
+  // still asking, but by the rules it gets there only once the effect has
+  // resolved -- so its own effect cannot find it there: OP15-079 Absalom's
+  // Trigger cannot return Absalom (Bandai's OP15-079#2).
+  if (context.viaTrigger && zones.includes("trash")) {
+    cards = cards.filter(
+      (card) => card.instanceId !== context.source.instanceId,
+    );
+  }
   if (selector.includeLeader) {
     cards = [
       {

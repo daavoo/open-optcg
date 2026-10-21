@@ -1548,16 +1548,14 @@ export type MechanicEffect =
       binding: string;
       to: MoveDestination;
       /**
-       * A second destination the same placement may split across -- EB03-023
-       * Kaya looks at five cards and "place[s] them at the top or bottom of the
-       * deck in any order", the first clause in the pool that does not send
-       * every looked-at card to one end.
+       * A second end the placement may go to instead -- EB03-023 Kaya and
+       * OP15-066 Satori place the cards they looked at on top of the deck or
+       * at its bottom, whichever the player picks.
        *
-       * Without it the clause has to pick an end for all five, which is a
-       * narrower card than the one printed: keeping a hit on top and burying
-       * the rest is the whole point of the look. The split is carried in the
-       * option's payload rather than as a per-card prompt, the same way the
-       * order itself is.
+       * Every card goes to the same end: the end is chosen, the cards are not
+       * divided between the two (Bandai's OP15-066#1). The end is carried in
+       * the option's payload rather than as a separate prompt, the same way
+       * the order itself is.
        */
       alternate?: MoveDestination;
       /**

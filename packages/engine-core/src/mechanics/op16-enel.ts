@@ -5,7 +5,7 @@
  */
 import { SOURCE_BINDING } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { donMinus, skypieaDrawOnPlay } from "./shared.js";
+import { donMinus, lookAndReplace, skypieaDrawOnPlay } from "./shared.js";
 
 export const op16EnelMechanics: SetMechanics = {
   eventMain: [
@@ -322,9 +322,8 @@ export const op16EnelMechanics: SetMechanics = {
     [
       // OP15-066 Satori: "[printed text omitted -- pnpm card:text OP15-066]"
       //
-      // The engine's convention for a look-and-reorder is that unselected cards
-      // return to the bottom in reveal order, so this is expressed as choosing up
-      // to one of the top two to send to the bottom.
+      // Both looked-at cards go to the same end, in the order chosen (Bandai's
+      // OP15-066#1).
       "OP15-066",
       {
         effect: {
@@ -335,18 +334,7 @@ export const op16EnelMechanics: SetMechanics = {
             operator: "lte",
             value: 6,
           },
-          then: {
-            kind: "choose",
-            selector: { player: "self", zone: "deck", limit: 2 },
-            bind: "satori-look",
-            min: 0,
-            max: 1,
-            effect: {
-              kind: "move",
-              binding: "satori-look",
-              to: { player: "self", zone: "deck", position: "bottom" },
-            },
-          },
+          then: lookAndReplace(2, "satori-look", true),
         },
       },
     ],
