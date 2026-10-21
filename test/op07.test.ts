@@ -1212,6 +1212,7 @@ describe("OP07-031 Bartolomeo", () => {
     // The rest raises the signal Bartolomeo watches, and the draw/discard is
     // the reaction it dispatches -- a card the deck gets for doing what it was
     // doing anyway.
+    applyOptional(game);
     expect(game.state.players.p1.hand.map((card) => card.instanceId)).toContain(
       "drawn",
     );
@@ -1570,6 +1571,7 @@ describe("OP07-038 Boa Hancock (Leader)", () => {
     game.play({ type: "resolve-effect", optionId: "cp-a" });
     game.play({ type: "resolve-effect", optionId: "cp-b" });
     game.play({ type: "resolve-effect", optionId: "small" });
+    applyOptional(game);
     settleDeclining(game);
 
     expect(game.state.players.p1.hand.map((card) => card.instanceId)).toContain(

@@ -2278,11 +2278,11 @@ describe("OP08-067 Charlotte Pudding", () => {
     expect(game.state.players.p1.restedDon).toHaveLength(before + 1);
   });
 
-  it("says it fired and spent its turn when the DON!! deck has nothing left", () => {
+  it("passes over quietly and keeps its turn when the DON!! deck has nothing left", () => {
     // The Leader answers the same two-DON!! return first and takes both back,
-    // so Pudding fires onto an empty DON!! deck. Its once-per-turn is gone all
-    // the same, and without a line saying so the player waits for it to answer
-    // the next return this turn, which it will not.
+    // so Pudding would add from an empty DON!! deck. A clause that would do
+    // nothing is not activated: no line for it, and its [Once Per Turn] use
+    // is still there for the next return this turn.
     const game = table("op08-067-empty")
       .bareTable()
       .withLeader("p1", "OP09-061")
@@ -2315,16 +2315,15 @@ describe("OP08-067 Charlotte Pudding", () => {
       ),
     ).toBe(false);
     expect(
-      seen.find(
+      seen.some(
         (event) =>
           event.type === "ability-triggered" &&
           event.sourceCardNumber === "OP08-067",
       ),
-    ).toMatchObject({
-      playerId: "p1",
-      sourceInstanceId: "pudding",
-      noEffect: true,
-    });
+    ).toBe(false);
+    expect(
+      game.state.oncePerTurn.some((key) => key.includes(":OP08-067:")),
+    ).toBe(false);
   });
 });
 
@@ -2887,6 +2886,7 @@ describe("OP08-046 Shakuyaku", () => {
     game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "fodder" });
     game.play({ type: "resolve-effect", optionId: "theirs" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     // The card off their hand is theirs to choose.
     expect(game.state.activePlayer).toBe("p2");
     game.play({ type: "resolve-effect", optionId: "t1" });

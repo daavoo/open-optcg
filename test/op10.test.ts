@@ -912,6 +912,7 @@ describe("OP10-042 Usopp's removal draw", () => {
       .build();
 
     game.pass(); // let the battle resolve and K.O. Leo
+    game.play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.players.p1.hand.map((card) => card.instanceId)).toContain(
       "drawn",

@@ -21,6 +21,7 @@ import {
   executeMechanicProgram,
   getMechanicChoiceOptions,
   orderReactionOptions,
+  type MechanicContext,
   type MechanicEffect,
   type MechanicInvocation,
   type MechanicPendingChoice,
@@ -524,12 +525,33 @@ export function triggerProgramCanAct(
   const program = getTriggerMechanicProgram(card.cardNumber);
   if (!program) return false;
   if (program.effect.kind === "choose" && program.effect.min === 0) return true;
+  return programCanAct(
+    state,
+    { sourcePlayerId: playerId, source: card },
+    program,
+    db,
+  );
+}
+
+/**
+ * Whether running `program` now would do anything: dry-run against a clone,
+ * it produces an event, a signal, a choice with something to pick, or a
+ * change to the state. Shared by the Trigger offer gate and by declinable
+ * `[Once Per Turn]` reactions, which are passed over rather than asked when
+ * the answer is no.
+ */
+export function programCanAct(
+  state: GameState,
+  context: MechanicContext,
+  program: MechanicProgram,
+  db: CardDatabase = defaultCardDatabase,
+  bindings?: Record<string, string[]>,
+): boolean {
   const probe = cloneGameData(state);
   const before = JSON.stringify(probe);
-  const context = { sourcePlayerId: playerId, source: card };
   let result;
   try {
-    result = executeMechanicProgram(probe, context, program, db);
+    result = executeMechanicProgram(probe, context, program, db, bindings);
   } catch {
     // A program that cannot even run is certainly not worth offering.
     return false;
@@ -705,6 +727,7 @@ export function getMechanicSignalInvocations(
   // an `[Your Turn]` reaction read off `activePlayer` alone never fires on the
   // life card an attack takes.
   const turnPlayerId = state.turnPlayerId;
+  const offeredKeys = new Set<string>();
   for (const signal of signals) {
     for (const playerId of ["p1", "p2"] as const) {
       for (const rule of REACTION_RULES) {
@@ -928,22 +951,60 @@ export function getMechanicSignalInvocations(
         });
         if (armed.length === 0) continue;
         for (const source of armed) {
+          // One use, one offer: a clause printed with two triggers (OP12-081
+          // Koala's) that both fire on one play is asked about once.
+          const useKey = rule.oncePerCopy ? copyKey(source.instanceId) : key;
+          if (rule.oncePerTurn && offeredKeys.has(useKey)) continue;
+          if (rule.oncePerTurn) offeredKeys.add(useKey);
           invocations.push({
             context: { sourcePlayerId: playerId, source },
-            program: rule.program,
+            program: rule.oncePerTurn
+              ? declinableProgram(rule.program, useKey)
+              : rule.program,
             automatic: true,
-            ...(rule.oncePerTurn ? { spendsOncePerTurn: true as const } : {}),
+            ...(rule.oncePerTurn ? { declinable: rule.program } : {}),
             ...(source === exited ? { answersOwnExit: true as const } : {}),
           });
-          if (rule.oncePerTurn && rule.oncePerCopy) {
-            state.oncePerTurn.push(copyKey(source.instanceId));
-          }
         }
-        if (rule.oncePerTurn && !rule.oncePerCopy) state.oncePerTurn.push(key);
       }
     }
   }
   return orderSimultaneous(state, invocations);
+}
+
+/**
+ * The `[Once Per Turn]` key a declinable reaction's offered effect spends, or
+ * `undefined` for any other effect -- see `declinableProgram`.
+ */
+export function onceKeyOf(
+  effect: MechanicEffect | undefined,
+): string | undefined {
+  if (effect?.kind !== "sequence") return undefined;
+  const first = effect.effects[0];
+  return first?.kind === "spend-once-per-turn" ? first.key : undefined;
+}
+
+/**
+ * A `[Once Per Turn]` reaction as it is offered: optional, with the use spent
+ * only when its controller applies it (see `MechanicProgramInvocation
+ * .declinable`). A clause already printed as optional takes the spend inside
+ * its own question rather than gaining a second one.
+ */
+function declinableProgram(
+  program: MechanicProgram,
+  key: string,
+): MechanicProgram {
+  const spend: MechanicEffect = { kind: "spend-once-per-turn", key };
+  const body =
+    program.effect.kind === "optional" ? program.effect.effect : program.effect;
+  return {
+    ...program,
+    effect: {
+      ...(program.effect.kind === "optional" ? program.effect : {}),
+      kind: "optional",
+      effect: { kind: "sequence", effects: [spend, body] },
+    },
+  };
 }
 
 /**
@@ -1019,7 +1080,8 @@ function isFieldReaction(invocation: MechanicProgramInvocation): boolean {
   return (
     fieldReactionPrograms
       .get(invocation.context.source.cardNumber)
-      ?.has(JSON.stringify(invocation.program)) ?? false
+      ?.has(JSON.stringify(invocation.declinable ?? invocation.program)) ??
+    false
   );
 }
 
@@ -1098,6 +1160,29 @@ export function dispatchMechanicInvocations(
       queuePendingContinuations(state, [invocation, ...continuations]);
       return { pending: null, invocation: null, continuations: [], events };
     }
+    // A declinable `[Once Per Turn]` clause that would do nothing is not put
+    // to its controller: nobody activates it for nothing, so it is passed over
+    // and keeps its use -- OP12-081 Koala on a Sanji played at 0 Life still
+    // answers the Linlin Sanji plays (Bandai's OP12-081#3).
+    // Nor is one whose use went while it waited, to an earlier offer of the
+    // same clause applied first.
+    const onceKey =
+      invocation.declinable && invocation.program.effect.kind === "optional"
+        ? onceKeyOf(invocation.program.effect.effect)
+        : undefined;
+    if (onceKey !== undefined && state.oncePerTurn.includes(onceKey)) continue;
+    if (
+      invocation.declinable &&
+      !programCanAct(
+        state,
+        invocation.context,
+        invocation.declinable,
+        db,
+        invocation.bindings,
+      )
+    ) {
+      continue;
+    }
     const result = executeMechanicProgram(
       state,
       invocation.context,
@@ -1108,30 +1193,18 @@ export function dispatchMechanicInvocations(
     // The cause, then what it did. Announced only once the clause has run and
     // produced something, so the panel never says an ability fired and then
     // shows nothing underneath -- and so a dry run's "did this do anything?"
-    // test is answered by the clause's own steps, never by this marker.
-    //
-    // The exception is a `[Once Per Turn]` clause that fired to nothing: its
-    // use is gone all the same, so staying quiet would leave the player
-    // waiting for it to answer the next trigger this turn, which it will not.
-    // That one is announced with `noEffect`, and a panel shows it bare.
-    if (invocation.automatic && result.events.length > 0) {
-      events.push({
-        type: "ability-triggered",
-        playerId: invocation.context.sourcePlayerId,
-        sourceCardNumber: invocation.context.source.cardNumber,
-        sourceInstanceId: invocation.context.source.instanceId,
-      });
-    } else if (
+    // test is answered by the clause's own steps, never by this marker. A
+    // declinable clause announces itself when applied (`spend-once-per-turn`).
+    if (
       invocation.automatic &&
-      invocation.spendsOncePerTurn &&
-      !result.pending
+      !invocation.declinable &&
+      result.events.length > 0
     ) {
       events.push({
         type: "ability-triggered",
         playerId: invocation.context.sourcePlayerId,
         sourceCardNumber: invocation.context.source.cardNumber,
         sourceInstanceId: invocation.context.source.instanceId,
-        noEffect: true,
       });
     }
     events.push(...result.events);

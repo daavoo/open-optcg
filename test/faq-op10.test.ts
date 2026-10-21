@@ -533,6 +533,7 @@ describe("OP10-042 Usopp", () => {
 
     // The draw first, then the [On K.O.].
     game.play({ type: "resolve-effect", optionId: "reaction:p1-leader" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     expect(ids(game.state.players.p1.hand)).toEqual(["drawn"]);
     expect(effectOptions(game, "p1")).toContain("cub");
   });
@@ -563,6 +564,7 @@ describe("OP10-042 Usopp", () => {
     const game = frankyFalls("faq-op10-042-3");
     game.play({ type: "resolve-effect", optionId: "reaction:franky" });
     game.play({ type: "resolve-effect", optionId: "cub" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     expect(ids(game.state.players.p1.board)).toEqual(["cub"]);
     expect(ids(game.state.players.p1.hand)).toEqual(["drawn"]);
     expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP10-044");

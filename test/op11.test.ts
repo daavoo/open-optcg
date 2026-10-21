@@ -449,8 +449,9 @@ describe("OP11-077 Randolph", () => {
     // OP11-063 Little Sadi's own `DON!! −1`, which is what returns the DON!!.
     game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", summary: "active DON" });
-    // Randolph's reaction: which {Big Mom Pirates} body is protected is the
-    // decision, and both it and Linlin qualify.
+    // Randolph's reaction: applied, then which {Big Mom Pirates} body is
+    // protected is the decision, and both it and Linlin qualify.
+    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "linlin" });
     resolveAll(game);
 

@@ -1821,6 +1821,8 @@ describe("OP06-044 Gion", () => {
     });
     game.pass();
     game.play({ type: "activate-counter-event", cardNumber: "OP06-038" });
+    // Gion's controller applies the clause; the defender then picks the card.
+    game.play({ type: "resolve-effect", optionId: "apply" });
     settleDeclining(game);
 
     // The Event resolved and the watcher took the card the defender had left,

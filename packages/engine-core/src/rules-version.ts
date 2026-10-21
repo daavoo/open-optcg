@@ -63,5 +63,10 @@
  * the field, opening Stages are played in turn order, and OP13-119's return
  * must land for the opponent's play. A recorded action list can meet offers
  * that changed.
+ *
+ * Bumped to 1.10 when every `[Once Per Turn]` reaction became optional, with
+ * the use kept on a decline and a clause that would do nothing passed over
+ * (Bandai's OP07-038#1 and OP12-081#3). A recorded action list meets an
+ * apply/skip question it never answered.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.9";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.10";

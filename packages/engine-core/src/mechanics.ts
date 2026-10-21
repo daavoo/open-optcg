@@ -1108,6 +1108,20 @@ export function continueExecution(
       }
       continue;
     }
+    if (effect.kind === "spend-once-per-turn") {
+      if (state.oncePerTurn.includes(effect.key)) {
+        execution.queue.length = 0;
+        continue;
+      }
+      state.oncePerTurn.push(effect.key);
+      events.push({
+        type: "ability-triggered",
+        playerId: execution.context.sourcePlayerId,
+        sourceCardNumber: execution.context.source.cardNumber,
+        sourceInstanceId: execution.context.source.instanceId,
+      });
+      continue;
+    }
     if (effect.kind === "at-end-of-turn-effect") {
       const player = state.players[execution.context.sourcePlayerId];
       player.endOfTurnPrograms = [

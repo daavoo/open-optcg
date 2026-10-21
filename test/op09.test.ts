@@ -2498,6 +2498,7 @@ describe("OP09-074 Bepo", () => {
     game.play({ type: "resolve-effect", optionId: "apply" });
     payDonMinus(game);
     game.play({ type: "resolve-effect", optionId: "victim-a" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "p1-leader" });
     settle(game);
     expect(currentPower(game.state, "p1", "p1-leader")).toBe(6_000);

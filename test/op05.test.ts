@@ -2972,6 +2972,7 @@ describe("OP05-098 Enel (Leader)", () => {
       targetInstanceId: "p1-leader",
     });
     declineDefence(game);
+    applyOptional(game);
     // The damaged Life card is in hand beside the held card; one is trashed.
     expect(game.state.players.p1.life.map((card) => card.instanceId)).toEqual([
       "top",
@@ -3323,6 +3324,7 @@ describe("OP05-109 Pagaya", () => {
       board: [["pagaya", "OP05-109"]],
     });
     game.play({ type: "resolve-trigger", optionId: "activate" });
+    applyOptional(game);
     // Shura arrives; Pagaya then draws two of the three deck cards.
     expect(game.state.players.p1.hand).toHaveLength(2);
     game.play({ type: "resolve-effect" });

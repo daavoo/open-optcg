@@ -10,6 +10,7 @@ import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import {
   dispatchMechanicInvocations,
   getMechanicSignalInvocations,
+  onceKeyOf,
   orderSimultaneous,
   getOnEndOfYourTurnMechanicProgram,
   getOnStartOfYourTurnMechanicProgram,
@@ -154,6 +155,10 @@ function optionalEffectSummary(
   db: CardDatabase,
 ): string {
   const card = `${db.require(cardNumber).name} [${cardNumber}]`;
+  // A declinable `[Once Per Turn]` reaction: the whole clause is the offer,
+  // and it is printed with no marker, so the card names it.
+  if (onceKeyOf(optional) !== undefined)
+    return `Apply ${card}'s optional effect`;
   const marker = optionalClauseMarker(cardNumber);
   if (optional && !isClauseOpeningOptional(cardNumber, optional)) {
     // An "up to" step inside a clause already paid for. Naming the clause and
@@ -1550,6 +1555,7 @@ function computeEffectOptions(
                         )
                       : optionId === "skip" &&
                           choice.kind === "optional" &&
+                          onceKeyOf(choice.effect) === undefined &&
                           !isClauseOpeningOptional(
                             effect.sourceCardNumber,
                             choice.effect,

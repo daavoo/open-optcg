@@ -83,13 +83,17 @@ function settle(game: Game): void {
 /**
  * Decline every remaining step of the current battle: the Leader's debuff,
  * the Block and Counter steps, and any [Trigger] on the Life card it takes.
+ * With `draw`, the Leader's [Once Per Turn] draw is applied when it is asked
+ * once the battle is over; without it, that is declined too.
  */
-function closeBattle(game: Game): void {
+function closeBattle(game: Game, { draw = false } = {}): void {
   let guard = 0;
   while (game.state.activeAttack || game.state.pendingEffect) {
     if (guard > 20) throw new Error("battle never closed");
     guard += 1;
-    if (offered(game, "skip")) {
+    if (draw && !game.state.activeAttack && offered(game, "apply")) {
+      game.play({ type: "resolve-effect", optionId: "apply" });
+    } else if (offered(game, "skip")) {
       game.play({ type: "resolve-effect", optionId: "skip" });
     } else if (game.state.pendingEffect) {
       game.play({ type: "resolve-effect" });
@@ -205,7 +209,7 @@ describe("OP13-002 Portgas.D.Ace: [DON!! x1] draws on damage and on a lost 6000 
       .build();
 
     attack(game, "attacker");
-    closeBattle(game);
+    closeBattle(game, { draw: true });
 
     // One Life card to hand, and the Leader's draw on top of it.
     expect(game.state.players.p1.life).toHaveLength(2);
@@ -219,7 +223,7 @@ describe("OP13-002 Portgas.D.Ace: [DON!! x1] draws on damage and on a lost 6000 
       .build();
 
     attack(game, "attacker");
-    closeBattle(game);
+    closeBattle(game, { draw: true });
 
     expect(game.state.players.p1.life).toHaveLength(2);
     expect(handIds(game.state, "p1")).toEqual(["p1-life-1"]);
@@ -235,7 +239,7 @@ describe("OP13-002 Portgas.D.Ace: [DON!! x1] draws on damage and on a lost 6000 
 
     attack(game, "attacker");
     game.play({ type: "block", blockerInstanceId: "marco" });
-    closeBattle(game);
+    closeBattle(game, { draw: true });
 
     expect(game.state.players.p1.board).toHaveLength(0);
     expect(game.state.players.p1.life).toHaveLength(3);
@@ -252,7 +256,7 @@ describe("OP13-002 Portgas.D.Ace: [DON!! x1] draws on damage and on a lost 6000 
       .build();
 
     attack(game, "attacker", "otama");
-    closeBattle(game);
+    closeBattle(game, { draw: true });
 
     expect(game.state.players.p1.board).toHaveLength(0);
     expect(game.state.players.p1.hand).toHaveLength(0);
@@ -269,9 +273,9 @@ describe("OP13-002 Portgas.D.Ace: [DON!! x1] draws on damage and on a lost 6000 
       .build();
 
     attack(game, "first");
-    closeBattle(game);
+    closeBattle(game, { draw: true });
     attack(game, "second");
-    closeBattle(game);
+    closeBattle(game, { draw: true });
 
     // Two Life cards to hand, one draw.
     expect(game.state.players.p1.life).toHaveLength(1);

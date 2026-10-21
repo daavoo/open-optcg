@@ -921,6 +921,15 @@ describe("ST31 rules", () => {
       revision: state.revision,
     });
     state = resolved.state;
+    // The Event Franky watches: its controller applies the +2000.
+    state = submit(
+      state,
+      requireAction(
+        state,
+        (action) =>
+          action.type === "resolve-effect" && action.optionId === "apply",
+      ),
+    );
     expect(state.activeAttack?.counterPower).toBe(4000);
     expect(battleAttackPower(state)).toBe(8000);
     // The cost card left a hand for a public trash, so its identity is a

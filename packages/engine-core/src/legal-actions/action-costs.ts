@@ -350,6 +350,8 @@ function collectPayoff(effect: MechanicEffect, kinds: Set<PayoffKind>): void {
     case "install-replacement":
       kinds.add("other");
       return;
+    case "spend-once-per-turn":
+      return;
     default: {
       // A new step kind fails here until it is given a payoff kind.
       const unclassified: never = effect;
