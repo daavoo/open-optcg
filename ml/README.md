@@ -175,6 +175,35 @@ twice. Rollouts are not bit-for-bit reproducible even uninterrupted (the
 games' timing decides which finish in which batch), so a resumed run follows
 the same schedule rather than the same games.
 
+### Throughput: `--overlap` and `--schedule`
+
+Each `compact_ppo` iteration logs `collect_breakdown`, where its collection's
+time went on the trainer's side; `--profile` adds the bridge workers' own
+split (engine, encoding, JSON, idle).
+
+- **`--overlap`** keeps the bridge playing the next iteration's games while
+  the update trains, with a snapshot of the weights from before it, on a
+  collector thread of its own. Training and scoring then share the GPU and
+  the GIL, so the update itself runs slower; the iteration is shorter only
+  by what collection cost beyond that. Every decision is trained on one
+  version later than without it, so the part of a game played two updates
+  back is dropped at the default `--max-staleness 1` -- about a third of a
+  batch at `--concurrent 1024` -- and `--overlap` wants `--max-staleness 2`.
+  Off by default.
+- **`--schedule N`** plays every ordered pairing of the pool (each training
+  deck as the learner's, against every deck) at least N times a cycle, in a
+  shuffled order, instead of drawing each game's decks. `--deck-weights`
+  and `--deck-power` become extra repeats of a deck's pairings in the next
+  cycle, and `--mirror` adds mirror games at that share; `--close` and
+  `--opponent-decks` choose the opponent instead, so they do not combine
+  with it. League games and variants are unchanged. The cycle and its
+  position are part of the resume state, and a pairing whose game was in
+  flight at a stop is played first on resume. Each iteration logs
+  `schedule`: the cycle, the position in it, and the fewest and most games
+  any planned pairing has had. On the 84-deck pool with v11's weights,
+  `--schedule 2` is a cycle of about 23,600 games, some 15 iterations.
+  Off by default.
+
 ### Playing it
 
 ```sh

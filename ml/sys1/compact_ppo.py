@@ -29,11 +29,15 @@ sent SIGTERM or SIGINT, and the same command run again continues from there
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import os
+import queue
 import shutil
 import signal
+import sys
+import threading
 import time
 from functools import partial
 from pathlib import Path
@@ -49,6 +53,8 @@ from .compact import (AUX_DIM, CARD_NUMBERS, COMPACT_VERSION, DATA, GLOBAL_NUMBE
                       size_order, zones_of)
 from .evaluate import catalog, deck_variants, head_to_head, paired_difference, play_vs_rules, read_deck_list
 from .ppo import gae, outcome
+from . import timers
+from .timers import timed
 
 
 def learning_rate(schedule: str, iteration: int, iterations: int, peak: float, final: float, start: float, warmup: float) -> float:
@@ -171,6 +177,96 @@ def losses(model, batch, clip: float, value_coef: float, entropy_coef: float, au
     return loss, (policy_loss, value_loss, entropy, approx_kl, clipped, aux_loss, kick_loss)
 
 
+class Schedule:
+    """Which decks meet, as a plan rather than a draw (`--schedule N`).
+
+    A cycle is every ordered pairing (the learner's deck, the deck across
+    from it) of the pilot pool against the whole pool, each played `repeats`
+    times or more, in an order shuffled with the run's generator; when it
+    runs out the next is built. A deck the weights favour gets its pairings
+    played more often in the next cycle rather than drawn more often, so
+    every pairing is still met at least `repeats` times a cycle, and the
+    weights are read again at each cycle's start (`weights`), which is when
+    `--deck-power`'s training win rates move them.
+
+    With `mirror`, each deck also meets itself, repeated so that mirrors are
+    about that share of its games, as `--mirror` makes them when drawn.
+
+    A game in flight when the run stops is dropped, and its pairing would
+    be with it: `state` records the pairings started but not finished, and
+    a resumed run plays those first, so the plan is kept to the game.
+    """
+
+    def __init__(self, rng, pilots: list[str], decks: list[str], repeats: int, mirror: float):
+        self.rng, self.pilots, self.decks, self.repeats, self.mirror = rng, pilots, decks, repeats, mirror
+        self.column = {d: j for j, d in enumerate(decks)}
+        self.cycle, self.order, self.cursor = 0, [], 0
+        self.requeue: list[tuple[int, int]] = []
+        # Games finished per (pilot row, deck column), over the run.
+        self.played = np.zeros((len(pilots), len(decks)), dtype=np.int64)
+
+    def plan(self, weights: np.ndarray | None) -> np.ndarray:
+        """Games per (pilot, deck) cell this cycle: `repeats` times each
+        pilot's weight (`Rollouts.cycle_weights`), rounded, and never fewer
+        than `repeats`."""
+        scale = np.ones(len(self.pilots)) if weights is None else weights
+        per_pilot = np.maximum(self.repeats, np.rint(self.repeats * scale)).astype(np.int64)
+        counts = np.repeat(per_pilot[:, None], len(self.decks), axis=1)
+        for i, deck in enumerate(self.pilots):
+            j = self.column[deck]
+            # A mirror share m of a deck's games: m / (1 - m) times its other pairings.
+            counts[i, j] = round(per_pilot[i] * (len(self.decks) - 1) * self.mirror / (1 - self.mirror)) if self.mirror else 0
+        return counts
+
+    def build(self, weights: np.ndarray | None) -> None:
+        counts = self.plan(weights)
+        cells = np.repeat(np.arange(counts.size), counts.ravel())
+        self.rng.shuffle(cells)
+        self.order = [divmod(int(c), len(self.decks)) for c in cells]
+        self.cursor = 0
+        self.cycle += 1
+
+    def next(self, weights) -> tuple[int, int]:
+        """The next pairing as (pilot row, deck column); `weights` is called
+        for the pilots' weights only when a new cycle is built."""
+        if self.requeue:
+            return self.requeue.pop(0)
+        if self.cursor >= len(self.order):
+            self.build(weights())
+        pairing = self.order[self.cursor]
+        self.cursor += 1
+        return pairing
+
+    def names(self, pairing: tuple[int, int]) -> tuple[str, str]:
+        return self.pilots[pairing[0]], self.decks[pairing[1]]
+
+    def record(self, pairing: tuple[int, int]) -> None:
+        self.played[pairing] += 1
+
+    def log(self) -> dict:
+        planned = self.played[self.cells()]
+        return {"cycle": self.cycle, "cursor": self.cursor, "length": len(self.order),
+                "played_min": int(planned.min()), "played_max": int(planned.max())}
+
+    def cells(self) -> np.ndarray:
+        """The cells a cycle plans games in."""
+        mask = np.ones(self.played.shape, dtype=bool)
+        if not self.mirror:
+            for i, deck in enumerate(self.pilots):
+                mask[i, self.column[deck]] = False
+        return mask
+
+    def state(self, unfinished: list[tuple[int, int]]) -> dict:
+        return {"cycle": self.cycle, "order": [list(p) for p in self.order], "cursor": self.cursor,
+                "requeue": [list(p) for p in unfinished + self.requeue], "played": self.played.tolist()}
+
+    def restore(self, state: dict) -> None:
+        self.cycle, self.cursor = state["cycle"], state["cursor"]
+        self.order = [tuple(p) for p in state["order"]]
+        self.requeue = [tuple(p) for p in state["requeue"]]
+        self.played = np.array(state["played"], dtype=np.int64)
+
+
 class Rollouts:
     """`concurrent` games in flight in two alternating groups.
 
@@ -192,6 +288,7 @@ class Rollouts:
         deck_weights: dict[str, float] | None = None, matchup_power: float = 0.0, deck_power: float = 0.0,
         teachers: dict[str, object] | None = None,
         variants: dict[str, list[str]] | None = None, variant_share: float = 0.0,
+        schedule: int = 0,
     ):
         self.env, self.concurrent, self.workers, self.rules, self.rng, self.seed = env, concurrent, workers, rules, rng, seed
         self.league, self.league_share = league, league_share if league else 0.0
@@ -218,7 +315,7 @@ class Rollouts:
         # Slots whose game in flight plays a variant, counted when it ends.
         self.varied: set[int] = set()
         self.draws = bool(pilot or mirror or close or opponent_pilot or deck_weights or deck_power or teachers
-                          or self.variant_share)
+                          or self.variant_share or schedule)
         # How often each deck is the learner's: weighted where it is piloted
         # furthest behind (`--deck-weights`), otherwise uniform.
         # With `deck_power` the weights follow training instead: each draw
@@ -234,6 +331,11 @@ class Rollouts:
             self.pilot_p = self.pilot_w / self.pilot_w.sum()
         if self.draws and not deck_ids:
             raise ValueError("drawing decks needs the whole pool")
+        # With `schedule`, which decks meet is planned rather than drawn
+        # (`Schedule`); `slot -> pairing` holds each scheduled game's from its
+        # start to its end, when it is counted played.
+        self.schedule = Schedule(rng, list(self.pilot_pool), list(deck_ids), schedule, mirror) if schedule else None
+        self.pairing: dict[int, tuple[int, int]] = {}
         # deck -> [wins, games], decayed: how the deck fares in training games,
         # whoever pilots it, for choosing close matchups (`--close`).
         self.strength: dict[str, list[float]] = {}
@@ -285,6 +387,7 @@ class Rollouts:
             else:
                 kind, seats, rules = "self", {"p1", "p2"}, "none"
             decks = {"p1": "random", "p2": "random"}
+            pairing = None
             if self.draws and kind == "league" and self.opponent_pilot:
                 # The frozen opponent pilots the target deck; the learner any.
                 p = None
@@ -294,15 +397,20 @@ class Rollouts:
                 theirs = str(self.rng.choice(self.opponent_pilot, p=p))
                 decks = {seat: str(self.rng.choice(self.pilot or self.deck_ids)), other: theirs}
             elif self.draws:
-                mine = str(self.rng.choice(self.pilot_pool, p=self.pilot_probs()))
-                decks = {seat: mine, other: self.opponent_deck(mine)}
+                if self.schedule:
+                    pairing = self.schedule.next(self.cycle_weights)
+                    mine, theirs = self.schedule.names(pairing)
+                else:
+                    mine = str(self.rng.choice(self.pilot_pool, p=self.pilot_probs()))
+                    theirs = self.opponent_deck(mine)
+                decks = {seat: mine, other: theirs}
                 if self.pilot and kind == "self" and decks[other] not in self.pilot:
                     seats = {seat}
             if self.variant_share:
                 decks = {seat: self.vary(deck) for seat, deck in decks.items()}
             spec = {"id": slot, **decks, "rules": rules, "seed": f"{self.seed}-{slot}-{self.generation[slot]}"}
             self.generation[slot] += 1
-            self.upcoming[slot] = {"seats": seats, "spec": spec, "kind": kind, "opponent": opponent}
+            self.upcoming[slot] = {"seats": seats, "spec": spec, "kind": kind, "opponent": opponent, "pairing": pairing}
         return self.upcoming[slot]
 
     def pilot_probs(self) -> np.ndarray | None:
@@ -310,6 +418,19 @@ class Rollouts:
             return self.pilot_p
         w = self.pilot_w * np.array([(1 - self.deck_rate(d)) ** self.deck_power for d in self.pilot_pool])
         return w / w.sum()
+
+    def cycle_weights(self) -> np.ndarray | None:
+        """Each pilot deck's weight for a new `Schedule` cycle, 1 for the
+        least: its `--deck-weights` weight over the smallest, times, with
+        `deck_power`, (1 - its training win rate) ** power over the mean of
+        those, so the decks losing most get the most extra games."""
+        if self.pilot_w is None:
+            return None
+        weights = self.pilot_w / self.pilot_w.min()
+        if self.deck_power:
+            losing = np.array([(1 - self.deck_rate(d)) ** self.deck_power for d in self.pilot_pool])
+            weights = weights * losing / losing.mean()
+        return weights
 
     def pilot_table(self) -> dict[str, list[float]]:
         """Each pilot deck's training win rate and its share of the learner's draws."""
@@ -370,6 +491,8 @@ class Rollouts:
             self.varied.add(slot)
         if upcoming["opponent"]:
             self.opponent[slot] = upcoming["opponent"]
+        if upcoming["pairing"]:
+            self.pairing[slot] = upcoming["pairing"]
         for seat in upcoming["seats"]:
             self.steps[(slot, seat)] = []
 
@@ -401,6 +524,9 @@ class Rollouts:
             if "failed" not in r and not r["truncated"]:
                 self.record_decks(decks, r["winner"])
             opponent = self.opponent.pop(slot, None)
+            pairing = self.pairing.pop(slot, None)
+            if pairing:
+                self.schedule.record(pairing)
             trajectories = [self.steps.pop((slot, seat), []) for seat in seats]
             if "failed" in r:
                 self.results["failed"] += 1
@@ -449,48 +575,59 @@ class Rollouts:
             by_policy.setdefault(id(chooser), (chooser, []))[1].append(r)
         actions, nexts = {}, {}
         # The specialist's view of the learner's own decisions on its deck.
+        by_teacher: dict[str, list[dict]] = {}
+        for r in by_policy[id(policy)][1] if self.teachers else ():
+            deck = self.decks[r["id"]][r["seat"]]
+            if deck in self.teachers and r["seat"] in self.learner[r["id"]]:
+                by_teacher.setdefault(deck, []).append(r)
+        # Every policy's forward passes queued, then one wait on the GPU: a
+        # league member or a teacher scores a few dozen decisions a group,
+        # and waiting on each in turn costs more than computing them.
+        choosing = [(chooser, decisions, chooser.dispatch(decisions)) for chooser, decisions in by_policy.values() if decisions]
+        teaching = [(self.teachers[deck], decisions, self.teachers[deck].dispatch(decisions)) for deck, decisions in by_teacher.items()]
+        with timed("gpu"):
+            mx.eval([scoring["arrays"] for *_, scoring in choosing + teaching])
         taught: dict[int, np.ndarray] = {}
-        if self.teachers:
-            by_teacher: dict[str, list[dict]] = {}
-            for r in by_policy[id(policy)][1]:
-                deck = self.decks[r["id"]][r["seat"]]
-                if deck in self.teachers and r["seat"] in self.learner[r["id"]]:
-                    by_teacher.setdefault(deck, []).append(r)
-            for deck, decisions in by_teacher.items():
-                tprobs, _ = self.teachers[deck].score(decisions)
-                for r, t in zip(decisions, tprobs):
-                    t = t.astype(np.float64)
-                    taught[r["id"]] = (t / t.sum()).astype(np.float32)
-        for chooser, decisions in by_policy.values():
-            if not decisions:
-                continue
-            probs, values = chooser.score(decisions)
-            for r, p, v in zip(decisions, probs, values):
-                p = p.astype(np.float64)
-                p /= p.sum()
-                action = int(self.rng.choice(len(p), p=p))
-                actions[r["id"]] = action
-                nexts[r["id"]] = self.next_spec(r["id"])["spec"]
-                if chooser is policy and r["seat"] in self.learner[r["id"]]:
-                    hidden = {"hidden": np.asarray(r["privileged"], dtype=np.float32)[list(HIDDEN_INDICES)]} if "privileged" in r else {}
-                    self.steps[(r["id"], r["seat"])].append({**hidden,
-                        "compact": r["compact"], "seat": r["seat"], "game_seed": self.game[r["id"]], "deck": self.decks[r["id"]][r["seat"]], "chosen": action, "old_logp": float(np.log(max(p[action], 1e-12))),
-                        "value": float(v), "reward": 0.0, "version": version,
-                        **({"probs": taught[r["id"]]} if r["id"] in taught else {}),
-                    })
+        for teacher, decisions, scoring in teaching:
+            tprobs, _ = teacher.finish(scoring)
+            for r, t in zip(decisions, tprobs):
+                t = t.astype(np.float64)
+                taught[r["id"]] = (t / t.sum()).astype(np.float32)
+        for chooser, decisions, scoring in choosing:
+            probs, values = chooser.finish(scoring)
+            with timed("sample"):
+                # One uniform draw per decision, read against its cumulative
+                # probabilities: `rng.choice` per decision costs more than the rest of this loop.
+                draws = self.rng.random(len(decisions))
+                for r, p, v, u in zip(decisions, probs, values, draws):
+                    cumulative = np.cumsum(p, dtype=np.float64)
+                    action = min(int(np.searchsorted(cumulative, u * cumulative[-1], side="right")), len(p) - 1)
+                    actions[r["id"]] = action
+                    nexts[r["id"]] = self.next_spec(r["id"])["spec"]
+                    if chooser is policy and r["seat"] in self.learner[r["id"]]:
+                        hidden = {"hidden": np.asarray(r["privileged"], dtype=np.float32)[list(HIDDEN_INDICES)]} if "privileged" in r else {}
+                        self.steps[(r["id"], r["seat"])].append({**hidden,
+                            "compact": r["compact"], "seat": r["seat"], "game_seed": self.game[r["id"]], "deck": self.decks[r["id"]][r["seat"]], "chosen": action, "old_logp": float(np.log(max(p[action] / cumulative[-1], 1e-12))),
+                            "value": float(v), "reward": 0.0, "version": version,
+                            **({"probs": taught[r["id"]]} if r["id"] in taught else {}),
+                        })
         return self.env.send_step(actions, nexts)
 
-    def collect(self, policy, version: int, decisions: int, batch: list[list[dict]]) -> list[list[dict]]:
-        """Play until `batch` holds `decisions` decisions from finished games;
-        returns it with nothing left in flight, so the caller may update the
-        weights. Games still running carry on into the next call."""
+    def collect(self, policy, version: int, decisions: int, batch: list[list[dict]],
+                until: threading.Event | None = None) -> list[list[dict]]:
+        """Play until `batch` holds `decisions` decisions from finished games,
+        or until `until` is set; returns it with nothing left in flight, so the
+        caller may update the weights. Games still running carry on into the
+        next call."""
         collected = sum(map(len, batch))
         pending: list[list[int] | None] = [None, None]
-        while collected < decisions:
+        while collected < decisions and not (until is not None and until.is_set()):
             # Group 0 scored while group 1's moves are played, and the other way round.
             for group in (0, 1):
                 if pending[group] is not None:
-                    finished = self.settle(self.env.receive(pending[group]))
+                    results = self.env.receive(pending[group])
+                    with timed("settle"):
+                        finished = self.settle(results)
                     pending[group] = None
                     batch.extend(finished)
                     collected += sum(map(len, finished))
@@ -521,14 +658,76 @@ class Rollouts:
         part of it: a resumed run starts fresh ones, and since each slot's
         generation counter carries on, no seed is played twice. The generator
         is the trainer's own and is saved with it."""
-        return {"generation": self.generation, "results": self.results, "strength": self.strength,
-                "vs_deck": self.vs_deck}
+        out = {"generation": self.generation, "results": self.results, "strength": self.strength,
+               "vs_deck": self.vs_deck}
+        if self.schedule:
+            # Games in flight, and those drawn for a slot but not yet started,
+            # are dropped if the run stops here: their pairings are replayed.
+            unfinished = [self.pairing[slot] for slot in sorted(self.pairing)]
+            unfinished += [u["pairing"] for _, u in sorted(self.upcoming.items()) if u["pairing"]]
+            out["schedule"] = self.schedule.state(unfinished)
+        return out
 
     def restore(self, state: dict) -> None:
         self.generation = list(state["generation"])
         self.results = dict(state["results"])
         self.strength = {d: list(v) for d, v in state["strength"].items()}
         self.vs_deck = {d: list(v) for d, v in state["vs_deck"].items()}
+        if self.schedule and state.get("schedule"):
+            self.schedule.restore(state["schedule"])
+
+
+class Collector:
+    """Every collection on a thread of its own, so that one can run while the
+    main thread trains (`--overlap`).
+
+    MLX streams belong to the thread that made them, and so does what a
+    compiled forward pass traced on one; every policy that scores rollout
+    games (the learner, its snapshot, league members, teachers) is therefore
+    only ever called here. The main thread never touches the rollouts while
+    a job runs: it waits for `result` before reading them.
+    """
+
+    def __init__(self):
+        self.jobs: queue.Queue = queue.Queue()
+        self.done: queue.Queue = queue.Queue()
+        self.thread = threading.Thread(target=self._run, name="collector", daemon=True)
+        self.thread.start()
+
+    def _run(self) -> None:
+        with mx.stream(mx.new_stream(mx.gpu)):
+            while (job := self.jobs.get()) is not None:
+                try:
+                    self.done.put((job(), None))
+                except BaseException as error:  # handed to the main thread, which raises it
+                    self.done.put((None, error))
+
+    def submit(self, job) -> None:
+        self.jobs.put(job)
+
+    def result(self):
+        value, error = self.done.get()
+        if error is not None:
+            raise error
+        return value
+
+    def close(self) -> None:
+        self.jobs.put(None)
+
+
+def breakdown(wall: float, workers: int) -> dict:
+    """Where a collection's `wall` seconds went (`timers`): this process's
+    stages, `other` for the rest of its loop, and with `--profile` each
+    worker's own stages as a mean over the workers, `idle` being the rest of
+    `wall` (a worker's own idle count would include the update before)."""
+    mine, theirs = timers.take()
+    out = {stage: round(seconds, 2) for stage, seconds in sorted(mine.items())}
+    out["other"] = round(wall - sum(mine.values()), 2)
+    theirs.pop("idle", None)
+    if theirs:
+        busy = {stage: seconds / workers for stage, seconds in sorted(theirs.items())}
+        out["worker"] = {**{stage: round(s, 2) for stage, s in busy.items()}, "idle": round(wall - sum(busy.values()), 2)}
+    return out
 
 
 def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarray:
@@ -555,13 +754,17 @@ def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarr
 # weights saved have the shape `--lora` and `--aux-hidden` give the model, and
 # the league is restored rather than rebuilt from `--league-seed`.
 RESUME_ARGS = ("init", "out", "iterations", "lr", "lr_final", "lr_schedule", "lr_div", "warmup", "kick", "kick_final",
-               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed")
+               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed", "schedule")
 
 
 def resume_identity(args: argparse.Namespace, schedule: str, lr_final: float) -> dict:
     """`RESUME_ARGS` as this command gives them, with the schedule's defaults
     resolved and paths made absolute, so the same run named another way matches."""
     values = {k: getattr(args, k) for k in RESUME_ARGS}
+    if not args.schedule:
+        # Recorded only for a scheduled run: a run from before the flag
+        # existed resumes as it would have.
+        del values["schedule"]
     values.update(lr_schedule=schedule, lr_final=lr_final, init=str(Path(args.init).resolve()),
                   out=str(Path(args.out).resolve()), league_seed=[str(Path(p).resolve()) for p in args.league_seed])
     return values
@@ -678,7 +881,23 @@ def main() -> None:
              "the learner copies the specialist first, then improves on it",
     )
     parser.add_argument("--resume-every", type=int, default=1, help="iterations between resume checkpoints in <out>/resume")
+    parser.add_argument(
+        "--schedule", type=int, default=0, metavar="N",
+        help="play every ordered pairing of the pool at least N times a cycle, in a shuffled order, rather than "
+             "drawing each game's decks; --deck-weights and --deck-power add repeats, --mirror adds mirrors (0: draw)",
+    )
+    parser.add_argument(
+        "--overlap", action="store_true",
+        help="keep playing the next iteration's games, with the weights from before the update, while the update "
+             "trains; every decision is then a version older when trained on, so pair it with --max-staleness 2",
+    )
+    parser.add_argument(
+        "--profile", action="store_true",
+        help="the bridge workers time their own stages too (engine, encoding, JSON, idle), in collect_breakdown.worker",
+    )
     args = parser.parse_args()
+    if args.schedule and (args.close or args.opponent_decks):
+        raise SystemExit("--schedule plays every pairing in turn; --close and --opponent-decks choose the deck across instead")
     schedule = args.lr_schedule or ("linear" if args.lr_final is not None else "constant")
     lr_final = args.lr_final if args.lr_final is not None else (args.lr / 10 if schedule == "onecycle" else args.lr)
 
@@ -706,6 +925,8 @@ def main() -> None:
     mx.set_cache_limit(8 << 30)
     os.environ["SYS1_RENDERS"] = "none"
     os.environ["SYS1_COMPACT"] = "1"
+    if args.profile:
+        os.environ["SYS1_PROFILE"] = "1"
     if args.aux_hidden:
         # The bridge sends each decision's full-state summary; only the
         # auxiliary head's targets are read from it.
@@ -857,7 +1078,8 @@ def main() -> None:
                         opponent_pilot=sorted(read_deck_list(Path(args.opponent_decks))) if args.opponent_decks else None,
                         deck_weights=json.loads(Path(args.deck_weights).read_text()) if args.deck_weights else None,
                         matchup_power=args.matchup_power, deck_power=args.deck_power, teachers=teachers,
-                        variants=deck_variants(env) if args.variant_share else None, variant_share=args.variant_share)
+                        variants=deck_variants(env) if args.variant_share else None, variant_share=args.variant_share,
+                        schedule=args.schedule)
 
     # Everything that carries from one iteration to the next, so a run that
     # stops and resumes is the run that did not: the weights, the optimizer's
@@ -911,14 +1133,40 @@ def main() -> None:
     signal.signal(signal.SIGTERM, ask_stop)
     signal.signal(signal.SIGINT, ask_stop)
 
+    # With `--overlap`, every collection runs on the collector's thread: the
+    # one that tops the batch up before an update, with the live weights, and
+    # the one that plays on through the update with `behaviour`, a snapshot
+    # of the weights from before it. A snapshot shares the live model's
+    # arrays, which MLX never changes in place, so taking one copies nothing.
+    collector = Collector() if args.overlap else None
+    if collector is not None:
+        # The trainer gives up the GIL at every GPU wait and needs it back to
+        # queue the next step; at the default 5 ms, a collector busy in Python
+        # holds it that long each time, and the GPU sits idle meanwhile.
+        sys.setswitchinterval(0.0005)
+    # (`compute`, an MLX dtype, does not deep-copy; it is shared as it is.)
+    behaviour = LivePolicy(copy.deepcopy(model, {id(model.compute): model.compute})) if args.overlap else None
+
+    def collect(policy, version: int, batch: list[list[dict]], until: threading.Event | None = None) -> list[list[dict]]:
+        def job():
+            return rollouts.collect(policy, version, args.decisions, batch, until)
+        if collector is None:
+            return job()
+        collector.submit(job)
+        return collector.result()
+
     batch: list[list[dict]] = rollouts.start()
+    overlap: dict = {}
     iteration = first - 1
     try:
         for iteration in range(first, args.iterations + 1):
             version = iteration - 1
+            timers.take()
             t0 = time.perf_counter()
-            batch = rollouts.collect(policy, version, args.decisions, batch)
+            carried = sum(map(len, batch))
+            batch = collect(policy, version, batch)
             t1 = time.perf_counter()
+            collect_breakdown = breakdown(t1 - t0, args.workers)
 
             records = []
             for traj, steps in enumerate(batch):
@@ -926,6 +1174,14 @@ def main() -> None:
                     record["traj"] = traj
                     records.append(record)
             batch = []
+            until = None
+            if collector is not None:
+                # The update's weights are `version` until it ends: the games
+                # go on under a snapshot of them, and what they finish is the
+                # start of the next batch.
+                behaviour.model.update(model.parameters())
+                until = threading.Event()
+                collector.submit(lambda: rollouts.collect(behaviour, version, args.decisions, [], until))
             adv, returns = gae(records, args.lam)
             behind = version - np.array([r["version"] for r in records])
             keep = np.flatnonzero(behind <= args.max_staleness)
@@ -964,6 +1220,11 @@ def main() -> None:
                 if stopped:
                     break
             t2 = time.perf_counter()
+            if collector is not None:
+                until.set()
+                batch = collector.result()
+                overlap = {"overlap_decisions": sum(map(len, batch)),
+                           "overlap_breakdown": breakdown(time.perf_counter() - t1, args.workers)}
             results = rollouts.take_results()
             n = max(n, 1)
             entry = {
@@ -977,9 +1238,13 @@ def main() -> None:
                 **({"kick_loss": sums[6] / n, "kick": kick, "taught": sum("probs" in r for r in records)} if args.teacher else {}),
                 **({"vs_deck": rollouts.vs_table()} if args.matchup_power else {}),
                 **({"pilot_deck": rollouts.pilot_table()} if args.deck_power else {}),
+                **({"schedule": rollouts.schedule.log()} if rollouts.schedule else {}),
                 "steps": n, "stopped_early": stopped,
                 "collect_s": round(t1 - t0, 1), "train_s": round(t2 - t1, 1),
                 "decisions_per_s": round(len(records) / max(t1 - t0, 1e-9)),
+                "iter_s": round(time.perf_counter() - t0, 1),
+                **({"carried": carried, **overlap} if collector is not None else {}),
+                "collect_breakdown": collect_breakdown,
                 "lr": float(optimizer.learning_rate.item() if hasattr(optimizer.learning_rate, "item") else optimizer.learning_rate),
             }
             if args.eval_every > 0 and iteration % args.eval_every == 0:
@@ -1034,6 +1299,8 @@ def main() -> None:
         save(out / "final")
         save_resume(iteration, done=True)
     finally:
+        if collector is not None:
+            collector.close()
         env.close()
         eval_env.close()
 

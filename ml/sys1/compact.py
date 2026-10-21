@@ -32,6 +32,8 @@ import mlx.optimizers as optim
 import numpy as np
 from mlx.utils import tree_flatten, tree_unflatten
 
+from .timers import timed
+
 DATA = Path(__file__).resolve().parent.parent / "data"
 
 # Must match bridge/compact.ts.
@@ -156,7 +158,21 @@ class CompactCorpus:
         )
 
     def save(self, path: Path) -> None:
-        np.savez(path, version=np.array(COMPACT_VERSION), **self.__dict__)
+        np.savez(path, version=np.array(COMPACT_VERSION), **{f: getattr(self, f) for f in self.__dataclass_fields__})
+
+    def sequence_cards(self) -> np.ndarray:
+        """Each decision's cards that are tokens of their own: those outside
+        `POOLED_ZONES`, which the model sums into one token each."""
+        if getattr(self, "_sequence", None) is None:
+            self._own = ~np.isin(self.card_idx[:, 1], POOLED_ZONES)
+            own = np.concatenate([[0], np.cumsum(self._own)])
+            self._sequence = own[self.card_start[1:]] - own[self.card_start[:-1]]
+        return self._sequence
+
+    def own_tokens(self, d: int) -> np.ndarray:
+        """Positions among decision `d`'s cards of those that are tokens of their own."""
+        self.sequence_cards()
+        return np.flatnonzero(self._own[self.card_start[d] : self.card_start[d + 1]])
 
     @classmethod
     def load(cls, paths: list[Path]) -> "CompactCorpus":
@@ -185,25 +201,33 @@ class CompactCorpus:
 def size_order(corpus: "CompactCorpus", indices: np.ndarray) -> np.ndarray:
     """`indices` ordered so that neighbours pad to nearly the same shape.
 
-    Grouped by option bucket first, then by card count: a batch cut from the
-    result pads both of its axes to close to its rows' own sizes, where an
-    order by the summed sizes leaves neither maximum tight.
+    Grouped by option bucket first, then by the cards that are tokens of
+    their own (`sequence_cards`), which set the sequence's length: a batch
+    cut from the result pads both of its axes to close to its rows' own
+    sizes, where an order by the summed sizes leaves neither maximum tight.
     """
-    cards = np.diff(corpus.card_start)[indices]
+    cards = corpus.sequence_cards()[indices]
     options = np.diff(corpus.option_start)[indices]
     bucket = np.searchsorted(np.array(OPTION_BUCKETS), options)
     return indices[np.lexsort((cards, bucket))]
 
 
 def collate(corpus: CompactCorpus, indices: np.ndarray, extras: dict[str, np.ndarray] | None = None) -> dict[str, mx.array]:
-    """Padded tensors for `indices`: cards to a bucket of C, options to one of K."""
+    """Padded tensors for `indices`: cards to a bucket of C, options to one of K.
+
+    `sequence` (B, S) holds the positions among a row's cards of those that
+    are tokens of their own, padded with -1 to a bucket of S: the blocks see
+    only those, where padding the sequence to C would carry every pooled
+    card as a masked token."""
     B = len(indices)
     cs, os_ = corpus.card_start, corpus.option_start
     C = fit(int(max(cs[d + 1] - cs[d] for d in indices)), CARD_BUCKETS)
+    S = fit(int(corpus.sequence_cards()[indices].max()), CARD_BUCKETS)
     K = fit(int(max(os_[d + 1] - os_[d] for d in indices)), OPTION_BUCKETS)
     card_idx = np.full((B, C, CARD_INDEX), -1, dtype=np.int32)
     card_num = np.zeros((B, C, corpus.card_num.shape[1]), dtype=np.float32)
     card_mask = np.zeros((B, C), dtype=bool)
+    sequence = np.full((B, S), -1, dtype=np.int32)
     option_idx = np.full((B, K, 6), -1, dtype=np.int32)
     option_num = np.zeros((B, K, corpus.option_num.shape[1]), dtype=np.float32)
     option_mask = np.zeros((B, K), dtype=bool)
@@ -213,6 +237,8 @@ def collate(corpus: CompactCorpus, indices: np.ndarray, extras: dict[str, np.nda
         card_idx[b, : c1 - c0] = corpus.card_idx[c0:c1]
         card_num[b, : c1 - c0] = corpus.card_num[c0:c1]
         card_mask[b, : c1 - c0] = True
+        own = corpus.own_tokens(d)
+        sequence[b, : len(own)] = own
         option_idx[b, : o1 - o0] = corpus.option_idx[o0:o1]
         option_num[b, : o1 - o0] = corpus.option_num[o0:o1]
         option_mask[b, : o1 - o0] = True
@@ -222,6 +248,7 @@ def collate(corpus: CompactCorpus, indices: np.ndarray, extras: dict[str, np.nda
         "card_idx": mx.array(card_idx),
         "card_num": mx.array(card_num),
         "card_mask": mx.array(card_mask),
+        "sequence": mx.array(sequence),
         "option_idx": mx.array(option_idx),
         "option_num": mx.array(option_num),
         "option_mask": mx.array(option_mask),
@@ -358,7 +385,7 @@ class CompactScorer(nn.Module):
     def __call__(self, batch: dict, with_aux: bool = False):
         ci, oi = batch["card_idx"], batch["option_idx"]
         cards = self._card(ci[..., 0]) + self.zone(mx.maximum(ci[..., 1], 0)) + self.card_num(batch["card_num"])
-        B, C, d = cards.shape
+        B = cards.shape[0]
 
         def pointed(ptr):
             gathered = mx.take_along_axis(cards, mx.maximum(ptr, 0)[..., None].astype(mx.int32), axis=1)
@@ -388,13 +415,22 @@ class CompactScorer(nn.Module):
                 pools.append(self.pool((cards * member[..., None]).sum(axis=1))[:, None])
                 pool_keep.append(member.any(axis=1)[:, None])
                 card_keep = card_keep & (zone != z)
-        x = mx.concatenate([glob, cards, *pools, options], axis=1).astype(self.compute)
+        tokens = cards
+        if self.pooled and "sequence" in batch:
+            # Only the cards that are tokens of their own (`collate`); the
+            # rest are in the pools. Nothing reads a token's position, so
+            # gathering them changes no output, only the sequence's length.
+            sequence = batch["sequence"]
+            tokens = mx.take_along_axis(cards, mx.maximum(sequence, 0)[..., None], axis=1)
+            card_keep = sequence >= 0
+        S = tokens.shape[1]
+        x = mx.concatenate([glob, tokens, *pools, options], axis=1).astype(self.compute)
         keep = mx.concatenate([mx.ones((B, 1), dtype=mx.bool_), card_keep, *pool_keep, batch["option_mask"]], axis=1)
         mask = mx.where(keep, 0.0, -1e9)[:, None, None, :].astype(x.dtype)
         for block in self.blocks:
             x = block(x, mask)
         x = self.norm(x.astype(mx.float32))
-        logits = self.policy_out(self.policy(x[:, 1 + C + len(pools) :])).squeeze(-1)
+        logits = self.policy_out(self.policy(x[:, 1 + S + len(pools) :])).squeeze(-1)
         logits = mx.where(batch["option_mask"], logits, -1e9)
         values = mx.tanh(self.value_out(self.value(x[:, 0])).squeeze(-1))
         if with_aux:
@@ -538,27 +574,47 @@ class CompactPolicy:
         pass
 
     def score(self, decisions: list[dict], chunk: int = 128) -> tuple[list[np.ndarray], np.ndarray]:
-        """Chunks of `chunk` in size order, so each pads close to its own
+        """Each decision's probabilities over its options, and its value."""
+        scoring = self.dispatch(decisions, chunk)
+        with timed("gpu"):
+            mx.eval(scoring["arrays"])
+        return self.finish(scoring)
+
+    def dispatch(self, decisions: list[dict], chunk: int = 128) -> dict:
+        """The forward passes for `decisions`, queued but not run: a caller
+        scoring with several policies evaluates every one's `arrays` at once,
+        so the GPU is waited on once rather than once per policy, then reads
+        each with `finish`.
+
+        Chunks of `chunk` in size order, so each pads close to its own
         decisions; each chunk's rows are padded to a multiple of 32 (repeats
         of its last row, dropped after) so the compiled forward pass sees a
         few batch shapes, not a new one every call."""
-        corpus = CompactCorpus.from_records(known_cards(
-            known_options(known_globals(known_zones(decisions, self.zones), self.globs), self.opts), self.card_nums))
-        probs: list[np.ndarray] = [np.empty(0)] * len(decisions)
-        values = np.zeros(len(decisions), dtype=np.float32)
+        with timed("corpus"):
+            corpus = CompactCorpus.from_records(known_cards(
+                known_options(known_globals(known_zones(decisions, self.zones), self.globs), self.opts), self.card_nums))
         order = size_order(corpus, np.arange(len(decisions)))
         pending = []
         for start in range(0, len(order), chunk):
             group = order[start : start + chunk]
             rows = np.concatenate([group, np.repeat(group[-1:], -len(group) % 32)])
-            logits, value = self._forward(collate(corpus, rows))
+            with timed("collate"):
+                batch = collate(corpus, rows)
+            logits, value = self._forward(batch)
             pending.append((group, mx.softmax(logits, axis=-1), value))
-        mx.eval([(p, v) for _, p, v in pending])
-        for group, p, v in pending:
-            p, v = np.array(p), np.array(v)
-            for row, index in enumerate(group):
-                probs[index] = p[row, : corpus.options(index)]
-                values[index] = v[row]
+        return {"corpus": corpus, "pending": pending, "n": len(decisions),
+                "arrays": [array for _, p, v in pending for array in (p, v)]}
+
+    def finish(self, scoring: dict) -> tuple[list[np.ndarray], np.ndarray]:
+        corpus = scoring["corpus"]
+        probs: list[np.ndarray] = [np.empty(0)] * scoring["n"]
+        values = np.zeros(scoring["n"], dtype=np.float32)
+        with timed("unbatch"):
+            for group, p, v in scoring["pending"]:
+                p, v = np.array(p), np.array(v)
+                for row, index in enumerate(group):
+                    probs[index] = p[row, : corpus.options(index)]
+                    values[index] = v[row]
         return probs, values
 
 
