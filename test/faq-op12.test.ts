@@ -1082,7 +1082,11 @@ describe("FAQ OP-12 black and yellow", () => {
         .build();
 
       game.play({ type: "play-card", cardNumber: "EB04-025" });
-      settle(game, "chaka", "skip", "bottom");
+      // Chaka & Pell's own [On Play] is declined; Koala's is applied.
+      game.play({ type: "resolve-effect", optionId: "chaka" });
+      game.play({ type: "resolve-effect", optionId: "skip" });
+      game.play({ type: "resolve-effect", optionId: "apply" });
+      settle(game, "skip", "bottom");
 
       expect(ids(game.state.players.p2.board).sort()).toEqual([
         "chaka",
@@ -1091,40 +1095,32 @@ describe("FAQ OP-12 black and yellow", () => {
       expect(game.state.players.p2.life).toHaveLength(2);
     });
 
-    // Koala's clause "can be activated", and Bandai lets its controller pass
-    // on it when Sanji is played and keep the [Once Per Turn] for the Linlin
-    // Sanji plays. The engine fires a [Once Per Turn] reaction whenever its
-    // signal lands and spends the use then -- here on Sanji, with no Life to
-    // take. A decline that keeps the use is the same change OP07-038#1
-    // (Hancock) is waiting on, and it gives every such clause a new decision.
-    it.fails(
-      "OP12-081#3: Koala can wait past Sanji and answer the Linlin it plays, after Linlin's Life gain",
-      () => {
-        // p2 sits on 0 Life. OP06-119 Sanji (cost 9) plays OP08-069 Charlotte
-        // Linlin off the top of the deck, whose [On Play] adds a Life card.
-        const game = defending(KOALA, ST31, "faq-op12-081-3")
-          .withHand("p2", [
-            instance("sanji", "OP06-119"),
-            instance("fodder", "ST31-003"),
-          ])
-          .withDeckTop("p2", [
-            instance("linlin", "OP08-069"),
-            instance("new-life", "ST31-003"),
-          ])
-          .build();
-        expect(game.state.players.p2.life).toEqual([]);
+    // Koala passes on Sanji (nothing to take at 0 Life) and keeps its use.
+    it("OP12-081#3: Koala can wait past Sanji and answer the Linlin it plays, after Linlin's Life gain", () => {
+      // p2 sits on 0 Life. OP06-119 Sanji (cost 9) plays OP08-069 Charlotte
+      // Linlin off the top of the deck, whose [On Play] adds a Life card.
+      const game = defending(KOALA, ST31, "faq-op12-081-3")
+        .withHand("p2", [
+          instance("sanji", "OP06-119"),
+          instance("fodder", "ST31-003"),
+        ])
+        .withDeckTop("p2", [
+          instance("linlin", "OP08-069"),
+          instance("new-life", "ST31-003"),
+        ])
+        .build();
+      expect(game.state.players.p2.life).toEqual([]);
 
-        game.play({ type: "play-card", cardNumber: "OP06-119" });
-        settle(game, "linlin", "apply", "fodder");
+      game.play({ type: "play-card", cardNumber: "OP06-119" });
+      settle(game, "linlin", "apply", "fodder");
 
-        expect(ids(game.state.players.p2.board).sort()).toEqual([
-          "linlin",
-          "sanji",
-        ]);
-        expect(game.state.players.p2.life).toEqual([]);
-        expect(ids(game.state.players.p2.hand)).toContain("new-life");
-      },
-    );
+      expect(ids(game.state.players.p2.board).sort()).toEqual([
+        "linlin",
+        "sanji",
+      ]);
+      expect(game.state.players.p2.life).toEqual([]);
+      expect(ids(game.state.players.p2.hand)).toContain("new-life");
+    });
   });
 
   describe("OP12-099 Kalgara", () => {

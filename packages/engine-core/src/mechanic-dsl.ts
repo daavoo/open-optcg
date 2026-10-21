@@ -2164,6 +2164,14 @@ export type MechanicEffect =
    */
   | { kind: "at-end-of-turn-effect"; effect: MechanicEffect }
   /**
+   * Spend a `[Once Per Turn]` use, as the first step of a declinable reaction
+   * its controller chose to apply (see `MechanicProgramInvocation.declinable`).
+   * Stops the clause if the use is already gone -- the same reaction queued
+   * twice before either resolved -- and otherwise announces it, since the
+   * clause only fires once it is applied.
+   */
+  | { kind: "spend-once-per-turn"; key: string }
+  /**
    * "[printed text omitted -- pnpm card:text <card>]" -- OP11-010, OP11-014, OP11-082,
    * OP11-084 and OP11-119.
    *
@@ -2294,15 +2302,14 @@ export interface MechanicProgramInvocation {
    */
   automatic?: true;
   /**
-   * The clause is `[Once Per Turn]` and firing it spent that use, whether or
-   * not it goes on to do anything.
-   *
-   * Read by `dispatchMechanicInvocations` for the one case its
-   * `ability-triggered` marker would otherwise stay silent on: a clause that
-   * fired to no effect -- OP08-067 Charlotte Pudding answering a returned DON!!
-   * with an empty DON!! deck -- and so will not answer the next one this turn.
+   * A `[Once Per Turn]` reaction, which its controller may decline and keep
+   * the use for a later signal that turn (Bandai's OP07-038#1, Boa Hancock's
+   * draw; OP12-081#3, Koala passing on Sanji to answer the Linlin it plays).
+   * `program` is then the clause wrapped in an `optional` whose apply spends
+   * the use; this is the clause as printed, which `dispatchMechanicInvocations`
+   * dry-runs first so a clause that would do nothing is skipped, not asked.
    */
-  spendsOncePerTurn?: true;
+  declinable?: MechanicProgram;
   /**
    * Shared by the clauses one player has triggered at the same time, when more
    * than one card is answering -- see `orderSimultaneous`.

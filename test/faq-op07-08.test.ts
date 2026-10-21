@@ -568,42 +568,31 @@ describe("FAQ OP-07", () => {
     expect(ids(game.state.players.p1.trash)).toEqual(["in-hand"]);
   });
 
-  // Engine disagrees: OP07-038's draw is a reaction rule
-  // (op07-reactions.ts) whose `[Once Per Turn]` key is booked when the signal
-  // is dispatched (card-mechanics.ts), and the draw is not optional -- so the
-  // first removal draws with no decision offered and the second draws
-  // nothing. The ruling makes the clause optional with the use kept on a
-  // decline. Twelve cards print the same activated-when template,
-  // and giving all of them a decline that leaves the key unspent is a new
-  // decision for every agent, so it is recorded here rather than patched
-  // for one Leader.
-  it.fails(
-    "OP07-038#1: Hancock's draw passed on the first removal is still there for the second",
-    () => {
-      const game = table("faq-op07-038-1")
-        .withLeader("p1", "OP07-038")
-        .withHand("p1", copies(2, "OP09-058", "muggy"))
-        .withDeckTop("p1", copies(2, "FIX-001", "p1-deck"))
-        .withBoard("p2", [character("x", "FIX-002"), character("y", "FIX-002")])
-        .build();
+  // The draw is optional, and passing on it keeps the [Once Per Turn].
+  it("OP07-038#1: Hancock's draw passed on the first removal is still there for the second", () => {
+    const game = table("faq-op07-038-1")
+      .withLeader("p1", "OP07-038")
+      .withHand("p1", copies(2, "OP09-058", "muggy"))
+      .withDeckTop("p1", copies(2, "FIX-001", "p1-deck"))
+      .withBoard("p2", [character("x", "FIX-002"), character("y", "FIX-002")])
+      .build();
 
-      game.play({ type: "activate-main", sourceInstanceId: "muggy-1" });
-      choose(game, "x");
-      // The decline the ruling allows.
-      game.play({ type: "resolve-effect", summary: "Don't apply" });
-      settle(game);
-      expect(ids(game.state.players.p1.hand)).toEqual(["muggy-2"]);
+    game.play({ type: "activate-main", sourceInstanceId: "muggy-1" });
+    choose(game, "x");
+    // The decline the ruling allows.
+    game.play({ type: "resolve-effect", summary: "Don't apply" });
+    settle(game);
+    expect(ids(game.state.players.p1.hand)).toEqual(["muggy-2"]);
 
-      game.play({ type: "activate-main", sourceInstanceId: "muggy-2" });
-      choose(game, "y");
-      game.play(
-        (action) =>
-          action.type === "resolve-effect" && action.option.kind !== "skip",
-      );
-      settle(game);
-      expect(ids(game.state.players.p1.hand)).toEqual(["p1-deck-1"]);
-    },
-  );
+    game.play({ type: "activate-main", sourceInstanceId: "muggy-2" });
+    choose(game, "y");
+    game.play(
+      (action) =>
+        action.type === "resolve-effect" && action.option.kind !== "skip",
+    );
+    settle(game);
+    expect(ids(game.state.players.p1.hand)).toEqual(["p1-deck-1"]);
+  });
 
   it("OP07-042#1: a lone Moria has no other Character to bottom, so it is not saved", () => {
     // The ruling: no.

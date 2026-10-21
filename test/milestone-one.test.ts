@@ -119,6 +119,10 @@ describe("Milestone 1 core hardening", () => {
     };
 
     resolveEffect(state, "apply");
+    // The Leader's [Once Per Turn] reaction to the Life card leaving asks
+    // whether to apply it before the scheduler settles.
+    expect(state.pendingEffect).toMatchObject({ sourceCardNumber: "OP11-041" });
+    resolveEffect(state, "apply");
 
     expect(state.pendingEffect).toBeNull();
     expect(state.players.p1.hand).toHaveLength(startingHandSize + 4);

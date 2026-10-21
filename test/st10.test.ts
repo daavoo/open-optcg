@@ -393,6 +393,7 @@ describe("ST10-006 Monkey.D.Luffy", () => {
       targetInstanceId: "p2-leader",
     });
     game.play({ type: "block", blockerInstanceId: "blocker" });
+    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "victim" });
     settle(game);
 
@@ -414,6 +415,7 @@ describe("ST10-007 Killer", () => {
     game.play({ type: "attack", targetInstanceId: "p2-leader" });
     applyOptional(game);
     payDonFromActive(game);
+    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "rested" });
     settle(game);
 

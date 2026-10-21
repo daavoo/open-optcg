@@ -430,6 +430,12 @@ describe("OP16 Blue/Yellow Nami profile", () => {
       (action) =>
         action.type === "resolve-effect" && action.optionId === "replacement",
     );
+    // The Life card Hiyori sent to hand: the Leader's draw is applied.
+    state = submit(
+      state,
+      (action) =>
+        action.type === "resolve-effect" && action.optionId === "apply",
+    );
 
     expect(state.pendingEffect).toBeNull();
     expect(state.players.p1.life[0]?.cardNumber).toBe("OP14-102");
@@ -549,6 +555,12 @@ describe("OP16 Blue/Yellow Nami profile", () => {
       (action) =>
         action.type === "resolve-effect" && action.optionId === "target",
     );
+    // The Life card Zeus paid with: the Leader's draw is applied.
+    state = submit(
+      state,
+      (action) =>
+        action.type === "resolve-effect" && action.optionId === "apply",
+    );
 
     expect(state.pendingEffect).toBeNull();
     expect(state.players.p2.board).toHaveLength(0);
@@ -624,6 +636,12 @@ describe("OP16 Blue/Yellow Nami profile", () => {
       (action) =>
         action.type === "resolve-effect" && action.optionId === "apply",
     );
+    // The Leader's draw for the Life card Nami took is a second question.
+    state = submit(
+      state,
+      (action) =>
+        action.type === "resolve-effect" && action.optionId === "apply",
+    );
 
     expect(state.players.p1.leaderAttachedDon).toHaveLength(1);
     expect(state.players.p2.hand).toContainEqual(opponentLife);
@@ -660,6 +678,11 @@ describe("OP16 Blue/Yellow Nami profile", () => {
     const drawn = state.players.p1.deck[0]!;
 
     state = attackWithLeader(state);
+    state = submit(
+      state,
+      (action) =>
+        action.type === "resolve-effect" && action.optionId === "apply",
+    );
 
     expect(state.players.p2.life).toHaveLength(1);
     expect(state.players.p1.hand).toContainEqual(drawn);
@@ -1235,13 +1258,25 @@ describe("OP16 Blue/Yellow Nami profile", () => {
       (action) =>
         action.type === "play-card" && action.cardInstanceId === "nami",
     );
-    const played = applyAction(state, {
+    const nami = applyAction(state, {
       ...getLegalActions(state, "p1").find(
         (action) =>
           action.type === "resolve-effect" && action.option.kind !== "skip",
       )!,
       revision: state.revision,
     });
+    // The Leader's draw is its own question, applied on the next action.
+    const drew = applyAction(nami.state, {
+      ...getLegalActions(nami.state, "p1").find(
+        (action) =>
+          action.type === "resolve-effect" && action.optionId === "apply",
+      )!,
+      revision: nami.state.revision,
+    });
+    const played = {
+      state: drew.state,
+      events: [...nami.events, ...drew.events],
+    };
 
     expect(played.state.players.p2.life).toHaveLength(3);
     expect(played.state.players.p2.hand).toHaveLength(p2HandCount + 1);

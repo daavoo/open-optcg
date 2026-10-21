@@ -94,8 +94,12 @@ describe("ordering simultaneous automatic clauses", () => {
     const active = game.state.players.p1.activeDon.length;
 
     play({ type: "resolve-effect", optionId: "reaction:pudding" });
+    play({ type: "resolve-effect", optionId: "apply" });
+    // The last clause left needs no order question, only its own.
+    expect(effectOptions(game.state)).toEqual(["apply", "skip"]);
+    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP09-061");
+    play({ type: "resolve-effect", optionId: "apply" });
 
-    // The last clause left needs no question.
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen)).toEqual([
       { source: "OP08-067", count: 1, rested: true },
@@ -106,11 +110,12 @@ describe("ordering simultaneous automatic clauses", () => {
     expect(game.state.players.p1.activeDon).toHaveLength(active + 1);
   });
 
-  it("resolves the Leader first when picked, and Pudding fires to nothing", () => {
+  it("resolves the Leader first when picked, and passes over Pudding with nothing left to add", () => {
     const { game, seen, play } = payTwo("order-leader");
     const active = game.state.players.p1.activeDon.length;
 
     play({ type: "resolve-effect", optionId: "reaction:p1-leader" });
+    play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen)).toEqual([
@@ -118,19 +123,29 @@ describe("ordering simultaneous automatic clauses", () => {
       { source: "OP09-061", count: 1, rested: true },
     ]);
     expect(game.state.players.p1.activeDon).toHaveLength(active + 1);
+    // Pudding is not activated for nothing: no line for it, and its
+    // [Once Per Turn] use is kept.
     expect(
-      seen.find(
+      seen.some(
         (event) =>
           event.type === "ability-triggered" &&
           event.sourceCardNumber === "OP08-067",
       ),
-    ).toMatchObject({ noEffect: true });
+    ).toBe(false);
+    expect(
+      game.state.oncePerTurn.some((key) => key.includes(":OP08-067:")),
+    ).toBe(false);
   });
 
-  it("does not ask when only one card answers", () => {
-    const { game, seen } = payTwo("order-alone", [
+  it("does not ask for an order when only one card answers", () => {
+    const { game, seen, play } = payTwo("order-alone", [
       character("bystander", "ST32-004"),
     ]);
+
+    // The Leader's own apply-or-skip question, and no order question.
+    expect(effectOptions(game.state)).toEqual(["apply", "skip"]);
+    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP09-061");
+    play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen).map((entry) => entry.source)).toEqual([
@@ -148,7 +163,7 @@ describe("ordering simultaneous automatic clauses", () => {
 });
 
 describe("the Leader, Pudding and Kid on one returned pair", () => {
-  it("asks twice, then lets the last one resolve on its own", () => {
+  it("asks for the order twice, then passes over the last one with nothing left to add", () => {
     const { game, seen, play } = payTwo("order-three", [
       character("pudding", "OP08-067"),
       character("kid", "OP05-074"),
@@ -160,12 +175,14 @@ describe("the Leader, Pudding and Kid on one returned pair", () => {
       "reaction:kid",
     ]);
     play({ type: "resolve-effect", optionId: "reaction:kid" });
+    play({ type: "resolve-effect", optionId: "apply" });
     // The pick resolved; the other two are asked about again.
     expect(effectOptions(game.state)).toEqual([
       "reaction:p1-leader",
       "reaction:pudding",
     ]);
     play({ type: "resolve-effect", optionId: "reaction:pudding" });
+    play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen)).toEqual([
@@ -173,14 +190,17 @@ describe("the Leader, Pudding and Kid on one returned pair", () => {
       { source: "OP08-067", count: 1, rested: true },
     ]);
     // The DON!! deck held only the two that went back, so the Leader, last,
-    // fired onto nothing.
+    // would add nothing: it is not asked, not announced, and keeps its use.
     expect(game.state.players.p1.donDeck).toHaveLength(0);
     expect(
-      seen.find(
+      seen.some(
         (event) =>
           event.type === "ability-triggered" &&
           event.sourceCardNumber === "OP09-061",
       ),
-    ).toMatchObject({ noEffect: true });
+    ).toBe(false);
+    expect(
+      game.state.oncePerTurn.some((key) => key.includes(":OP09-061:")),
+    ).toBe(false);
   });
 });
