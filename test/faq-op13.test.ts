@@ -813,6 +813,8 @@ describe("FAQ OP-13 yellow", () => {
       .build();
 
     game.play({ type: "play-card", cardNumber: "OP13-109" });
+    // The Leader's [Once Per Turn] reaction is optional, so it asks first.
+    game.play({ type: "resolve-effect", optionId: "apply" });
     expect(effectOptions(game)).toContain("bonney");
     game.play({ type: "resolve-effect", optionId: "bonney" });
     settle(game);
