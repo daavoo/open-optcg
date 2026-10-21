@@ -49,6 +49,8 @@ from .compact import (AUX_DIM, CARD_NUMBERS, COMPACT_VERSION, DATA, GLOBAL_NUMBE
                       size_order, zones_of)
 from .evaluate import catalog, deck_variants, head_to_head, paired_difference, play_vs_rules, read_deck_list
 from .ppo import gae, outcome
+from . import timers
+from .timers import timed
 
 
 def learning_rate(schedule: str, iteration: int, iterations: int, peak: float, final: float, start: float, warmup: float) -> float:
@@ -449,35 +451,42 @@ class Rollouts:
             by_policy.setdefault(id(chooser), (chooser, []))[1].append(r)
         actions, nexts = {}, {}
         # The specialist's view of the learner's own decisions on its deck.
+        by_teacher: dict[str, list[dict]] = {}
+        for r in by_policy[id(policy)][1] if self.teachers else ():
+            deck = self.decks[r["id"]][r["seat"]]
+            if deck in self.teachers and r["seat"] in self.learner[r["id"]]:
+                by_teacher.setdefault(deck, []).append(r)
+        # Every policy's forward passes queued, then one wait on the GPU: a
+        # league member or a teacher scores a few dozen decisions a group,
+        # and waiting on each in turn costs more than computing them.
+        choosing = [(chooser, decisions, chooser.dispatch(decisions)) for chooser, decisions in by_policy.values() if decisions]
+        teaching = [(self.teachers[deck], decisions, self.teachers[deck].dispatch(decisions)) for deck, decisions in by_teacher.items()]
+        with timed("gpu"):
+            mx.eval([scoring["arrays"] for *_, scoring in choosing + teaching])
         taught: dict[int, np.ndarray] = {}
-        if self.teachers:
-            by_teacher: dict[str, list[dict]] = {}
-            for r in by_policy[id(policy)][1]:
-                deck = self.decks[r["id"]][r["seat"]]
-                if deck in self.teachers and r["seat"] in self.learner[r["id"]]:
-                    by_teacher.setdefault(deck, []).append(r)
-            for deck, decisions in by_teacher.items():
-                tprobs, _ = self.teachers[deck].score(decisions)
-                for r, t in zip(decisions, tprobs):
-                    t = t.astype(np.float64)
-                    taught[r["id"]] = (t / t.sum()).astype(np.float32)
-        for chooser, decisions in by_policy.values():
-            if not decisions:
-                continue
-            probs, values = chooser.score(decisions)
-            for r, p, v in zip(decisions, probs, values):
-                p = p.astype(np.float64)
-                p /= p.sum()
-                action = int(self.rng.choice(len(p), p=p))
-                actions[r["id"]] = action
-                nexts[r["id"]] = self.next_spec(r["id"])["spec"]
-                if chooser is policy and r["seat"] in self.learner[r["id"]]:
-                    hidden = {"hidden": np.asarray(r["privileged"], dtype=np.float32)[list(HIDDEN_INDICES)]} if "privileged" in r else {}
-                    self.steps[(r["id"], r["seat"])].append({**hidden,
-                        "compact": r["compact"], "seat": r["seat"], "game_seed": self.game[r["id"]], "deck": self.decks[r["id"]][r["seat"]], "chosen": action, "old_logp": float(np.log(max(p[action], 1e-12))),
-                        "value": float(v), "reward": 0.0, "version": version,
-                        **({"probs": taught[r["id"]]} if r["id"] in taught else {}),
-                    })
+        for teacher, decisions, scoring in teaching:
+            tprobs, _ = teacher.finish(scoring)
+            for r, t in zip(decisions, tprobs):
+                t = t.astype(np.float64)
+                taught[r["id"]] = (t / t.sum()).astype(np.float32)
+        for chooser, decisions, scoring in choosing:
+            probs, values = chooser.finish(scoring)
+            with timed("sample"):
+                # One uniform draw per decision, read against its cumulative
+                # probabilities: `rng.choice` per decision costs more than the rest of this loop.
+                draws = self.rng.random(len(decisions))
+                for r, p, v, u in zip(decisions, probs, values, draws):
+                    cumulative = np.cumsum(p, dtype=np.float64)
+                    action = min(int(np.searchsorted(cumulative, u * cumulative[-1], side="right")), len(p) - 1)
+                    actions[r["id"]] = action
+                    nexts[r["id"]] = self.next_spec(r["id"])["spec"]
+                    if chooser is policy and r["seat"] in self.learner[r["id"]]:
+                        hidden = {"hidden": np.asarray(r["privileged"], dtype=np.float32)[list(HIDDEN_INDICES)]} if "privileged" in r else {}
+                        self.steps[(r["id"], r["seat"])].append({**hidden,
+                            "compact": r["compact"], "seat": r["seat"], "game_seed": self.game[r["id"]], "deck": self.decks[r["id"]][r["seat"]], "chosen": action, "old_logp": float(np.log(max(p[action] / cumulative[-1], 1e-12))),
+                            "value": float(v), "reward": 0.0, "version": version,
+                            **({"probs": taught[r["id"]]} if r["id"] in taught else {}),
+                        })
         return self.env.send_step(actions, nexts)
 
     def collect(self, policy, version: int, decisions: int, batch: list[list[dict]]) -> list[list[dict]]:
@@ -490,7 +499,9 @@ class Rollouts:
             # Group 0 scored while group 1's moves are played, and the other way round.
             for group in (0, 1):
                 if pending[group] is not None:
-                    finished = self.settle(self.env.receive(pending[group]))
+                    results = self.env.receive(pending[group])
+                    with timed("settle"):
+                        finished = self.settle(results)
                     pending[group] = None
                     batch.extend(finished)
                     collected += sum(map(len, finished))
@@ -529,6 +540,21 @@ class Rollouts:
         self.results = dict(state["results"])
         self.strength = {d: list(v) for d, v in state["strength"].items()}
         self.vs_deck = {d: list(v) for d, v in state["vs_deck"].items()}
+
+
+def breakdown(wall: float, workers: int) -> dict:
+    """Where a collection's `wall` seconds went (`timers`): this process's
+    stages, `other` for the rest of its loop, and with `--profile` each
+    worker's own stages as a mean over the workers, `idle` being the rest of
+    `wall` (a worker's own idle count would include the update before)."""
+    mine, theirs = timers.take()
+    out = {stage: round(seconds, 2) for stage, seconds in sorted(mine.items())}
+    out["other"] = round(wall - sum(mine.values()), 2)
+    theirs.pop("idle", None)
+    if theirs:
+        busy = {stage: seconds / workers for stage, seconds in sorted(theirs.items())}
+        out["worker"] = {**{stage: round(s, 2) for stage, s in busy.items()}, "idle": round(wall - sum(busy.values()), 2)}
+    return out
 
 
 def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarray:
@@ -678,6 +704,10 @@ def main() -> None:
              "the learner copies the specialist first, then improves on it",
     )
     parser.add_argument("--resume-every", type=int, default=1, help="iterations between resume checkpoints in <out>/resume")
+    parser.add_argument(
+        "--profile", action="store_true",
+        help="the bridge workers time their own stages too (engine, encoding, JSON, idle), in collect_breakdown.worker",
+    )
     args = parser.parse_args()
     schedule = args.lr_schedule or ("linear" if args.lr_final is not None else "constant")
     lr_final = args.lr_final if args.lr_final is not None else (args.lr / 10 if schedule == "onecycle" else args.lr)
@@ -706,6 +736,8 @@ def main() -> None:
     mx.set_cache_limit(8 << 30)
     os.environ["SYS1_RENDERS"] = "none"
     os.environ["SYS1_COMPACT"] = "1"
+    if args.profile:
+        os.environ["SYS1_PROFILE"] = "1"
     if args.aux_hidden:
         # The bridge sends each decision's full-state summary; only the
         # auxiliary head's targets are read from it.
@@ -916,9 +948,11 @@ def main() -> None:
     try:
         for iteration in range(first, args.iterations + 1):
             version = iteration - 1
+            timers.take()
             t0 = time.perf_counter()
             batch = rollouts.collect(policy, version, args.decisions, batch)
             t1 = time.perf_counter()
+            collect_breakdown = breakdown(t1 - t0, args.workers)
 
             records = []
             for traj, steps in enumerate(batch):
@@ -980,6 +1014,7 @@ def main() -> None:
                 "steps": n, "stopped_early": stopped,
                 "collect_s": round(t1 - t0, 1), "train_s": round(t2 - t1, 1),
                 "decisions_per_s": round(len(records) / max(t1 - t0, 1e-9)),
+                "collect_breakdown": collect_breakdown,
                 "lr": float(optimizer.learning_rate.item() if hasattr(optimizer.learning_rate, "item") else optimizer.learning_rate),
             }
             if args.eval_every > 0 and iteration % args.eval_every == 0:

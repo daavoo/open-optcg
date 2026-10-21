@@ -12,6 +12,7 @@ import base64
 import json
 import os
 import subprocess
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -19,6 +20,7 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 
 from .data import SUPPORTED_RENDERS
+from .timers import WORKER_TIMES, timed
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = Path(__file__).resolve().parents[2]
@@ -36,11 +38,15 @@ OPTION_WIDTH = 52
 
 def unpack(results: list[dict]) -> list[dict]:
     """Each decision's packed `compact` (server.ts `pack`) as the arrays
-    {global, cards, options} it encodes, in place; returns `results`."""
+    {global, cards, options} it encodes, and its packed `privileged` as one
+    float32 array, in place; returns `results`."""
     for r in results:
+        privileged = r.get("privileged")
+        if isinstance(privileged, dict):
+            r["privileged"] = np.frombuffer(base64.b64decode(privileged["packed"]), dtype=np.float32)
         packed = r.get("compact")
-        if packed is not None and "packed" in packed:
-            values = np.frombuffer(base64.b64decode(packed["packed"]), dtype=np.float32)
+        if packed is not None and "deflated" in packed:
+            values = np.frombuffer(zlib.decompress(base64.b64decode(packed["deflated"]), -15), dtype=np.float32)
             cards_end = GLOBAL_NUMBERS + packed["cards"] * CARD_WIDTH
             r["compact"] = {
                 "global": values[:GLOBAL_NUMBERS],
@@ -99,15 +105,23 @@ class Worker:
 
     def send(self, request: dict) -> None:
         assert self.process.stdin
-        self.process.stdin.write(json.dumps(request) + "\n")
-        self.process.stdin.flush()
+        with timed("send"):
+            self.process.stdin.write(json.dumps(request) + "\n")
+            self.process.stdin.flush()
 
     def receive(self) -> dict:
         assert self.process.stdout
-        reply = json.loads(self.process.stdout.readline())
+        # `wait` is the worker still playing, plus the pipe; the rest is ours.
+        with timed("wait"):
+            line = self.process.stdout.readline()
+        with timed("json_in"):
+            reply = json.loads(line)
         if "error" in reply:
             raise RuntimeError(reply["error"])
-        unpack(reply.get("results", []))
+        for stage, ms in reply.pop("profile", {}).items():
+            WORKER_TIMES[stage] += ms / 1000
+        with timed("unpack"):
+            unpack(reply.get("results", []))
         return reply
 
     def close(self) -> None:

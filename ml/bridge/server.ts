@@ -31,6 +31,7 @@
  * `timeLimit`, which the header's config needs for the app to replay it.
  */
 import { writeFileSync } from "node:fs";
+import { deflateRawSync } from "node:zlib";
 import { createInterface } from "node:readline";
 import {
   applyOfferedAction,
@@ -105,9 +106,52 @@ const RENDERS =
 const COMPACT = process.env.SYS1_COMPACT === "1";
 
 /**
- * A compact decision as one base64 run of little-endian float32s -- global,
- * then each card row, then each option row -- with the row counts beside it;
- * `env.py` unpacks it. As JSON numbers its ~700 values cost Python an object
+ * `SYS1_PROFILE=1` has every reply carry `profile`: milliseconds this worker
+ * spent per stage since its previous reply -- `engine` (transitions, legal
+ * actions, observe, pruning), `rules` (in-process rules agents), `compact`
+ * (the encoding), `pack`, `privileged`, `parse` and `stringify` (JSON both
+ * ways) and `write` (stdout); the trainer counts the rest of its wall time as
+ * idle. A reply's own stringify and write are counted on the next one. Read
+ * by `sys1/env.py`.
+ */
+const PROFILE = process.env.SYS1_PROFILE === "1";
+const spent: Record<string, number> = {};
+
+function timed<T>(stage: string, run: () => T): T {
+  if (!PROFILE) return run();
+  const start = performance.now();
+  try {
+    return run();
+  } finally {
+    spent[stage] = (spent[stage] ?? 0) + performance.now() - start;
+  }
+}
+
+async function timedAsync<T>(stage: string, run: () => Promise<T>): Promise<T> {
+  if (!PROFILE) return run();
+  const start = performance.now();
+  try {
+    return await run();
+  } finally {
+    spent[stage] = (spent[stage] ?? 0) + performance.now() - start;
+  }
+}
+
+/** `spent` so far, cleared, with `engine` as what the other stages leave of `handled`. */
+function takeProfile(handled: number): Record<string, number> {
+  const inside = ["rules", "compact", "pack", "privileged"].reduce(
+    (sum, stage) => sum + (spent[stage] ?? 0),
+    0,
+  );
+  const out = { ...spent, engine: handled - inside };
+  for (const stage of Object.keys(spent)) delete spent[stage];
+  return out;
+}
+
+/**
+ * A compact decision as one base64 run of raw-deflated little-endian
+ * float32s -- global, then each card row, then each option row -- with the
+ * row counts beside it; `env.py` unpacks it. As JSON numbers its ~700 values cost Python an object
  * each to parse, which capped collection; the trainer keeps them as float32
  * or narrower, so nothing is lost.
  */
@@ -120,8 +164,18 @@ function pack(decision: CompactDecision) {
   return {
     cards: decision.cards.length,
     options: decision.options.length,
-    packed: Buffer.from(new Float32Array(values).buffer).toString("base64"),
+    // Deflated first: six values in seven are zero, so the run shrinks about
+    // tenfold, and every byte saved is a byte the trainer's single process
+    // does not read off a pipe and parse.
+    deflated: deflateRawSync(new Float32Array(values), { level: 1 }).toString(
+      "base64",
+    ),
   };
+}
+
+/** `values` as base64 little-endian float32s, which `env.py` decodes in one call. */
+function floats(values: number[]): string {
+  return Buffer.from(new Float32Array(values).buffer).toString("base64");
 }
 
 /**
@@ -253,7 +307,9 @@ async function advance(id: number, game: Game) {
           simulateAction(frozen, actionId, seat),
         );
       }
-      const picked = await agent.chooseAction(observation);
+      const picked = await timedAsync("rules", () =>
+        agent.chooseAction(observation),
+      );
       markStep(game, `rules agent ${seat} applying ${picked.actionId}`);
       // The offered action itself, whatever object the agent handed back.
       const chosen = observation.legalActions.find(
@@ -304,10 +360,12 @@ async function advance(id: number, game: Game) {
       done: false,
       ...(COMPACT && TOKENS
         ? {
-            compact: pack(
-              compactDecision(observation, offered, TOKENS.rows, {
-                ownDeck: deckList(game.spec[seat]),
-              }),
+            compact: ((rows) => timed("pack", () => pack(rows)))(
+              timed("compact", () =>
+                compactDecision(observation, offered, TOKENS.rows, {
+                  ownDeck: deckList(game.spec[seat]),
+                }),
+              ),
             ),
           }
         : {}),
@@ -315,7 +373,11 @@ async function advance(id: number, game: Game) {
         ? { audit: attackAudit(game.state, observation, offered) }
         : {}),
       ...(PRIVILEGED
-        ? { privileged: privilegedFeatures(game.state, seat) }
+        ? {
+            privileged: timed("privileged", () => ({
+              packed: floats(privilegedFeatures(game.state, seat)),
+            })),
+          }
         : {}),
     };
   }
@@ -533,10 +595,18 @@ createInterface({ input: process.stdin, crlfDelay: Infinity }).on(
     if (!line.trim()) return;
     queue = queue.then(async () => {
       try {
-        const result = await dispatch(
-          JSON.parse(line) as Record<string, unknown>,
+        const request = timed(
+          "parse",
+          () => JSON.parse(line) as Record<string, unknown>,
         );
-        process.stdout.write(`${JSON.stringify(result)}\n`);
+        const handled = performance.now();
+        const result = await dispatch(request);
+        if (PROFILE && result && typeof result === "object")
+          (result as Record<string, unknown>).profile = takeProfile(
+            performance.now() - handled,
+          );
+        const text = timed("stringify", () => JSON.stringify(result));
+        timed("write", () => process.stdout.write(`${text}\n`));
       } catch (error) {
         process.stdout.write(
           `${JSON.stringify({ error: error instanceof Error ? error.message : String(error) })}\n`,
