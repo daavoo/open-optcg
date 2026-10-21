@@ -115,7 +115,7 @@ const COMPACT = process.env.SYS1_COMPACT === "1";
  * by `sys1/env.py`.
  */
 const PROFILE = process.env.SYS1_PROFILE === "1";
-const spent: Record<string, number> = {};
+let spent: Record<string, number> = {};
 
 function timed<T>(stage: string, run: () => T): T {
   if (!PROFILE) return run();
@@ -144,7 +144,7 @@ function takeProfile(handled: number): Record<string, number> {
     0,
   );
   const out = { ...spent, engine: handled - inside };
-  for (const stage of Object.keys(spent)) delete spent[stage];
+  spent = {};
   return out;
 }
 
