@@ -200,7 +200,8 @@ export const op09TriggerMechanics: SetMechanics = {
     ],
     [
       // OP09-105 Sanji: buys a Life card back off the top of the deck, and pays
-      // two cards for it.
+      // two cards for it. The trash is not a cost -- it follows the Life card
+      // with "Then" -- so a hand of one trashes that one (rule 8-4-4-1).
       "OP09-105",
       {
         effect: {
@@ -228,8 +229,9 @@ export const op09TriggerMechanics: SetMechanics = {
                 kind: "choose",
                 selector: { player: "self", zone: "hand" },
                 bind: "op09-sanji-discard",
-                min: 2,
+                min: 0,
                 max: 2,
+                exhaustive: true,
                 effect: {
                   kind: "move",
                   binding: "op09-sanji-discard",

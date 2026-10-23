@@ -284,14 +284,19 @@ export const op16TriggerMechanics: SetMechanics = {
     [
       // OP16-094 Portgas.D.Ace: "[printed text omitted -- pnpm card:text OP16-094]" They choose which, as the rule for anything discarded out
       // of a hand requires.
+      //
+      // `exhaustive` rather than `min: 2`: the clause is mandatory, and rule
+      // 8-4-4-1 has a player do as much of it as they can, so a hand of one
+      // trashes that one -- `min: 2` would skip the clause whole.
       "OP16-094",
       {
         effect: {
           kind: "choose",
           selector: { player: "opponent", zone: "hand" },
           bind: "op16-ace-discard",
-          min: 2,
+          min: 0,
           max: 2,
+          exhaustive: true,
           chooser: "opponent",
           effect: {
             kind: "move",

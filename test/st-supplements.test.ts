@@ -1409,11 +1409,31 @@ describe("ST20-005 Charlotte Linlin", () => {
     applyOptional(game);
     game.play({ type: "resolve-effect", optionId: "cost" });
     game.play({ type: "resolve-effect", optionId: "hand" });
-    game.play({ type: "resolve-effect", optionId: "theirs1" });
-    game.play({ type: "resolve-effect", optionId: "theirs2" });
+    settle(game);
+
+    // A hand of two is the whole hand, so both go without a pick to make.
+    expect(game.state.players.p2.hand).toHaveLength(0);
+  });
+
+  it("trashes the one card a hand of one holds", () => {
+    const game = table("st20-005-short")
+      .withHand("p1", [
+        instance("linlin", "ST20-005"),
+        instance("cost", "FIX-001"),
+      ])
+      .withHand("p2", [instance("theirs1", "FIX-001")])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "ST20-005" });
+    applyOptional(game);
+    game.play({ type: "resolve-effect", optionId: "cost" });
+    game.play({ type: "resolve-effect", optionId: "hand" });
     settle(game);
 
     expect(game.state.players.p2.hand).toHaveLength(0);
+    expect(
+      game.state.players.p2.trash.map((card) => card.instanceId),
+    ).toContain("theirs1");
   });
 
   it("lets the opponent trash a Life card instead", () => {

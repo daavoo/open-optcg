@@ -181,8 +181,11 @@ export const st20Mechanics: SetMechanics = {
                       selector: { player: "opponent", zone: "hand" },
                       chooser: "opponent",
                       bind: "st20-linlin-hand",
-                      min: 2,
+                      // A hand of one trashes that one, as OP17-049's Q&A
+                      // rules for the same branch (rule 8-4-4-1).
+                      min: 0,
                       max: 2,
+                      exhaustive: true,
                       effect: {
                         kind: "move",
                         binding: "st20-linlin-hand",
