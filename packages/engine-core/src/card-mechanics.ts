@@ -55,6 +55,7 @@ import {
   onBlockPrograms,
   onPlayPrograms,
   replacementPrograms,
+  damageReplacementPrograms,
   triggerPrograms,
   whenAttackingPrograms,
   whenRestedPrograms,
@@ -255,6 +256,7 @@ export function mechanicProgramCards(): ReadonlySet<string> {
     // is claimed here rather than exempted, which is what the registry in
     // `mechanics/<set>.ts` was added for.
     ...replacementPrograms.keys(),
+    ...damageReplacementPrograms.keys(),
     // A Leader whose clause has no printed marker and is dispatched off the
     // signal stream instead: OP11-041 Nami and OP16-041 Buggy.
     ...REACTION_RULES.map((rule) => rule.cardNumber),

@@ -105,3 +105,24 @@ export const shirahoshiLeaderActive = {
   name: "Shirahoshi",
   rested: false,
 } as const satisfies Omit<CardSelector, "player">;
+
+/**
+ * "Add up to 1 card from the top of your deck to the top of your Life cards."
+ *
+ * EB05-055 Nami's `[On Play]` and EB05-060 Take Care of Lilith!!!'s `[Main]`.
+ * A `choose` over the single top card rather than a bare move: the printed "up
+ * to" lets the player keep the Life total where it is, and an empty deck
+ * resolves to nothing.
+ */
+export const deckTopToLife = (bind: string): MechanicEffect => ({
+  kind: "choose",
+  selector: { player: "self", zone: "deck", position: "top" },
+  bind,
+  min: 0,
+  max: 1,
+  effect: {
+    kind: "move",
+    binding: bind,
+    to: { player: "self", zone: "life", position: "top" },
+  },
+});

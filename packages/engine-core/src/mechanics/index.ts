@@ -114,6 +114,7 @@ import {
   registerReplacementPrograms,
   registerWhenRestedCards,
 } from "../mechanics.js";
+import { registerDamageReplacements } from "../damage-replacement.js";
 import { mergeSetMechanics } from "./registry.js";
 import {
   registerRemovalImmunities,
@@ -417,12 +418,15 @@ export const onEndOfYourTurnPrograms = registries.onEndOfYourTurn;
 export const onStartOfYourTurnPrograms = registries.onStartOfYourTurn;
 export const triggerPrograms = registries.trigger;
 export const replacementPrograms = registries.replacement;
+export const damageReplacementPrograms = registries.damageReplacement;
 
 // The interpreter offers a registered replacement whenever its own `knock-out`
 // node would remove a Character, and it cannot import this module to find them:
 // every set module here imports `../mechanics.js`, so the edge would close a
 // cycle. Handing the merged registry over once, at init, is the seam.
 registerReplacementPrograms(replacementPrograms);
+// Same seam, for the damage replacement the `deal-damage` node offers.
+registerDamageReplacements(damageReplacementPrograms);
 // Same seam, for the two Characters whose text activates an Event out of hand.
 registerEventMainPrograms(eventMainPrograms);
 // Same seam again, for the one fact the inertness walk needs about a card it is

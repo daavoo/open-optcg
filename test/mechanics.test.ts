@@ -481,6 +481,109 @@ describe("generic mechanic programs", () => {
     expect(state.players.p1.leaderAttachedDon).toEqual(["r1"]);
     expect(state.players.p1.restedDon).toEqual([]);
   });
+
+  it("filters give-rested-don targets by any of several attributes, granted ones included", () => {
+    const state = createGame({
+      gameId: "mechanic-give-rested-don-attribute",
+      p1: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      p2: resolveDeck("(Green) Roronoa Zoro - Starter Deck 32"),
+      seed: "mechanic-give-rested-don-attribute",
+    });
+    const source = { instanceId: "nojiko", cardNumber: "EB05-057" };
+    state.players.p1.restedDon = ["r1"];
+    // A <Wisdom> Leader, a <Slash>/<Wisdom> Character, a <Strike> one, and a
+    // <Strike> one handed <Special> for the turn (EB05-057's filter).
+    state.players.p1.leaderCardNumber = "FIX-LEADER-VEGAPUNK";
+    const body = (
+      instanceId: string,
+      cardNumber: string,
+      granted?: string[],
+    ) => ({
+      instanceId,
+      cardNumber,
+      rested: false,
+      playedTurn: 1,
+      attachedDon: [],
+      powerModifiers: [],
+      ...(granted
+        ? {
+            grantedAttributes: {
+              attributes: granted,
+              expiresAtTurn: state.turn,
+            },
+          }
+        : {}),
+    });
+    state.players.p1.board = [
+      body("mohji", "OP12-055"),
+      body("deckhand", "FIX-001"),
+      body("granted", "FIX-001", ["Special"]),
+    ];
+
+    const result = executeMechanicProgram(
+      state,
+      { sourcePlayerId: "p1", source },
+      {
+        effect: {
+          kind: "give-rested-don",
+          player: "self",
+          count: 1,
+          anyOfAttributes: ["Special", "Wisdom"],
+        },
+      },
+    );
+    expect(getMechanicChoiceOptions(state, result.pending!)).toEqual([
+      "p1-leader",
+      "mohji",
+      "granted",
+      "skip",
+    ]);
+  });
+
+  it("asks the damaged player about a damage replacement before deal-damage moves a Life card", () => {
+    const state = createGame({
+      gameId: "mechanic-damage-replacement",
+      p1: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      p2: resolveDeck("(Green) Roronoa Zoro - Starter Deck 32"),
+      seed: "mechanic-damage-replacement",
+    });
+    state.players.p2.board = [
+      {
+        instanceId: "gloriosa",
+        cardNumber: "EB05-052",
+        rested: false,
+        playedTurn: 1,
+        attachedDon: [],
+        powerModifiers: [],
+      },
+    ];
+    state.players.p2.life = state.players.p2.deck.splice(0, 2);
+    const lifeBefore = state.players.p2.life.length;
+    const program: MechanicProgram = {
+      effect: { kind: "deal-damage", player: "opponent" },
+    };
+    const source = { instanceId: "robin", cardNumber: "EB03-055" };
+
+    let result = executeMechanicProgram(
+      state,
+      { sourcePlayerId: "p1", source },
+      program,
+    );
+    expect(result.pending?.kind).toBe("choice");
+    expect(
+      result.pending?.kind === "choice" && result.pending.chooserPlayerId,
+    ).toBe("p2");
+    expect(getMechanicChoiceOptions(state, result.pending!)).toEqual([
+      "replace:gloriosa",
+      "take-damage",
+    ]);
+
+    // Taking the damage deals it, without asking a second time.
+    result = resolveMechanicChoice(state, result.pending!, "take-damage");
+    expect(result.pending).toBeNull();
+    expect(state.players.p2.life).toHaveLength(lifeBefore - 1);
+    expect(state.pendingTrigger?.playerId).toBe("p2");
+  });
 });
 
 describe("field-don-versus with a margin", () => {
