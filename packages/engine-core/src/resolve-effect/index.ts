@@ -61,6 +61,7 @@ import {
 import {
   resolveBattleKoReplacement,
   resolveCharacterAreaReplacement,
+  resolveDamageReplacement,
   resolveHandTrashReplacement,
   resolveReplacementChoice,
 } from "./replacements.js";
@@ -87,6 +88,7 @@ export const EFFECT_RESOLVERS: EffectResolvers = {
   "borsalino-end-turn": resolveBorsalinoEndTurn,
   "bottom-deck-character": resolveBottomDeckCharacter,
   "character-area-replacement": resolveCharacterAreaReplacement,
+  "damage-replacement": resolveDamageReplacement,
   "discard-for-life": resolveDiscardForLife,
   "discard-supernova-draw-two": resolveDiscardForLife,
   "draw-trash": resolveDrawTrash,

@@ -39,6 +39,7 @@ import {
 import type { CardInstance, GameState, PendingEffect } from "./model.js";
 import {} from "./removal.js";
 import { orderSummary } from "./offered-action.js";
+import { damageReplacementOption } from "./damage-replacement.js";
 import {
   charactersArriveRested,
   effectsNegated,
@@ -1669,6 +1670,15 @@ function computeEffectOptions(
               : `Prevent ${describeCardOption(state, optionId, db)} from attacking`,
         })),
       { optionId: "skip", summary: "Choose no more Characters" },
+    ];
+  }
+  if (effect.kind === "damage-replacement") {
+    return [
+      ...effect.protectorInstanceIds.map((instanceId) => ({
+        optionId: damageReplacementOption(instanceId),
+        summary: `Trash ${describeCardOption(state, instanceId, db)} instead of taking the damage`,
+      })),
+      { optionId: "skip", summary: "Take the damage" },
     ];
   }
   if (effect.kind === "battle-ko-replacement") {

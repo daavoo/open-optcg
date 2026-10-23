@@ -10,6 +10,7 @@
  * for the same card twice is an error at import time rather than a silent
  * last-one-wins.
  */
+import type { DamageReplacementProgram } from "../damage-replacement.js";
 import type { MechanicProgram } from "../mechanics.js";
 import type {
   ActivateMainProgram,
@@ -54,6 +55,12 @@ export interface SetMechanics {
   onStartOfYourTurn?: Entries<MechanicProgram>;
   trigger?: Entries<MechanicProgram>;
   replacement?: Entries<ReplacementProgram>;
+  /**
+   * "If you would take damage, you may ... instead" -- a replacement on the
+   * player's damage rather than on a Character's removal. See
+   * `damage-replacement.ts`.
+   */
+  damageReplacement?: Entries<DamageReplacementProgram>;
 }
 
 /** The clause keys, so the merge can iterate them exhaustively. */
@@ -72,6 +79,7 @@ const CLAUSES = [
   "onStartOfYourTurn",
   "trigger",
   "replacement",
+  "damageReplacement",
 ] as const satisfies readonly (keyof SetMechanics)[];
 
 export type MergedMechanics = {

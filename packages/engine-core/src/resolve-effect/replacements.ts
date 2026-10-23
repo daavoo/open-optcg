@@ -22,6 +22,8 @@ import {
   replacementKey,
 } from "../removal.js";
 import { type EffectContext } from "./context.js";
+import { damageReplacementOption } from "../damage-replacement.js";
+import { resumeMainAfterBattle } from "../pending.js";
 import { navyHandTrashDraws } from "./discards.js";
 import { type PublicEvent } from "@one-piece-sim/protocol";
 
@@ -293,6 +295,67 @@ export function resolveBattleKoReplacement({
   if (attackerPlayerId) {
     state.phase = "main";
     state.activePlayer = attackerPlayerId;
+  }
+  return events;
+}
+
+/**
+ * `damage-replacement` -- EB05-052 Gloriosa answering a lost battle on its
+ * controller's Leader.
+ *
+ * `skip` hands straight back to `resolveBattle`, which re-enters with
+ * `damageReplacementOffered` set and deals the damage as usual. Paying trashes
+ * the protector as its own effect and ends the battle with no damage at all:
+ * the replacement answers the whole of the battle's damage, so no second
+ * [Double Attack] point is owed (Bandai's EB05-052#2).
+ */
+export function resolveDamageReplacement({
+  state,
+  effect,
+  optionId,
+  db,
+}: EffectContext<"damage-replacement">): PublicEvent[] {
+  if (optionId === "skip") return [];
+  const protectorId = effect.protectorInstanceIds.find(
+    (instanceId) => damageReplacementOption(instanceId) === optionId,
+  );
+  const protector =
+    protectorId === undefined
+      ? undefined
+      : state.players[effect.playerId].board.find(
+          (card) => card.instanceId === protectorId,
+        );
+  if (!protector) throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
+  const dispatched = dispatchMechanicInvocations(
+    state,
+    [
+      {
+        context: { sourcePlayerId: effect.playerId, source: protector },
+        program: {
+          effect: {
+            kind: "move",
+            binding: SOURCE_BINDING,
+            to: { player: "self", zone: "trash" },
+            skipReplacements: true,
+          },
+        },
+      },
+    ],
+    db,
+  );
+  const events = [...dispatched.events];
+  const attackerPlayerId = state.activeAttack?.attackerPlayerId;
+  resumeMainAfterBattle(state);
+  if (dispatched.pending && dispatched.invocation) {
+    state.pendingEffect = mechanicPendingEffect(
+      dispatched.invocation,
+      dispatched.pending,
+      dispatched.continuations,
+    );
+    if (attackerPlayerId) {
+      state.pendingEffectResume = { phase: "main", playerId: attackerPlayerId };
+    }
+    state.activePlayer = effect.playerId;
   }
   return events;
 }
