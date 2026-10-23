@@ -7,7 +7,6 @@
 import { fieldDonCount, returnDonToDeck } from "../don.js";
 import {
   applyAfterRest,
-  applyPowerModifier,
   createOnKoResult,
   drawCards,
   effectSource,
@@ -17,6 +16,7 @@ import {
   triggerPerona,
 } from "../effects.js";
 import { dispatchMechanicInvocations } from "../card-mechanics.js";
+import { addBasePowerSetter } from "../mechanic-conditions.js";
 import { replacementCostEffect } from "../mechanics.js";
 import { currentPower } from "../queries.js";
 import {
@@ -450,7 +450,14 @@ export function resolveSt34DonMinusKo({
   return events;
 }
 
-/** `set-base-power-zero`. */
+/**
+ * `set-base-power-zero`: ST34-004 Charlotte Linlin's "base power becomes 0
+ * during this turn".
+ *
+ * A base-power setter, not a minus-printed-power modifier: "base power N or
+ * less" filters and a base-power swap read the base, and rule 4-9-2-1 lets a
+ * higher setter already on the card (OP16-106 Sanjuan.Wolf's 7000) outrank it.
+ */
 export function resolveSetBasePowerZero({
   state,
   effect,
@@ -461,28 +468,22 @@ export function resolveSetBasePowerZero({
   if (!effect.eligibleInstanceIds.includes(optionId)) {
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
   }
-  const target = state.players[effect.targetPlayerId].board.find(
-    (card) => card.instanceId === optionId,
-  );
-  if (!target) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
-  const amount = -(db.require(target.cardNumber).power ?? 0);
-  applyPowerModifier(
+  const written = addBasePowerSetter(
     state,
-    effect.targetPlayerId,
     optionId,
-    amount,
-    effect.expiresAtTurn,
-    {
-      instanceId: effect.sourceInstanceId,
-      cardNumber: effect.sourceCardNumber,
-    },
+    { value: 0, expiresAtTurn: effect.expiresAtTurn },
+    db,
   );
+  if (!written) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
   return [
     {
-      type: "power-changed",
-      playerId: effect.targetPlayerId,
+      type: "base-power-set",
+      playerId: written.owner,
       targetInstanceId: optionId,
-      amount,
+      basePower: 0,
+      ...(written.outrankedBy === undefined
+        ? {}
+        : { outrankedBy: written.outrankedBy }),
       expiresAtTurn: effect.expiresAtTurn,
       sourceCardNumber: effect.sourceCardNumber,
       sourceInstanceId: effect.sourceInstanceId,
