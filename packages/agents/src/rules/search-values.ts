@@ -246,6 +246,8 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP17-031", // Yasopp -- draws and rests a cost-8-or-less body
       "OP17-025", // Building Snake -- 4 cost; feeds the Leader a rested DON!! a turn
       "OP17-032", // Limejuice -- 2000 Counter at 1 cost
+      "OP17-021", // Crone Oli -- 2000 Counter at 1 cost; shields the crew from removal
+      "OP17-026", // Fugar -- 2000 Counter at 1 cost; rests a 2-cost when attacking
       "OP17-037", // Are You That Afraid of the New Era?!!
       "OP17-038", // I Think He's Seen an Ugly Future...
       "OP17-036", // Withdraw Now... -- six DON!! for two K.O.s, or a +4000 Counter
