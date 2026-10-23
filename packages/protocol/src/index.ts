@@ -1552,8 +1552,8 @@ export interface CardRules {
    *
    * "A Character card with 6000 power or less and no base effect" is a target
    * filter three EB-03 cards print (EB03-003 Uta, EB03-007 Baccarat, EB03-039
-   * Ulti), and "base effect" is the effect box: a card with only a `[Trigger]`,
-   * printed in its own field, still has none. Derived rather than asked of the
+   * Ulti). A `[Trigger]` counts as a base effect too (Bandai's P-011#1), so
+   * that filter reads this and `hasTrigger` together. Derived rather than asked of the
    * text at runtime, because nothing above the engine holds the words -- the
    * whole reason `CardRules` exists.
    */

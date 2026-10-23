@@ -412,10 +412,9 @@ export interface CardSelector {
    * "…a Character card with 6000 power or less and no base effect" -- EB03-003
    * Uta, EB03-007 Baccarat and EB03-039 Ulti all reach for a vanilla body.
    *
-   * Reads `rules.hasPrintedEffect`, so the question is about the card's effect
-   * box: a Character whose only printed clause is a `[Trigger]`, which sits in
-   * its own field, is a legal target. `hasTrigger` is the nearest existing
-   * field and asks the opposite half of the card.
+   * No effect box and no `[Trigger]`: a Character whose only printed clause
+   * is a `[Trigger]` has a base effect (Bandai's P-011#1). A `[Counter]` value
+   * is not an effect, so a vanilla body with one still qualifies (P-011#2).
    */
   noBaseEffect?: boolean;
   /**

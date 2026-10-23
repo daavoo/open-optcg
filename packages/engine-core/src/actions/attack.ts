@@ -16,6 +16,7 @@ import {
 } from "../battle.js";
 import { effectiveBoardCost, leaderInstanceId, opponentOf } from "../board.js";
 import { type CardInstance } from "../model.js";
+import { handOverPendingEffect } from "../pending.js";
 import { battleAttackPower } from "../queries.js";
 import { effectsNegated } from "../static-abilities.js";
 import { type ActionContext } from "./context.js";
@@ -236,6 +237,9 @@ export function applyAttack({
       };
       state.phase = "main";
       state.activePlayer = activePlayer;
+      // The first question may be the defender's: P-048 Arlong
+      // has them choose the card from their own hand (Bandai's P-048#1).
+      handOverPendingEffect(state);
       if (program.oncePerTurn) {
         // A dual-timed card (OP17-048/058 print both this and `[On Your
         // Opponent's Attack]`) shares its budget with that table's own
@@ -284,6 +288,7 @@ export function applyAttack({
       };
       state.phase = "main";
       state.activePlayer = activePlayer;
+      handOverPendingEffect(state);
     }
   } else if (
     attackerCard?.cardNumber === "ST34-005" &&

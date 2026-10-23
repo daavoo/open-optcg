@@ -466,7 +466,7 @@ describe("EB04-017 Mystoms", () => {
 describe("EB04-017 Mystoms' aura", () => {
   covers("EB04-017", "[Your Turn]");
 
-  it("gives the opponent's board −1 cost at three Minks", () => {
+  it("gives the opponent's board −1 cost per copy at three Minks", () => {
     const game = table("eb04-017-aura")
       .withBoard("p1", [
         character("a", "EB04-017", { playedTurn: 1 }),
@@ -477,8 +477,9 @@ describe("EB04-017 Mystoms' aura", () => {
       .build();
 
     const jinbe = game.state.players.p2.board[0]!;
-    // ST31-002 Jinbe is a printed 5-drop.
-    expect(effectiveCost(game.state, "p2", jinbe)).toBe(4);
+    // ST31-002 Jinbe is a printed 5-drop, and each of the two Mystoms gives
+    // its own −1 (copies of an aura stack: Bandai's P-027#2).
+    expect(effectiveCost(game.state, "p2", jinbe)).toBe(3);
   });
 
   it("gives nothing at two Minks", () => {

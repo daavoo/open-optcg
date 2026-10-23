@@ -567,9 +567,8 @@ export const rayleighOrCharacter = {
  * EB02-022 Usopp.
  *
  * The four differ only in the zone the body comes from, so the target is
- * written once. `noBaseEffect` reads the effect box rather than the card: a
- * vanilla body with a `[Trigger]` is a legal target, which is what makes this
- * a real choice in a deck that plays any.
+ * written once. A body whose only text is a `[Trigger]` is not one
+ * (Bandai's P-011#1); see `noBaseEffect`.
  */
 const vanillaBody = (zone: "hand" | "trash") =>
   ({

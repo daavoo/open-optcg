@@ -57,26 +57,28 @@ export const utaRestLock: MechanicProgram = {
   effect: ifUtaLeader(restLock(4, "p057-lock", 2)),
 };
 
-/** P-058's refresh of the {FILM} board, at the end of the turn. */
+/**
+ * P-058's refresh of the {FILM} board, at the end of the turn.
+ *
+ * The Leader is checked when the Event resolves; the board is read when the
+ * turn ends, so a {FILM} Character played after the Event is set active too
+ * (Bandai's P-058#1). Deferred rather than set active now, which is what lets
+ * a {FILM} board attack and still block.
+ */
 export const utaRefreshAtEndOfTurn: MechanicProgram = {
   effect: ifUtaLeader({
-    kind: "select",
-    selector: {
-      player: "self",
-      zone: "board",
-      category: "character",
-      type: "FILM",
-    },
-    bind: "p058-film",
-    count: "all",
-    // The debt is booked against the cards the binding holds, and paid when
-    // the turn ends -- which is what makes this the Event that lets a {FILM}
-    // board attack and still block. A `update: { rested: false }` here would
-    // set them active now, on a turn they have not attacked with yet.
+    kind: "at-end-of-turn-effect",
     effect: {
-      kind: "at-end-of-turn",
-      binding: "p058-film",
-      action: "set-active",
+      kind: "select",
+      selector: {
+        player: "self",
+        zone: "board",
+        category: "character",
+        type: "FILM",
+      },
+      bind: "p058-film",
+      count: "all",
+      effect: { kind: "update", binding: "p058-film", rested: false },
     },
   }),
 };
@@ -220,9 +222,9 @@ export const promoMainMechanics: SetMechanics = {
       // P-011 Uta (Leader): once a turn, one DON!! turned over buys +2000 on a
       // Character with no printed effect box.
       //
-      // `noBaseEffect` reads `rules.hasPrintedEffect`, so a Character whose
-      // only text is a `[Trigger]` -- which sits in its own field -- is a legal
-      // target. The clause is the Leader's whole reason to run vanilla bodies.
+      // `noBaseEffect` is a Character with neither an effect box nor a
+      // `[Trigger]` (Bandai's P-011#1). The clause is the Leader's whole reason
+      // to run vanilla bodies.
       "P-011",
       {
         oncePerTurn: true,
