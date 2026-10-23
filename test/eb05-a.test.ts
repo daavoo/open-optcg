@@ -1083,7 +1083,7 @@ describe("EB05-013 Shirley", () => {
     expect(effectOptions(game.state)).not.toContain("apply");
   });
 
-  it("is not offered behind a {Fish-Man} Leader's absence", () => {
+  it("is not offered behind a Leader of another type", () => {
     const game = defending("eb05-013-leader")
       .withBoard("p1", [character("shirley", "EB05-013")])
       .withBoard("p2", [character("attacker", "ST31-002", { playedTurn: 1 })])
