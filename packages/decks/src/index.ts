@@ -41,6 +41,9 @@ import { eb03ViviManifest } from "./eb03-vivi-manifest.js";
 import { op14LawManifest } from "./op14-law-manifest.js";
 import { op14HancockManifest } from "./op14-hancock-manifest.js";
 import { op14HancockTournamentManifest } from "./op14-hancock-tournament-manifest.js";
+import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
+import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
+import { eb05RobinManifest } from "./eb05-robin-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -317,6 +320,9 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
   "(Yellow) Vegapunk - 1st Place Store Battle",
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
+  "(Blue) Buggy - 33rd Place ChinoizeCup #124",
+  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
+  "(Green/Yellow) Nico Robin - EB05 Wisdom List",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -471,6 +477,9 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Yellow) Vegapunk - 1st Place Store Battle": op07VegapunkTournamentManifest,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentManifest,
+  "(Blue) Buggy - 33rd Place ChinoizeCup #124": op09BuggyTournamentManifest,
+  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
+  "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {

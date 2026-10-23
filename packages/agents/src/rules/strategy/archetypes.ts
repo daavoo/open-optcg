@@ -1429,6 +1429,21 @@ const midrangeReijuOp06: StrategyProfile = {
 };
 
 /**
+ * EB05 Green/Yellow Nico Robin, EB05-010.
+ *
+ * Enrolled under the `midrange` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `eb05-robin-policy.ts`.
+ */
+const midrangeRobinEb05: StrategyProfile = {
+  id: "midrange-robin-eb05",
+  extends: "midrange",
+  summary:
+    "EB05 Green/Yellow Nico Robin: a board of 6000-power <Wisdom> bodies the Leader stands back up for a second attack, refilling its Life when one is K.O.'d.",
+  pattern: "midrange",
+  leaders: ["EB05-010"],
+};
+
+/**
  * OP11 Red/Black Koby, OP11-001.
  *
  * Enrolled under the `midrange` root with nothing but a mulligan of its own,
@@ -1975,6 +1990,7 @@ export const BUILT_IN_STRATEGY_PROFILES: readonly StrategyProfile[] = [
   midrangeLuffyEb02,
   midrangeShirahoshiOp11,
   midrangeReijuOp06,
+  midrangeRobinEb05,
   midrangeKobyOp11,
   midrangeAceOp13,
   midrangeSanjiOp12,

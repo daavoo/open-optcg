@@ -381,6 +381,13 @@ const ARCHETYPE_BY_LEADER: ReadonlyMap<string, Archetype> = new Map([
   // works only while it holds no more DON!! than the opponent -- a deck that
   // trades on the board and draws off the DON!! it hands back, not a race.
   ["OP06-042", "midrange"],
+  // EB05 (Green/Yellow) Nico Robin, the EB-05 deck guide's list.
+  //
+  // Midrange. A board of 6000-power <Wisdom> bodies that the Leader stands
+  // back up once a turn for a second attack, and that refill the Leader's Life
+  // when they are K.O.'d; the removal is Megalo, Rayleigh and Shanks. It wins
+  // by trading bodies and cards, not by racing Life.
+  ["EB05-010", "midrange"],
   // OP11 (Red/Black) Koby, a Regional Final 2nd-place list.
   //
   // Midrange. Its {SWORD} bodies attack Characters the turn they land, after

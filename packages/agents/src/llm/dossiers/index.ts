@@ -75,6 +75,9 @@ import { st32Dossier } from "./st32.js";
 import { st33Dossier } from "./st33.js";
 import { st33KuzanTournamentDossier } from "./st33-kuzan-tournament.js";
 import { op14HancockTournamentDossier } from "./op14-hancock-tournament.js";
+import { op09BuggyTournamentDossier } from "./op09-buggy-tournament.js";
+import { op14LawTournamentDossier } from "./op14-law-tournament.js";
+import { eb05RobinDossier } from "./eb05-robin.js";
 import { st34Dossier } from "./st34.js";
 import { st35Dossier } from "./st35.js";
 import { st36Dossier } from "./st36.js";
@@ -136,6 +139,9 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentDossier,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentDossier,
+  "(Blue) Buggy - 33rd Place ChinoizeCup #124": op09BuggyTournamentDossier,
+  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentDossier,
+  "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,
