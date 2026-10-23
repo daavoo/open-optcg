@@ -8,6 +8,7 @@ import {
 } from "@one-piece-sim/engine-core";
 
 import { resolveDeck } from "@one-piece-sim/decks";
+import { scenario } from "./support/index.js";
 
 const lifeCost = (effect: MechanicProgram["effect"]): MechanicProgram => ({
   effect: {
@@ -256,6 +257,64 @@ describe("generic mechanic programs", () => {
       state.players.p1.board.find((card) => card.instanceId === "bare")
         ?.unblockableUntilTurn,
     ).toBeUndefined();
+  });
+
+  it("measures a Leader against a power bound at the power it has, not the power it prints", () => {
+    // A Leader reaches a selector as a bare pseudo-card. Its given DON!! and
+    // modifiers still move its power, and "Leader or Characters with 6000
+    // power or more" (EB05-001) reads that number.
+    const game = scenario()
+      .decks(
+        "(Red) Monkey.D.Luffy - Starter Deck 31",
+        "(Green) Roronoa Zoro - Starter Deck 32",
+      )
+      .seed("mechanic-leader-current-power")
+      .atTurn(11, { active: "p1" })
+      .bareTable()
+      .withGivenDon("p1", "p1-leader", 2)
+      .build();
+    const state = game.state;
+    const leaderOptions = (bound: {
+      minCurrentPower?: number;
+      maxCurrentPower?: number;
+    }) => {
+      const result = executeMechanicProgram(
+        state,
+        {
+          sourcePlayerId: "p1",
+          source: { instanceId: "probe", cardNumber: "FIX-001" },
+        },
+        {
+          effect: {
+            kind: "choose",
+            selector: {
+              player: "self",
+              zone: [],
+              includeLeader: true,
+              ...bound,
+            },
+            bind: "leader-bound",
+            min: 0,
+            max: 1,
+            effect: {
+              kind: "modify-power",
+              binding: "leader-bound",
+              amount: 0,
+              expiresAfterTurns: 0,
+            },
+          },
+        },
+      );
+      return result.pending
+        ? getMechanicChoiceOptions(state, result.pending)
+        : [];
+    };
+
+    // A printed 5000 with two DON!! given on its own turn is a 7000.
+    expect(leaderOptions({ minCurrentPower: 7_000 })).toContain("p1-leader");
+    expect(leaderOptions({ maxCurrentPower: 5_000 })).not.toContain(
+      "p1-leader",
+    );
   });
 
   it("gives rested DON!! to a chosen Leader or Character, or declines", () => {

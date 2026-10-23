@@ -9,6 +9,7 @@
  */
 import {
   cards as defaultCardDatabase,
+  hasCardAttribute,
   hasCardType,
   hasCardTypeIncluding,
   printedClauses,
@@ -837,6 +838,13 @@ export function getMechanicSignalInvocations(
               ((signal.from === "board"
                 ? departedCardBasePower(state, signal.ownerId, signal.card, db)
                 : moved.power) ?? 0) < rule.signal.movedMinPower) ||
+            (rule.signal.movedAttribute !== undefined &&
+              !hasCardAttribute(
+                signal.card.cardNumber,
+                rule.signal.movedAttribute,
+              )) ||
+            (rule.signal.movedLacksKeyword !== undefined &&
+              moved.rules.keywords.includes(rule.signal.movedLacksKeyword)) ||
             (rule.signal.sourceType !== undefined &&
               (signal.sourceCardNumber === undefined ||
                 !hasCardType(

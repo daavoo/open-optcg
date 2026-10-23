@@ -59,6 +59,7 @@ card data.
 | `op15-shared.ts`       | OP15 fragments printed on two clauses of one card                   |
 | `op16-shared.ts`       | the OP16 Whitebeard "reveal an 8000" template                       |
 | `eb02-*.ts`            | `cards/src/eb02.ts`                                                 |
+| `eb05-shared.ts`       | EB05 fragments more than one of its cards prints                    |
 | `eb02-shared.ts`       | EB02 fragments more than one of its cards prints                    |
 | `shared.ts`            | program fragments more than one set prints                          |
 | `*-static.ts`          | each set's continuous text, the rows `../static-abilities.ts` folds |
