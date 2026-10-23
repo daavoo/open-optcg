@@ -4,7 +4,7 @@
  * Printed text for any card here is `pnpm card:text <CARD>`; the repo carries
  * the derived rules and not the words.
  */
-import { type MechanicEffect, type MechanicProgram } from "../mechanics.js";
+import { type MechanicProgram } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import {
   donMinus,
