@@ -18,9 +18,10 @@ import {
  * The `P-` promos, as a whole-page import.
  *
  * `packages/cards/src/p.ts` explains where the records come from. These are
- * not a set: 103 identities printed one at a time across five blocks, in event
+ * not a set: 109 identities printed one at a time across five blocks, in event
  * packs, tournament kits and magazine inserts -- five of them read off the
- * PRB-02 page, which is the only English printing they have. So this file is a list of
+ * PRB-02 page, which is the only English printing they have, and the six
+ * listed beside other products are in `test/promo-other-products.test.ts`. So this file is a list of
  * unrelated cards rather than a reading of a product, and it is grouped by the
  * shape of the clause instead.
  *

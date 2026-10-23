@@ -10,6 +10,7 @@
 import { cardAttributes, hasCardType } from "@one-piece-sim/cards";
 import {
   attachedDon,
+  buggyCostBandBan,
   leaderHasType,
   lowLife,
   turnPlayer,
@@ -22,6 +23,23 @@ import {
 import { fieldDonCount } from "../don.js";
 
 export const promoStaticAbilities: readonly StaticAbility[] = [
+  // P-084 Buggy: under its controller's [Buggy] Leader, no Character with a
+  // cost of 3 or 4 can attack -- on either side of the table, which is two
+  // rows, the way OP05-040 Birdcage pairs its two Stage scopes. Each row reads
+  // the Leader on the Buggy's own side. "This Character cannot attack" is the
+  // derived `cannotAttack` flag and needs no row; the `[On Play]` is in
+  // `promo-on-play.ts`.
+  {
+    cardNumber: "P-084",
+    scope: "board-aura",
+    attackBlocked: (context) => buggyCostBandBan(context, context.playerId),
+  },
+  {
+    cardNumber: "P-084",
+    scope: "opponent-board-aura",
+    attackBlocked: (context) =>
+      buggyCostBandBan(context, opponentOf(context.playerId)),
+  },
   // P-105 Sabo: [Blocker] only under a {Revolutionary Army} Leader.
   {
     cardNumber: "P-105",

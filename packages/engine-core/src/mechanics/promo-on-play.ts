@@ -536,8 +536,175 @@ export const promoOnPlayMechanics: SetMechanics = {
       "P-115",
       { effect: { kind: "give-rested-don", player: "self", count: 1 } },
     ],
+    [
+      // P-072 Ryuma. Its `[On K.O.]` is the same clause, registered below.
+      "P-072",
+      { effect: restCostAtMost(4, "p072-rest") },
+    ],
+    [
+      // P-084 Buggy: play a {Cross Guild} Character of cost 6 or less from
+      // hand. Its two attack bans are continuous text in `promo-static.ts`.
+      //
+      // `maxCost` rather than the printed number: a discount the board is
+      // already applying is real, and the free play is the whole payoff.
+      "P-084",
+      {
+        effect: {
+          kind: "choose",
+          selector: {
+            player: "self",
+            zone: "hand",
+            category: "character",
+            type: "Cross Guild",
+            maxCost: 6,
+          },
+          bind: "p084-play",
+          min: 0,
+          max: 1,
+          effect: { kind: "play", binding: "p084-play" },
+        },
+      },
+    ],
+    [
+      // P-093 Trafalgar Law: ramp one rested DON!! while its controller has no
+      // more DON!! on the field than the opponent. A tie qualifies ("equal to
+      // or less"), and an empty DON!! deck adds nothing -- the "up to".
+      "P-093",
+      {
+        effect: {
+          kind: "if",
+          condition: {
+            kind: "field-don-versus",
+            player: "self",
+            operator: "lte",
+          },
+          then: { kind: "add-don", player: "self", count: 1, rested: true },
+        },
+      },
+    ],
+    [
+      // P-152 Edward.Newgate: +2000 to the Leader and every Character for the
+      // turn, then K.O. up to 1 opposing Character of 3000 power or less.
+      //
+      // The buff resolves first, so "power or less" reads the opponent's
+      // board as it stands then -- the buff is to its controller's side and
+      // moves nothing the K.O. measures. Current power, because a Character
+      // debuffed under 3000 earlier in the turn is in range.
+      "P-152",
+      {
+        effect: {
+          kind: "sequence",
+          effects: [
+            {
+              kind: "select",
+              selector: { player: "self", zone: "board", includeLeader: true },
+              bind: "p152-team",
+              count: "all",
+              effect: {
+                kind: "modify-power",
+                binding: "p152-team",
+                amount: 2000,
+                expiresAfterTurns: 0,
+              },
+            },
+            {
+              kind: "choose",
+              selector: {
+                player: "opponent",
+                zone: "board",
+                category: "character",
+                maxCurrentPower: 3000,
+              },
+              bind: "p152-ko",
+              min: 0,
+              max: 1,
+              effect: { kind: "knock-out", binding: "p152-ko" },
+            },
+          ],
+        },
+      },
+    ],
+    [
+      // P-153 Portgas.D.Ace: −3000 for the turn on up to two opposing
+      // Characters, chosen together so the same Character cannot take both.
+      "P-153",
+      {
+        effect: {
+          kind: "choose",
+          selector: {
+            player: "opponent",
+            zone: "board",
+            category: "character",
+          },
+          bind: "p153-debuff",
+          min: 0,
+          max: 2,
+          effect: {
+            kind: "modify-power",
+            binding: "p153-debuff",
+            amount: -3000,
+            expiresAfterTurns: 0,
+          },
+        },
+      },
+    ],
+    [
+      // P-154 Monkey.D.Luffy: rest 3 DON!! to play a [Portgas.D.Ace] of 8000
+      // power or less from hand, under an Ace Leader.
+      //
+      // The Leader gate is outermost although it is printed after the cost:
+      // paying cannot change the Leader, so the only difference is that a
+      // player under another Leader is not offered three DON!! for nothing.
+      // The active-DON!! check is the cost's own affordability.
+      "P-154",
+      {
+        effect: {
+          kind: "if",
+          condition: {
+            kind: "all-of",
+            conditions: [
+              {
+                kind: "leader-has-name",
+                player: "self",
+                name: "Portgas.D.Ace",
+              },
+              { kind: "active-don", player: "self", operator: "gte", value: 3 },
+            ],
+          },
+          then: {
+            kind: "optional",
+            effect: {
+              kind: "sequence",
+              effects: [
+                { kind: "rest-don", player: "self", count: 3 },
+                {
+                  kind: "choose",
+                  selector: {
+                    player: "self",
+                    zone: "hand",
+                    category: "character",
+                    name: "Portgas.D.Ace",
+                    maxPower: 8000,
+                  },
+                  bind: "p154-play",
+                  min: 0,
+                  max: 1,
+                  effect: { kind: "play", binding: "p154-play" },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ],
   ],
   onKo: [
+    [
+      // P-072 Ryuma: the same rest as its `[On Play]`, printed as one clause
+      // on both timings.
+      "P-072",
+      { effect: restCostAtMost(4, "p072-ko-rest") },
+    ],
     [
       // P-030 Jinbe: dying buries a cheap body, on either side of the table.
       //

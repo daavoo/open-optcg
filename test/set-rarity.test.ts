@@ -97,17 +97,18 @@ const SUPPLEMENT_COMPOSITION = { C: 3, SR: 2 };
  */
 const ST11_COMPOSITION = { C: 2, SR: 2 };
 /**
- * The promos, which are not a product at all: 103 identities printed one at a
+ * The promos, which are not a product at all: 109 identities printed one at a
  * time in event packs, tournament kits and magazine inserts, listed together
- * because there is nowhere else to put them. Five of them are printed on the
- * PRB-02 page and on no other, which is why the promo `setSeries` entry reads
- * two files.
+ * because there is nowhere else to put them. Eleven are listed only beside
+ * another product -- five on the PRB-02 page, one on ST-25's, five on the
+ * "Other Product Card" page -- which is why the promo `setSeries` entry reads
+ * four files.
  *
  * `P` is their rarity and it is a provenance stamp rather than a pull
  * frequency -- a promo has no booster slot to fill.
  *
  * They are also the one product where rarity and role come apart: four of the
- * 103 are Leaders and only one of them, P-011 Uta, is printed at `L` -- the
+ * 109 are Leaders and only one of them, P-011 Uta, is printed at `L` -- the
  * other three carry `P` like everything else on the page. So the `L` count is
  * written into the composition here rather than derived from the Leader count
  * below, which is what every set with a booster make-up can do.
