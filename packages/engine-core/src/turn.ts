@@ -203,10 +203,17 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
   // positions.
   const activePlayer = state.turnPlayerId;
   const endingPlayer = state.players[activePlayer];
-  const activateCount = Math.min(
-    endingPlayer.activateDonAtEndOfTurn,
-    endingPlayer.restedDon.length,
-  );
+  // Only ST24-005 X.Drake, a Character, books this, so OP10-030 Smoker's "no
+  // Character effect sets your DON!! active" stops it (Bandai's ST24-005#2),
+  // as it stops the declarative `activate-don`.
+  const barred =
+    (endingPlayer.cannotActivateDonByCharacterUntilTurn ?? -1) >= state.turn;
+  const activateCount = barred
+    ? 0
+    : Math.min(
+        endingPlayer.activateDonAtEndOfTurn,
+        endingPlayer.restedDon.length,
+      );
   endingPlayer.activeDon.push(
     ...endingPlayer.restedDon.splice(0, activateCount),
   );

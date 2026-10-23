@@ -439,9 +439,11 @@ export function selectCards(
       (selector.attribute === undefined ||
         attributes.includes(selector.attribute)) &&
       (selector.minGivenDon === undefined ||
-        ("attachedDon" in card
-          ? ((card as BoardCard).attachedDon?.length ?? 0)
-          : 0) >= selector.minGivenDon) &&
+        (card.instanceId === `${playerId}-leader`
+          ? state.players[playerId].leaderAttachedDon.length
+          : "attachedDon" in card
+            ? ((card as BoardCard).attachedDon?.length ?? 0)
+            : 0) >= selector.minGivenDon) &&
       (selector.maxCostFromZoneCount === undefined ||
         effectiveCost(state, playerId, card, db) <=
           (

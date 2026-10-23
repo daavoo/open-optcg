@@ -186,8 +186,8 @@ describe("ST24-004 Law & Bepo", () => {
 
     game.play({ type: "play-card", cardNumber: "ST24-004" });
 
-    // `canRest` keeps the already-rested body off the offer.
-    expect(effectOptions(game.state)).toEqual(["awake", "done"]);
+    // An already-rested body is on the offer too (Bandai's ST24-004#1).
+    expect(effectOptions(game.state)).toEqual(["awake", "napping", "done"]);
     game.play({ type: "resolve-effect", optionId: "awake" });
     while (game.state.pendingEffect) game.play({ type: "resolve-effect" });
 

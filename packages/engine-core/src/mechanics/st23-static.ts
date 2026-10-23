@@ -4,6 +4,7 @@
  * one with a marker is a program in `st23.ts`. Printed text for any card here
  * is `pnpm card:text <CARD>`.
  */
+import { storedBasePower } from "../base-power.js";
 import { boardCardPower, type StaticAbility } from "../static-abilities.js";
 
 export const st23StaticAbilities: readonly StaticAbility[] = [
@@ -38,8 +39,9 @@ export const st23StaticAbilities: readonly StaticAbility[] = [
   // ST23-002 Shanks: −3 cost in hand while your opponent has a Character with
   // 8000 base power or more.
   //
-  // "Base power", so printed power, the reading ST26-001 Soba Mask takes:
-  // DON!! and modifiers on the opposing body do not bring it into the gate.
+  // "Base power": the printed power, or one an effect set -- an opposing
+  // Character raised to 8000 base counts (Bandai's ST23-002#1). DON!! and
+  // power modifiers do not bring a body into the gate.
   {
     cardNumber: "ST23-002",
     scope: "self",
@@ -49,7 +51,10 @@ export const st23StaticAbilities: readonly StaticAbility[] = [
       return context.state.players[opponent].board.some((board) => {
         const definition = context.db.require(board.cardNumber);
         return (
-          definition.category === "character" && (definition.power ?? 0) >= 8000
+          definition.category === "character" &&
+          (storedBasePower(board.basePowerOverrides, context.state.turn) ??
+            definition.power ??
+            0) >= 8000
         );
       })
         ? -3

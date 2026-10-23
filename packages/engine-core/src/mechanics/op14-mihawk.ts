@@ -122,10 +122,10 @@ export const op14MihawkMechanics: SetMechanics = {
       // `modify-power`, which is what makes the +2000 defence rather than a
       // push. `{ zone: [], includeLeader: true }` names the Leader alone.
       //
-      // `canRest` is the pool-wide convention for "[printed text omitted -- pnpm card:text OP17-020]", and it skips an already-rested body. That costs this
-      // card the line where it locks a Character that is rested already and
-      // rests nothing -- a real line, but a strictly worse one than resting an
-      // active body and locking that, which is what the clause is for.
+      // No `canRest`: an already-rested Character is a legal pick, and the
+      // lock still keeps it down through the next Refresh Phase (Bandai's
+      // ST24-004#1). One that cannot be rested stays active, so its lock does
+      // nothing.
       //
       // The `if` reads the board *after* the rest, which is what "Then" means:
       // the Character this clause just rested counts toward the 2, so one
@@ -141,7 +141,6 @@ export const op14MihawkMechanics: SetMechanics = {
                 player: "opponent",
                 zone: "board",
                 category: "character",
-                canRest: true,
               },
               bind: "st24-lawbepo-rest",
               min: 0,
