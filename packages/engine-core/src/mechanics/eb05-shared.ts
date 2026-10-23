@@ -109,7 +109,8 @@ export const shirahoshiLeaderActive = {
 /**
  * "Add up to 1 card from the top of your deck to the top of your Life cards."
  *
- * EB05-055 Nami's `[On Play]` and EB05-060 Take Care of Lilith!!!'s `[Main]`.
+ * EB05-010 Nico Robin's Leader watcher, EB05-055 Nami's `[On Play]` and EB05-060
+ * Take Care of Lilith!!!'s `[Main]`.
  * A `choose` over the single top card rather than a bare move: the printed "up
  * to" lets the player keep the Life total where it is, and an empty deck
  * resolves to nothing.
