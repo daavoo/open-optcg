@@ -8,6 +8,7 @@
  * `card-mechanics.ts` imports `mechanics/index.ts`: a register function there
  * would be called while that module is still mid-evaluation.
  */
+import type { CardKeyword } from "@one-piece-sim/protocol";
 import type { MechanicCondition, MechanicProgram } from "./mechanics.js";
 
 /**
@@ -73,6 +74,20 @@ export interface ReactionRule {
          * `departedCardBasePower`.
          */
         movedMinPower?: number;
+        /**
+         * An attribute the moved card must print -- "one of your Characters
+         * with the <Wisdom> attribute" (EB05-010 Nico Robin's Leader). Read
+         * off the printed field: a card that has left the field keeps no
+         * attribute an effect handed it there.
+         */
+        movedAttribute?: string;
+        /**
+         * A keyword the moved card must *not* print -- "...and without
+         * [Blocker]" (EB05-010). The printed keyword, not the live one:
+         * Bandai's EB05-010#1 rules that a [Blocker] whose ability an effect
+         * has negated is still a Character with [Blocker] for this clause.
+         */
+        movedLacksKeyword?: CardKeyword;
         /**
          * Whose card moved. `"self"` is the reacting card's own controller;
          * `"opponent"` is the other side, which EB04-044 Koby is the first
