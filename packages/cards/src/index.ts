@@ -27,6 +27,7 @@ import { op14Cards } from "./op14.js";
 import { op15Cards } from "./op15.js";
 import { op16Cards } from "./op16.js";
 import { op17Cards } from "./op17.js";
+import { eb05Cards } from "./eb05.js";
 import { eb04Cards } from "./eb04.js";
 import { eb03Cards } from "./eb03.js";
 import { eb02Cards } from "./eb02.js";
@@ -390,6 +391,7 @@ export const cardRegistry = new Map<string, CardDefinition>([
   ...op15Cards.map(setRecord),
   ...op16Cards.map(setRecord),
   ...op17Cards.map(setRecord),
+  ...eb05Cards.map(setRecord),
   ...eb04Cards.map(setRecord),
   ...eb03Cards.map(setRecord),
   ...eb02Cards.map(setRecord),
