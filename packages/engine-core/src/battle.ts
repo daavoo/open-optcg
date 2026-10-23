@@ -1225,7 +1225,7 @@ export function resolveBattle(
     resumeMainAfterBattle(state);
     return;
   }
-  if (opensTriggerWindow(life.cardNumber)) {
+  if (opensTriggerWindow(state, attack.defenderPlayerId, life)) {
     // A Trigger window is a *private* look: the damaged player checks the Life
     // card and only turns it face-up by activating it ("you may activate this
     // card's [Trigger]" -- declining leaves the card unrevealed, and it joins

@@ -46,6 +46,7 @@ export const op07ReactionRules: readonly ReactionRule[] = [
     signal: { kind: "card-moved", from: "board", bySource: "self" },
     ownTurn: true,
     oncePerTurn: true,
+    optionalActivation: true,
     maxHandSize: 5,
     program: { effect: { kind: "draw", player: "self", count: 1 } },
   },

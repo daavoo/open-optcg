@@ -10,6 +10,7 @@ import { withoutBasePowerSetters } from "./base-power.js";
 import { getTriggerMechanicProgram } from "./card-mechanics.js";
 
 import { bankDamagedLifeCard, dealDamage } from "./life.js";
+import { faceUpLifeBanksToDeck } from "./static-abilities.js";
 
 import type { CardInstance, GameState } from "./model.js";
 
@@ -103,10 +104,20 @@ export const BESPOKE_TRIGGERS = [
  * `settleEffectDamage`, so effect damage and battle damage cannot disagree about
  * which Triggers exist.
  */
-export function opensTriggerWindow(cardNumber: string): boolean {
+export function opensTriggerWindow(
+  state: GameState,
+  playerId: PlayerId,
+  card: CardInstance,
+): boolean {
+  // Under ST13-003's Leader a face-up Life card goes to the bottom of the
+  // deck instead of the hand, and its [Trigger] cannot be activated (Bandai's
+  // ST13-003#1).
+  if (card.faceUp === true && faceUpLifeBanksToDeck(state, playerId)) {
+    return false;
+  }
   return (
-    BESPOKE_TRIGGERS.includes(cardNumber) ||
-    getTriggerMechanicProgram(cardNumber) !== undefined
+    BESPOKE_TRIGGERS.includes(card.cardNumber) ||
+    getTriggerMechanicProgram(card.cardNumber) !== undefined
   );
 }
 
@@ -192,7 +203,7 @@ export function settleEffectDamage(
     state.phase === "block" || state.phase === "counter" ? state.phase : "main";
   if (
     state.phase !== "finished" &&
-    opensTriggerWindow(trigger.card.cardNumber)
+    opensTriggerWindow(state, trigger.playerId, trigger.card)
   ) {
     // Same private look as battle damage: only the damaged player sees which
     // Life card it is while deciding. The public reveal, if it comes, is the

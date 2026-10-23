@@ -23,6 +23,7 @@ export const op16ReactionRules: readonly ReactionRule[] = [
     },
     ownTurn: false,
     oncePerTurn: true,
+    optionalActivation: true,
     leaderAttachedDon: 1,
     program: {
       effect: {

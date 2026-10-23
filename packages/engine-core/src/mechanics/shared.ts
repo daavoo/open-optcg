@@ -16,6 +16,28 @@ import {
 } from "../mechanics.js";
 
 /**
+ * The payoff of a "add a Life card to your hand:" cost, run only if the card
+ * reached the hand. Under ST13-003's Leader a face-up Life card goes to the
+ * bottom of the deck instead, which leaves the cost unpaid and the payoff
+ * undone (Bandai's ST13-003#2); OP06-020 Hody Jones's lock stops the move
+ * outright, with the same result.
+ */
+export const paidToHand = (
+  bind: string,
+  effects: readonly MechanicEffect[],
+): MechanicEffect => ({
+  kind: "if",
+  condition: {
+    kind: "selector-count",
+    player: "self",
+    selector: { zone: "hand", binding: bind },
+    operator: "gte",
+    value: 1,
+  },
+  then: { kind: "sequence", effects: [...effects] },
+});
+
+/**
  * "You may add 1 card from the top (or bottom) of your Life cards to your
  * hand: <effect>".
  *
@@ -43,7 +65,7 @@ export const lifeToHandCost = (
             binding: "life-cost",
             to: { player: "self", zone: "hand" },
           },
-          effect,
+          paidToHand("life-cost", [effect]),
         ],
       },
     },
@@ -130,6 +152,36 @@ export const haveNamed = (name: string, count = 1): MechanicCondition => ({
   operator: "gte",
   value: count,
 });
+
+/**
+ * "Trash N cards from your opponent's hand": the player using the effect picks,
+ * face-down (Bandai's ST10-010#1, and OP17-075#1 for one card). One blind pick
+ * per card, each trashed before the next is drawn, so a later pick never
+ * names a card that is already gone. Text that says "your opponent trashes"
+ * leaves the pick to them and does not use this.
+ */
+export const trashFromOpponentHandBlind = (
+  count: number,
+  bind: string,
+): MechanicEffect => {
+  let effect: MechanicEffect | undefined;
+  for (let index = count; index >= 1; index -= 1) {
+    const pick = `${bind}-${index}`;
+    const trash: MechanicEffect = {
+      kind: "move",
+      binding: pick,
+      to: { player: "opponent", zone: "trash" },
+    };
+    effect = {
+      kind: "pick-from-hand",
+      player: "opponent",
+      pick: "blind",
+      bind: pick,
+      effect: effect ? { kind: "sequence", effects: [trash, effect] } : trash,
+    };
+  }
+  return effect!;
+};
 
 export const elbaphGiantOut: MechanicCondition = {
   kind: "selector-count",

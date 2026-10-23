@@ -12,7 +12,12 @@
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { revealTwoEvents } from "./op12-shared.js";
-import { lookAndAdd, lookAndAddOrTrash, payFromHand } from "./shared.js";
+import {
+  lookAndAdd,
+  lookAndAddOrTrash,
+  paidToHand,
+  payFromHand,
+} from "./shared.js";
 
 /** "If your Leader has the {Revolutionary Army} type" -- Black's gate. */
 const revolutionaryArmyLeader = {
@@ -616,19 +621,21 @@ export const op12OnPlayMechanics: SetMechanics = {
                   binding: "op12-sabo-cost",
                   to: { player: "self", zone: "hand" },
                 },
-                { kind: "draw", player: "self", count: 2 },
-                {
-                  kind: "choose",
-                  selector: { player: "self", zone: "hand" },
-                  bind: "op12-sabo-trash",
-                  min: 1,
-                  max: 1,
-                  effect: {
-                    kind: "move",
-                    binding: "op12-sabo-trash",
-                    to: { player: "self", zone: "trash" },
+                paidToHand("op12-sabo-cost", [
+                  { kind: "draw", player: "self", count: 2 },
+                  {
+                    kind: "choose",
+                    selector: { player: "self", zone: "hand" },
+                    bind: "op12-sabo-trash",
+                    min: 1,
+                    max: 1,
+                    effect: {
+                      kind: "move",
+                      binding: "op12-sabo-trash",
+                      to: { player: "self", zone: "trash" },
+                    },
                   },
-                },
+                ]),
               ],
             },
           },

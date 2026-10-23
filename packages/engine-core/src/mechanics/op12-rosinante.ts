@@ -7,7 +7,7 @@
  */
 import { SOURCE_BINDING } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { lookAndAdd } from "./shared.js";
+import { lookAndAdd, trashFromOpponentHandBlind } from "./shared.js";
 
 export const op12RosinanteMechanics: SetMechanics = {
   eventMain: [
@@ -405,10 +405,8 @@ export const op12RosinanteMechanics: SetMechanics = {
       // DON!! goes back to the DON!! deck -- so offering it against a hand already
       // under seven would offer a strictly losing move.
       //
-      // `chooser: "opponent"` is the rule for anything trashed out of a hand: the
-      // cards are the opponent's and the opponent picks which two go. `min: 2`
-      // means a hand of exactly seven loses two, and the gate above guarantees
-      // there are at least that many to take.
+      // Law's controller picks the two, face-down (Bandai's ST10-010#1). The
+      // gate above guarantees there are at least two to take.
       "ST10-010",
       {
         effect: {
@@ -434,19 +432,7 @@ export const op12RosinanteMechanics: SetMechanics = {
                 kind: "sequence",
                 effects: [
                   { kind: "return-don", player: "self", count: 1 },
-                  {
-                    kind: "choose",
-                    selector: { player: "opponent", zone: "hand" },
-                    bind: "law-hand-trash",
-                    min: 2,
-                    max: 2,
-                    chooser: "opponent",
-                    effect: {
-                      kind: "move",
-                      binding: "law-hand-trash",
-                      to: { player: "opponent", zone: "trash" },
-                    },
-                  },
+                  trashFromOpponentHandBlind(2, "law-hand-trash"),
                 ],
               },
             },

@@ -1821,8 +1821,7 @@ describe("OP06-044 Gion", () => {
     });
     game.pass();
     game.play({ type: "activate-counter-event", cardNumber: "OP06-038" });
-    // Gion's controller applies the clause; the defender then picks the card.
-    game.play({ type: "resolve-effect", optionId: "apply" });
+    // The defender picks the card (Gion's clause is not optional).
     settleDeclining(game);
 
     // The Event resolved and the watcher took the card the defender had left,
@@ -3867,7 +3866,7 @@ describe("OP06-096 ...Nothing...at All!!!", () => {
 describe("OP06-097 Negative Hollow", () => {
   covers("OP06-097", "[Main]", "[Trigger]");
 
-  it("takes a card the opponent chooses", () => {
+  it("takes a card its user picks face-down", () => {
     const game = table("op06-097")
       .bareTable()
       .withHand("p1", [instance("event", "OP06-097")])
@@ -3878,13 +3877,20 @@ describe("OP06-097 Negative Hollow", () => {
       .build();
 
     game.play({ summary: "[OP06-097]" });
-    expect(game.state.activePlayer).toBe("p2");
-    game.play({ type: "resolve-effect", optionId: "theirs-b" });
+    // The Event's user picks, by position only: a discard this card makes
+    // out of the opposing hand is theirs to choose, face-down (Bandai's
+    // ST10-010#1 for the same wording).
+    expect(game.state.activePlayer).toBe("p1");
+    const picks = game
+      .legalActions("p1")
+      .filter((action) => action.type === "resolve-effect")
+      .map((action) => action.optionId);
+    expect(picks).toHaveLength(2);
+    expect(picks.every((id) => id.startsWith("face-down:"))).toBe(true);
+    game.play({ type: "resolve-effect", optionId: picks[0]! });
     settleDeclining(game);
 
-    expect(game.state.players.p2.hand.map((card) => card.instanceId)).toEqual([
-      "theirs-a",
-    ]);
+    expect(game.state.players.p2.hand).toHaveLength(1);
     expect(game.state.players.p2.trash).toHaveLength(1);
   });
 

@@ -839,9 +839,7 @@ export const op17OnPlayMechanics: SetMechanics = {
       //
       // One end for both cards: Bandai's Q&A rules out putting one on top and
       // the other at the bottom. So the end is a `choice` asked once, after the
-      // look, and `order-to-bottom` then asks the order at that end. It has no
-      // `alternate`, because that field is what lets the node split the cards
-      // between two ends.
+      // look, and `order-to-bottom` then asks the order at that end.
       "OP17-050",
       {
         effect: {

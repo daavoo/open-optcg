@@ -13,7 +13,7 @@
  * (`pnpm card:text ST29-0xx` prints it from the local cache).
  */
 import { type SetMechanics } from "./registry.js";
-import { lookAndAdd } from "./shared.js";
+import { lookAndAdd, paidToHand } from "./shared.js";
 import { restByOpponentLife } from "./st29-battle.js";
 
 export const st29OnPlayMechanics: SetMechanics = {
@@ -62,18 +62,20 @@ export const st29OnPlayMechanics: SetMechanics = {
                   binding: "st29-chopper-life",
                   to: { player: "self", zone: "hand" },
                 },
-                {
-                  kind: "choose",
-                  selector: { player: "self", zone: "hand" },
-                  bind: "st29-chopper-bank",
-                  min: 0,
-                  max: 1,
-                  effect: {
-                    kind: "move",
-                    binding: "st29-chopper-bank",
-                    to: { player: "self", zone: "life", position: "top" },
+                paidToHand("st29-chopper-life", [
+                  {
+                    kind: "choose",
+                    selector: { player: "self", zone: "hand" },
+                    bind: "st29-chopper-bank",
+                    min: 0,
+                    max: 1,
+                    effect: {
+                      kind: "move",
+                      binding: "st29-chopper-bank",
+                      to: { player: "self", zone: "life", position: "top" },
+                    },
                   },
-                },
+                ]),
               ],
             },
           },
