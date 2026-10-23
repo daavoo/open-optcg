@@ -112,7 +112,7 @@ const ST11_COMPOSITION = { C: 2, SR: 2 };
  * written into the composition here rather than derived from the Leader count
  * below, which is what every set with a booster make-up can do.
  */
-const PROMO_COMPOSITION = { P: 102, L: 1 };
+const PROMO_COMPOSITION = { P: 108, L: 1 };
 /**
  * Cards in the set, and how many of them are Leaders.
  *
@@ -301,7 +301,7 @@ const SET_SIZES: Record<
     composition: SUPPLEMENT_COMPOSITION,
   },
   P: {
-    total: 103,
+    total: 109,
     leaders: 4,
     secrets: 0,
     composition: PROMO_COMPOSITION,

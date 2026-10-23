@@ -75,6 +75,9 @@ export const CARDLIST_SERIES = [
   ["eb05", "569205"],
   ["prb02", "569302"],
   ["promo", "569901"],
+  // "Other Product Card": promos Bandai printed in products outside the
+  // promotion list, P-093 Trafalgar Law among them.
+  ["other", "569801"],
 ] as const;
 
 export function cardlistUrl(series: string): string {
