@@ -16,7 +16,12 @@ import {
   restableCards,
 } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { giveDonToRayleigh, lookAndAddOrTrash, payFromHand } from "./shared.js";
+import {
+  giveDonToRayleigh,
+  lookAndAddOrTrash,
+  paidToHand,
+  payFromHand,
+} from "./shared.js";
 
 /**
  * "You may rest 1 of your cards: <effect>."
@@ -814,25 +819,27 @@ export const eb04MainMechanics: SetMechanics = {
                     binding: "eb04-060-life-cost",
                     to: { player: "self", zone: "hand" },
                   },
-                  {
-                    kind: "choose",
-                    selector: {
-                      player: "self",
-                      zone: "hand",
-                      category: "character",
-                      type: "Egghead",
+                  paidToHand("eb04-060-life-cost", [
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "self",
+                        zone: "hand",
+                        category: "character",
+                        type: "Egghead",
+                      },
+                      bind: "eb04-060-to-life",
+                      min: 0,
+                      max: 1,
+                      effect: {
+                        kind: "move",
+                        binding: "eb04-060-to-life",
+                        to: { player: "self", zone: "life", position: "top" },
+                        faceUp: true,
+                      },
                     },
-                    bind: "eb04-060-to-life",
-                    min: 0,
-                    max: 1,
-                    effect: {
-                      kind: "move",
-                      binding: "eb04-060-to-life",
-                      to: { player: "self", zone: "life", position: "top" },
-                      faceUp: true,
-                    },
-                  },
-                  debuffOpponentCharacter("eb04-060-debuff", -1_000),
+                    debuffOpponentCharacter("eb04-060-debuff", -1_000),
+                  ]),
                 ],
               },
             },

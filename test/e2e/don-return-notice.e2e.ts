@@ -91,14 +91,6 @@ test("a DON!! payment is named before the Leader's answer to it is reported", as
   await expect(page.locator(".opponent-action-modal")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Return 2 DON!!" }).click();
-  // The Leader's refund is a [Once Per Turn] reaction, so it is put to the
-  // player before it fires, and only after the payment has been made.
-  await expect(page.locator(".opponent-action-modal")).toHaveCount(0);
-  await page
-    .getByRole("button", {
-      name: "Apply Monkey.D.Luffy [OP09-061]'s optional effect",
-    })
-    .click();
   const notice = page.locator(".opponent-action-modal");
   await expect(notice).toContainText("Fired on its own");
 

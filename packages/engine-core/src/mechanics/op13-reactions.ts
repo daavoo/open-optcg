@@ -77,6 +77,7 @@ export const op13ReactionRules: readonly ReactionRule[] = [
     },
     ownTurn: true,
     oncePerTurn: true,
+    optionalActivation: true,
     program: { effect: { kind: "give-rested-don", player: "self", count: 2 } },
   },
   {

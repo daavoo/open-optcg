@@ -2886,7 +2886,6 @@ describe("OP08-046 Shakuyaku", () => {
     game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "fodder" });
     game.play({ type: "resolve-effect", optionId: "theirs" });
-    game.play({ type: "resolve-effect", optionId: "apply" });
     // The card off their hand is theirs to choose.
     expect(game.state.activePlayer).toBe("p2");
     game.play({ type: "resolve-effect", optionId: "t1" });

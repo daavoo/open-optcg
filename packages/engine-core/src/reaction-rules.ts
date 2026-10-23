@@ -195,6 +195,14 @@ export interface ReactionRule {
   opponentTurn?: boolean;
   oncePerTurn: boolean;
   /**
+   * The clause prints "This effect can be activated when ...": its controller
+   * may decline it and keep the `[Once Per Turn]` use for a later signal that
+   * turn (Bandai's OP07-038#1, OP12-081#3). A `[Once Per Turn]` reaction
+   * printed as "When ..., do ..." is mandatory -- ST10-014 Wire must draw and
+   * trash (ST10-014#2) -- unless its own clause is a "you may".
+   */
+  optionalActivation?: true;
+  /**
    * Keys `[Once Per Turn]` by the reacting copy rather than by card number, so
    * each copy on the board has its own use -- OP11-012 Franky, which ST31 runs
    * four of. Every copy on the field when the signal lands answers it, and a

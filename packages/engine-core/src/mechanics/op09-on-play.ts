@@ -20,6 +20,7 @@ import {
   drawAndDiscard,
   lifeToHandCost,
   lookAndAdd,
+  paidToHand,
 } from "./shared.js";
 import { twoRestedCharacters } from "./op09-shared.js";
 
@@ -590,20 +591,22 @@ export const op09OnPlayMechanics: SetMechanics = {
                   binding: "op09-kid-life",
                   to: { player: "self", zone: "hand" },
                 },
-                {
-                  kind: "if",
-                  condition: {
-                    kind: "leader-has-type",
-                    player: "self",
-                    type: "Kid Pirates",
+                paidToHand("op09-kid-life", [
+                  {
+                    kind: "if",
+                    condition: {
+                      kind: "leader-has-type",
+                      player: "self",
+                      type: "Kid Pirates",
+                    },
+                    then: {
+                      kind: "add-don",
+                      player: "self",
+                      count: 1,
+                      rested: false,
+                    },
                   },
-                  then: {
-                    kind: "add-don",
-                    player: "self",
-                    count: 1,
-                    rested: false,
-                  },
-                },
+                ]),
               ],
             },
           },

@@ -1,6 +1,11 @@
 /** OP14 `[On Play]` programs. */
 import { type SetMechanics } from "./registry.js";
-import { donMinus, lookAndAdd, lookAndAddOrTrash } from "./shared.js";
+import {
+  donMinus,
+  lookAndAdd,
+  lookAndAddOrTrash,
+  paidToHand,
+} from "./shared.js";
 import {
   costZeroOrEightPlusBody,
   opponentLifeToHand,
@@ -726,18 +731,20 @@ export const op14OnPlayMechanics: SetMechanics = {
                   binding: "op14-gloriosa-cost",
                   to: { player: "self", zone: "hand" },
                 },
-                {
-                  kind: "choose",
-                  selector: { player: "self", zone: "hand" },
-                  bind: "op14-gloriosa-back",
-                  min: 0,
-                  max: 1,
-                  effect: {
-                    kind: "move",
-                    binding: "op14-gloriosa-back",
-                    to: { player: "self", zone: "life", position: "top" },
+                paidToHand("op14-gloriosa-cost", [
+                  {
+                    kind: "choose",
+                    selector: { player: "self", zone: "hand" },
+                    bind: "op14-gloriosa-back",
+                    min: 0,
+                    max: 1,
+                    effect: {
+                      kind: "move",
+                      binding: "op14-gloriosa-back",
+                      to: { player: "self", zone: "life", position: "top" },
+                    },
                   },
-                },
+                ]),
               ],
             },
           },

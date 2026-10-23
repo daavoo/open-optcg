@@ -34,7 +34,7 @@ import {
   trashFromHand,
 } from "./op06-shared.js";
 import { SOURCE_BINDING } from "../mechanics.js";
-import { asOnPlayTrigger } from "./shared.js";
+import { asOnPlayTrigger, paidToHand } from "./shared.js";
 
 export const op06TriggerMechanics: SetMechanics = {
   trigger: [
@@ -117,9 +117,9 @@ export const op06TriggerMechanics: SetMechanics = {
       },
     ],
     [
-      // OP06-059 White Snake: a five-deep look, split between the two ends of
+      // OP06-059 White Snake: a five-deep look, all five sent to one end of
       // the deck in the player's own order -- which is what
-      // `order-to-bottom`'s `alternate` asks, a card at a time.
+      // `order-to-bottom`'s `alternate` asks (Bandai's OP15-066#1).
       "OP06-059",
       {
         effect: {
@@ -196,7 +196,7 @@ export const op06TriggerMechanics: SetMechanics = {
                   binding: "op06-nothing-trigger-cost",
                   to: { player: "self", zone: "hand" },
                 },
-                battleShield,
+                paidToHand("op06-nothing-trigger-cost", [battleShield]),
               ],
             },
           },

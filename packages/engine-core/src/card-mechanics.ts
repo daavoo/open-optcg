@@ -59,7 +59,7 @@ import {
   whenRestedPrograms,
 } from "./mechanics/index.js";
 import { cloneGameData } from "./clone.js";
-import { REACTION_RULES } from "./reaction-rules.js";
+import { REACTION_RULES, type ReactionRule } from "./reaction-rules.js";
 import type {
   ActivateMainProgram,
   CounterEventProgram,
@@ -959,7 +959,7 @@ export function getMechanicSignalInvocations(
           invocations.push({
             context: { sourcePlayerId: playerId, source },
             program: rule.oncePerTurn
-              ? declinableProgram(rule.program, useKey)
+              ? onceProgram(rule, useKey)
               : rule.program,
             automatic: true,
             ...(rule.oncePerTurn ? { declinable: rule.program } : {}),
@@ -973,8 +973,8 @@ export function getMechanicSignalInvocations(
 }
 
 /**
- * The `[Once Per Turn]` key a declinable reaction's offered effect spends, or
- * `undefined` for any other effect -- see `declinableProgram`.
+ * The `[Once Per Turn]` key a reaction's program spends first, or `undefined`
+ * for any other effect -- see `onceProgram`.
  */
 export function onceKeyOf(
   effect: MechanicEffect | undefined,
@@ -985,16 +985,23 @@ export function onceKeyOf(
 }
 
 /**
- * A `[Once Per Turn]` reaction as it is offered: optional, with the use spent
- * only when its controller applies it (see `MechanicProgramInvocation
- * .declinable`). A clause already printed as optional takes the spend inside
- * its own question rather than gaining a second one.
+ * A `[Once Per Turn]` reaction as it runs, its use spent as its first step.
+ *
+ * One that may be declined (`optionalActivation`, or a clause printed as a
+ * "you may") is offered as optional, the use spent only when its controller
+ * applies it; a printed optional takes the spend inside its own question
+ * rather than gaining a second one. Any other is mandatory and runs as
+ * printed (Bandai's ST10-014#2).
  */
-function declinableProgram(
-  program: MechanicProgram,
-  key: string,
-): MechanicProgram {
+function onceProgram(rule: ReactionRule, key: string): MechanicProgram {
+  const { program } = rule;
   const spend: MechanicEffect = { kind: "spend-once-per-turn", key };
+  if (!rule.optionalActivation && program.effect.kind !== "optional") {
+    return {
+      ...program,
+      effect: { kind: "sequence", effects: [spend, program.effect] },
+    };
+  }
   const body =
     program.effect.kind === "optional" ? program.effect.effect : program.effect;
   return {
@@ -1160,16 +1167,19 @@ export function dispatchMechanicInvocations(
       queuePendingContinuations(state, [invocation, ...continuations]);
       return { pending: null, invocation: null, continuations: [], events };
     }
-    // A declinable `[Once Per Turn]` clause that would do nothing is not put
-    // to its controller: nobody activates it for nothing, so it is passed over
-    // and keeps its use -- OP12-081 Koala on a Sanji played at 0 Life still
+    // A `[Once Per Turn]` clause that would do nothing is not put to its
+    // controller: nobody activates it for nothing, so it is passed over and
+    // keeps its use -- OP12-081 Koala on a Sanji played at 0 Life still
     // answers the Linlin Sanji plays (Bandai's OP12-081#3).
     // Nor is one whose use went while it waited, to an earlier offer of the
     // same clause applied first.
-    const onceKey =
-      invocation.declinable && invocation.program.effect.kind === "optional"
-        ? onceKeyOf(invocation.program.effect.effect)
-        : undefined;
+    const onceKey = invocation.declinable
+      ? onceKeyOf(
+          invocation.program.effect.kind === "optional"
+            ? invocation.program.effect.effect
+            : invocation.program.effect,
+        )
+      : undefined;
     if (onceKey !== undefined && state.oncePerTurn.includes(onceKey)) continue;
     if (
       invocation.declinable &&

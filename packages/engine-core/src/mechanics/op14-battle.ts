@@ -9,7 +9,12 @@ import {
   restableCards,
 } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { donMinus, payFromHand, trashForBattlePower } from "./shared.js";
+import {
+  donMinus,
+  paidToHand,
+  payFromHand,
+  trashForBattlePower,
+} from "./shared.js";
 import { sourceAtFivePower, topDeckToLife } from "./op14-shared.js";
 
 /**
@@ -547,23 +552,25 @@ export const op14BattleMechanics: SetMechanics = {
                     binding: "op14-issho-life",
                     to: { player: "self", zone: "hand" },
                   },
-                  {
-                    kind: "choose",
-                    selector: {
-                      player: "opponent",
-                      zone: ["board", "stage"],
-                      rested: true,
+                  paidToHand("op14-issho-life", [
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "opponent",
+                        zone: ["board", "stage"],
+                        rested: true,
+                      },
+                      bind: "op14-issho-lock",
+                      min: 0,
+                      max: 1,
+                      effect: {
+                        kind: "restrict",
+                        binding: "op14-issho-lock",
+                        restriction: "cannot-refresh",
+                        expiresAfterTurns: 1,
+                      },
                     },
-                    bind: "op14-issho-lock",
-                    min: 0,
-                    max: 1,
-                    effect: {
-                      kind: "restrict",
-                      binding: "op14-issho-lock",
-                      restriction: "cannot-refresh",
-                      expiresAfterTurns: 1,
-                    },
-                  },
+                  ]),
                 ],
               },
             },

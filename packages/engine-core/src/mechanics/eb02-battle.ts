@@ -6,7 +6,7 @@
  */
 import { SOURCE_BINDING } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { payFromHand } from "./shared.js";
+import { paidToHand, payFromHand } from "./shared.js";
 import { frankyRamp } from "./eb02-on-play.js";
 
 export const eb02BattleMechanics: SetMechanics = {
@@ -209,51 +209,53 @@ export const eb02BattleMechanics: SetMechanics = {
                     binding: "eb02-057-cost",
                     to: { player: "self", zone: "hand" },
                   },
-                  {
-                    kind: "choose",
-                    selector: {
-                      player: "opponent",
-                      zone: "board",
-                      category: "character",
-                      maxCost: 3,
-                    },
-                    bind: "eb02-057-target",
-                    min: 0,
-                    max: 1,
-                    effect: {
-                      kind: "choice",
-                      branches: [
-                        {
-                          id: "top",
-                          label: "Add it to the top of their Life cards",
-                          effect: {
-                            kind: "move",
-                            binding: "eb02-057-target",
-                            to: {
-                              player: "opponent",
-                              zone: "life",
-                              position: "top",
+                  paidToHand("eb02-057-cost", [
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "opponent",
+                        zone: "board",
+                        category: "character",
+                        maxCost: 3,
+                      },
+                      bind: "eb02-057-target",
+                      min: 0,
+                      max: 1,
+                      effect: {
+                        kind: "choice",
+                        branches: [
+                          {
+                            id: "top",
+                            label: "Add it to the top of their Life cards",
+                            effect: {
+                              kind: "move",
+                              binding: "eb02-057-target",
+                              to: {
+                                player: "opponent",
+                                zone: "life",
+                                position: "top",
+                              },
+                              faceUp: true,
                             },
-                            faceUp: true,
                           },
-                        },
-                        {
-                          id: "bottom",
-                          label: "Add it to the bottom of their Life cards",
-                          effect: {
-                            kind: "move",
-                            binding: "eb02-057-target",
-                            to: {
-                              player: "opponent",
-                              zone: "life",
-                              position: "bottom",
+                          {
+                            id: "bottom",
+                            label: "Add it to the bottom of their Life cards",
+                            effect: {
+                              kind: "move",
+                              binding: "eb02-057-target",
+                              to: {
+                                player: "opponent",
+                                zone: "life",
+                                position: "bottom",
+                              },
+                              faceUp: true,
                             },
-                            faceUp: true,
                           },
-                        },
-                      ],
+                        ],
+                      },
                     },
-                  },
+                  ]),
                 ],
               },
             },
