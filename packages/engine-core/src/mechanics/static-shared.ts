@@ -382,6 +382,34 @@ export function celestialDragonsCourt(context: AbilityContext): boolean {
   );
 }
 
+/**
+ * P-084 Buggy's ban, with `buggyOwner` the seat the Buggy stands on: while
+ * that player's Leader is [Buggy], no Character with a cost of 3 or 4 attacks,
+ * on either side. Current cost, so a discount or a "+N cost" moves a Character
+ * into or out of the band.
+ */
+export function buggyCostBandBan(
+  context: AbilityContext,
+  buggyOwner: PlayerId,
+): boolean {
+  if (context.isLeader) return false;
+  if (context.db.require(context.card.cardNumber).category !== "character") {
+    return false;
+  }
+  if (
+    !hasCardName(context.state.players[buggyOwner].leaderCardNumber, "Buggy")
+  ) {
+    return false;
+  }
+  const cost = costOf(
+    context.state,
+    context.playerId,
+    context.card,
+    context.db,
+  );
+  return cost === 3 || cost === 4;
+}
+
 /** OP05-040 Birdcage's gate, with `stageOwner` the seat the Stage sits on. */
 export function birdcageHolds(
   context: AbilityContext,

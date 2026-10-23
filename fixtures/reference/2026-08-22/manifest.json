@@ -693,6 +693,17 @@
       "authority": "primary",
       "contentType": "text/html",
       "bytes": 197073
+    },
+    {
+      "id": "bandai-cardlist-other",
+      "url": "https://en.onepiece-cardgame.com/cardlist/?series=569801",
+      "resolvedUrl": "https://en.onepiece-cardgame.com/cardlist/?series=569801",
+      "path": "bandai/cardlist-other.html",
+      "fetchedAt": "2026-10-23T14:58:45.651Z",
+      "sha256": "65b53ffc5d115b5029b9a22da2cff30e15c10f377b3a6814d76fac61eeeea36d",
+      "authority": "primary",
+      "contentType": "text/html",
+      "bytes": 475194
     }
   ]
 }

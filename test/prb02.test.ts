@@ -207,6 +207,31 @@ describe("PRB02-003 Lucky.Roux", () => {
   });
 });
 
+describe("PRB02-003 Lucky.Roux's [Blocker]", () => {
+  covers("PRB02-003", "[Blocker]");
+
+  it("takes a declared attack off the Leader and rests doing it", () => {
+    const game = scenario()
+      .decks(P1, P2)
+      .seed("prb02-003-blocker")
+      .atTurn(5, { active: "p1" })
+      .bareTable()
+      .withBoard("p1", [character("attacker", "ST31-002", { playedTurn: 1 })])
+      .withBoard("p2", [character("roux", "PRB02-003")])
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "p2-leader",
+    });
+    game.play({ type: "block", blockerInstanceId: "roux" });
+
+    expect(game.state.activeAttack?.targetInstanceId).toBe("roux");
+    expect(game.state.players.p2.board[0]?.rested).toBe(true);
+  });
+});
+
 describe("PRB02-004 Jewelry Bonney", () => {
   covers("PRB02-004", "[On Your Opponent's Attack]");
 

@@ -943,18 +943,21 @@ const setSeries = [
     // rarity is a provenance stamp rather than a pull frequency. The one `L`
     // on the page is the promo Leader.
     id: "P",
-    // Two pages, like EB-04's two: five `P-` identities are printed on the
-    // PRB-02 page and on no other, so the promo list alone leaves them with no
-    // primary record at all. The `prefix` filter drops PRB-02's own numbers,
-    // which belong to that series' entry above.
-    //
-    // P-084 Buggy is the one Standard-legal promo this still misses. Its only
-    // English print is on the OP-17 page at `SP CARD`, a collector treatment
-    // rather than a printable rarity, so there is no base print to stamp --
-    // recorded here rather than papered over with a rarity nothing supports.
-    files: ["cardlist-promo.html", "cardlist-prb02.html"],
+    // Four pages, because Bandai lists some promos only beside the product
+    // they shipped with: five `P-` identities are printed on the PRB-02 page
+    // and on no other, P-084 Buggy at rarity `P` on the ST-25 page (its OP-17
+    // print is the `SP CARD` collector treatment), and P-093 Trafalgar Law on
+    // the "Other Product Card" page (series 569801) beside four more promos
+    // printed nowhere else (P-072, P-152, P-153, P-154). The `prefix` filter
+    // drops each page's own numbers, which belong to their series' entries.
+    files: [
+      "cardlist-promo.html",
+      "cardlist-prb02.html",
+      "cardlist-st25.html",
+      "cardlist-other.html",
+    ],
     prefix: "P-",
-    expected: 103,
+    expected: 109,
     output: "generated-p.ts",
     binding: "pCardRecords",
   },

@@ -136,7 +136,10 @@ describe("deck provenance rows", () => {
     // sixteen distinct deck cards where the old list had fourteen, so 2 more.
     // The ChinoizeCup #105 (Blue/Yellow) Boa Hancock list adds 17: sixteen
     // distinct deck cards and its Leader.
-    expect(communityDeckCardRows).toHaveLength(953);
+    // The three EB-05 lists add 46: the ChinoizeCup #124 Buggy and #125 Law
+    // lists 16 each (fifteen distinct deck cards and a Leader), and the EB05
+    // Wisdom Robin list 14 (thirteen and a Leader).
+    expect(communityDeckCardRows).toHaveLength(999);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -206,7 +209,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(68);
+    expect(reports).toHaveLength(71);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
@@ -295,8 +298,11 @@ describe("recommended lists", () => {
   it("falls back to a Leader's only list, and to none when unmarked lists share one", () => {
     // OP12-040 fronts ST-33 and the Hiroshima list, and neither is marked.
     expect(recommendedDeckFor("OP12-040")).toBeUndefined();
-    expect(recommendedDeckFor("OP14-001")).toBe(
-      "(Red) Trafalgar Law - Official Feature Deck",
+    // OP14-001 fronts Bandai's feature deck and the ChinoizeCup #125 list,
+    // and neither is marked either.
+    expect(recommendedDeckFor("OP14-001")).toBeUndefined();
+    expect(recommendedDeckFor("OP15-039")).toBe(
+      "(Blue) Rebecca - Official Feature Deck",
     );
   });
 });

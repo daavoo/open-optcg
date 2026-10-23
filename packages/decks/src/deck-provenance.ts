@@ -46,6 +46,9 @@ import { op07VegapunkTournamentManifest } from "./op07-vegapunk-tournament-manif
 import { op14LawManifest } from "./op14-law-manifest.js";
 import { op14HancockManifest } from "./op14-hancock-manifest.js";
 import { op14HancockTournamentManifest } from "./op14-hancock-tournament-manifest.js";
+import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
+import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
+import { eb05RobinManifest } from "./eb05-robin-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -250,6 +253,17 @@ export type CommunityDeckId =
    */
   | "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105"
   /**
+   * The first EB-05 lists, from the online events that allowed the set ahead
+   * of its 30 Oct 2026 English release: second lists under the OP09-042 and
+   * OP14-001 Leaders beside Bandai's feature decks, read off Limitless TCG's
+   * results like the list above, and the deck guide's list for the new
+   * EB05-010 Leader, which has no placed list of its own kind yet. Each
+   * manifest says why that list.
+   */
+  | "(Blue) Buggy - 12th Place ChinoizeCup #124"
+  | "(Red) Trafalgar Law - 9th Place ChinoizeCup #125"
+  | "(Green/Yellow) Nico Robin - EB05 Wisdom List"
+  /**
    * Bandai's ST-18 precon, whose Leader is the OP05-060 reprint. Same standing
    * as ST-26 below: off a Bandai page rather than out of the ST31-36 loop, so
    * its identities are validated one by one here.
@@ -349,6 +363,10 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op07VegapunkTournamentManifest,
     "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
       op14HancockTournamentManifest,
+    "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
+    "(Red) Trafalgar Law - 9th Place ChinoizeCup #125":
+      op14LawTournamentManifest,
+    "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,

@@ -232,6 +232,7 @@ import {
   createOp06ReijuMulliganModule,
   OP06_REIJU_RULES,
 } from "./decks/op06-reiju-policy.js";
+import { createEb05RobinMulliganModule } from "./decks/eb05-robin-policy.js";
 import {
   createOp11KobyCounterPolicy,
   createOp11KobyMulliganModule,
@@ -454,6 +455,7 @@ export const LEADERS = {
   YELLOW_ENEL: "OP05-098",
   OP13_LUFFY: "OP13-001",
   ELBAPH_LUFFY: "OP17-079",
+  GREEN_YELLOW_ROBIN: "EB05-010",
 } as const;
 
 /**
@@ -1858,6 +1860,12 @@ registerPolicy({
 // Its DON!! parity sequencing and the hand-cost choices. One module per rule;
 // see `OP06_REIJU_RULES`.
 registerDeckRules(LEADERS.BLUE_PURPLE_REIJU, "op06-reiju", OP06_REIJU_RULES);
+// (Green/Yellow) Nico Robin's opening hand. See `eb05-robin-policy.ts`.
+registerPolicy({
+  deck: LEADERS.GREEN_YELLOW_ROBIN,
+  priority: MULLIGAN_PRIORITY,
+  create: createEb05RobinMulliganModule,
+});
 // (Red/Black) Koby's opening hand. See `op11-koby-policy.ts`.
 registerPolicy({
   deck: LEADERS.RED_BLACK_KOBY,
