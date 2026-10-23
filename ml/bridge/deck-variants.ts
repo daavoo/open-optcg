@@ -831,7 +831,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
     label:
       "Phoenix 1st (4-0) - PRB02 Pudding + Zala + Slow-Slow, no Zeus/Mamaragan",
     cards: {
-      "OP05-073": 2,
+      "ST34-002": 2,
       "OP07-076": 3,
       "OP08-062": 4,
       "OP11-067": 4,
@@ -847,7 +847,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "PRB02-010": 4,
     },
     source:
-      "1st (4-0), SB / LGS, 2026-09-17 (https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/)",
+      "1st (4-0), SB / LGS, 2026-09-17 (https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/); OP05-073 Zala rotated out with block 1, so its 2 slots are ST34-002 Charlotte Cracker, a 4-cost purple ramp body under this {Big Mom Pirates} Leader",
   },
   {
     base: "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
@@ -876,7 +876,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
     base: "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
     label: "Benjo 1st Place - Zala x3 + Mont-d'or x3",
     cards: {
-      "OP05-073": 3,
+      "EB01-061": 3,
       "OP09-078": 4,
       "OP16-119": 3,
       "OP17-074": 4,
@@ -892,14 +892,14 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "ST34-003": 2,
     },
     source:
-      "1st Place, Flame-Flame FC / Bandai(Utrecht), 2026-09-05 (https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/)",
+      "1st Place, Flame-Flame FC / Bandai(Utrecht), 2026-09-05 (https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/); OP05-073 Zala rotated out with block 1, so its 3 slots are EB01-061 Mr.2, a 4-cost purple ramp body with no Leader gate",
   },
   {
     base: "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
     label: "Max__711 2nd Place - Zala x4 + It's to Die For, no Daifuku",
     cards: {
       "EB04-058": 3,
-      "OP05-073": 4,
+      "EB01-061": 4,
       "OP08-076": 3,
       "OP09-078": 4,
       "OP12-112": 4,
@@ -913,7 +913,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "OP17-114": 4,
     },
     source:
-      "2nd Place, Flame-Flame FC / Bandai(Utrecht), 2026-09-05 (https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/)",
+      "2nd Place, Flame-Flame FC / Bandai(Utrecht), 2026-09-05 (https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/); OP05-073 Zala rotated out with block 1, so its 4 slots are EB01-061 Mr.2, a 4-cost purple ramp body with no Leader gate",
   },
   {
     base: "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
@@ -1433,7 +1433,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
     cards: {
       "EB02-056": 4,
       "EB03-058": 4,
-      "EB04-058": 4,
+      "EB02-054": 4,
       "OP07-098": 4,
       "OP07-100": 4,
       "OP07-101": 4,
@@ -1447,7 +1447,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "OP13-108": 3,
     },
     source:
-      "1st Place, FS(5-0) Cardshop (JP), 2026-02-08 (https://onepiecetopdecks.com/deck-list/japan-eb-04-deck-list-egghead-crisis/)",
+      "1st Place, FS(5-0) Cardshop (JP), 2026-02-08 (https://onepiecetopdecks.com/deck-list/japan-eb-04-deck-list-egghead-crisis/); EB04-058 Borsalino may not share a deck with OP07-115, which the base list plays four of, so its 4 slots are EB02-054 Sanji, another yellow 5-cost [Blocker]",
   },
   {
     base: "(Yellow) Vegapunk - 1st Place Store Battle",
