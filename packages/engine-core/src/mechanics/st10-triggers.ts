@@ -15,10 +15,10 @@ export const st10TriggerMechanics: SetMechanics = {
       // ST10-016 Gum-Gum Kong Gatling: off a Life card, +1000 on the Leader
       // that outlives the turn it was taken on.
       //
-      // A `[Trigger]` fires on the opponent's turn, so `expiresAfterTurns: 1`
-      // is what "until the end of your next turn" means in player-turns: the
-      // buff survives the rest of the attack it was revealed during and the
-      // controller's own next turn.
+      // `expiresAfterTurns` counts from the controller's turn, so 2 is "until
+      // the end of your next turn" wherever the Trigger is revealed: on the
+      // opponent's turn the buff lasts the rest of that attack and the
+      // controller's own next turn (Bandai's ST10-016#1).
       //
       // The selector reaches only the Leader, and the choice is "up to 1", so
       // the clause can be declined -- which is the right offer on a board where
@@ -35,7 +35,7 @@ export const st10TriggerMechanics: SetMechanics = {
             kind: "modify-power",
             binding: "st10-gatling-buff",
             amount: 1_000,
-            expiresAfterTurns: 1,
+            expiresAfterTurns: 2,
           },
         },
       },

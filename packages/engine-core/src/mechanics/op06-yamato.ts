@@ -11,7 +11,11 @@
  * is the one clause pointed the other way and keeps its own condition inline,
  * where the asymmetry is visible.
  */
-import { SOURCE_BINDING, type MechanicCondition } from "../mechanics.js";
+import {
+  SOURCE_BINDING,
+  type MechanicCondition,
+  type MechanicEffect,
+} from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { lookAndAdd, trashForBattlePower } from "./shared.js";
 // The Land of Wano Trigger six of the set's bodies print, defined once beside
@@ -226,7 +230,27 @@ export const op06YamatoMechanics: SetMechanics = {
             effect: {
               kind: "sequence",
               effects: [
-                { kind: "return-given-don", player: "self", count: 2 },
+                // Two picks of a card holding a given DON!!, one DON!! off
+                // each, so the two may come from different cards -- a
+                // Character and the Leader (Bandai's ST28-004#1).
+                ...[1, 2].map((pick): MechanicEffect => ({
+                  kind: "choose",
+                  selector: {
+                    player: "self",
+                    zone: "board",
+                    includeLeader: true,
+                    minGivenDon: 1,
+                  },
+                  bind: `st28-momonosuke-don-${pick}`,
+                  min: 1,
+                  max: 1,
+                  effect: {
+                    kind: "return-given-don",
+                    player: "self",
+                    count: 1,
+                    binding: `st28-momonosuke-don-${pick}`,
+                  },
+                })),
                 {
                   kind: "grant-keyword",
                   binding: SOURCE_BINDING,

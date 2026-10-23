@@ -229,7 +229,8 @@ export const op07TriggerMechanics: SetMechanics = {
             kind: "modify-power",
             binding: "op07-usopp-buff",
             amount: 2_000,
-            expiresAfterTurns: 1,
+            // Counted from the controller's turn: their next one, end of.
+            expiresAfterTurns: 2,
           },
         },
       },

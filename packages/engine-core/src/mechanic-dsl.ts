@@ -1413,6 +1413,13 @@ export type MechanicEffect =
       kind: "modify-power";
       binding: string;
       amount: number;
+      /**
+       * Turns the change lasts past this one, counted from its controller's
+       * turn: 0 is "during this turn", 1 is "until the end of your opponent's
+       * next turn" (resolved on the opponent's turn, that turn -- Bandai's
+       * ST21-015#2), 2 is "until the end of your next turn". The same
+       * reading holds for `modify-cost` and `grant-keyword`.
+       */
       expiresAfterTurns: number;
       /**
        * A binding whose card's *given DON!!* multiplies `amount`, for "−1000
@@ -1948,13 +1955,17 @@ export type MechanicEffect =
    * rest of the turn, because a rested DON!! cannot be given again until the
    * next Refresh Phase.
    *
-   * "Currently given" is the whole board: the Leader's pile and every
-   * Character's, taken Characters-first so the Leader's own attack power is
-   * the last thing the cost eats into. DON!! cards are interchangeable, so
-   * which ones move is not a decision and the node takes a count rather than a
-   * binding -- the same reading `rest-don` and `return-don` have.
+   * With `binding`, one DON!! comes off each bound card -- Leader or
+   * Character -- which is how the player picks which cards pay: Bandai's
+   * ST28-004#1 lets the two come from a Character and the Leader. Without
+   * one, `count` DON!! come off the whole board, Characters first.
    */
-  | { kind: "return-given-don"; player: PlayerRef; count: number }
+  | {
+      kind: "return-given-don";
+      player: PlayerRef;
+      count: number;
+      binding?: string;
+    }
   /** Rest N of the player's active DON!! as a cost. */
   | { kind: "rest-don"; player: PlayerRef; count: number }
   /**

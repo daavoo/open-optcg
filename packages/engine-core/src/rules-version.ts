@@ -100,5 +100,13 @@
  * face-up Life card cannot trigger and goes to the bottom of the deck even
  * when an effect adds it to the hand -- leaving a "Life card to hand" cost
  * unpaid. A recorded action list can meet offers that changed.
+ *
+ * Bumped to 1.15 for Bandai's ST-15 to ST-28 Q&As: a power, cost or keyword
+ * grant lasting into a later turn counts from its controller's turn (an
+ * off-turn "until the end of your opponent's next turn" ends that turn),
+ * "base power" reads a base an effect set, ST24-004 may lock an
+ * already-rested Character, OP10-030 stops ST24-005's end-of-turn
+ * activation, and ST28-004 picks which cards give back its two DON!!. A
+ * recorded action list can meet offers that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.14";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.15";

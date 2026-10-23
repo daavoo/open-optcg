@@ -181,6 +181,23 @@ export function formatOrderOption(order: readonly number[]): string {
  * have produced: a repeated index would place one card twice and lose another.
  */
 /**
+ * The last turn a grant lasting `afterTurns` turns is live, counted from its
+ * controller's turn. "Until the end of your opponent's next turn" resolved on
+ * the opponent's own turn means that turn (Bandai's ST21-015#2), so a grant
+ * made off-turn ends one turn sooner than one made on the controller's turn.
+ * "During this turn" (0) is this turn either way.
+ */
+function ownTurnExpiry(
+  state: GameState,
+  execution: MechanicExecution,
+  afterTurns: number,
+): number {
+  if (afterTurns === 0) return state.turn;
+  const offTurn = state.turnPlayerId !== execution.context.sourcePlayerId;
+  return state.turn + afterTurns - (offTurn ? 1 : 0);
+}
+
+/**
  * The same option with a split point: the first `atPrimary` cards of `order`
  * go to the node's own destination and the rest to its `alternate`. The rules
  * only allow the two ends -- 0 or every card -- because a "top or bottom"
@@ -1473,11 +1490,21 @@ export function continueExecution(
     if (effect.kind === "return-given-don") {
       const player =
         state.players[resolvePlayer(execution.context, effect.player)];
-      // Characters first, then the Leader: the printed cost says "N total" and
-      // leaves the pick to the player, and DON!! are interchangeable, so the
-      // only thing this order decides is which card loses power. Taking from
-      // the Characters first is the reading that keeps the Leader's attack
-      // intact, which is what the card paying the cost is for.
+      // One DON!! off each card the player picked, when the program asked.
+      if (effect.binding !== undefined) {
+        const playerId = resolvePlayer(execution.context, effect.player);
+        for (const holder of execution.bindings[effect.binding] ?? []) {
+          const pile =
+            holder === `${playerId}-leader`
+              ? player.leaderAttachedDon
+              : player.board.find((card) => card.instanceId === holder)
+                  ?.attachedDon;
+          player.restedDon.push(...(pile?.splice(0, 1) ?? []));
+        }
+        continue;
+      }
+      // Otherwise Characters first, then the Leader, which keeps the Leader's
+      // attack intact.
       let remaining = effect.count;
       const take = (pile: string[]) => {
         const moved = pile.splice(0, Math.min(remaining, pile.length));
@@ -2678,7 +2705,11 @@ export function continueExecution(
           (playerId) => instanceId === `${playerId}-leader`,
         );
         if (leaderPlayerId) {
-          const expiresAtTurn = state.turn + effect.expiresAfterTurns;
+          const expiresAtTurn = ownTurnExpiry(
+            state,
+            execution,
+            effect.expiresAfterTurns,
+          );
           if (effect.keyword === "Unblockable") {
             state.players[leaderPlayerId].leaderUnblockableUntilTurn =
               expiresAtTurn;
@@ -2718,7 +2749,11 @@ export function continueExecution(
         // pilot that answered the choice by anything but the first offer
         // crash the match.
         if (!target) continue;
-        const expiresAtTurn = state.turn + effect.expiresAfterTurns;
+        const expiresAtTurn = ownTurnExpiry(
+          state,
+          execution,
+          effect.expiresAfterTurns,
+        );
         if (effect.keyword === "Unblockable") {
           target.unblockableUntilTurn = expiresAtTurn;
         } else if (effect.keyword === "Rush") {
@@ -2901,7 +2936,11 @@ export function continueExecution(
           : printedCostOfBinding(state, execution, effect.perCostOf, db);
       const amount = effect.amount * multiplier * steps * costOf;
       if (amount === 0) continue;
-      const expiresAtTurn = state.turn + effect.expiresAfterTurns;
+      const expiresAtTurn = ownTurnExpiry(
+        state,
+        execution,
+        effect.expiresAfterTurns,
+      );
       const sourceCardNumber = execution.context.source.cardNumber;
       const sourceInstanceId = execution.context.source.instanceId;
       for (const instanceId of instanceIds) {
@@ -2961,7 +3000,11 @@ export function continueExecution(
         target.costModifiers ??= [];
         target.costModifiers.push({
           amount: effect.amount,
-          expiresAtTurn: state.turn + effect.expiresAfterTurns,
+          expiresAtTurn: ownTurnExpiry(
+            state,
+            execution,
+            effect.expiresAfterTurns,
+          ),
         });
       }
       continue;
