@@ -249,11 +249,13 @@ export interface StaticAbility {
    * the attacker's identity as well as whether it is the Leader, because
    * OP08-114 S-Hawk names an *attribute* -- "cannot be K.O.'d in battle by
    * <Slash> attribute cards" -- which no flag about the other side's role can
-   * answer.
+   * answer. `attributes` is the attacker's printed and granted attributes
+   * together -- a Character handed <Slash> for the turn (OP15-093) is a <Slash>
+   * attacker -- so a clause reads it rather than the card number's printing.
    */
   battleKoImmune?: (
     context: AbilityContext,
-    attacker: { isLeader: boolean; cardNumber: string },
+    attacker: BattleKoAttacker,
   ) => boolean;
   /**
    * An alternate win condition that fires when the *opponent* activates a
@@ -1492,6 +1494,14 @@ function leaderContext(
   };
 }
 
+/** The other side of a lost fight, as `battleKoImmune` sees it. */
+export interface BattleKoAttacker {
+  isLeader: boolean;
+  cardNumber: string;
+  /** Printed and granted together; see `boardCardAttributes`. */
+  attributes: readonly string[];
+}
+
 /**
  * Whether a Character survives losing a fight. See `battleKoImmune`.
  *
@@ -1502,7 +1512,7 @@ export function survivesBattleKo(
   state: GameState,
   ownerId: PlayerId,
   card: CardInstance,
-  attacker: { isLeader: boolean; cardNumber: string },
+  attacker: BattleKoAttacker,
   db: CardDatabase = cards,
 ): boolean {
   // The granted window beside the printed text -- OP06-030 Dosun hands it to

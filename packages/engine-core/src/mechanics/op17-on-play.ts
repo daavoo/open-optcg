@@ -1086,7 +1086,10 @@ export const op17OnPlayMechanics: SetMechanics = {
               player: "self",
               zone: "hand",
               category: "character",
-              anyOf: [{ type: "Land of Wano" }, { type: "Whitebeard Pirates" }],
+              anyOf: [
+                { type: "Land of Wano" },
+                { typeIncluding: "Whitebeard Pirates" },
+              ],
               maxPower: 6_000,
             },
             bind: "op17-oden-play",
@@ -1109,7 +1112,7 @@ export const op17OnPlayMechanics: SetMechanics = {
                 category: "character",
                 anyOf: [
                   { type: "Land of Wano" },
-                  { type: "Whitebeard Pirates" },
+                  { typeIncluding: "Whitebeard Pirates" },
                 ],
                 maxPower: 6_000,
               },
@@ -1211,13 +1214,13 @@ export const op17OnPlayMechanics: SetMechanics = {
     [
       // OP17-032 Limejuice: "[printed text omitted -- pnpm card:text OP17-032]"Red-Haired Pirates"[printed text omitted -- pnpm card:text OP17-032]"
       "OP17-032",
-      lookAndAdd(3, "op17-032-look", { type: "Red-Haired Pirates" }),
+      lookAndAdd(3, "op17-032-look", { typeIncluding: "Red-Haired Pirates" }),
     ],
     [
       // OP17-033 Lucky Roux: "[printed text omitted -- pnpm card:text OP17-033]"Red-Haired Pirates"[printed text omitted -- pnpm card:text OP17-033]" Its `[On Your Opponent's Attack]` half is registered
       // separately in `onOpponentAttackPrograms`.
       "OP17-033",
-      lookAndAdd(3, "op17-033-look", { type: "Red-Haired Pirates" }),
+      lookAndAdd(3, "op17-033-look", { typeIncluding: "Red-Haired Pirates" }),
     ],
     [
       // OP17-040 Edward.Newgate: "[On Play] Draw 1 card." Its watcher clause --
@@ -1296,7 +1299,7 @@ export const op17OnPlayMechanics: SetMechanics = {
             selector: {
               player: "self",
               zone: "hand",
-              type: "Rocks Pirates",
+              typeIncluding: "Rocks Pirates",
             },
             bind: "op17-kaido-reveal",
             min: 3,

@@ -255,7 +255,7 @@ export function applyAttack({
     } else if (program.oncePerTurn) {
       // A program that resolved without asking anything has been used --
       // the same rule `offerOnOpponentAttackEffect` follows, since
-      // `requires` (and `handCardsOfType`) already guarantee this dispatch
+      // `requires` (and `handCardsMatching`) already guarantee this dispatch
       // did something rather than silently no-op.
       state.oncePerTurn.push(oncePerTurnKey);
     }

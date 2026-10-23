@@ -12,7 +12,6 @@ import {
   cards as defaultCardDatabase,
   clauseText,
   hasCardName,
-  hasCardType,
   type CardDatabase,
   type ClauseMarker,
 } from "@one-piece-sim/cards";
@@ -946,18 +945,10 @@ export function winsOnEmptyDeck(
     .winsOnEmptyDeck;
 }
 
-/** Whether a player's hand holds enough cards of the required type. */
-export function handHasType(
-  player: { hand: readonly CardInstance[] },
-  required: { type: string; count: number },
-): boolean {
-  return (
-    player.hand.filter((card) => hasCardType(card.cardNumber, required.type))
-      .length >= required.count
-  );
-}
-
-/** The category counterpart of `handHasType`, for "1 Event or Stage card". */
+/**
+ * Whether a player's hand holds enough cards of the required categories, for
+ * "1 Event or Stage card".
+ */
 export function handHasCategory(
   player: { hand: readonly CardInstance[] },
   required: { categories: readonly string[]; count: number },

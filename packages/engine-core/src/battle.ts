@@ -9,8 +9,9 @@
  * work of migrating them to `mechanics/` has one place to start.
  */
 import {
+  cardAttributes,
   cards as defaultCardDatabase,
-  hasCardType,
+  hasCardTypeIncluding,
   type CardDatabase,
 } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
@@ -33,6 +34,7 @@ import { bankDamagedLifeCard } from "./life.js";
 import { damageReplacementProtectors } from "./damage-replacement.js";
 import {
   battleParticipant,
+  boardCardAttributes,
   conditionMatches,
   leaderBattledCharacterKey,
   programBattlePower,
@@ -54,7 +56,6 @@ import {
   leaderInstanceId,
   hasKeyword,
   offerBuggyBlockerEffect,
-  handHasType,
   handHasCategory,
   restLocked,
 } from "./board.js";
@@ -440,12 +441,6 @@ export function onOpponentAttackSources(
       }
       if (requires.sourceActive && !active) return [];
       if (
-        requires.handCardsOfType !== undefined &&
-        !handHasType(defender, requires.handCardsOfType)
-      ) {
-        return [];
-      }
-      if (
         requires.handCardsOfCategory !== undefined &&
         !handHasCategory(defender, requires.handCardsOfCategory)
       ) {
@@ -590,8 +585,11 @@ export function leaderWatcherSources(
         return [];
       }
       if (
-        requires.leaderType !== undefined &&
-        !hasCardType(controller.leaderCardNumber, requires.leaderType)
+        requires.leaderTypeIncluding !== undefined &&
+        !hasCardTypeIncluding(
+          controller.leaderCardNumber,
+          requires.leaderTypeIncluding,
+        )
       ) {
         return [];
       }
@@ -717,12 +715,6 @@ export function eligibleWhenAttackingProgram(
     if (
       requires.activeDon !== undefined &&
       player.activeDon.length < requires.activeDon
-    ) {
-      return undefined;
-    }
-    if (
-      requires.handCardsOfType !== undefined &&
-      !handHasType(player, requires.handCardsOfType)
     ) {
       return undefined;
     }
@@ -908,6 +900,25 @@ function attackingCardNumber(state: GameState, attack: ActiveAttack): string {
   );
 }
 
+/**
+ * The attacker's attributes, printed or granted. A Character handed <Slash>
+ * for the turn (OP15-093) is a <Slash> attacker to every "cannot be K.O.'d in
+ * battle by <Slash>" clause, so the battle site reads the board card rather
+ * than its card number.
+ */
+function attackingCardAttributes(
+  state: GameState,
+  attack: ActiveAttack,
+  db: CardDatabase,
+): readonly string[] {
+  const board = state.players[attack.attackerPlayerId].board.find(
+    (card) => card.instanceId === attack.attackerInstanceId,
+  );
+  return board
+    ? boardCardAttributes(state, board, db)
+    : cardAttributes(db.require(attackingCardNumber(state, attack)));
+}
+
 export function resolveBattle(
   state: GameState,
   events: PublicEvent[],
@@ -966,12 +977,19 @@ export function resolveBattle(
     // cannot happen would spend a card for nothing.
     if (
       threatened &&
-      survivesBattleKo(state, attack.defenderPlayerId, threatened, {
-        isLeader:
-          attack.attackerInstanceId ===
-          leaderInstanceId(attack.attackerPlayerId),
-        cardNumber: attackingCardNumber(state, attack),
-      })
+      survivesBattleKo(
+        state,
+        attack.defenderPlayerId,
+        threatened,
+        {
+          isLeader:
+            attack.attackerInstanceId ===
+            leaderInstanceId(attack.attackerPlayerId),
+          cardNumber: attackingCardNumber(state, attack),
+          attributes: attackingCardAttributes(state, attack, db),
+        },
+        db,
+      )
     ) {
       events.push({
         type: "battle-resolved",

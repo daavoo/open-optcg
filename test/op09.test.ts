@@ -3644,6 +3644,38 @@ describe("OP09-105 Sanji", () => {
     ).toEqual(["life-card", "pitch-a", "pitch-b"]);
   });
 
+  it("trashes the one card a hand of one holds", () => {
+    const game = defending("op09-105-short")
+      .bareTable()
+      .withLeader("p1", "OP13-100")
+      .withLife("p1", [instance("life-card", "OP09-105")])
+      .withDeckTop("p1", [instance("banked", "ST32-004")])
+      .withHand("p1", [instance("pitch-a", "ST32-004")])
+      .withBoard("p2", [character("attacker", "ST32-004")])
+      .build();
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "p1-leader",
+    });
+    while (
+      game.state.phase === "block" ||
+      (game.state.phase === "counter" &&
+        !game
+          .legalActions()
+          .some((action) => action.type === "resolve-trigger"))
+    ) {
+      game.pass();
+    }
+    game.play({ type: "resolve-trigger", summary: "Activate Trigger" });
+    settle(game);
+
+    expect(game.state.players.p1.hand).toHaveLength(0);
+    expect(
+      game.state.players.p1.trash.map((card) => card.instanceId).sort(),
+    ).toEqual(["life-card", "pitch-a"]);
+  });
+
   it("is not offered behind a Leader of another type", () => {
     const game = triggerFrom("op09-105-other", "OP09-105");
     expect(

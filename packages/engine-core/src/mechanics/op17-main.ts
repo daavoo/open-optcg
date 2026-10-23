@@ -154,7 +154,9 @@ export const op17MainMechanics: SetMechanics = {
       "OP17-019",
       {
         cost: 1,
-        program: lookAndAdd(5, "op17-019-look", { type: "Whitebeard Pirates" }),
+        program: lookAndAdd(5, "op17-019-look", {
+          typeIncluding: "Whitebeard Pirates",
+        }),
       },
     ],
     [
@@ -163,7 +165,9 @@ export const op17MainMechanics: SetMechanics = {
       "OP17-037",
       {
         cost: 1,
-        program: lookAndAdd(5, "op17-037-look", { type: "Red-Haired Pirates" }),
+        program: lookAndAdd(5, "op17-037-look", {
+          typeIncluding: "Red-Haired Pirates",
+        }),
       },
     ],
     [

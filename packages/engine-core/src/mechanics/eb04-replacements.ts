@@ -49,8 +49,7 @@ export const eb04ReplacementMechanics: SetMechanics = {
       // `removal: "off-field"` rather than `"ko"`: the printed clause says
       // "removed from the field", which is the wider window -- a bounce to hand
       // and a place-at-the-bottom are both covered, and a K.O. is one case of
-      // it. That reading is what makes a 6-cost 7000 hard to answer with
-      // anything but battle.
+      // it.
       //
       // `requires` is the printed "If your Leader's type includes 'Navy'",
       // which `protects` cannot express -- it filters the *threatened* card on
@@ -62,10 +61,15 @@ export const eb04ReplacementMechanics: SetMechanics = {
       // clause quotes a substring, so a Leader typed {Navy HQ} or
       // {Former Navy} satisfies it the way the words say.
       //
+      // `opponentEffectOnly: false`: the clause names no source, so a lost
+      // battle and its controller's own removal are answered too -- OP11-092
+      // Helmeppo's end-of-turn bottom-deck of a Koby it played from the trash
+      // among them. The same reading as OP17-043 Ganzui's.
+      //
       // Its `[Your Turn]` draw is a `ReactionRule` in `card-mechanics.ts`.
       "EB04-044",
       {
-        opponentEffectOnly: true,
+        opponentEffectOnly: false,
         oncePerTurn: true,
         removal: "off-field",
         requires: {

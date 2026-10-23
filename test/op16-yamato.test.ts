@@ -275,6 +275,34 @@ describe("OP16-094 Portgas.D.Ace", () => {
     expect(game.state.players.p1.trash).toHaveLength(2);
   });
 
+  it("[On K.O.] trashes the one card a hand of one holds", () => {
+    const game = scenario()
+      .decks(OPPONENT, DECK)
+      .seed("op16-094-ko-short")
+      .atTurn(11, { active: "p1" })
+      .bareTable()
+      .withBoard("p1", [character("attacker", "OP16-096")])
+      .withBoard("p2", [character("ace", "OP16-094", { rested: true })])
+      .withHand("p1", [instance("held", "ST32-005")])
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "ace",
+    });
+    while (game.state.phase === "block" || game.state.phase === "counter") {
+      game.pass();
+    }
+    answer(game);
+
+    expect(boardIds(game.state, "p2")).toEqual([]);
+    expect(game.state.players.p1.hand).toHaveLength(0);
+    expect(game.state.players.p1.trash.map((card) => card.instanceId)).toEqual([
+      "held",
+    ]);
+  });
+
   it("[Activate: Main] gives a rested DON!! to a Land of Wano Leader", () => {
     const game = table("op16-094-main")
       .withBoard("p1", [character("ace", "OP16-094")])

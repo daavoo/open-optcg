@@ -139,7 +139,7 @@ export const op17TriggerMechanics: SetMechanics = {
             selector: {
               player: "self",
               zone: "hand",
-              type: "Whitebeard Pirates",
+              typeIncluding: "Whitebeard Pirates",
             },
             bind: "op17-marco-cost",
             min: 1,

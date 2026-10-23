@@ -6,7 +6,11 @@
  * `mechanics.ts` re-exports all of it, so a set module's
  * `import ... from "../mechanics.js"` keeps working.
  */
-import { hasCardName, hasCardType } from "@one-piece-sim/cards";
+import {
+  hasCardName,
+  hasCardType,
+  hasCardTypeIncluding,
+} from "@one-piece-sim/cards";
 import type {
   GrantableKeyword,
   PlayerId,
@@ -512,6 +516,13 @@ export interface BattleTargetFilter {
   isLeader?: boolean;
   type?: string;
   /**
+   * "…with a type including \"Whitebeard Pirates\"" -- the substring form of
+   * `type`, the battle-side twin of `CardSelector.typeIncluding`. OP17's
+   * Counters print it, and it is what lets {Whitebeard Pirates Allies},
+   * {Former Whitebeard Pirates} and {Former Rocks Pirates} bodies take the buff.
+   */
+  typeIncluding?: string;
+  /**
    * A disjunction of types, for "[printed text omitted -- pnpm card:text <card>]" -- OP11-039 Vagabond Drill. `type` names one and
    * cannot say this, and running the buff twice is not an option: the engine
    * holds a battle's power as one scalar.
@@ -588,6 +599,12 @@ export function battleTargetMatches(
   if (
     filter.type !== undefined &&
     !hasCardType(participant.cardNumber, filter.type)
+  ) {
+    return false;
+  }
+  if (
+    filter.typeIncluding !== undefined &&
+    !hasCardTypeIncluding(participant.cardNumber, filter.typeIncluding)
   ) {
     return false;
   }
@@ -1676,6 +1693,12 @@ export type MechanicEffect =
        * attributes qualifies on any of them (Bandai's EB05-057#1).
        */
       anyOfAttributes?: readonly string[];
+      /**
+       * "1 Character with a type including \"Whitebeard Pirates\"" -- the
+       * substring form of `type` (OP13-044 Curiel), which also reaches
+       * {Whitebeard Pirates Allies} and {Former Whitebeard Pirates}.
+       */
+      typeIncluding?: string;
       /**
        * Which DON!! moves. Defaults to `"rested"`, the printed "give up to N
        * rested DON!! cards" every earlier card carries.

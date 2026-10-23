@@ -422,17 +422,19 @@ export const op05OnPlayMechanics: SetMechanics = {
     ],
     [
       // OP05-079 Viola: the *opponent* puts three of their own trash cards under
-      // their deck, in an order of their choosing -- so the pick is theirs. A
-      // trash of fewer than three simply cannot pay and nothing moves, which is
-      // the reading every fixed-count `choose` in the pool takes.
+      // their deck, in an order of their choosing -- so the pick is theirs. It
+      // is mandatory, not a cost, so a trash of fewer than three places what it
+      // has (rule 8-4-4-1); `exhaustive` says that where `min: 3` would skip
+      // the clause.
       "OP05-079",
       {
         effect: {
           kind: "choose",
           selector: { player: "opponent", zone: "trash" },
           bind: "op05-viola-bury",
-          min: 3,
+          min: 0,
           max: 3,
+          exhaustive: true,
           chooser: "opponent",
           effect: {
             kind: "order-to-bottom",

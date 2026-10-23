@@ -107,9 +107,8 @@ export const op13BattleMechanics: SetMechanics = {
       // `op13-triggers.ts`.
       //
       // The type filter reaches both halves, which is what `give-rested-don`'s own
-      // `type` does -- and "a type including" is why {Whitebeard Pirates Allies}
-      // qualifies too. `anyOfTypes` carries the substring reading as the two
-      // printed spellings.
+      // type filters do -- and "a type including" is why {Whitebeard Pirates
+      // Allies} and {Former Whitebeard Pirates} qualify too.
       "OP13-044",
       {
         oncePerTurn: false,
@@ -118,7 +117,7 @@ export const op13BattleMechanics: SetMechanics = {
             kind: "give-rested-don",
             player: "self",
             count: 1,
-            anyOfTypes: ["Whitebeard Pirates", "Whitebeard Pirates Allies"],
+            typeIncluding: "Whitebeard Pirates",
           },
         },
       },

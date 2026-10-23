@@ -2466,6 +2466,18 @@ describe("OP05-079 Viola", () => {
     ]);
     expect(game.state.players.p2.deck).toHaveLength(3);
   });
+
+  it("places what it can from a trash of fewer than three", () => {
+    const game = table("op05-079-short")
+      .bareTable()
+      .withHand("p1", [instance("viola", "OP05-079")])
+      .withTrash("p2", deepTrash("p2", 2))
+      .build();
+    game.play({ type: "play-card", cardNumber: "OP05-079" });
+    settle(game);
+    expect(game.state.players.p2.trash).toHaveLength(0);
+    expect(game.state.players.p2.deck).toHaveLength(2);
+  });
 });
 
 // --- Black -------------------------------------------------------------------

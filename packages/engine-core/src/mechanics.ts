@@ -14,6 +14,7 @@ import {
   cards as defaultCardDatabase,
   hasCardName,
   hasCardType,
+  hasCardTypeIncluding,
   type CardDatabase,
 } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
@@ -1343,7 +1344,9 @@ export function continueExecution(
         (effect.anyOfAttributes === undefined ||
           effect.anyOfAttributes.some((attribute) =>
             attributes().includes(attribute),
-          ));
+          )) &&
+        (effect.typeIncluding === undefined ||
+          hasCardTypeIncluding(cardNumber, effect.typeIncluding));
       // `player`'s cards first: it is the side each of these cards was written
       // for, so a pilot that takes the first offer keeps doing so.
       const owners: PlayerId[] = effect.eitherOwner
@@ -2625,10 +2628,33 @@ export function continueExecution(
     if (effect.kind === "at-end-of-turn") {
       const playerId = execution.context.sourcePlayerId;
       const player = state.players[playerId];
+      if (effect.action === "bury") {
+        // Through the `move` node rather than a direct splice, because the
+        // bury removes a Character from the field and a removal replacement
+        // that names no source answers it -- EB04-044 Koby played by OP11-092
+        // Helmeppo can trash a card to stay.
+        player.endOfTurnPrograms = [
+          ...(player.endOfTurnPrograms ?? []),
+          {
+            turn: state.turn,
+            source: {
+              instanceId: execution.context.source.instanceId,
+              cardNumber: execution.context.source.cardNumber,
+            },
+            effect: {
+              kind: "move",
+              binding: END_OF_TURN_OWED_BINDING,
+              to: { player: "owner", zone: "deck", position: "bottom" },
+            },
+            bindings: { [END_OF_TURN_OWED_BINDING]: [...instanceIds] },
+          },
+        ];
+        continue;
+      }
       player.endOfTurnCardActions = [
         ...(player.endOfTurnCardActions ?? []),
         ...instanceIds.map((instanceId) => ({
-          kind: effect.action,
+          kind: "set-active" as const,
           instanceId,
           turn: state.turn,
         })),
@@ -3273,6 +3299,9 @@ export function continueExecution(
 }
 
 export const SOURCE_BINDING = "source";
+
+/** The cards an `at-end-of-turn` bury is owed by, in its booked step. */
+export const END_OF_TURN_OWED_BINDING = "end-of-turn-owed";
 
 /**
  * The binding a `knock-out` node keeps each target's eligible protectors

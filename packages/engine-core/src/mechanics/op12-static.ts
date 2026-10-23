@@ -64,8 +64,7 @@ export const op12StaticAbilities: readonly StaticAbility[] = [
     cardNumber: "OP12-036",
     scope: "self",
     battleKoImmune: (context, attacker) =>
-      leaderIsSlash(context) &&
-      cardAttributes(context.db.require(attacker.cardNumber)).includes("Slash"),
+      leaderIsSlash(context) && attacker.attributes.includes("Slash"),
   },
   {
     cardNumber: "OP12-036",

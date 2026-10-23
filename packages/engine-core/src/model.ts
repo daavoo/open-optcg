@@ -301,8 +301,8 @@ export interface PlayerState {
    */
   leaderAttacksActiveUntilTurn?: number;
   /**
-   * Cards this player's effects have booked something for at the end of the
-   * turn, and what is owed on each.
+   * Cards this player's effects have booked to be set active at the end of the
+   * turn.
    *
    * "[printed text omitted -- pnpm card:text OP11-014]" (OP11-092 Helmeppo) and "[printed text omitted -- pnpm card:text OP11-092]" (OP11-107 Topknot Neptunian).
    * Neither is an `[End of Your Turn]` clause -- nothing is printed on the card
@@ -312,9 +312,13 @@ export interface PlayerState {
    *
    * `turn` is the turn it was booked on, so a debt that somehow survives its own
    * turn is dropped rather than paid late.
+   *
+   * A bury is not booked here: it removes a Character from the field, so it is
+   * an `endOfTurnPrograms` step that can raise the "instead" a removal
+   * replacement prints (EB04-044 Koby, OP17-043 Ganzui).
    */
   endOfTurnCardActions?: readonly {
-    kind: "bury" | "set-active";
+    kind: "set-active";
     instanceId: string;
     turn: number;
   }[];
@@ -322,11 +326,17 @@ export interface PlayerState {
    * Steps booked for the end of the turn by `at-end-of-turn-effect`, each run
    * by `endTurn` as its card's own program -- so it can ask, as OP06-006
    * Saga's choice of {FILM} Character does. Absent when nothing is booked.
+   *
+   * `bindings` are the cards the booking clause already chose, for a step
+   * owed by them rather than chosen then (OP11-092 Helmeppo's bury). `endTurn`
+   * keeps only the ones still on this player's field: "that Character" means
+   * nothing once it has left.
    */
   endOfTurnPrograms?: readonly {
     turn: number;
     source: { instanceId: string; cardNumber: string };
     effect: MechanicEffect;
+    bindings?: Readonly<Record<string, readonly string[]>>;
   }[];
   /**
    * DON!! this player owes back at the end of the turn, down to the opponent's
