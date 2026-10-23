@@ -13,6 +13,7 @@ import {
   turnLifeFaceDown,
 } from "./op11-shared.js";
 import {
+  haveNamed,
   donMinus,
   lookAndAdd,
   lookAndAddOrTrash,
@@ -822,13 +823,7 @@ export const op11OnPlayMechanics: SetMechanics = {
       {
         effect: {
           kind: "if",
-          condition: {
-            kind: "selector-count",
-            player: "self",
-            selector: { zone: "board", name: "Camie" },
-            operator: "gte",
-            value: 1,
-          },
+          condition: haveNamed("Camie"),
           then: {
             kind: "sequence",
             effects: [

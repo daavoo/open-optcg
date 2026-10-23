@@ -9,11 +9,9 @@ export const op16MainMechanics: SetMechanics = {
     [
       // OP16-022 Monkey.D.Luffy (Leader): `pnpm card:text OP16-022`.
       //
-      // Migrated off the hand-written activation register, and off a
-      // once-per-turn key of its own (`<turn>:<player>:OP16-022`) onto the one
-      // every other activation uses. `every-character-matches` is the printed
-      // "if the only Characters on your field are {Impel Down}", and it is
-      // vacuously true on an empty board -- the same answer `board.every` gave.
+      // `every-character-matches` is the printed "if the only Characters on
+      // your field are {Impel Down}", and it needs at least one Character: an
+      // empty board does not meet it (Bandai's OP16-022#1).
       "OP16-022",
       {
         oncePerTurn: true,
@@ -293,10 +291,12 @@ export const op16MainMechanics: SetMechanics = {
               effects: [
                 { kind: "rest", binding: SOURCE_BINDING },
                 {
+                  // Either side's Character meets it: Bandai rules an
+                  // opponent's 8-cost enough on its own (OP16-081#1).
                   kind: "if",
                   condition: {
                     kind: "selector-count",
-                    player: "self",
+                    player: "either",
                     selector: {
                       zone: "board",
                       category: "character",
@@ -639,21 +639,48 @@ export const op16MainMechanics: SetMechanics = {
               value: 10,
             },
             then: {
-              kind: "select",
-              selector: {
-                player: "self",
-                zone: "board",
-                category: "character",
-                name: "Prisoner of Impel Down",
-              },
-              bind: "op16-riot-set",
-              count: "all",
-              effect: {
-                kind: "set-base-power",
-                binding: "op16-riot-set",
-                value: 7000,
-                expiresAfterTurns: 0,
-              },
+              kind: "sequence",
+              effects: [
+                {
+                  kind: "select",
+                  selector: {
+                    player: "self",
+                    zone: "board",
+                    category: "character",
+                    name: "Prisoner of Impel Down",
+                  },
+                  bind: "op16-riot-set",
+                  count: "all",
+                  effect: {
+                    kind: "set-base-power",
+                    binding: "op16-riot-set",
+                    value: 7000,
+                    expiresAfterTurns: 0,
+                  },
+                },
+                {
+                  // "All of your ... cards" reaches the Leader too, when it
+                  // has the name (Bandai's OP16-058#1).
+                  kind: "if",
+                  condition: {
+                    kind: "selector-count",
+                    player: "self",
+                    selector: {
+                      zone: [],
+                      includeLeader: true,
+                      name: "Prisoner of Impel Down",
+                    },
+                    operator: "gte",
+                    value: 1,
+                  },
+                  then: {
+                    kind: "set-leader-base-power",
+                    player: "self",
+                    value: 7000,
+                    expiresAfterTurns: 0,
+                  },
+                },
+              ],
             },
           },
         },

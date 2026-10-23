@@ -11,6 +11,7 @@ import {
   placeCharacter,
 } from "../effects.js";
 import { type EffectContext } from "./context.js";
+import { returnOwnCharacterToHand } from "./costs.js";
 import { type PublicEvent } from "@one-piece-sim/protocol";
 
 /** `free-play`. */
@@ -130,16 +131,12 @@ export function resolveReturnOwnForFreePlay({
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
   }
   const player = state.players[effect.playerId];
-  const boardIndex = player.board.findIndex(
-    (card) => card.instanceId === optionId,
+  const events = returnOwnCharacterToHand(
+    state,
+    effect.playerId,
+    optionId,
+    effect.sourceCardNumber,
   );
-  const [returned] = player.board.splice(boardIndex, 1);
-  if (!returned) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
-  player.activeDon.push(...(returned.attachedDon ?? []));
-  player.hand.push({
-    instanceId: returned.instanceId,
-    cardNumber: returned.cardNumber,
-  });
   const eligibleInstanceIds = player.hand
     .filter((card) => {
       const definition = db.require(card.cardNumber);
@@ -160,5 +157,5 @@ export function resolveReturnOwnForFreePlay({
           eligibleInstanceIds,
         }
       : null;
-  return [];
+  return events;
 }

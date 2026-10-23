@@ -44,11 +44,21 @@ const pizarroRecursion: MechanicProgram = {
   },
 };
 
-/** OP16-103 Van Augur. */
+/**
+ * OP16-103 Van Augur. `[Opponent's Turn]` is a `turn-player` gate, and its
+ * `[Trigger]` runs this same program, so a Trigger revealed on its owner's own
+ * turn does nothing (Bandai's OP16-103#1).
+ */
 const vanAugurRecursion: MechanicProgram = {
   effect: {
     kind: "if",
-    condition: blackbeardLeader,
+    condition: {
+      kind: "all-of",
+      conditions: [
+        { kind: "turn-player", player: "opponent" },
+        blackbeardLeader,
+      ],
+    },
     then: {
       kind: "sequence",
       effects: [
@@ -319,11 +329,7 @@ export const op16TriggerMechanics: SetMechanics = {
     ],
     [
       // OP16-103 Van Augur: "[printed text omitted -- pnpm card:text OP16-103]"
-      // Shared with its `[Trigger]`.
-      //
-      // The `[Opponent's Turn]` gate is on the `[On K.O.]` only: a Trigger
-      // always fires on the opponent's turn by definition, so the same program
-      // reads correctly from both.
+      // Shared with its `[Trigger]`, gate and all.
       "OP16-103",
       vanAugurRecursion,
     ],

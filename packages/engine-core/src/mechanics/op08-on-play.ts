@@ -13,7 +13,7 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { lookAndAdd, payFromHand, revealTopThen } from "./shared.js";
+import { haveNamed, lookAndAdd, payFromHand, revealTopThen } from "./shared.js";
 import {
   chopperDig,
   deckTopToLife,
@@ -28,7 +28,7 @@ import {
   whitebeardLeader,
 } from "./op08-shared.js";
 
-/** "If you have [<name>]" -- the Drum Kingdom pair's gate on each other. */
+/** "If you have a [<name>] Character" -- a Character only, unlike `haveNamed`. */
 const hasNamed = (name: string) =>
   ({
     kind: "selector-count",
@@ -73,7 +73,7 @@ export const op08OnPlayMechanics: SetMechanics = {
       {
         effect: {
           kind: "if",
-          condition: hasNamed("Chess"),
+          condition: haveNamed("Chess"),
           then: {
             kind: "choose",
             selector: {

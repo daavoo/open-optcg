@@ -126,12 +126,10 @@ const ON_PLAY_HANDLERS = new Map<string, OnPlayHandler>([
   [
     "OP16-045",
     ({ player, playerId, source, db }) => {
+      // Crocodile itself is one of "your Characters" and may pay (Bandai's
+      // OP16-045#1).
       const eligibleInstanceIds = player.board
-        .filter(
-          (card) =>
-            card.instanceId !== source.instanceId &&
-            (db.require(card.cardNumber).cost ?? 0) >= 2,
-        )
+        .filter((card) => (db.require(card.cardNumber).cost ?? 0) >= 2)
         .map((card) => card.instanceId);
       return {
         pending:
