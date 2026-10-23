@@ -1,6 +1,7 @@
 import { requireKnownCard } from "@one-piece-sim/cards";
 import {
   compareFeaturePageEntries,
+  deckDisplayName,
   deckManifests,
   deckShelf,
   isRecommendedDeck,
@@ -10,11 +11,7 @@ import {
 import { assetUrl } from "./assets.js";
 import { escapeHtml } from "./card-text.js";
 import { icon } from "./icons.js";
-import {
-  deckDisplayName,
-  deckManifestFor,
-  type SavedDeck,
-} from "./deck-labels.js";
+import { deckManifestFor, type SavedDeck } from "./deck-labels.js";
 
 /**
  * The paired deck `<select>` and leader preview.
@@ -82,9 +79,9 @@ export function updateDeckLeaderPreview(
   if (preview) preview.outerHTML = renderDeckLeaderPreview(savedDecks, deck);
 }
 
-/** Names compared without the punctuation they disagree about: a deck id
-    writes "Eustass Kid" for a Leader printed `Eustass"Captain"Kid`, and
-    "Monkey.D.Luffy" for one printed "Monkey.D. Luffy". */
+/** Names compared without the punctuation they disagree about: a name a
+    player gave a deck may write "Eustass Kid" for a Leader printed
+    `Eustass"Captain"Kid`, or "Monkey.D.Luffy" for "Monkey.D. Luffy". */
 function compact(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -92,9 +89,9 @@ function compact(text: string): string {
 /**
  * Whether a deck's own name already says who its Leader is.
  *
- * Every format deck id does -- "(Red) Monkey.D.Luffy - Starter Deck 31" -- and
- * the nickname inside a Leader's printed name is not in the id, so the quoted
- * part is dropped before comparing.
+ * A shipped deck's always does, since it is the Leader's name; the nickname
+ * inside a Leader's printed name is often left out of a name a player typed,
+ * so the quoted part is dropped before comparing.
  */
 function namesLeader(name: string, leaderName: string): boolean {
   const haystack = compact(name);
@@ -107,13 +104,12 @@ function namesLeader(name: string, leaderName: string): boolean {
 
 /**
  * One deck's label, as both the picker's tiles and the select's options print
- * it: a format deck by its set id, a saved deck by the name it was given.
+ * it: a shipped deck by its Leader and colours ({@link deckDisplayName}), a
+ * saved deck by the name it was given.
  *
- * The Leader is appended only when the name does not already carry it. Every
- * format deck id names its Leader, so appending unconditionally printed it
- * twice ("(Red) Monkey.D.Luffy - Starter Deck 31 · Monkey.D.Luffy"); a deck the
- * player named themselves ("MyST31") usually does not, and that is the case the
- * suffix is for.
+ * The Leader is appended only when the name does not already carry it, which
+ * a shipped deck's always does; a deck the player named themselves ("MyST31")
+ * usually does not, and that is the case the suffix is for.
  */
 export function deckLabel(
   savedDecks: Record<string, SavedDeck>,
@@ -138,8 +134,7 @@ export function deckLabel(
  * this button, which is what the form reads on submit.
  *
  * Nothing is printed under the card. The Leader is the deck at a glance, and
- * the full name of it -- with the set or list it came from -- is one click
- * away in the picker, where every deck is read side by side. The name is still
+ * its name and colours are one click away in the picker, where every deck is read side by side. The name is still
  * carried twice for the readers a card face does not serve: as the button's
  * `title`, for a pointer that hovers rather than clicks, and as screen-reader
  * text, which is the only identification of the chosen deck a screen reader
@@ -229,10 +224,26 @@ function deckGroups(
   return shelves;
 }
 
+/**
+ * Where a shipped list came from -- "25th Place ChinoizeCup #105", "Starter
+ * Deck 31" -- read off the end of its id, or undefined for a deck that is not
+ * a shipped list. The tile's name leaves it out, because it describes one list
+ * and the name stands for the Leader's; it is still true of this list, so the
+ * tile carries it as its tooltip and the filter matches it.
+ */
+function deckOrigin(
+  savedDecks: Record<string, SavedDeck>,
+  deckId: string,
+): string | undefined {
+  if (savedDecks[deckId] || !deckManifests[deckId]) return undefined;
+  const at = deckId.lastIndexOf(" - ");
+  return at < 0 ? undefined : deckId.slice(at + 3);
+}
+
 /** What a tile's filter matches against: the label the tile prints, plus the
     Leader's name, number and colours, which a label may not carry -- a saved
-    deck's name says nothing about its colour. Lower-cased once here so the
-    filter compares without re-reading any card. */
+    deck's name says nothing about its colour -- and a shipped list's origin.
+    Lower-cased once here so the filter compares without re-reading any card. */
 function deckFilterText(
   savedDecks: Record<string, SavedDeck>,
   deckId: string,
@@ -244,6 +255,7 @@ function deckFilterText(
     leader?.name ?? "",
     leader?.cardNumber ?? "",
     ...(leader?.colors ?? []),
+    deckOrigin(savedDecks, deckId) ?? "",
   ]
     .join(" ")
     .toLowerCase();
@@ -271,13 +283,17 @@ export function deckPickerDialog(
 ): string {
   const candidates = options.deckIds ?? SELECTABLE_DECK_IDS;
   const saved = options.deckIds ? [] : Object.keys(savedDecks);
+  const originTitle = (deckId: string): string => {
+    const origin = deckOrigin(savedDecks, deckId);
+    return origin ? ` title="${escapeHtml(origin)}"` : "";
+  };
   const tile = (deckId: string): string =>
     // The tile is two controls, not one: the card picks the deck, and the
     // pencil on it opens the deck in the editor. That second one is what
     // makes a preset readable -- and copyable, since saving a preset you
     // opened writes a new deck of your own rather than overwriting it.
     `<div class="deck-tile-wrap" data-deck-filter="${escapeHtml(deckFilterText(savedDecks, deckId))}">
-        <button class="deck-tile ${deckId === selected ? "picked" : ""}" type="button" data-pick-deck="${seat}" data-deck-id="${escapeHtml(deckId)}" aria-pressed="${deckId === selected}">
+        <button class="deck-tile ${deckId === selected ? "picked" : ""}" type="button" data-pick-deck="${seat}" data-deck-id="${escapeHtml(deckId)}" aria-pressed="${deckId === selected}"${originTitle(deckId)}>
           ${renderDeckLeaderPreview(savedDecks, deckId)}
           <span class="deck-tile-name">${escapeHtml(deckLabel(savedDecks, deckId))}</span>
           ${isRecommendedDeck(deckId) ? `<span class="deck-tile-badge">Recommended</span>` : ""}
