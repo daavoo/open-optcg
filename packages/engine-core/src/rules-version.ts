@@ -83,5 +83,14 @@
  * its [Opponent's Turn] gate, OP16-045 may return itself, and Slave Arrow's
  * and Crocodile's returns are seen by "removed from the field" watchers. A recorded action list can meet offers
  * that changed.
+ *
+ * Bumped to 1.13 for Bandai's PRB-02 and promotion-card Q&As: copies of a
+ * Character's aura each apply, cost auras reach only Characters on the
+ * field, a [Trigger] is a base effect, every [On Your Opponent's Attack]
+ * source is offered after one that asked nothing, a [When Attacking] choice
+ * the defender makes is theirs to answer, P-058 reads the board at the end
+ * of the turn, PRB02-014's discount is a cost layer, and PRB02-006 cannot
+ * swap with a Character that cannot be rested. A recorded action list can
+ * meet offers that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.12";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.13";

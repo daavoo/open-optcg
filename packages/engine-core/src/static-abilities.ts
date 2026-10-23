@@ -898,20 +898,30 @@ function auraReaches(aura: StaticAbility, context: AbilityContext): boolean {
       );
     }
     case "board-aura":
-    case "opponent-board-aura": {
-      const board =
-        state.players[
-          aura.scope === "opponent-board-aura" ? opponentOf(playerId) : playerId
-        ].board;
-      return board.some(
-        (card) =>
-          card.cardNumber === aura.cardNumber &&
-          !effectsNegated(state, card.instanceId),
-      );
-    }
+    case "opponent-board-aura":
+      return boardAuraCopies(aura, context) > 0;
     case "self":
       return false;
   }
+}
+
+/**
+ * How many un-negated copies of a Character aura's source stand on the board
+ * it reaches from. Each copy's effect applies on its own, so two P-027 General
+ * Frankys give +2000 (Bandai's P-027#2). A Leader or Stage aura has one
+ * source per side, so only a Character aura can count past one.
+ */
+function boardAuraCopies(aura: StaticAbility, context: AbilityContext): number {
+  const { state, playerId } = context;
+  const board =
+    state.players[
+      aura.scope === "opponent-board-aura" ? opponentOf(playerId) : playerId
+    ].board;
+  return board.filter(
+    (card) =>
+      card.cardNumber === aura.cardNumber &&
+      !effectsNegated(state, card.instanceId),
+  ).length;
 }
 
 function abilitiesFor(context: AbilityContext): StaticAbility[] {
@@ -933,7 +943,13 @@ function abilitiesFor(context: AbilityContext): StaticAbility[] {
   );
   if (reaching.length > 1)
     reaching.sort((left, right) => left.position - right.position);
-  for (const { ability } of reaching) abilities.push(ability);
+  for (const { ability } of reaching) {
+    const copies =
+      ability.scope === "board-aura" || ability.scope === "opponent-board-aura"
+        ? boardAuraCopies(ability, context)
+        : 1;
+    for (let copy = 0; copy < copies; copy += 1) abilities.push(ability);
+  }
   return abilities;
 }
 
@@ -955,9 +971,9 @@ function presentAuras(
 }
 
 /**
- * Adds `cardNumber`'s auras to `found` once each: two copies of the same
- * Character on a board project one aura, not two, and `found` is a handful
- * of entries at most, so a linear check is the cheapest set there is.
+ * Adds `cardNumber`'s auras to `found` once each -- `abilitiesFor` counts the
+ * copies -- and `found` is a handful of entries at most, so a linear check is
+ * the cheapest set there is.
  */
 function collectAuras(
   found: { ability: StaticAbility; position: number }[],
@@ -998,17 +1014,18 @@ export function baseEffectiveCost(
 /**
  * Whether a cost layer applies to the card in the zone it is in now: a
  * `scope: "self"` layer only where its printed text points (see
- * `StaticAbility.cost` and `costZone`), every aura wherever its own predicate
- * says.
+ * `StaticAbility.cost` and `costZone`), and an aura only on the field. Every
+ * cost aura in the pool names "Characters", which are cards on the field, so
+ * none reaches a Character card in a hand or a trash (Bandai's P-032#1).
  */
 function selfCostReads(
   ability: StaticAbility,
   context: AbilityContext,
 ): boolean {
-  if (ability.scope !== "self" || ability.cost === undefined) return true;
+  if (ability.cost === undefined) return true;
   const player = context.state.players[context.playerId];
   const id = context.card.instanceId;
-  if (ability.costZone === "hand")
+  if (ability.scope === "self" && ability.costZone === "hand")
     return player.hand.some((card) => card.instanceId === id);
   return (
     player.board.some((card) => card.instanceId === id) ||

@@ -653,9 +653,9 @@ export function deriveRules(card: RulesSource): CardRules {
     donDeckSize: donDeckSizeOf(effect),
     hasTrigger: trigger.trim().length > 0,
     hasCounterEvent: effect.includes("[Counter]"),
-    // The effect box, not the card: a `[Trigger]`-only Character prints
-    // nothing here and is a legal "no base effect" target. See the field's
-    // own comment in `CardRules`.
+    // The effect box alone; a `[Trigger]` is `hasTrigger`. "No base effect"
+    // needs both false (Bandai's P-011#1). See the field's own comment in
+    // `CardRules`.
     hasPrintedEffect: effect.trim().length > 0,
     clauses: printedClausesOf({ effect, trigger }, card.category),
     tokens: tokensOf(effect),

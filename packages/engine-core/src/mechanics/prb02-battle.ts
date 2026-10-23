@@ -195,6 +195,9 @@ export const prb02BattleMechanics: SetMechanics = {
                   category: "character",
                   excludeSource: true,
                   rested: false,
+                  // A Character that cannot be rested cannot stand in
+                  // (Bandai's PRB02-006#1).
+                  canRest: true,
                 },
                 bind: "prb02-zoro-instead",
                 min: 1,

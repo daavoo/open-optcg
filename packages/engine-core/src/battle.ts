@@ -791,52 +791,58 @@ export function offerOnOpponentAttackEffect(
 ): boolean {
   const attack = state.activeAttack;
   if (!attack) return false;
-  const [next] = onOpponentAttackSources(
-    state,
-    attack.defenderPlayerId,
-    battleParticipant(state, attack.defenderPlayerId),
-    attack.onOpponentAttackOffered ?? [],
-    battleParticipant(state, attack.attackerPlayerId),
-  );
-  if (!next) return false;
-  attack.onOpponentAttackOffered = [
-    ...(attack.onOpponentAttackOffered ?? []),
-    next.source.instanceId,
-  ];
-  const dispatched = dispatchMechanicInvocations(state, [
-    {
-      context: {
-        sourcePlayerId: attack.defenderPlayerId,
-        source: next.source,
+  // A source that resolves without asking anything can make another eligible
+  // -- PRB02-004 Jewelry Bonney sets a DON!! active that the OP07-019 Leader
+  // then rests (Bandai's PRB02-004#1) -- so the sources are read again after
+  // each one until something asks or none is left.
+  for (;;) {
+    const [next] = onOpponentAttackSources(
+      state,
+      attack.defenderPlayerId,
+      battleParticipant(state, attack.defenderPlayerId),
+      attack.onOpponentAttackOffered ?? [],
+      battleParticipant(state, attack.attackerPlayerId),
+    );
+    if (!next) return false;
+    attack.onOpponentAttackOffered = [
+      ...(attack.onOpponentAttackOffered ?? []),
+      next.source.instanceId,
+    ];
+    const dispatched = dispatchMechanicInvocations(state, [
+      {
+        context: {
+          sourcePlayerId: attack.defenderPlayerId,
+          source: next.source,
+        },
+        program: next.program.program,
       },
-      program: next.program.program,
-    },
-  ]);
-  events.push(...dispatched.events);
-  state.pendingEffect =
-    dispatched.pending && dispatched.invocation
-      ? mechanicPendingEffect(
-          dispatched.invocation,
-          dispatched.pending,
-          dispatched.continuations,
-        )
-      : null;
-  if (next.program.oncePerTurn) {
-    if (state.pendingEffect) {
-      // Spent on the first answer that is not "skip", not here: an ability the
-      // attack pushed at the defender is not used by declining it.
-      attack.onOpponentAttackPending = {
-        sourceInstanceId: next.source.instanceId,
-        oncePerTurnKey: next.oncePerTurnKey,
-      };
-    } else {
-      // A program that resolved without asking anything has been used.
-      state.oncePerTurn.push(next.oncePerTurnKey);
+    ]);
+    events.push(...dispatched.events);
+    state.pendingEffect =
+      dispatched.pending && dispatched.invocation
+        ? mechanicPendingEffect(
+            dispatched.invocation,
+            dispatched.pending,
+            dispatched.continuations,
+          )
+        : null;
+    if (next.program.oncePerTurn) {
+      if (state.pendingEffect) {
+        // Spent on the first answer that is not "skip", not here: an ability
+        // the attack pushed at the defender is not used by declining it.
+        attack.onOpponentAttackPending = {
+          sourceInstanceId: next.source.instanceId,
+          oncePerTurnKey: next.oncePerTurnKey,
+        };
+      } else {
+        // A program that resolved without asking anything has been used.
+        state.oncePerTurn.push(next.oncePerTurnKey);
+      }
     }
+    state.phase = "block";
+    state.activePlayer = attack.defenderPlayerId;
+    if (state.pendingEffect !== null) return true;
   }
-  state.phase = "block";
-  state.activePlayer = attack.defenderPlayerId;
-  return state.pendingEffect !== null;
 }
 
 /**

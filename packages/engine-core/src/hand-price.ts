@@ -127,23 +127,6 @@ const STATIC_HAND_DISCOUNTS: readonly {
         .require(state.players[playerId].leaderCardNumber)
         .name.includes("Ace") && fieldDonCount(state, playerId) >= 6,
   },
-  // PRB02-014 Sabo: "If you have 15 or more cards in your trash, give this card
-  // in your hand -3 cost."
-  //
-  // A 6-cost 6000 Blocker for 3, and the one card in ST-27's list that reads no
-  // Leader type -- that deck qualifies it by trashing its own hand with the
-  // OP09-081 Leader, so the discount pays for a cost the deck is already paying
-  // rather than for a condition it plays toward.
-  //
-  // Here and not in `static-abilities.ts`, for the reason this table's own note
-  // gives: the clause prices the card *in hand*, and a `cost` layer would leave
-  // the hand price untouched while making the played body read as a 3-cost to
-  // every "cost N or less" removal pointed at it.
-  {
-    cardNumber: "PRB02-014",
-    amount: 3,
-    when: (state, playerId) => state.players[playerId].trash.length >= 15,
-  },
 ];
 
 function opponentHasHighPowerCharacter(

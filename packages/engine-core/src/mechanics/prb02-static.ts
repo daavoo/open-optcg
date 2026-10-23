@@ -7,6 +7,20 @@ import { leaderHasType, turnPlayer } from "./static-shared.js";
 import type { StaticAbility } from "../static-abilities.js";
 
 export const prb02StaticAbilities: readonly StaticAbility[] = [
+  // PRB02-014 Sabo: −3 cost in hand with 15 or more cards in the trash.
+  //
+  // A cost layer rather than a hand price, so both the price paid to play it
+  // and a "cost N or less" clause reading the hand see it: EB01-042 Scarlet
+  // trashing herself to reach 15 plays it as a cost-3 Character (Bandai's
+  // PRB02-014#1). `costZone: "hand"`, so the body on the field is priced at
+  // its printed 6.
+  {
+    cardNumber: "PRB02-014",
+    scope: "self",
+    costZone: "hand",
+    cost: (context) =>
+      context.state.players[context.playerId].trash.length >= 15 ? -3 : 0,
+  },
   // PRB02-001 Koby: "[printed text omitted -- pnpm card:text PRB02-001]"
   //
   // The defensive half of the card: a 5000 that defends at 6000 behind a

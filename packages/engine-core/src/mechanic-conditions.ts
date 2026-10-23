@@ -363,7 +363,8 @@ export function selectCards(
       (selector.hasTrigger === undefined ||
         definition.rules.hasTrigger === selector.hasTrigger) &&
       (selector.noBaseEffect === undefined ||
-        definition.rules.hasPrintedEffect !== selector.noBaseEffect) &&
+        !(definition.rules.hasPrintedEffect || definition.rules.hasTrigger) ===
+          selector.noBaseEffect) &&
       (selector.lacksClause === undefined ||
         !definition.rules.clauses.includes(selector.lacksClause)) &&
       (selector.hasClause === undefined ||
