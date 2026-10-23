@@ -290,6 +290,43 @@ untouched. The model's edge over the rules agents piloting the same deck in
 the same games (`--baseline`) is about +0.16 on featured decks and +0.25 on
 starters.
 
+## After a training round: which list to ship for each Leader
+
+Most training decks have variants: other builds of the same Leader
+(`bridge/deck-variants.ts`, `bridge/deck-pool-scan.ts`). The shipped list is
+not always the one the model pilots best, and the gap can be large: one
+Leader's shipped list won about a quarter of its games against the most
+played decks where its best tournament build won about half.
+`sys1.best_variants` plays each base deck's shipped list and every variant
+against the same opponent field, with the checkpoint on both seats and the
+same seeds for every build, so builds compare on identical games:
+
+```sh
+.venv/bin/python -m sys1.best_variants checkpoints/<run>/final \
+  --field top-decks.txt --games 20 \
+  --out data/best-variants.json --report data/best-variants.md
+```
+
+- `--games` per (build, opponent) pairing, half with the build on each seat.
+- `--field FILE` is the opponents, one deck id a line (e.g. the Leaders most
+  played); by default every selectable deck but the one under test.
+- `--decks FILE` limits the run to some base decks.
+- The report gives each build's win rate with a 95% interval and its paired
+  difference from the shipped list (per seat-swapped pair, so a game the
+  opponent's draw decided cancels), and lists the Leaders where the best
+  variant beats the shipped list by more than 2 SE: the candidates to ship.
+  The best of several noisy builds is biased upwards, so a narrow margin on a
+  Leader with many variants is worth a second run with another `--seed`.
+- It prints the planned game count first. SIGTERM or Ctrl-C stops it at the
+  next step and writes the games finished so far, marked partial; games are
+  ordered repetition by repetition, so every build has about as many.
+
+It plays about 14 games a second on an M5 Pro with 12 workers
+(`checkpoints/v13-ppo/final`, with another job on the machine). The 84-deck
+catalog has 75 base decks with variants, 424 builds in all, so `--games 20` is
+about 704,000 games, some 14 hours, against the whole catalog, and about
+85,000 games, under 2 hours, against a 10-deck field.
+
 ## Reviewing its games
 
 A person can flag the scorer's misplays and train on them:
@@ -325,6 +362,7 @@ data/feedback.jsonl` rebuilds each flagged position from the file and
 | `sys1.parity`             | MLX encoder vs `transformers`, and order invariance                     |
 | `sys1.evaluate`           | paired win rate vs the rules agents, per deck                           |
 | `sys1.evaluate --against` | paired win rate of one checkpoint against another                       |
+| `sys1.best_variants`      | which build of each Leader the checkpoint pilots best                   |
 | `sys1.ladder`             | Elo ratings and a win-rate matrix over checkpoints and the rules agents |
 | `sys1.audit_attacks`      | doomed attacks chosen, and the dominance rule's false alarms            |
 | `bridge/parity-web.ts`    | the TypeScript/WebGPU scorer vs the MLX model it came from              |

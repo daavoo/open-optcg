@@ -109,6 +109,7 @@ def play(
     concurrent: int = 240,
     on_decision=None,
     enough=None,
+    stop=None,
 ) -> list[dict]:
     """Plays every spec to the end; returns one {spec, winner, truncated} each.
 
@@ -117,6 +118,10 @@ def play(
     are abandoned. Only an unbroken prefix counts, because the games that end
     first are the short ones, and a test stopped on them would be judged on a
     biased sample.
+
+    `stop`, if given, is asked after every step; when it answers true, the
+    games finished so far come back, in the order they ended, and the rest
+    are abandoned. It is for cutting a long run short, not for a test.
 
     A spec is {p1, p2, seed, rules, seats}, where `seats` names the entry of
     `policies` that plays each seat Python plays; the other seats are played by
@@ -168,6 +173,8 @@ def play(
                 prefix += 1
             if enough([done_by_id[i] for i in range(prefix)]):
                 return [done_by_id[i] for i in range(prefix)]
+        if stop and stop():
+            return finished
         if not open_:
             break
         by_policy: dict[str, list[dict]] = {}
