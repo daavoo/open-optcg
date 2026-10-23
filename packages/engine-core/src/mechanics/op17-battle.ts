@@ -11,14 +11,15 @@ export const op17BattleMechanics: SetMechanics = {
     [
       // OP17-017 Ga Ha Ha Ha!!: "[printed text omitted -- pnpm card:text OP17-017]"Whitebeard Pirates"[printed text omitted -- pnpm card:text OP17-017]"Whitebeard Pirates"[printed text omitted -- pnpm card:text OP17-017]"
       //
-      // The buff only reaches the battle when the thing being attacked is itself a
-      // Whitebeard Pirates card. The debuff half is a free choice over the
+      // The buff only reaches the battle when the thing being attacked has a type
+      // including "Whitebeard Pirates" -- {Whitebeard Pirates Allies} and
+      // {Former Whitebeard Pirates} bodies qualify, hence `typeIncluding`. The debuff half is a free choice over the
       // opponent's side and runs afterwards, so it lands even when the buff is 0.
       "OP17-017",
       {
         cost: 1,
         power: 2_000,
-        target: { type: "Whitebeard Pirates" },
+        target: { typeIncluding: "Whitebeard Pirates" },
         program: {
           effect: {
             kind: "choose",
@@ -96,9 +97,12 @@ export const op17BattleMechanics: SetMechanics = {
       // including Rocks Pirates or up to 1 of your Characters with a type
       // including Rocks Pirates gains +2000 power during this battle."
       "OP17-055",
-      { cost: 0, power: 2_000, target: { type: "Rocks Pirates" } },
+      { cost: 0, power: 2_000, target: { typeIncluding: "Rocks Pirates" } },
     ],
-    ["OP17-056", { cost: 0, power: 2_000, target: { type: "Rocks Pirates" } }],
+    [
+      "OP17-056",
+      { cost: 0, power: 2_000, target: { typeIncluding: "Rocks Pirates" } },
+    ],
     [
       // OP17-096 "I'm Luffy!! The Man Who Will Be King of the Pirates!!":
       // "[printed text omitted -- pnpm card:text OP17-096]"
@@ -325,7 +329,7 @@ export const op17BattleMechanics: SetMechanics = {
                   kind: "battle-power",
                   player: "self",
                   amount: 1_000,
-                  target: { type: "Rocks Pirates" },
+                  target: { typeIncluding: "Rocks Pirates" },
                 },
               ],
             },
@@ -429,7 +433,12 @@ export const op17BattleMechanics: SetMechanics = {
       "OP17-048",
       {
         oncePerTurn: true,
-        requires: { handCardsOfType: { type: "Rocks Pirates", count: 1 } },
+        requires: {
+          handCardsMatching: {
+            match: { typeIncluding: "Rocks Pirates" },
+            count: 1,
+          },
+        },
         program: {
           effect: {
             kind: "optional",
@@ -441,7 +450,7 @@ export const op17BattleMechanics: SetMechanics = {
                   selector: {
                     player: "self",
                     zone: "hand",
-                    type: "Rocks Pirates",
+                    typeIncluding: "Rocks Pirates",
                   },
                   bind: "op17-shiki048-cost",
                   min: 1,
@@ -510,7 +519,7 @@ export const op17BattleMechanics: SetMechanics = {
       "OP17-040",
       {
         oncePerTurn: true,
-        requires: { handCards: 1, leaderType: "Rocks Pirates" },
+        requires: { handCards: 1, leaderTypeIncluding: "Rocks Pirates" },
         program: trashForBattlePower(3_000, "op17-newgate040-cost", {
           isLeader: true,
         }),
@@ -595,7 +604,7 @@ export const op17BattleMechanics: SetMechanics = {
                   selector: {
                     zone: "deck",
                     binding: "op17-xebec039-reveal",
-                    type: "Rocks Pirates",
+                    typeIncluding: "Rocks Pirates",
                   },
                   operator: "gte",
                   value: 1,
@@ -791,13 +800,18 @@ export const op17BattleMechanics: SetMechanics = {
       // Registered under both this table and `onOpponentAttackPrograms`, below
       // -- printed on both timings, one `[Once Per Turn]` budget shared between
       // them the way the dispatch site's shared key format lets it. `requires`'
-      // new `handCardsOfType` is what makes an offer here always resolve to
+      // `handCardsMatching` is what makes an offer here always resolve to
       // something: without it a hand with no Rocks Pirates card would still
       // show "you may", and paying nothing for nothing would be free to accept.
       "OP17-048",
       {
         oncePerTurn: true,
-        requires: { handCardsOfType: { type: "Rocks Pirates", count: 1 } },
+        requires: {
+          handCardsMatching: {
+            match: { typeIncluding: "Rocks Pirates" },
+            count: 1,
+          },
+        },
         program: {
           effect: {
             kind: "optional",
@@ -809,7 +823,7 @@ export const op17BattleMechanics: SetMechanics = {
                   selector: {
                     player: "self",
                     zone: "hand",
-                    type: "Rocks Pirates",
+                    typeIncluding: "Rocks Pirates",
                   },
                   bind: "op17-shiki048-cost",
                   min: 1,

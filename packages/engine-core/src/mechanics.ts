@@ -14,6 +14,7 @@ import {
   cards as defaultCardDatabase,
   hasCardName,
   hasCardType,
+  hasCardTypeIncluding,
   type CardDatabase,
 } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
@@ -1343,7 +1344,9 @@ export function continueExecution(
         (effect.anyOfAttributes === undefined ||
           effect.anyOfAttributes.some((attribute) =>
             attributes().includes(attribute),
-          ));
+          )) &&
+        (effect.typeIncluding === undefined ||
+          hasCardTypeIncluding(cardNumber, effect.typeIncluding));
       // `player`'s cards first: it is the side each of these cards was written
       // for, so a pilot that takes the first offer keeps doing so.
       const owners: PlayerId[] = effect.eitherOwner

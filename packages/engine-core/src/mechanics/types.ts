@@ -157,22 +157,14 @@ export interface OnOpponentAttackProgram {
     activeDon?: number;
     sourceActive?: boolean;
     /**
-     * A cost paid with cards of a specific type, as OP17-048 Shiki's "you may
-     * trash 1 card with a type including Rocks Pirates from your hand".
-     * `handCards` alone cannot gate this: a hand full of cards none of which
-     * qualify would still be offered a cost it cannot pay.
-     */
-    handCardsOfType?: { type: string; count: number };
-    /**
      * A cost paid with cards of particular *categories*, as OP15-057 Dressrosa
      * Kingdom's "[printed text omitted -- pnpm card:text OP15-057]". `handCards` alone
      * cannot gate it -- a hand of Characters would be offered a cost it cannot
-     * pay -- and `handCardsOfType` asks a different question, so the category
-     * disjunction is its own field.
+     * pay -- so the category disjunction is its own field.
      */
     handCardsOfCategory?: { categories: readonly string[]; count: number };
     /**
-     * A cost paid with hand cards the two fields above cannot describe --
+     * A cost paid with hand cards a category cannot describe --
      * OP16-015's "[printed text omitted -- pnpm card:text OP16-015]" and OP16-080's "1 card with
      * a [Trigger]". `handCards` alone is a card count, so a hand of the wrong
      * cards is offered a cost it cannot pay: the prompt appears, the player
@@ -236,7 +228,7 @@ export interface OnOpponentAttackProgram {
  * plays the same role `onOpponentAttackSources` plays for that table, and
  * `offerLeaderWatcherEffect` is the ladder that offers it.
  *
- * OP17-040 Edward.Newgate is the only entry: "[printed text omitted -- pnpm card:text OP17-040]" The `leaderType` requirement is checked
+ * OP17-040 Edward.Newgate is the only entry: "[printed text omitted -- pnpm card:text OP17-040]" The `leaderTypeIncluding` requirement is checked
  * against the *watcher's controller's* Leader, not the battle's target --
  * "your Leader" always means the controller's own, on both ends of the
  * clause.
@@ -246,8 +238,12 @@ export interface LeaderWatcherProgram {
   oncePerTurn: boolean;
   requires?: {
     handCards?: number;
-    /** A type the watcher's controller's Leader must carry, e.g. Rocks Pirates. */
-    leaderType?: string;
+    /**
+     * Text the watcher's controller's Leader's type must include -- OP17-040's
+     * "your Leader with a type including \"Rocks Pirates\"", which a
+     * {Former Rocks Pirates} Leader answers as well.
+     */
+    leaderTypeIncluding?: string;
   };
   program: MechanicProgram;
 }

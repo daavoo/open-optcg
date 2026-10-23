@@ -145,8 +145,8 @@ export const op16BattleMechanics: SetMechanics = {
       // OP16-080 Marshall.D.Teach (Leader): "[printed text omitted -- pnpm card:text OP16-080]"
       //
       // What a [Blocker] does, paid for out of hand instead of by resting -- and
-      // it may name the Leader, which no Blocker can. Neither `handCardsOfType`
-      // nor `handCardsOfCategory` can ask "with a [Trigger]", so the offer is
+      // it may name the Leader, which no Blocker can. `handCardsOfCategory`
+      // cannot ask "with a [Trigger]", so the offer is
       // gated by `handCardsMatching` on the same selector the cost spends.
       //
       // Its `[Opponent's Turn]` +1 cost aura is a static layer.

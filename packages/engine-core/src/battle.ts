@@ -10,7 +10,7 @@
  */
 import {
   cards as defaultCardDatabase,
-  hasCardType,
+  hasCardTypeIncluding,
   type CardDatabase,
 } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
@@ -54,7 +54,6 @@ import {
   leaderInstanceId,
   hasKeyword,
   offerBuggyBlockerEffect,
-  handHasType,
   handHasCategory,
   restLocked,
 } from "./board.js";
@@ -440,12 +439,6 @@ export function onOpponentAttackSources(
       }
       if (requires.sourceActive && !active) return [];
       if (
-        requires.handCardsOfType !== undefined &&
-        !handHasType(defender, requires.handCardsOfType)
-      ) {
-        return [];
-      }
-      if (
         requires.handCardsOfCategory !== undefined &&
         !handHasCategory(defender, requires.handCardsOfCategory)
       ) {
@@ -590,8 +583,11 @@ export function leaderWatcherSources(
         return [];
       }
       if (
-        requires.leaderType !== undefined &&
-        !hasCardType(controller.leaderCardNumber, requires.leaderType)
+        requires.leaderTypeIncluding !== undefined &&
+        !hasCardTypeIncluding(
+          controller.leaderCardNumber,
+          requires.leaderTypeIncluding,
+        )
       ) {
         return [];
       }
@@ -717,12 +713,6 @@ export function eligibleWhenAttackingProgram(
     if (
       requires.activeDon !== undefined &&
       player.activeDon.length < requires.activeDon
-    ) {
-      return undefined;
-    }
-    if (
-      requires.handCardsOfType !== undefined &&
-      !handHasType(player, requires.handCardsOfType)
     ) {
       return undefined;
     }
