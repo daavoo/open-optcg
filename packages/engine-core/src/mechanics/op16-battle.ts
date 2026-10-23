@@ -5,7 +5,7 @@
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { powerEightThousand } from "./op16-shared.js";
 import { type SetMechanics } from "./registry.js";
-import { trashForBattlePower } from "./shared.js";
+import { haveNamed, trashForBattlePower } from "./shared.js";
 
 /**
  * OP16-025 Bunkov and OP16-029 Antlerkov: "[When Attacking] If you have
@@ -17,13 +17,7 @@ import { trashForBattlePower } from "./shared.js";
  */
 const impelDownPair = (partner: string, bind: string): MechanicEffect => ({
   kind: "if",
-  condition: {
-    kind: "selector-count",
-    player: "self",
-    selector: { zone: "board", name: partner },
-    operator: "gte",
-    value: 1,
-  },
+  condition: haveNamed(partner),
   then: {
     kind: "choose",
     selector: {
@@ -350,13 +344,7 @@ export const op16BattleMechanics: SetMechanics = {
         program: {
           effect: {
             kind: "if",
-            condition: {
-              kind: "selector-count",
-              player: "self",
-              selector: { zone: "board", name: "Prisoner of Impel Down" },
-              operator: "gte",
-              value: 2,
-            },
+            condition: haveNamed("Prisoner of Impel Down", 2),
             then: { kind: "battle-power", player: "self", amount: 4000 },
           },
         },

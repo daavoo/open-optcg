@@ -4,13 +4,72 @@
  * One of the per-kind resolver modules `resolveEffect` dispatches to; see
  * `resolve-effect/index.ts` for the table and the contract they share.
  */
+import { getMechanicSignalInvocations } from "../card-mechanics.js";
 import { addDonFromDeck } from "../don.js";
-import { drawCards } from "../effects.js";
+import { drawCards, queuePendingContinuations } from "../effects.js";
+import type { GameState } from "../model.js";
 import { takeFromLife } from "../life.js";
 import { addPowerModifier } from "../pending.js";
 import { recordDeckTopKnowledge } from "../queries.js";
 import { type EffectContext } from "./context.js";
-import { type PublicEvent } from "@one-piece-sim/protocol";
+import { type PlayerId, type PublicEvent } from "@one-piece-sim/protocol";
+
+/**
+ * Returns one of `playerId`'s Characters to its owner's hand as a cost --
+ * OP07-056 Slave Arrow's and OP16-045 Crocodile's -- the way a `move` would:
+ * its given DON!! go back rested, the opponent sees which card left, and the
+ * "removed from the field" watchers hear it once the effect settles (OP16-041
+ * Buggy's Leader, Bandai's OP16-041#2).
+ */
+export function returnOwnCharacterToHand(
+  state: GameState,
+  playerId: PlayerId,
+  instanceId: string,
+  sourceCardNumber: string,
+): PublicEvent[] {
+  const player = state.players[playerId];
+  const boardIndex = player.board.findIndex(
+    (card) => card.instanceId === instanceId,
+  );
+  const [returned] =
+    boardIndex === -1 ? [] : player.board.splice(boardIndex, 1);
+  if (!returned) throw new Error(`MISSING_EFFECT_TARGET: ${instanceId}`);
+  player.restedDon.push(...(returned.attachedDon ?? []));
+  const card = {
+    instanceId: returned.instanceId,
+    cardNumber: returned.cardNumber,
+  };
+  player.hand.push(card);
+  queuePendingContinuations(
+    state,
+    getMechanicSignalInvocations(
+      state,
+      [
+        {
+          kind: "card-moved",
+          card,
+          ownerId: playerId,
+          from: "board",
+          to: "hand",
+          sourceCardNumber,
+          sourcePlayerId: playerId,
+        },
+      ],
+      false,
+    ),
+  );
+  return [
+    {
+      type: "card-moved",
+      playerId,
+      cardInstanceId: card.instanceId,
+      cardNumber: card.cardNumber,
+      from: "board",
+      to: "hand",
+      sourceCardNumber,
+    },
+  ];
+}
 
 /** `p105-life-cost`. */
 export function resolveP105LifeCost({
@@ -195,17 +254,12 @@ export function resolveSlaveArrowCost({
     return events;
   }
   const player = state.players[effect.playerId];
-  const boardIndex = player.board.findIndex(
-    (card) => card.instanceId === optionId,
+  const moved = returnOwnCharacterToHand(
+    state,
+    effect.playerId,
+    optionId,
+    effect.sourceCardNumber,
   );
-  const [returned] = player.board.splice(boardIndex, 1);
-  if (!returned) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
-  // A Character leaving the field returns its DON!! rested, as it does on K.O.
-  player.restedDon.push(...(returned.attachedDon ?? []));
-  player.hand.push({
-    instanceId: returned.instanceId,
-    cardNumber: returned.cardNumber,
-  });
   // The card being attacked first, then the Leader and every Character. "Up
   // to 1" admits none, but with the cost already paid choosing none only
   // throws the power away, so it is not offered; nor is a prompt with one
@@ -228,11 +282,11 @@ export function resolveSlaveArrowCost({
       step: "target",
       eligibleInstanceIds: targets,
     };
-    return [];
+    return moved;
   }
   const events = boost(targets[0]!);
   resume();
-  return events;
+  return [...moved, ...events];
 }
 
 /** `st34-guess-cost`. */

@@ -7,6 +7,7 @@
  * card that prints it.
  */
 import {
+  OWN_CARDS_ZONES,
   type BattleTargetFilter,
   type CardSelector,
   type MechanicCondition,
@@ -114,6 +115,21 @@ export const ownCostTenBody: MechanicCondition = {
   operator: "gte",
   value: 1,
 };
+
+/**
+ * "If you have [name]" -- or "2 or more [name] cards" with `count`. The name
+ * is looked for on every card you have on the field, Leader, Characters and
+ * Stage, so a Leader treated as having every card name counts (Bandai's
+ * OP15-064#1, OP16-025#1, OP16-057#1). Text that says "a [name] Character"
+ * is narrower and does not use this.
+ */
+export const haveNamed = (name: string, count = 1): MechanicCondition => ({
+  kind: "selector-count",
+  player: "self",
+  selector: { zone: OWN_CARDS_ZONES, includeLeader: true, name },
+  operator: "gte",
+  value: count,
+});
 
 export const elbaphGiantOut: MechanicCondition = {
   kind: "selector-count",

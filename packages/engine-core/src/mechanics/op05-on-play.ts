@@ -12,7 +12,7 @@
  */
 import { type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { donMinus, lookAndAdd, payFromHand } from "./shared.js";
+import { donMinus, haveNamed, lookAndAdd, payFromHand } from "./shared.js";
 import { koCostAtMost, playFromHand, powerDebuff } from "./op08-shared.js";
 import { buryCostAtMost, payFromTrash } from "./op07-shared.js";
 import {
@@ -520,13 +520,7 @@ export const op05OnPlayMechanics: SetMechanics = {
       {
         effect: {
           kind: "if",
-          condition: {
-            kind: "selector-count",
-            player: "self",
-            selector: { zone: "board", name: "Hotori" },
-            operator: "gte",
-            value: 1,
-          },
+          condition: haveNamed("Hotori"),
           then: koCostAtMostOpponentLife("op05-kotori-ko"),
         },
       },

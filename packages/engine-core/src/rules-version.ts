@@ -75,5 +75,13 @@
  * effect resolves, OP15-080 is played only from the trash, and OP15-114's
  * flip needs a face-down top Life card. A recorded action list can meet
  * offers that changed.
+ *
+ * Bumped to 1.12 for Bandai's OP-16 Q&A: "if you have [name]" counts the
+ * Leader and Stage on every card that prints it (OP16-025/029, OP16-057,
+ * OP05-103, OP08-004, OP11-109), OP16-058 sets an every-name Leader's base
+ * power too, OP16-081 counts either side's 8-cost, OP16-103's [Trigger] keeps
+ * its [Opponent's Turn] gate, OP16-045 may return itself, and Slave Arrow's
+ * and Crocodile's returns are seen by "removed from the field" watchers. A recorded action list can meet offers
+ * that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.11";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.12";
