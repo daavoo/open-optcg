@@ -3003,6 +3003,79 @@ describe("EB04-044 Koby", () => {
     ).toContain("fodder");
   });
 
+  it("survives losing a battle behind a Navy Leader", () => {
+    // The clause names no source, so a lost fight is a removal it answers.
+    const game = defending("eb04-044-battle")
+      .withLeader("p1", "OP10-001")
+      .withBoard("p1", [
+        character("koby", "EB04-044", { rested: true, playedTurn: 1 }),
+      ])
+      .withHand("p1", [instance("fodder", "ST31-002")])
+      // ST31-004 Monkey.D.Luffy is a 9000 against Koby's 7000.
+      .withBoard("p2", [character("attacker", "ST31-004", { playedTurn: 1 })])
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "koby",
+    });
+    // The offer opens inside the Counter step, so the step is passed only
+    // until it does.
+    while (
+      !game.state.pendingEffect &&
+      (game.state.phase === "block" || game.state.phase === "counter")
+    ) {
+      game.pass();
+    }
+    expect(game.state.pendingEffect?.kind).toBe("battle-ko-replacement");
+    game.play({ type: "resolve-effect", summary: "Trash 1 card" });
+    settle(game);
+
+    expect(boardIds(game.state, "p1")).toEqual(["koby"]);
+    expect(
+      game.state.players.p1.trash.map((card) => card.instanceId),
+    ).toContain("fodder");
+  });
+
+  it("survives OP11-092 Helmeppo's end-of-turn bottom-deck", () => {
+    // Its own controller's effect: Helmeppo plays Koby from the trash and
+    // places it at the bottom of the deck at the end of the turn.
+    const game = table("eb04-044-helmeppo")
+      .withLeader("p1", "OP10-001")
+      .withHand("p1", [
+        instance("helmeppo", "OP11-092"),
+        instance("cost", "ST31-002"),
+        instance("fodder", "ST31-002"),
+      ])
+      .withTrash("p1", [instance("koby", "EB04-044")])
+      .withDeckTop("p1", [instance("drawn", "ST31-002")])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "OP11-092" });
+    applyOptional(game);
+    game.play({ type: "resolve-effect", optionId: "cost" });
+    game.play({ type: "resolve-effect", optionId: "koby" });
+    settle(game);
+    expect(boardIds(game.state, "p1")).toContain("koby");
+
+    game.pass();
+    expect(effectOptions(game.state)).toContain("replace:koby");
+    takeReplacement(game, "koby");
+    while (game.state.pendingEffect) {
+      const options = effectOptions(game.state);
+      game.play({
+        type: "resolve-effect",
+        optionId: options.includes("fodder") ? "fodder" : options[0],
+      });
+    }
+
+    expect(boardIds(game.state, "p1")).toContain("koby");
+    expect(
+      game.state.players.p1.deck.map((card) => card.instanceId),
+    ).not.toContain("koby");
+  });
+
   it("is not protected behind a Leader whose type has no Navy in it", () => {
     // The `requires` gate on the replacement, from the other side. Without it
     // this body would be protected behind every Leader in the format.

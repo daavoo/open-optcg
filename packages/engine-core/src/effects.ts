@@ -779,6 +779,7 @@ export function runEndOfTurnProgram(
   source: CardInstance,
   mechanicProgram: MechanicProgram,
   db: CardDatabase = defaultCardDatabase,
+  bindings: Record<string, string[]> = {},
 ): OnPlayResult {
   const invocation = {
     context: { sourcePlayerId: playerId, source },
@@ -789,6 +790,7 @@ export function runEndOfTurnProgram(
     invocation.context,
     mechanicProgram,
     db,
+    bindings,
   );
   const continuations = getMechanicSignalInvocations(state, result.signals);
   if (result.pending) {

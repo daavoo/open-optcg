@@ -223,36 +223,16 @@ export function completeEndTurn(state: GameState, events: PublicEvent[]): void {
     );
     delete endingPlayer.addDonAtEndOfTurn;
   }
-  // Debts an earlier clause booked against particular cards -- OP11-092's
-  // "[printed text omitted -- pnpm card:text OP11-092]", OP11-107's "[printed text omitted -- pnpm card:text OP11-107]". Paid here, and dropped rather than carried: a debt
+  // Debts an earlier clause booked against particular cards -- OP11-107's
+  // "[printed text omitted -- pnpm card:text OP11-107]". Paid here, and dropped rather than carried: a debt
   // whose card has already left the field is simply forgotten, which is what
   // "that Character" means once there is no such Character.
   for (const owed of endingPlayer.endOfTurnCardActions ?? []) {
     if (owed.turn !== state.turn) continue;
-    const index = endingPlayer.board.findIndex(
-      (card) => card.instanceId === owed.instanceId,
+    const card = endingPlayer.board.find(
+      (candidate) => candidate.instanceId === owed.instanceId,
     );
-    const card = endingPlayer.board[index];
-    if (!card) continue;
-    if (owed.kind === "set-active") {
-      card.rested = false;
-      continue;
-    }
-    endingPlayer.board.splice(index, 1);
-    endingPlayer.activeDon.push(...(card.attachedDon ?? []));
-    endingPlayer.deck.push({
-      instanceId: card.instanceId,
-      cardNumber: card.cardNumber,
-    });
-    events.push({
-      type: "card-moved",
-      playerId: activePlayer,
-      cardInstanceId: card.instanceId,
-      cardNumber: card.cardNumber,
-      from: "board",
-      to: "deck",
-      position: "bottom",
-    });
+    if (card) card.rested = false;
   }
   delete endingPlayer.endOfTurnCardActions;
   // A booked step `endTurn` did not reach -- one made for a turn that has
@@ -575,12 +555,21 @@ export function endTurn(
     player.endOfTurnPrograms = player.endOfTurnPrograms!.filter(
       (booking) => booking !== booked,
     );
+    const onField = (instanceId: string) =>
+      player.board.some((card) => card.instanceId === instanceId);
+    const bindings = Object.fromEntries(
+      Object.entries(booked.bindings ?? {}).map(([name, instanceIds]) => [
+        name,
+        instanceIds.filter(onField),
+      ]),
+    );
     const result = runEndOfTurnProgram(
       state,
       playerId,
       booked.source,
       { effect: booked.effect },
       db,
+      bindings,
     );
     events.push(...result.events);
     if (result.pending) {

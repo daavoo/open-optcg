@@ -32,7 +32,7 @@ export const op11KobyDossier: DeckStrategyDossier = {
   ],
   commonCombos: [
     "Doll's −6000 on a Character, then Hibari: Hibari's [On Play] lets her attack the active target the turn she lands, and her [Activate: Main] trims another 1000.",
-    "OP11-092 Helmeppo pulls EB04-044 Koby back from the trash, it attacks a Character the same turn, and goes under the deck at the end of it.",
+    "OP11-092 Helmeppo pulls EB04-044 Koby back from the trash, it attacks a Character the same turn, and at the end of it goes under the deck unless you trash a card from hand to keep it.",
     "EB04-047 Helmeppo trashes itself to play a Hibari from the trash, so a Helmeppo on the field is a second Hibari attack for no DON!!.",
   ],
   keyCardNumbers: [
@@ -52,7 +52,7 @@ export const op11KobyDossier: DeckStrategyDossier = {
   counterplay: [
     "Every Character they play can attack one of yours the turn it lands, so a Character you leave rested is a Character they get to remove. Keep your key bodies active where you can.",
     "Their Leader saves a small {Navy} body from removal once a turn by moving 3 trash cards to the bottom of the deck. Spend your first removal on a body above 7000 base power, or remove two in a turn.",
-    "EB04-044 Koby survives removal for a card from hand; K.O. it in battle or make them spend the card when their hand is thin.",
+    "EB04-044 Koby survives removal and a lost battle for a card from hand, once a turn: answer it twice in one turn, or when their hand is thin.",
   ],
   sources: [
     {
