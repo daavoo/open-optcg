@@ -2148,6 +2148,27 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
     source:
       "2nd of 24 (3-1-1), [EB05] Rumble league #14, 2026-10-22 (https://play.limitlesstcg.com/tournament/6ad1e9418a8383117e3ecdc7/standings): the OP-17 Big Mom [Trigger] build",
   },
+  {
+    base: "(Black) Monkey.D.Luffy - Open OPTCG",
+    label: "Mon's build",
+    cards: {
+      "OP15-086": 4,
+      "OP15-088": 4,
+      "OP15-092": 4,
+      "OP17-080": 4,
+      "OP17-081": 2,
+      "OP17-082": 4,
+      "OP17-084": 2,
+      "OP17-086": 4,
+      "OP17-087": 2,
+      "OP17-089": 4,
+      "OP17-091": 4,
+      "OP17-093": 4,
+      "OP17-096": 4,
+      "OP17-098": 4,
+    },
+    source: "Built by Mon, shared 23 Oct 2026",
+  },
 ];
 
 export const variantId = (variant: DeckVariant): string =>
