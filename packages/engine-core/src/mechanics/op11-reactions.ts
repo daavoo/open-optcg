@@ -53,6 +53,7 @@ export const op11ReactionRules: readonly ReactionRule[] = [
     signal: { kind: "event-activated", activatedBy: "opponent" },
     ownTurn: true,
     oncePerTurn: true,
+    optionalActivation: true,
     program: { effect: camieTrashBothLives },
   },
   {
@@ -61,6 +62,7 @@ export const op11ReactionRules: readonly ReactionRule[] = [
     signal: { kind: "trigger-activated" },
     ownTurn: true,
     oncePerTurn: true,
+    optionalActivation: true,
     program: { effect: camieTrashBothLives },
   },
   {
@@ -105,6 +107,7 @@ export const op11ReactionRules: readonly ReactionRule[] = [
     signal: { kind: "card-moved", from: "life" },
     ownTurn: true,
     oncePerTurn: true,
+    optionalActivation: true,
     maxHandSize: 7,
     program: { effect: { kind: "draw", player: "self", count: 1 } },
   },

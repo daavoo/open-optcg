@@ -59,6 +59,7 @@ export const op12ReactionRules: readonly ReactionRule[] = [
     },
     ownTurn: false,
     oncePerTurn: true,
+    optionalActivation: true,
     program: { effect: koalaLifeToHand },
   },
   {
@@ -72,6 +73,7 @@ export const op12ReactionRules: readonly ReactionRule[] = [
     },
     ownTurn: false,
     oncePerTurn: true,
+    optionalActivation: true,
     program: { effect: koalaLifeToHand },
   },
   {

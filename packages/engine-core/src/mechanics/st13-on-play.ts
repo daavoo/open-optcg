@@ -6,6 +6,7 @@
  * than quoting the card -- printed text is a runtime asset, not repo content
  * (`pnpm card:text ST13-0xx` prints it from the local cache).
  */
+import { paidToHand } from "./shared.js";
 import { SOURCE_BINDING } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import {
@@ -283,32 +284,34 @@ export const st13OnPlayMechanics: SetMechanics = {
                     binding: "st13-makino-take",
                     to: { player: "self", zone: "hand" },
                   },
-                  {
-                    kind: "look-at",
-                    player: "self",
-                    count: "all",
-                    bind: "st13-makino-read",
-                    zone: "life",
-                  },
-                  {
-                    kind: "select",
-                    selector: {
+                  paidToHand("st13-makino-take", [
+                    {
+                      kind: "look-at",
                       player: "self",
+                      count: "all",
+                      bind: "st13-makino-read",
                       zone: "life",
-                      binding: "st13-makino-read",
                     },
-                    bind: "st13-makino-order",
-                    count: "all",
-                    effect: {
-                      kind: "order-to-bottom",
-                      binding: "st13-makino-order",
-                      to: {
+                    {
+                      kind: "select",
+                      selector: {
                         player: "self",
                         zone: "life",
-                        position: "bottom",
+                        binding: "st13-makino-read",
+                      },
+                      bind: "st13-makino-order",
+                      count: "all",
+                      effect: {
+                        kind: "order-to-bottom",
+                        binding: "st13-makino-order",
+                        to: {
+                          player: "self",
+                          zone: "life",
+                          position: "bottom",
+                        },
                       },
                     },
-                  },
+                  ]),
                 ],
               },
             },

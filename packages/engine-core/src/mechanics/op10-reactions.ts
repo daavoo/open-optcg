@@ -27,6 +27,7 @@ export const op10ReactionRules: readonly ReactionRule[] = [
     ownTurn: false,
     opponentTurn: true,
     oncePerTurn: true,
+    optionalActivation: true,
     maxHandSize: 5,
     program: { effect: { kind: "draw", player: "self", count: 1 } },
   },

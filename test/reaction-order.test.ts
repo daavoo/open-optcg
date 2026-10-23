@@ -93,12 +93,9 @@ describe("ordering simultaneous automatic clauses", () => {
     const rested = game.state.players.p1.restedDon.length;
     const active = game.state.players.p1.activeDon.length;
 
+    // Both clauses are mandatory: once the order is picked, the two resolve
+    // without another question.
     play({ type: "resolve-effect", optionId: "reaction:pudding" });
-    play({ type: "resolve-effect", optionId: "apply" });
-    // The last clause left needs no order question, only its own.
-    expect(effectOptions(game.state)).toEqual(["apply", "skip"]);
-    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP09-061");
-    play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen)).toEqual([
@@ -115,7 +112,6 @@ describe("ordering simultaneous automatic clauses", () => {
     const active = game.state.players.p1.activeDon.length;
 
     play({ type: "resolve-effect", optionId: "reaction:p1-leader" });
-    play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen)).toEqual([
@@ -138,15 +134,11 @@ describe("ordering simultaneous automatic clauses", () => {
   });
 
   it("does not ask for an order when only one card answers", () => {
-    const { game, seen, play } = payTwo("order-alone", [
+    const { game, seen } = payTwo("order-alone", [
       character("bystander", "ST32-004"),
     ]);
 
-    // The Leader's own apply-or-skip question, and no order question.
-    expect(effectOptions(game.state)).toEqual(["apply", "skip"]);
-    expect(game.state.pendingEffect?.sourceCardNumber).toBe("OP09-061");
-    play({ type: "resolve-effect", optionId: "apply" });
-
+    // No order question, and the Leader's mandatory clause asks nothing.
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen).map((entry) => entry.source)).toEqual([
       "OP09-061",
@@ -175,14 +167,12 @@ describe("the Leader, Pudding and Kid on one returned pair", () => {
       "reaction:kid",
     ]);
     play({ type: "resolve-effect", optionId: "reaction:kid" });
-    play({ type: "resolve-effect", optionId: "apply" });
     // The pick resolved; the other two are asked about again.
     expect(effectOptions(game.state)).toEqual([
       "reaction:p1-leader",
       "reaction:pudding",
     ]);
     play({ type: "resolve-effect", optionId: "reaction:pudding" });
-    play({ type: "resolve-effect", optionId: "apply" });
 
     expect(game.state.pendingEffect).toBeNull();
     expect(added(seen)).toEqual([
