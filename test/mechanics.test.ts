@@ -423,3 +423,60 @@ describe("generic mechanic programs", () => {
     expect(state.players.p1.restedDon).toEqual([]);
   });
 });
+
+describe("field-don-versus with a margin", () => {
+  /**
+   * EB05-033 Nico Robin's gate: at least `by` fewer DON!! on the field than
+   * the opponent. Read on both sides of the boundary, and with `by` absent so
+   * the bare "fewer" every earlier caller prints still means one.
+   */
+  const drawsAt = (own: number, other: number, by?: number): boolean => {
+    const state = createGame({
+      gameId: "mechanic-don-margin",
+      p1: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      p2: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      seed: "mechanic-don-margin",
+    });
+    for (const [playerId, count] of [
+      ["p1", own],
+      ["p2", other],
+    ] as const) {
+      const side = state.players[playerId];
+      const pool = [...side.activeDon, ...side.donDeck];
+      side.activeDon = pool.splice(0, count);
+      side.donDeck = pool;
+    }
+    const before = state.players.p1.hand.length;
+    executeMechanicProgram(
+      state,
+      {
+        sourcePlayerId: "p1",
+        source: { instanceId: "src", cardNumber: "EB05-033" },
+      },
+      {
+        effect: {
+          kind: "if",
+          condition: {
+            kind: "field-don-versus",
+            player: "self",
+            operator: "lt",
+            ...(by === undefined ? {} : { by }),
+          },
+          then: { kind: "draw", player: "self", count: 1 },
+        },
+      },
+    );
+    return state.players.p1.hand.length > before;
+  };
+
+  it("holds at exactly the margin and not one short of it", () => {
+    expect(drawsAt(4, 10, 6)).toBe(true);
+    expect(drawsAt(5, 10, 6)).toBe(false);
+    expect(drawsAt(0, 10, 6)).toBe(true);
+  });
+
+  it("defaults to a margin of one", () => {
+    expect(drawsAt(9, 10)).toBe(true);
+    expect(drawsAt(10, 10)).toBe(false);
+  });
+});

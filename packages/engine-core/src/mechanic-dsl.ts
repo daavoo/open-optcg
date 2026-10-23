@@ -811,6 +811,14 @@ export type MechanicCondition =
        * the card was printed to sit out.
        */
       operator: "lte" | "gte" | "lt" | "gt";
+      /**
+       * How far apart the two counts have to be, for the strict operators --
+       * EB05-033 Nico Robin pays out only while its controller has at least 6
+       * fewer DON!! on the field than the opponent. Defaults to 1, which is the
+       * bare "fewer"/"more" every earlier caller prints. Ignored by `"lte"` and
+       * `"gte"`, whose reading already includes the tie.
+       */
+      by?: number;
     }
   /**
    * "[Opponent's Turn]" and "[Your Turn]" as a gate on a clause.

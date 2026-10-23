@@ -9,10 +9,27 @@ import {
   type RemovalImmunity,
   type StaticAbility,
 } from "../static-abilities.js";
+import { leaderHasType } from "./static-shared.js";
 
 export const eb05StaticAbilities: readonly StaticAbility[] = [
   // -- Red and Green: EB05-001 to EB05-020, and EB05-061 --
   // -- Blue and Purple: EB05-021 to EB05-040 --
+  // EB05-024 Little Sadi. Printed text: `pnpm card:text EB05-024`.
+  //
+  // Both halves behind the one {Impel Down} Leader gate. The keyword is a row
+  // here rather than read off the card, because the [Blocker] in the text is
+  // conditional; the cost layer is `scope: "self"`, so it is read only on the
+  // field and the card is still a 1-cost to play.
+  {
+    cardNumber: "EB05-024",
+    scope: "self",
+    cost: (context) => (leaderHasType(context, "Impel Down") ? 2 : 0),
+    keyword: {
+      keyword: "Blocker",
+      when: (context) =>
+        !context.isLeader && leaderHasType(context, "Impel Down"),
+    },
+  },
   // -- Black and Yellow: EB05-041 to EB05-060 --
 ];
 
