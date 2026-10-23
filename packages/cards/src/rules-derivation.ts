@@ -99,6 +99,17 @@ const OPPONENT_KEYWORD =
 const FILTER_KEYWORD = /^\s*Characters?\b/;
 
 /**
+ * Text that uses the keyword to *exclude* Characters, rather than printing it.
+ *
+ * EB05-010 Nico Robin's Leader watches "one of your Characters with the
+ * <Wisdom> attribute and without [Blocker]" -- the marker qualifies the
+ * Characters the clause answers to, and the qualifier sits before it rather
+ * than after, so `FILTER_KEYWORD` cannot see it. Read as printed text it made
+ * the Leader a [Blocker].
+ */
+const LACKED_KEYWORD = /\bwithout\s+$/;
+
+/**
  * Every occurrence has to be a grant or a denial before the keyword is dropped:
  * OP15-047 Sanji prints [Blocker] and grants [Unblockable] in the same text, and
  * only the granted one is somebody else's.
@@ -115,6 +126,7 @@ function keywordsOf(effect: string): CardKeyword[] {
       const after = effect.slice(index + marker.length);
       printed =
         !FILTER_KEYWORD.test(after) &&
+        !LACKED_KEYWORD.test(before) &&
         !GRANTED_KEYWORD.test(before) &&
         !DENIED_KEYWORD.test(before) &&
         !OPPONENT_KEYWORD.test(before);

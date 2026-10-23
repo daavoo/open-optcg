@@ -30,6 +30,7 @@ import {
 } from "./static-abilities.js";
 import { fieldDonCount } from "./don.js";
 import { bankDamagedLifeCard } from "./life.js";
+import { damageReplacementProtectors } from "./damage-replacement.js";
 import {
   battleParticipant,
   conditionMatches,
@@ -1104,6 +1105,29 @@ export function resolveBattle(
       resumeMainAfterBattle(state);
     }
     return;
+  }
+  // "If you would take damage, you may trash this Character instead" (EB05-052
+  // Gloriosa). Asked before a Life card is checked, and before a Leader on 0
+  // Life loses: the replacement answers the damage itself, so the game-win
+  // branch below is only reached once it has been declined (Bandai's
+  // EB05-052#1).
+  if (!attack.damageReplacementOffered) {
+    const protectors = damageReplacementProtectors(
+      state,
+      attack.defenderPlayerId,
+    );
+    if (protectors.length > 0) {
+      attack.damageReplacementOffered = true;
+      state.pendingEffect = {
+        kind: "damage-replacement",
+        playerId: attack.defenderPlayerId,
+        protectorInstanceIds: protectors.map((card) => card.instanceId),
+        sourceCardNumber: attackingCardNumber(state, attack),
+        sourceInstanceId: attack.attackerInstanceId,
+      };
+      state.activePlayer = attack.defenderPlayerId;
+      return;
+    }
   }
   const life = defender.life.shift();
   if (!life) {

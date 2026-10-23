@@ -1,11 +1,16 @@
 import { dealDamage, flipLife } from "./life.js";
 import {
+  damageReplacementOption,
+  damageReplacementProtectors,
+} from "./damage-replacement.js";
+import {
   boardCardNames,
   eligibleReplacements,
   replacementCoveredTargets,
   replacementCostEffect,
 } from "./replacement-eligibility.js";
 import {
+  cardAttributes,
   cards as defaultCardDatabase,
   hasCardName,
   hasCardType,
@@ -62,6 +67,7 @@ import {
   addBasePowerSetter,
   setBaseCardPower,
   conditionMatches,
+  boardCardAttributes,
 } from "./mechanic-conditions.js";
 import {
   getMechanicChoiceOptions,
@@ -771,6 +777,49 @@ export function continueExecution(
     }
     if (effect.kind === "deal-damage") {
       const targetPlayerId = resolvePlayer(execution.context, effect.player);
+      // "If you would take damage, you may trash this Character instead"
+      // (EB05-052 Gloriosa) answers an effect's damage too (Bandai's
+      // EB05-052#3), so the damaged player is asked before a Life card moves:
+      // one branch per protector, and one that takes the damage. The trash is
+      // the protector's own effect, so it skips the removal replacements a
+      // move made by the damage's source would otherwise offer.
+      const protectors =
+        effect.skipReplacements === true
+          ? []
+          : damageReplacementProtectors(state, targetPlayerId);
+      if (protectors.length > 0) {
+        for (const protector of protectors) {
+          execution.bindings[damageReplacementOption(protector.instanceId)] = [
+            protector.instanceId,
+          ];
+        }
+        execution.queue.unshift({
+          kind: "choice",
+          chooser:
+            targetPlayerId === execution.context.sourcePlayerId
+              ? "self"
+              : "opponent",
+          branches: [
+            ...protectors.map((protector) => ({
+              id: damageReplacementOption(protector.instanceId),
+              label: `Trash ${db.require(protector.cardNumber).name} instead of taking the damage`,
+              effect: {
+                kind: "move" as const,
+                binding: damageReplacementOption(protector.instanceId),
+                to: { player: "owner" as const, zone: "trash" as const },
+                skipReplacements: true as const,
+                sourceBinding: damageReplacementOption(protector.instanceId),
+              },
+            })),
+            {
+              id: "take-damage",
+              label: "Take the damage",
+              effect: { ...effect, skipReplacements: true as const },
+            },
+          ],
+        });
+        continue;
+      }
       events.push(...dealDamage(state, targetPlayerId));
       // A card leaving Life is what OP11-041 Nami's Leader reacts to, whether it
       // left to battle damage or to an effect.
@@ -1283,11 +1332,18 @@ export function continueExecution(
             ? owner.activeDon.length
             : owner.restedDon.length;
       };
-      const typeMatches = (cardNumber: string): boolean =>
+      const typeMatches = (
+        cardNumber: string,
+        attributes: () => readonly string[],
+      ): boolean =>
         (effect.type === undefined || hasCardType(cardNumber, effect.type)) &&
         (effect.name === undefined || hasCardName(cardNumber, effect.name)) &&
         (effect.anyOfTypes === undefined ||
-          effect.anyOfTypes.some((type) => hasCardType(cardNumber, type)));
+          effect.anyOfTypes.some((type) => hasCardType(cardNumber, type))) &&
+        (effect.anyOfAttributes === undefined ||
+          effect.anyOfAttributes.some((attribute) =>
+            attributes().includes(attribute),
+          ));
       // `player`'s cards first: it is the side each of these cards was written
       // for, so a pilot that takes the first offer keeps doing so.
       const owners: PlayerId[] = effect.eitherOwner
@@ -1298,11 +1354,17 @@ export function continueExecution(
         .flatMap((ownerId) => {
           const owner = state.players[ownerId];
           return [
-            ...(typeMatches(owner.leaderCardNumber)
+            ...(typeMatches(owner.leaderCardNumber, () =>
+              cardAttributes(db.require(owner.leaderCardNumber)),
+            )
               ? [`${ownerId}-leader`]
               : []),
             ...(effect.recipient === "leader" ? [] : owner.board)
-              .filter((card) => typeMatches(card.cardNumber))
+              .filter((card) =>
+                typeMatches(card.cardNumber, () =>
+                  boardCardAttributes(state, card, db),
+                ),
+              )
               .map((card) => card.instanceId),
           ];
         });

@@ -275,8 +275,15 @@ export function canBeTargeted(
 ): boolean {
   const definition = db.require(card.cardNumber);
   const rested = isRested(state, card);
-  const evaluatedPower =
-    "rested" in card
+  // A Leader reaches these criteria as a bare pseudo-card with no `rested`
+  // field, but its power moves exactly as a Character's does -- given DON!!,
+  // modifiers, base-power setters -- so "Leader or Characters with 6000 power
+  // or more" (EB05-001) and "a Leader with 4000 power or less" (OP09-007) read
+  // the number the Leader actually has. Lazy, like `basePower` below: most
+  // criteria never ask.
+  const isLeader = card.instanceId === `${playerId}-leader`;
+  const evaluatedPower = () =>
+    "rested" in card || isLeader
       ? currentPower(
           state,
           playerId,
@@ -305,9 +312,9 @@ export function canBeTargeted(
     (criteria.minPower === undefined ||
       (basePower() ?? Number.NEGATIVE_INFINITY) >= criteria.minPower) &&
     (criteria.maxCurrentPower === undefined ||
-      evaluatedPower <= criteria.maxCurrentPower) &&
+      evaluatedPower() <= criteria.maxCurrentPower) &&
     (criteria.minCurrentPower === undefined ||
-      evaluatedPower >= criteria.minCurrentPower) &&
+      evaluatedPower() >= criteria.minCurrentPower) &&
     (criteria.rested === undefined || rested === criteria.rested) &&
     (criteria.faceUp === undefined ||
       Boolean(card.faceUp) === criteria.faceUp) &&

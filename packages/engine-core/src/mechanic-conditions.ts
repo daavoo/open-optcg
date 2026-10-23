@@ -938,9 +938,10 @@ export function conditionMatches(
   if (condition.kind === "field-don-versus") {
     const own = fieldDonCount(state, playerId);
     const other = fieldDonCount(state, opponentOf(playerId));
+    const by = condition.by ?? 1;
     if (condition.operator === "lte") return own <= other;
-    if (condition.operator === "lt") return own < other;
-    if (condition.operator === "gt") return own > other;
+    if (condition.operator === "lt") return own + by <= other;
+    if (condition.operator === "gt") return own >= other + by;
     return own >= other;
   }
   const count = zoneCards(state, playerId, condition.zone).length;

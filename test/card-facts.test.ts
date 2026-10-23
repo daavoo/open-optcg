@@ -42,6 +42,9 @@ describe("card facts", () => {
     // activate up to 1 [Blocker] Character" name somebody else's Blocker.
     expect(cardFacts("ST30-012").keywords).not.toContain("Blocker");
     expect(cardFacts("OP09-014").keywords).not.toContain("Blocker");
+    // "...Characters ... without [Blocker]" excludes the keyword's holders:
+    // the EB05-010 Leader watches the others and prints no [Blocker] itself.
+    expect(cardFacts("EB05-010").keywords).not.toContain("Blocker");
   });
 });
 

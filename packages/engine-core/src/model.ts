@@ -632,6 +632,8 @@ export interface ActiveAttack {
    */
   defenderLeaderDonAtDeclaration?: number;
   koReplacementOffered?: boolean;
+  /** The defender has been asked about a damage replacement in this battle. */
+  damageReplacementOffered?: boolean;
   /**
    * Instance ids whose `[On Your Opponent's Attack]` ability has already been
    * offered in this battle.
@@ -1082,6 +1084,22 @@ export type PendingEffect =
        * the registry has to reach this window rather than only `knockOut`'s.
        */
       mechanicOptions?: { optionId: string; summary: string }[];
+    }
+  /**
+   * "If you would take damage, you may trash this Character instead" --
+   * EB05-052 Gloriosa, offered to the defender in the middle of
+   * `resolveBattle`, before a Life card is checked and before a player on 0
+   * Life loses (Bandai's EB05-052#1). Declining re-enters `resolveBattle`
+   * with `damageReplacementOffered` set; accepting ends the battle with no
+   * damage dealt, the second point of a [Double Attack] included
+   * (EB05-052#2). See `damage-replacement.ts`.
+   */
+  | {
+      kind: "damage-replacement";
+      playerId: PlayerId;
+      protectorInstanceIds: string[];
+      sourceCardNumber: string;
+      sourceInstanceId: string;
     }
   | {
       kind: "navy-search";

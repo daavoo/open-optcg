@@ -783,6 +783,16 @@ const setSeries = [
     binding: "eb04CardRecords",
   },
   {
+    // EB-05 has a series page of its own (569205) and 61 cards on it, every
+    // one numbered EB05-: the page carries no reprints for the prefix to drop.
+    id: "EB05",
+    files: ["cardlist-eb05.html"],
+    prefix: "EB05-",
+    expected: 61,
+    output: "generated-eb05.ts",
+    binding: "eb05CardRecords",
+  },
+  {
     // EB-03 does have a series page of its own (569203), so it reads one file
     // like the eight main sets and unlike its neighbour above.
     id: "EB03",

@@ -811,6 +811,14 @@ export type MechanicCondition =
        * the card was printed to sit out.
        */
       operator: "lte" | "gte" | "lt" | "gt";
+      /**
+       * How far apart the two counts have to be, for the strict operators --
+       * EB05-033 Nico Robin pays out only while its controller has at least 6
+       * fewer DON!! on the field than the opponent. Defaults to 1, which is the
+       * bare "fewer"/"more" every earlier caller prints. Ignored by `"lte"` and
+       * `"gte"`, whose reading already includes the tie.
+       */
+      by?: number;
     }
   /**
    * "[Opponent's Turn]" and "[Your Turn]" as a gate on a clause.
@@ -1659,6 +1667,16 @@ export type MechanicEffect =
        */
       anyOfTypes?: readonly string[];
       /**
+       * A disjunction of attributes -- "1 of your Leader or Character cards
+       * with the <Special> or <Wisdom> attribute" (EB05-057 Nojiko).
+       *
+       * The attribute counterpart of `anyOfTypes`, read through
+       * `boardCardAttributes` for a Character so an attribute granted for the
+       * turn counts as a printed one does, and a card printing several
+       * attributes qualifies on any of them (Bandai's EB05-057#1).
+       */
+      anyOfAttributes?: readonly string[];
+      /**
        * Which DON!! moves. Defaults to `"rested"`, the printed "give up to N
        * rested DON!! cards" every earlier card carries.
        *
@@ -1827,7 +1845,18 @@ export type MechanicEffect =
    * its Trigger window, so a second point cannot be dealt in the same
    * resolution. Nothing in the format prints one.
    */
-  | { kind: "deal-damage"; player: PlayerRef }
+  | {
+      kind: "deal-damage";
+      player: PlayerRef;
+      /**
+       * Internal: skip the damage-replacement offer (EB05-052 Gloriosa).
+       *
+       * Set only on the node the offer itself queues for its "take the
+       * damage" branch, so answering the offer does not raise it again -- the
+       * same flag `knock-out` and `move` carry for the removal replacements.
+       */
+      skipReplacements?: true;
+    }
   /**
    * Pay `DON!! −N`: return that many DON!! from the field to the DON!! deck.
    *

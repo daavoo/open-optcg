@@ -61,7 +61,7 @@ export const drawTwoTrashOne: MechanicEffect = {
  * the offer has paid for nothing. Nesting is what keeps a hand that cannot pay
  * from reaching the play.
  */
-const seraphimTrigger = (bind: string, then?: MechanicEffect) => ({
+export const seraphimTrigger = (bind: string, then?: MechanicEffect) => ({
   effect: {
     kind: "optional" as const,
     effect: payFromHand({ player: "self", zone: "hand" }, bind, 1, {

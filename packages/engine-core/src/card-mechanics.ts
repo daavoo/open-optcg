@@ -9,6 +9,7 @@
  */
 import {
   cards as defaultCardDatabase,
+  hasCardAttribute,
   hasCardType,
   hasCardTypeIncluding,
   printedClauses,
@@ -54,6 +55,7 @@ import {
   onBlockPrograms,
   onPlayPrograms,
   replacementPrograms,
+  damageReplacementPrograms,
   triggerPrograms,
   whenAttackingPrograms,
   whenRestedPrograms,
@@ -254,6 +256,7 @@ export function mechanicProgramCards(): ReadonlySet<string> {
     // is claimed here rather than exempted, which is what the registry in
     // `mechanics/<set>.ts` was added for.
     ...replacementPrograms.keys(),
+    ...damageReplacementPrograms.keys(),
     // A Leader whose clause has no printed marker and is dispatched off the
     // signal stream instead: OP11-041 Nami and OP16-041 Buggy.
     ...REACTION_RULES.map((rule) => rule.cardNumber),
@@ -837,6 +840,13 @@ export function getMechanicSignalInvocations(
               ((signal.from === "board"
                 ? departedCardBasePower(state, signal.ownerId, signal.card, db)
                 : moved.power) ?? 0) < rule.signal.movedMinPower) ||
+            (rule.signal.movedAttribute !== undefined &&
+              !hasCardAttribute(
+                signal.card.cardNumber,
+                rule.signal.movedAttribute,
+              )) ||
+            (rule.signal.movedLacksKeyword !== undefined &&
+              moved.rules.keywords.includes(rule.signal.movedLacksKeyword)) ||
             (rule.signal.sourceType !== undefined &&
               (signal.sourceCardNumber === undefined ||
                 !hasCardType(

@@ -39,6 +39,7 @@ card data.
 | `op05-shared.ts`       | OP05 fragments more than one of its cards prints                    |
 | `op06-*.ts`            | `cards/src/op06.ts`                                                 |
 | `op06-yamato.ts`       | `cards/src/op06-yamato.ts`                                          |
+| `eb05-*.ts`            | `cards/src/eb05.ts`                                                 |
 | `eb04-bonney.ts`       | `cards/src/eb04-bonney.ts`                                          |
 | `eb04-*.ts`            | `cards/src/eb04.ts`                                                 |
 | `eb04-replacements.ts` | the two removal replacements EB-04 prints                           |
@@ -58,6 +59,7 @@ card data.
 | `op15-shared.ts`       | OP15 fragments printed on two clauses of one card                   |
 | `op16-shared.ts`       | the OP16 Whitebeard "reveal an 8000" template                       |
 | `eb02-*.ts`            | `cards/src/eb02.ts`                                                 |
+| `eb05-shared.ts`       | EB05 fragments more than one of its cards prints                    |
 | `eb02-shared.ts`       | EB02 fragments more than one of its cards prints                    |
 | `shared.ts`            | program fragments more than one set prints                          |
 | `*-static.ts`          | each set's continuous text, the rows `../static-abilities.ts` folds |
@@ -69,7 +71,7 @@ card data.
 | `index.ts`             | the twelve merged registries                                        |
 
 Sixteen sets are in the pool as whole series -- OP05 through OP17, 119 cards
-each except OP14 and OP13 at 120, plus EB-04's 61, EB-03's 62 and EB-02's 61 --
+each except OP14 and OP13 at 120, plus EB-05's 61, EB-04's 61, EB-03's 62 and EB-02's 61 --
 and every one of them is split
 the same way, by the timing window a clause fires in: `*-on-play.ts`, `*-main.ts` (`[Main]` Events
 and `[Activate: Main]`), `*-battle.ts` (`[Counter]`,

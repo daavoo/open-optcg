@@ -76,6 +76,11 @@ import { op06MainMechanics } from "./op06-main.js";
 import { op06OnPlayMechanics } from "./op06-on-play.js";
 import { op06TriggerMechanics } from "./op06-triggers.js";
 import { op06YamatoMechanics } from "./op06-yamato.js";
+import { eb05OnPlayMechanics } from "./eb05-on-play.js";
+import { eb05MainMechanics } from "./eb05-main.js";
+import { eb05BattleMechanics } from "./eb05-battle.js";
+import { eb05TriggerMechanics } from "./eb05-triggers.js";
+import { eb05ReplacementMechanics } from "./eb05-replacements.js";
 import { eb04BonneyMechanics } from "./eb04-bonney.js";
 import { eb04OnPlayMechanics } from "./eb04-on-play.js";
 import { eb04MainMechanics } from "./eb04-main.js";
@@ -109,6 +114,7 @@ import {
   registerReplacementPrograms,
   registerWhenRestedCards,
 } from "../mechanics.js";
+import { registerDamageReplacements } from "../damage-replacement.js";
 import { mergeSetMechanics } from "./registry.js";
 import {
   registerRemovalImmunities,
@@ -122,6 +128,7 @@ import { op11ReactionRules } from "./op11-reactions.js";
 import { op13ReactionRules } from "./op13-reactions.js";
 import { op16ReactionRules } from "./op16-reactions.js";
 import { op14ReactionRules } from "./op14-reactions.js";
+import { eb05ReactionRules } from "./eb05-reactions.js";
 import { eb04ReactionRules } from "./eb04-reactions.js";
 import { op09ReactionRules } from "./op09-reactions.js";
 import { eb03ReactionRules } from "./eb03-reactions.js";
@@ -154,6 +161,7 @@ import { st25StaticAbilities } from "./st25-static.js";
 import { st30StaticAbilities } from "./st30-static.js";
 import { st28StaticAbilities } from "./st28-static.js";
 import { op06RemovalImmunities, op06StaticAbilities } from "./op06-static.js";
+import { eb05RemovalImmunities, eb05StaticAbilities } from "./eb05-static.js";
 import { eb04RemovalImmunities, eb04StaticAbilities } from "./eb04-static.js";
 import { eb03RemovalImmunities, eb03StaticAbilities } from "./eb03-static.js";
 import { op08RemovalImmunities, op08StaticAbilities } from "./op08-static.js";
@@ -365,6 +373,11 @@ const registries = mergeSetMechanics([
   { name: "op06-battle", mechanics: op06BattleMechanics },
   { name: "op06-triggers", mechanics: op06TriggerMechanics },
   { name: "op06-yamato", mechanics: op06YamatoMechanics },
+  { name: "eb05-on-play", mechanics: eb05OnPlayMechanics },
+  { name: "eb05-main", mechanics: eb05MainMechanics },
+  { name: "eb05-battle", mechanics: eb05BattleMechanics },
+  { name: "eb05-triggers", mechanics: eb05TriggerMechanics },
+  { name: "eb05-replacements", mechanics: eb05ReplacementMechanics },
   { name: "eb04-bonney", mechanics: eb04BonneyMechanics },
   { name: "eb04-on-play", mechanics: eb04OnPlayMechanics },
   { name: "eb04-main", mechanics: eb04MainMechanics },
@@ -405,12 +418,15 @@ export const onEndOfYourTurnPrograms = registries.onEndOfYourTurn;
 export const onStartOfYourTurnPrograms = registries.onStartOfYourTurn;
 export const triggerPrograms = registries.trigger;
 export const replacementPrograms = registries.replacement;
+export const damageReplacementPrograms = registries.damageReplacement;
 
 // The interpreter offers a registered replacement whenever its own `knock-out`
 // node would remove a Character, and it cannot import this module to find them:
 // every set module here imports `../mechanics.js`, so the edge would close a
 // cycle. Handing the merged registry over once, at init, is the seam.
 registerReplacementPrograms(replacementPrograms);
+// Same seam, for the damage replacement the `deal-damage` node offers.
+registerDamageReplacements(damageReplacementPrograms);
 // Same seam, for the two Characters whose text activates an Event out of hand.
 registerEventMainPrograms(eventMainPrograms);
 // Same seam again, for the one fact the inertness walk needs about a card it is
@@ -437,6 +453,7 @@ registerStaticAbilities([
   ...st30StaticAbilities,
   ...st28StaticAbilities,
   ...op06StaticAbilities,
+  ...eb05StaticAbilities,
   ...eb04StaticAbilities,
   ...eb03StaticAbilities,
   ...op08StaticAbilities,
@@ -466,6 +483,7 @@ registerReactionRules([
   ...op13ReactionRules,
   ...op16ReactionRules,
   ...op14ReactionRules,
+  ...eb05ReactionRules,
   ...eb04ReactionRules,
   ...op09ReactionRules,
   ...eb03ReactionRules,
@@ -490,6 +508,7 @@ registerRemovalImmunities([
   ...op15RemovalImmunities,
   ...eb03RemovalImmunities,
   ...eb04RemovalImmunities,
+  ...eb05RemovalImmunities,
   ...promoRemovalImmunities,
   ...st14RemovalImmunities,
 ]);

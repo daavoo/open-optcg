@@ -51,7 +51,8 @@ export function applyResolveEffect({
   // A declined battle K.O. replacement leaves the battle exactly where it was;
   // finish resolving it.
   if (
-    resolvedEffect?.kind === "battle-ko-replacement" &&
+    (resolvedEffect?.kind === "battle-ko-replacement" ||
+      resolvedEffect?.kind === "damage-replacement") &&
     !state.pendingEffect &&
     state.activeAttack
   ) {

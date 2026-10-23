@@ -8,6 +8,7 @@ import {
 } from "@one-piece-sim/engine-core";
 
 import { resolveDeck } from "@one-piece-sim/decks";
+import { scenario } from "./support/index.js";
 
 const lifeCost = (effect: MechanicProgram["effect"]): MechanicProgram => ({
   effect: {
@@ -258,6 +259,64 @@ describe("generic mechanic programs", () => {
     ).toBeUndefined();
   });
 
+  it("measures a Leader against a power bound at the power it has, not the power it prints", () => {
+    // A Leader reaches a selector as a bare pseudo-card. Its given DON!! and
+    // modifiers still move its power, and "Leader or Characters with 6000
+    // power or more" (EB05-001) reads that number.
+    const game = scenario()
+      .decks(
+        "(Red) Monkey.D.Luffy - Starter Deck 31",
+        "(Green) Roronoa Zoro - Starter Deck 32",
+      )
+      .seed("mechanic-leader-current-power")
+      .atTurn(11, { active: "p1" })
+      .bareTable()
+      .withGivenDon("p1", "p1-leader", 2)
+      .build();
+    const state = game.state;
+    const leaderOptions = (bound: {
+      minCurrentPower?: number;
+      maxCurrentPower?: number;
+    }) => {
+      const result = executeMechanicProgram(
+        state,
+        {
+          sourcePlayerId: "p1",
+          source: { instanceId: "probe", cardNumber: "FIX-001" },
+        },
+        {
+          effect: {
+            kind: "choose",
+            selector: {
+              player: "self",
+              zone: [],
+              includeLeader: true,
+              ...bound,
+            },
+            bind: "leader-bound",
+            min: 0,
+            max: 1,
+            effect: {
+              kind: "modify-power",
+              binding: "leader-bound",
+              amount: 0,
+              expiresAfterTurns: 0,
+            },
+          },
+        },
+      );
+      return result.pending
+        ? getMechanicChoiceOptions(state, result.pending)
+        : [];
+    };
+
+    // A printed 5000 with two DON!! given on its own turn is a 7000.
+    expect(leaderOptions({ minCurrentPower: 7_000 })).toContain("p1-leader");
+    expect(leaderOptions({ maxCurrentPower: 5_000 })).not.toContain(
+      "p1-leader",
+    );
+  });
+
   it("gives rested DON!! to a chosen Leader or Character, or declines", () => {
     const state = createGame({
       gameId: "mechanic-give-rested-don",
@@ -421,5 +480,165 @@ describe("generic mechanic programs", () => {
     expect(result.pending).toBeNull();
     expect(state.players.p1.leaderAttachedDon).toEqual(["r1"]);
     expect(state.players.p1.restedDon).toEqual([]);
+  });
+
+  it("filters give-rested-don targets by any of several attributes, granted ones included", () => {
+    const state = createGame({
+      gameId: "mechanic-give-rested-don-attribute",
+      p1: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      p2: resolveDeck("(Green) Roronoa Zoro - Starter Deck 32"),
+      seed: "mechanic-give-rested-don-attribute",
+    });
+    const source = { instanceId: "nojiko", cardNumber: "EB05-057" };
+    state.players.p1.restedDon = ["r1"];
+    // A <Wisdom> Leader, a <Slash>/<Wisdom> Character, a <Strike> one, and a
+    // <Strike> one handed <Special> for the turn (EB05-057's filter).
+    state.players.p1.leaderCardNumber = "FIX-LEADER-VEGAPUNK";
+    const body = (
+      instanceId: string,
+      cardNumber: string,
+      granted?: string[],
+    ) => ({
+      instanceId,
+      cardNumber,
+      rested: false,
+      playedTurn: 1,
+      attachedDon: [],
+      powerModifiers: [],
+      ...(granted
+        ? {
+            grantedAttributes: {
+              attributes: granted,
+              expiresAtTurn: state.turn,
+            },
+          }
+        : {}),
+    });
+    state.players.p1.board = [
+      body("mohji", "OP12-055"),
+      body("deckhand", "FIX-001"),
+      body("granted", "FIX-001", ["Special"]),
+    ];
+
+    const result = executeMechanicProgram(
+      state,
+      { sourcePlayerId: "p1", source },
+      {
+        effect: {
+          kind: "give-rested-don",
+          player: "self",
+          count: 1,
+          anyOfAttributes: ["Special", "Wisdom"],
+        },
+      },
+    );
+    expect(getMechanicChoiceOptions(state, result.pending!)).toEqual([
+      "p1-leader",
+      "mohji",
+      "granted",
+      "skip",
+    ]);
+  });
+
+  it("asks the damaged player about a damage replacement before deal-damage moves a Life card", () => {
+    const state = createGame({
+      gameId: "mechanic-damage-replacement",
+      p1: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      p2: resolveDeck("(Green) Roronoa Zoro - Starter Deck 32"),
+      seed: "mechanic-damage-replacement",
+    });
+    state.players.p2.board = [
+      {
+        instanceId: "gloriosa",
+        cardNumber: "EB05-052",
+        rested: false,
+        playedTurn: 1,
+        attachedDon: [],
+        powerModifiers: [],
+      },
+    ];
+    state.players.p2.life = state.players.p2.deck.splice(0, 2);
+    const lifeBefore = state.players.p2.life.length;
+    const program: MechanicProgram = {
+      effect: { kind: "deal-damage", player: "opponent" },
+    };
+    const source = { instanceId: "robin", cardNumber: "EB03-055" };
+
+    let result = executeMechanicProgram(
+      state,
+      { sourcePlayerId: "p1", source },
+      program,
+    );
+    expect(result.pending?.kind).toBe("choice");
+    expect(
+      result.pending?.kind === "choice" && result.pending.chooserPlayerId,
+    ).toBe("p2");
+    expect(getMechanicChoiceOptions(state, result.pending!)).toEqual([
+      "replace:gloriosa",
+      "take-damage",
+    ]);
+
+    // Taking the damage deals it, without asking a second time.
+    result = resolveMechanicChoice(state, result.pending!, "take-damage");
+    expect(result.pending).toBeNull();
+    expect(state.players.p2.life).toHaveLength(lifeBefore - 1);
+    expect(state.pendingTrigger?.playerId).toBe("p2");
+  });
+});
+
+describe("field-don-versus with a margin", () => {
+  /**
+   * EB05-033 Nico Robin's gate: at least `by` fewer DON!! on the field than
+   * the opponent. Read on both sides of the boundary, and with `by` absent so
+   * the bare "fewer" every earlier caller prints still means one.
+   */
+  const drawsAt = (own: number, other: number, by?: number): boolean => {
+    const state = createGame({
+      gameId: "mechanic-don-margin",
+      p1: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      p2: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
+      seed: "mechanic-don-margin",
+    });
+    for (const [playerId, count] of [
+      ["p1", own],
+      ["p2", other],
+    ] as const) {
+      const side = state.players[playerId];
+      const pool = [...side.activeDon, ...side.donDeck];
+      side.activeDon = pool.splice(0, count);
+      side.donDeck = pool;
+    }
+    const before = state.players.p1.hand.length;
+    executeMechanicProgram(
+      state,
+      {
+        sourcePlayerId: "p1",
+        source: { instanceId: "src", cardNumber: "EB05-033" },
+      },
+      {
+        effect: {
+          kind: "if",
+          condition: {
+            kind: "field-don-versus",
+            player: "self",
+            operator: "lt",
+            ...(by === undefined ? {} : { by }),
+          },
+          then: { kind: "draw", player: "self", count: 1 },
+        },
+      },
+    );
+    return state.players.p1.hand.length > before;
+  };
+
+  it("holds at exactly the margin and not one short of it", () => {
+    expect(drawsAt(4, 10, 6)).toBe(true);
+    expect(drawsAt(5, 10, 6)).toBe(false);
+    expect(drawsAt(0, 10, 6)).toBe(true);
+  });
+
+  it("defaults to a margin of one", () => {
+    expect(drawsAt(9, 10)).toBe(true);
+    expect(drawsAt(10, 10)).toBe(false);
   });
 });

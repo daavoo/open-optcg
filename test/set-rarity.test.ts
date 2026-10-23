@@ -37,7 +37,7 @@ const EXPECTED_COMPOSITION = { C: 45, UC: 30, R: 26, SR: 10 };
  */
 const EB04_COMPOSITION = { C: 27, UC: 1, R: 22, SR: 9 };
 /**
- * Shared by EB-03 and EB-02, which print the same 29/21/9 below the Leader and
+ * Shared by EB-05, EB-03 and EB-02, which print the same 29/21/9 below the Leader and
  * the Secrets and differ only in how many Secrets sit above it -- EB-03 has two
  * and 62 cards, EB-02 one and 61. So the make-up below the top of the set is
  * the extra booster's own standard, and the two sets sharing one constant is
@@ -162,6 +162,12 @@ const SET_SIZES: Record<
   // than two. EB-04 is also the only set the audit reads from two pages, where
   // EB-03 has a series page of its own; see `cards/src/eb04.ts` and
   // `cards/src/eb03.ts`.
+  EB05: {
+    total: 61,
+    leaders: 1,
+    secrets: 1,
+    composition: EB03_COMPOSITION,
+  },
   EB04: {
     total: 61,
     leaders: 1,
@@ -315,6 +321,7 @@ const IMPORTED_SETS = [
   "OP15",
   "OP16",
   "OP17",
+  "EB05",
   "EB04",
   "EB03",
   "EB02",

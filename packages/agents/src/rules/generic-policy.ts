@@ -309,6 +309,40 @@ const ATTACK_ONLY_KEYWORDS = new Set(["Unblockable", "Double Attack"]);
 const RUSH_KEYWORDS = new Set(["Rush", "Rush: Character"]);
 
 /**
+ * Answer "if you would take damage, you may trash this Character instead"
+ * (EB05-052 Gloriosa): take the damage unless it would lose the game.
+ *
+ * The engine asks it in two shapes -- a `damage-replacement` effect for a lost
+ * battle, whose decline is `skip`, and a `take-damage` mode on an effect's
+ * `deal-damage` -- and both list the replacement first, so the fallback below
+ * would always pay it. That trades a 6000-power body for one Life card, and the
+ * Life card comes to hand (or flips a [Trigger]), so the trade only pays when
+ * there is no Life left to take: at 0 Life the damage ends the game.
+ */
+export function chooseDamageReplacement(
+  observation: GameObservation,
+  effects: readonly EffectAction[],
+): PolicyDecision | undefined {
+  const takeDamage = effects.find(
+    (action) =>
+      (action.effectKind === "damage-replacement" &&
+        action.option.kind === "skip") ||
+      (action.option.kind === "mode" && action.option.mode === "take-damage"),
+  );
+  if (!takeDamage) return undefined;
+  if (observation.self.lifeCount > 0) {
+    return decision(
+      takeDamage,
+      "Take the damage: a Life card is cheaper than the Character.",
+    );
+  }
+  const replace = effects.find((action) => action !== takeDamage);
+  return replace
+    ? decision(replace, "Trash the Character: the damage would lose the game.")
+    : undefined;
+}
+
+/**
  * A keyword granted for this turn goes on a card that can use it this turn.
  *
  * OP17-084 Chopper's `[On Play]` offers `[Unblockable]` to any of your
@@ -1026,6 +1060,8 @@ export function chooseGenericRules(
     // costs it 1000 power on the spot.
     const donReturn = chooseDonReturn(effects);
     if (donReturn) return donReturn;
+    const damage = chooseDamageReplacement(observation, effects);
+    if (damage) return damage;
     // Before the strongest-opponent rule too: a debuff paid during a battle
     // goes on the card in the battle, whatever else is on the board.
     const debuffed = chooseBattleDebuffTarget(observation, effects);
