@@ -3,6 +3,7 @@ import {
   compareFeaturePageEntries,
   deckManifests,
   deckShelf,
+  isRecommendedDeck,
   starterDeckNumber,
   SELECTABLE_DECK_IDS,
 } from "@one-piece-sim/decks";
@@ -215,6 +216,16 @@ function deckGroups(
     (left, right) =>
       (starterDeckNumber(left) ?? 0) - (starterDeckNumber(right) ?? 0),
   );
+  // A Leader's recommended list (`DeckManifest.recommended`) leads its shelf,
+  // ahead of every order above: it is the list the app means a player to be
+  // handed for that Leader, so it is the first tile they read. The sort is
+  // stable, so the rest of each shelf keeps the order it was just given.
+  for (const shelf of shelves.slice(1)) {
+    shelf.deckIds.sort(
+      (left, right) =>
+        Number(isRecommendedDeck(right)) - Number(isRecommendedDeck(left)),
+    );
+  }
   return shelves;
 }
 
@@ -269,6 +280,7 @@ export function deckPickerDialog(
         <button class="deck-tile ${deckId === selected ? "picked" : ""}" type="button" data-pick-deck="${seat}" data-deck-id="${escapeHtml(deckId)}" aria-pressed="${deckId === selected}">
           ${renderDeckLeaderPreview(savedDecks, deckId)}
           <span class="deck-tile-name">${escapeHtml(deckLabel(savedDecks, deckId))}</span>
+          ${isRecommendedDeck(deckId) ? `<span class="deck-tile-badge">Recommended</span>` : ""}
         </button>
         ${options.offerBuilder ? `<button class="deck-tile-edit" type="button" data-edit-deck="${seat}" data-deck-id="${escapeHtml(deckId)}" title="Open ${escapeHtml(deckLabel(savedDecks, deckId))} in the deck editor">${icon("settings", `Open ${deckLabel(savedDecks, deckId)} in the deck editor`)}</button>` : ""}
         ${

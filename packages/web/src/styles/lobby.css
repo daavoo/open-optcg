@@ -350,6 +350,18 @@
   font-size: 0.78rem;
   line-height: 1.35;
 }
+/* The mark on a Leader's recommended list: the one tile among that Leader's
+   lists the app would hand a player, so it reads as a label, not a control. */
+.deck-tile-badge {
+  justify-self: center;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--flag);
+  border-radius: 999px;
+  color: var(--flag);
+  font: 600 0.62rem/1.4 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 /* The empty slot, first in the grid: a deck that does not exist yet. Drawn as
    an outline rather than a filled tile, which is what says "empty". */
 .deck-tile-builder {

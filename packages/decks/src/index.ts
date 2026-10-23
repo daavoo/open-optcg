@@ -40,6 +40,7 @@ import { op15LuffyManifest } from "./op15-luffy-manifest.js";
 import { eb03ViviManifest } from "./eb03-vivi-manifest.js";
 import { op14LawManifest } from "./op14-law-manifest.js";
 import { op14HancockManifest } from "./op14-hancock-manifest.js";
+import { op14HancockTournamentManifest } from "./op14-hancock-tournament-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -315,6 +316,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle",
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
   "(Yellow) Vegapunk - 1st Place Store Battle",
+  "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -348,6 +350,18 @@ export interface DeckManifest {
    * a real deck, and the point of the field is that the list says so.
    */
   format?: DeckFormat;
+  /**
+   * This is the list the app hands a player for its Leader: the one the deck
+   * picker puts first and marks, when several shipped lists share a Leader.
+   *
+   * A Leader's lists are rarely equal -- Bandai's feature deck is a showcase,
+   * and a list the field has tuned since usually plays the Leader better -- so
+   * the picker should not leave the choice to whichever tuple a list happens
+   * to be listed in. At most one shipped list per Leader carries it
+   * (`test/deck-provenance.test.ts` holds that), and a Leader with one list
+   * needs none: {@link recommendedDeckFor} falls back to it.
+   */
+  recommended?: true;
 }
 
 /** The format a manifest declares, with Standard as the default. */
@@ -455,6 +469,8 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final":
     op11KobyTournamentManifest,
   "(Yellow) Vegapunk - 1st Place Store Battle": op07VegapunkTournamentManifest,
+  "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
+    op14HancockTournamentManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {
@@ -544,6 +560,30 @@ export const deckManifests: Record<string, DeckManifest> = Object.fromEntries([
     },
   ]),
 ]);
+
+/**
+ * The shipped list the app offers for `leader`: the one marked
+ * {@link DeckManifest.recommended}, else the only selectable list behind that
+ * Leader, else undefined when several share it and none is marked.
+ */
+export function recommendedDeckFor(
+  leader: string,
+): SelectableDeckId | undefined {
+  const lists = SELECTABLE_DECK_IDS.filter(
+    (deckId) => deckManifests[deckId]?.leader === leader,
+  );
+  return (
+    lists.find((deckId) => deckManifests[deckId]?.recommended) ??
+    (lists.length === 1 ? lists[0] : undefined)
+  );
+}
+
+/** Whether `deckId` is marked as its Leader's recommended list. Only a
+    Leader with more than one list needs the mark, so it is also the case
+    where showing it tells the player something. */
+export function isRecommendedDeck(deckId: string): boolean {
+  return deckManifests[deckId]?.recommended === true;
+}
 
 export function requireSupportedDeck(deckId: string): DeckManifest {
   const manifest = deckManifests[deckId];

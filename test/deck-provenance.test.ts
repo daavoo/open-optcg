@@ -9,7 +9,9 @@ import {
   deckCardRows,
   deckFormatReport,
   formatDeckCardRows,
+  recommendedDeckFor,
   requireSupportedDeck,
+  SELECTABLE_DECK_IDS,
   validateDeckCardRows,
   type DeckCardRow,
 } from "@one-piece-sim/decks";
@@ -132,7 +134,9 @@ describe("deck provenance rows", () => {
     // cards and its Leader.
     // The (Red/Green) Monkey.D.Luffy list moved to the Malmo Regional winner:
     // sixteen distinct deck cards where the old list had fourteen, so 2 more.
-    expect(communityDeckCardRows).toHaveLength(936);
+    // The ChinoizeCup #105 (Blue/Yellow) Boa Hancock list adds 17: sixteen
+    // distinct deck cards and its Leader.
+    expect(communityDeckCardRows).toHaveLength(953);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -202,7 +206,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(67);
+    expect(reports).toHaveLength(68);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
@@ -259,5 +263,40 @@ describe("deck provenance rows", () => {
         expect(row.sourceMatch, cardNumber).toBe(false);
       }
     }
+  });
+});
+
+describe("recommended lists", () => {
+  it("marks at most one shipped list per Leader", () => {
+    const marked = new Map<string, string[]>();
+    for (const deckId of SELECTABLE_DECK_IDS) {
+      const manifest = requireSupportedDeck(deckId);
+      if (!manifest.recommended) continue;
+      marked.set(manifest.leader, [
+        ...(marked.get(manifest.leader) ?? []),
+        deckId,
+      ]);
+    }
+    for (const [leader, deckIds] of marked) {
+      expect(deckIds, leader).toHaveLength(1);
+    }
+  });
+
+  it("offers the tuned Hancock list over Bandai's feature deck", () => {
+    expect(recommendedDeckFor("OP14-041")).toBe(
+      "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
+    );
+    expect(
+      requireSupportedDeck("(Blue/Yellow) Boa Hancock - Official Feature Deck")
+        .recommended,
+    ).toBeUndefined();
+  });
+
+  it("falls back to a Leader's only list, and to none when unmarked lists share one", () => {
+    // OP12-040 fronts ST-33 and the Hiroshima list, and neither is marked.
+    expect(recommendedDeckFor("OP12-040")).toBeUndefined();
+    expect(recommendedDeckFor("OP14-001")).toBe(
+      "(Red) Trafalgar Law - Official Feature Deck",
+    );
   });
 });

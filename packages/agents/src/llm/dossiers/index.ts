@@ -74,6 +74,7 @@ import { st31Dossier } from "./st31.js";
 import { st32Dossier } from "./st32.js";
 import { st33Dossier } from "./st33.js";
 import { st33KuzanTournamentDossier } from "./st33-kuzan-tournament.js";
+import { op14HancockTournamentDossier } from "./op14-hancock-tournament.js";
 import { st34Dossier } from "./st34.js";
 import { st35Dossier } from "./st35.js";
 import { st36Dossier } from "./st36.js";
@@ -133,6 +134,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Yellow) Enel - Open OPTCG": op05EnelOpenDossier,
   "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroPostBanDossier,
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentDossier,
+  "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
+    op14HancockTournamentDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,
