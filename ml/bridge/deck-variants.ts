@@ -1918,6 +1918,27 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
     source:
       "TCG Match Making, OP17.5 Weekly Power Rankings, 22 Oct 2026: Green Shanks, ranked 10 of the top ten",
   },
+  {
+    base: "(Black) Monkey.D.Luffy - Open OPTCG",
+    label: "Mon's build",
+    cards: {
+      "OP15-086": 4,
+      "OP15-088": 4,
+      "OP15-092": 4,
+      "OP17-080": 4,
+      "OP17-081": 2,
+      "OP17-082": 4,
+      "OP17-084": 2,
+      "OP17-086": 4,
+      "OP17-087": 2,
+      "OP17-089": 4,
+      "OP17-091": 4,
+      "OP17-093": 4,
+      "OP17-096": 4,
+      "OP17-098": 4,
+    },
+    source: "Built by Mon, shared 23 Oct 2026",
+  },
 ];
 
 export const variantId = (variant: DeckVariant): string =>
