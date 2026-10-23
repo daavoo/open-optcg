@@ -45,6 +45,7 @@ import { op11KobyTournamentManifest } from "./op11-koby-tournament-manifest.js";
 import { op07VegapunkTournamentManifest } from "./op07-vegapunk-tournament-manifest.js";
 import { op14LawManifest } from "./op14-law-manifest.js";
 import { op14HancockManifest } from "./op14-hancock-manifest.js";
+import { op14HancockTournamentManifest } from "./op14-hancock-tournament-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -242,6 +243,13 @@ export type CommunityDeckId =
   | "(Red/Black) Koby - 2nd Place Indonesia Regional Final"
   | "(Yellow) Vegapunk - 1st Place Store Battle"
   /**
+   * A second list under the OP14-041 Leader beside Bandai's feature deck: the
+   * 25th-place entry at ChinoizeCup #105, an online event played on
+   * 2 Sep 2026, read off Limitless TCG's results and validated one identity
+   * at a time like the lists above.
+   */
+  | "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105"
+  /**
    * Bandai's ST-18 precon, whose Leader is the OP05-060 reprint. Same standing
    * as ST-26 below: off a Bandai page rather than out of the ST31-36 loop, so
    * its identities are validated one by one here.
@@ -339,6 +347,8 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op11KobyTournamentManifest,
     "(Yellow) Vegapunk - 1st Place Store Battle":
       op07VegapunkTournamentManifest,
+    "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
+      op14HancockTournamentManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,

@@ -246,8 +246,8 @@ describe("deck standings", () => {
     // What has to stay comparable across the two files is a row's precision,
     // which is games per deck, not seeds per matchup. The single 27-deck field
     // gave every deck 260 games. The ceiling is 440 because seeds come in
-    // whole numbers: at fifty-five featured decks 4 seeds is 432 games a deck
-    // and 3 is 324. The count stays at 4, since a seed less costs every row
+    // whole numbers: at fifty-six featured decks 4 seeds is 440 games a deck
+    // and 3 is 330. The count stays at 4, since a seed less costs every row
     // precision and a seed more costs only run time.
     for (const division of STANDINGS_DIVISIONS) {
       const decks = divisionDecks(division).length;

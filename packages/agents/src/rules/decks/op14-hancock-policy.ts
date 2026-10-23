@@ -13,13 +13,13 @@ import { createMulliganModule } from "../mulligan.js";
 import type { PolicyModule } from "../policy-module.js";
 
 /**
- * The fifty's Characters of cost 4 or less: OP13-113 Lilith (1), OP14-113
- * Marguerite (3) and OP14-114 Ran (4). The generic keep reads any card of
- * cost 2 or less, which here is Lilith and the OP14-118 Counter Event -- and
- * the Event is not a play, so a hand holding only it has nothing to do before
- * the 5-costs.
+ * The Characters of cost 4 or less the two Hancock lists play: OP13-113
+ * Lilith (1), OP14-113 Marguerite (3), OP14-114 Ran (4) and, in the
+ * ChinoizeCup list, ST17-004 Boa Hancock (4). The generic keep reads any card
+ * of cost 2 or less, which here is Lilith and the Events -- and an Event is
+ * not a play, so a hand holding only one has nothing to do before the 5-costs.
  */
-const EARLY_PLAYS = new Set(["OP13-113", "OP14-113", "OP14-114"]);
+const EARLY_PLAYS = new Set(["OP13-113", "OP14-113", "OP14-114", "ST17-004"]);
 
 export function createOp14HancockMulliganModule(): PolicyModule {
   return createMulliganModule({
@@ -27,7 +27,7 @@ export function createOp14HancockMulliganModule(): PolicyModule {
     keep: (observation) =>
       observation.self.hand.some((card) => EARLY_PLAYS.has(card.cardNumber)),
     keepBecause:
-      "Keep a Lilith, Marguerite or Ran: a Character to play before the 5-costs arrive.",
+      "Keep a Lilith, Marguerite, Ran or ST17-004 Hancock: a Character to play before the 5-costs arrive.",
     mulliganBecause:
       "Mulligan a hand with no Character of cost 4 or less: it does nothing until turn five.",
   });

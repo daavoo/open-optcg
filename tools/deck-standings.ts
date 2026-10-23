@@ -165,8 +165,8 @@ export const STANDINGS_PATHS: Record<StandingsDivision, string> = {
 export const STANDINGS_SEEDS: Record<StandingsDivision, number> = {
   // 4 since the thirty-first featured deck, for the reason the starter count
   // below gives: thirty-one decks play thirty opponents each, so 4 seeds is
-  // 240 games a deck, where 5 would be 300. At fifty-five decks 4 seeds is
-  // 432 and 3 would be 324, a seed less precision on every row, so the count
+  // 240 games a deck, where 5 would be 300. At fifty-six decks 4 seeds is
+  // 440 and 3 would be 330, a seed less precision on every row, so the count
   // stays at 4 and the band's ceiling in `test/deck-standings.test.ts` sits
   // at 440.
   featured: 4,
