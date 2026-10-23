@@ -19,7 +19,11 @@ import {
   type FormatDeckId,
   type ControllerKind,
 } from "./agent-factory.js";
-import { FORMAT_DECK_IDS, resolveDeck } from "@one-piece-sim/decks";
+import {
+  deckDisplayName,
+  FORMAT_DECK_IDS,
+  resolveDeck,
+} from "@one-piece-sim/decks";
 import { chooseHumanAction } from "./human-seat.js";
 import { TraceRecorder, type TraceController } from "./trace.js";
 
@@ -34,7 +38,7 @@ interface MatchController {
 }
 
 const deckOptions: Array<{ label: string; value: FormatDeckId }> =
-  FORMAT_DECK_IDS.map((id) => ({ label: id, value: id }));
+  FORMAT_DECK_IDS.map((id) => ({ label: deckDisplayName(id), value: id }));
 
 const controllerOptions: Array<{ label: string; value: ControllerKind }> = [
   { label: "Human", value: "human" },
@@ -119,8 +123,8 @@ try {
   const tracePath = (await prompt.question("Trace JSON path [none]: ")).trim();
 
   const labels: Record<PlayerId, string> = {
-    p1: `${p1Deck} (P1)`,
-    p2: `${p2Deck} (P2)`,
+    p1: `${deckDisplayName(p1Deck)} (P1)`,
+    p2: `${deckDisplayName(p2Deck)} (P2)`,
   };
   const controllers: Record<PlayerId, MatchController> = {
     p1: makeController(p1Kind, p1Deck, `${seed}:p1-agent`),
@@ -138,7 +142,7 @@ try {
   trace?.setInitialObservation(observation);
 
   console.log(
-    `\nStarting ${p1Deck} (${p1Kind}) vs ${p2Deck} (${p2Kind})${trace ? `; trace: ${trace.filePath}` : ""}`,
+    `\nStarting ${deckDisplayName(p1Deck)} (${p1Kind}) vs ${deckDisplayName(p2Deck)} (${p2Kind})${trace ? `; trace: ${trace.filePath}` : ""}`,
   );
 
   while (observation.phase !== "finished" && !quit) {

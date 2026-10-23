@@ -585,6 +585,68 @@ export function isRecommendedDeck(deckId: string): boolean {
   return deckManifests[deckId]?.recommended === true;
 }
 
+/**
+ * A shipped deck's name as the app shows it: its Leader and the Leader's
+ * colours, "Boa Hancock (Blue/Yellow)".
+ *
+ * The id says where a list came from -- a placing, an event, a product -- and
+ * that is the wrong thing to put in front of a player once a Leader's
+ * recommended list ({@link DeckManifest.recommended}) can be swapped for a
+ * better one: the Leader stays, the origin would not. The id stays the key
+ * for everything that stores or measures a deck; this is display only.
+ *
+ * An id that is not a shipped list -- a saved deck, a sealed build, a
+ * training variant -- is returned as it is.
+ */
+export function deckDisplayName(deckId: string): string {
+  return displayNames.get(deckId) ?? deckId;
+}
+
+/** One list for {@link nameDeckLists}: what its name is built from. */
+export interface NamedDeckList {
+  id: string;
+  leader: string;
+  shelf: DeckShelf;
+  recommended?: boolean;
+}
+
+/**
+ * The display names of a set of lists, keyed by id.
+ *
+ * Lists behind one Leader on different shelves share a name: the shelf, and
+ * the Recommended badge, tell them apart. Two on the same shelf would be two
+ * identical tiles side by side, so the second and later get a counter, "(2)",
+ * in the order given with the recommended list first -- a counter rather than
+ * the origin, which is the word that goes stale when the list is replaced.
+ */
+export function nameDeckLists(
+  lists: readonly NamedDeckList[],
+): Map<string, string> {
+  const names = new Map<string, string>();
+  const seen = new Map<string, number>();
+  const ordered = [...lists].sort(
+    (left, right) => Number(!!right.recommended) - Number(!!left.recommended),
+  );
+  for (const list of ordered) {
+    const leader = requireKnownCard(list.leader);
+    const title = `${leader.name} (${leader.colors?.join("/") ?? "No colour"})`;
+    const key = `${list.shelf}|${title}`;
+    const count = (seen.get(key) ?? 0) + 1;
+    seen.set(key, count);
+    names.set(list.id, count === 1 ? title : `${title} (${String(count)})`);
+  }
+  return names;
+}
+
+const displayNames: ReadonlyMap<string, string> = nameDeckLists(
+  SELECTABLE_DECK_IDS.map((id) => ({
+    id,
+    leader: deckManifests[id]!.leader,
+    shelf: deckShelf(id),
+    recommended: isRecommendedDeck(id),
+  })),
+);
+
 export function requireSupportedDeck(deckId: string): DeckManifest {
   const manifest = deckManifests[deckId];
   if (!manifest) throw new Error(`UNSUPPORTED_DECK: ${deckId}`);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { deckManifests } from "@one-piece-sim/decks";
+import { deckDisplayName, deckManifests } from "@one-piece-sim/decks";
+import { escapeHtml } from "../packages/web/src/card-text.js";
 import {
   winRateRange,
   type AnalyticsGame,
@@ -54,8 +55,10 @@ describe("simulate matchup screen", () => {
   it("shows the lobby's two decks and one button, with no results yet", () => {
     const html = render(emptyState(), stubContext());
     expect(html).toContain("Simulate matchup");
-    expect(html).toContain(LUFFY);
-    expect(html).toContain(KID);
+    // By the Leader and its colours, not the id.
+    expect(html).toContain(`<b>${escapeHtml(deckDisplayName(LUFFY))}</b>`);
+    expect(html).toContain(`<b>${escapeHtml(deckDisplayName(KID))}</b>`);
+    expect(html).not.toContain(LUFFY);
     expect(DEFAULT_RUN_GAMES).toBe(100);
     expect(html).toMatch(/id="sim-run">.*Run 100 games<\/button>/s);
     // The three sizes, the default pressed.

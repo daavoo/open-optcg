@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  deckDisplayName,
   deckManifests,
   deckShelf,
   SELECTABLE_DECK_IDS,
@@ -10,10 +11,7 @@ import {
   selectField,
 } from "../packages/web/src/deck-select.js";
 import { escapeHtml } from "../packages/web/src/card-text.js";
-import {
-  deckDisplayName,
-  type SavedDeck,
-} from "../packages/web/src/deck-labels.js";
+import type { SavedDeck } from "../packages/web/src/deck-labels.js";
 
 /**
  * Where the picker prints a deck's tile, by the same escaping the renderer uses.
@@ -38,39 +36,30 @@ const savedDecks: Record<string, SavedDeck> = {
 };
 
 describe("deck labels in the picker and the selects", () => {
-  it("does not repeat a Leader the deck id already names", () => {
-    // Every format deck id carries its Leader, so the suffix that a custom
-    // deck needs was printing it twice: "... Starter Deck 31 · Monkey.D.Luffy".
-    expect(deckLabel({}, LUFFY_ST31)).toBe(LUFFY_ST31);
+  it("names a shipped deck by its Leader and colours, and only once", () => {
+    // The name is the Leader's, so the Leader suffix a custom deck needs is
+    // never added to it.
+    expect(deckLabel({}, LUFFY_ST31)).toBe("Monkey.D.Luffy (Red)");
     for (const deckId of SELECTABLE_DECK_IDS) {
       expect(deckLabel({}, deckId)).toBe(deckDisplayName(deckId));
     }
   });
 
-  it("shortens a tournament list's placing and event", () => {
-    // The two words a placing id can lose without losing a distinction: on
-    // the Community shelf an ordinal is already a placing, and the event is
-    // named by where and when it was held.
-    expect(
-      deckLabel({}, "(Purple) Enel - 1st Place EU Championship 26-27 S1"),
-    ).toBe("(Purple) Enel - 1st EU 26-27 S1");
-    expect(
-      deckLabel(
-        {},
-        "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
-      ),
-    ).toBe("(Green) Dracule Mihawk - 3rd EU 26-27 S1");
-    // A tournament list whose id carries no placing keeps every word: both
-    // substitutions are about a placing suffix, and there is nothing here to
-    // shorten.
-    const elbaph = "(Red/Black) Sabo - OP17 Elbaph List";
-    expect(deckShelf(elbaph)).toBe("tournament");
-    expect(deckDisplayName(elbaph)).toBe(elbaph);
+  it("names a Leader by its printed name, nickname and all", () => {
+    expect(deckLabel({}, KID_ST36)).toBe('Eustass"Captain"Kid (Yellow)');
   });
 
-  it("matches a Leader whose printed name is punctuated differently", () => {
-    // The id says "Eustass Kid"; the card is printed `Eustass"Captain"Kid`.
-    expect(deckLabel({}, KID_ST36)).toBe(KID_ST36);
+  it("keeps a shipped list's origin as the tile's tooltip, and filters on it", () => {
+    const enel = "(Purple) Enel - 1st Place EU Championship 26-27 S1";
+    const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
+      offerBuilder: false,
+    });
+    const tile = html.slice(tileIndex(html, enel));
+    expect(tile).toMatch(/^[^>]*title="1st Place EU Championship 26-27 S1"/);
+    const wrap = html.lastIndexOf("data-deck-filter=", tileIndex(html, enel));
+    expect(html.slice(wrap, html.indexOf(">", wrap))).toContain(
+      "1st place eu championship 26-27 s1",
+    );
   });
 
   it("still names the Leader for a deck whose own name does not", () => {
@@ -83,7 +72,7 @@ describe("deck labels in the picker and the selects", () => {
 
   it("prints the same label in the select as on the tiles", () => {
     const html = selectField(savedDecks, "p1-deck", "Your deck", LUFFY_ST31);
-    expect(html).toContain(`>${LUFFY_ST31}</option>`);
+    expect(html).toContain(`>Monkey.D.Luffy (Red)</option>`);
     expect(html).toContain(">MyST31 · Monkey.D.Luffy</option>");
   });
 });

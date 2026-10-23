@@ -30,10 +30,10 @@ describe("deck labels", () => {
     expect(deckManifestFor("CUSTOM-unknown", {})).toBeUndefined();
   });
 
-  it("labels a saved deck by its name, a format deck by its id", () => {
+  it("labels a saved deck by its name, a format deck by its Leader", () => {
     expect(deckLabel("CUSTOM-1", savedDecks)).toBe("My Zoro deck");
     expect(deckLabel("(Red) Monkey.D.Luffy - Starter Deck 31", {})).toBe(
-      "(Red) Monkey.D.Luffy - Starter Deck 31",
+      "Monkey.D.Luffy (Red)",
     );
   });
 
@@ -94,9 +94,7 @@ describe("deck labels", () => {
     expect(deckShortName("CUSTOM-1", savedDecks)).toBe("My Zoro deck");
     // The full name is still there, as the chip's tooltip.
     const chip = deckChip("(Purple) Enel - Official Feature Deck", {});
-    expect(chip).toContain(
-      'title="(Purple) Enel - Official Feature Deck">Enel<',
-    );
+    expect(chip).toContain('title="Enel (Purple)">Enel<');
   });
 
   it("names the deck by its own colours, red as the shared fallback", () => {

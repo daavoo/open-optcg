@@ -1,8 +1,8 @@
 import { requireKnownCard } from "@one-piece-sim/cards";
 import {
+  deckDisplayName,
   deckFormat,
   deckManifests,
-  deckShelf,
   starterDeckNumber,
   type DeckManifest,
 } from "@one-piece-sim/decks";
@@ -30,25 +30,8 @@ export function deckManifestFor(
   return savedDecks[deck]?.deck ?? deckManifests[deck];
 }
 
-/**
- * A shipped deck's id as a screen prints it.
- *
- * Every id but a tournament list reads as its own label already. A placing id
- * carries the event in the words the event itself uses -- "- 1st Place EU
- * Championship 26-27 S1" -- which is the longest suffix any shelf has, and on
- * a tile it crowds out the Leader name appended after it. "Place" and
- * "Championship" are the two words in it that tell no two lists apart: on the
- * Community shelf an ordinal is a placing, so the short form keeps the
- * placing and the event and drops the rest.
- */
-export function deckDisplayName(deckId: string): string {
-  if (deckShelf(deckId) !== "tournament") return deckId;
-  return deckId
-    .replace(/ - (\d+(?:st|nd|rd|th)) Place /, " - $1 ")
-    .replace(/\bChampionships? /, "");
-}
-
-/** Prose name for a deck: a saved one by what the user called it, the rest by ID. */
+/** Prose name for a deck: a saved one by what the user called it, a shipped
+    one by its Leader and colours ({@link deckDisplayName}). */
 export function deckLabel(
   deck: string,
   savedDecks: Record<string, SavedDeck>,
@@ -68,8 +51,8 @@ export function deckLeaderName(
   return manifest ? requireKnownCard(manifest.leader).name : "—";
 }
 
-/** The Leader under the name: its number and colours, which the deck ID in the
-    select above does not say and a custom deck has no other way to state, plus
+/** The Leader under the name: its number and colours, which a custom deck has
+    no other way to state, plus
     the constructed format the list is built for -- a shipped list is not
     necessarily tournament-legal today, and this is where it says so. */
 export function deckLeaderLine(
@@ -95,10 +78,10 @@ export function deckAccent(
  * A name short enough for a chip or a headline: a saved deck by what the user
  * called it, a starter deck by its product number, anything else by its Leader.
  *
- * A deck ID names the colours, the Leader and the product, which is a column's
- * worth of words; the chip beside it already carries the colour and the full
- * name is its tooltip. A starter's number is shorter than its Leader and is what
- * tells the two Luffy starters apart.
+ * A column has room for one word; the chip already carries the colour, and the
+ * full name is its tooltip. A starter's number is shorter than its Leader and
+ * is what tells the Luffy starters apart, and unlike a list's origin it does
+ * not change: the product is the list.
  */
 export function deckShortName(
   deck: string,
