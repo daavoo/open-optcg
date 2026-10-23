@@ -15,7 +15,7 @@
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
 import { costDebuff, powerDebuff } from "./op08-shared.js";
-import { payFromHand } from "./shared.js";
+import { paidToHand, payFromHand } from "./shared.js";
 import { silenceBlockers } from "./promo-shared.js";
 
 /** `[DON!! xN]`: the clause only fires with N DON!! given to the source. */
@@ -175,29 +175,31 @@ export const promoBattleMechanics: SetMechanics = {
                     binding: "p036-life",
                     to: { player: "self", zone: "hand" },
                   },
-                  {
-                    kind: "modify-power",
-                    binding: SOURCE_BINDING,
-                    amount: 1_000,
-                    expiresAfterTurns: 0,
-                  },
-                  {
-                    kind: "choose",
-                    selector: {
-                      player: "self",
-                      zone: [],
-                      includeLeader: true,
-                    },
-                    bind: "p036-leader",
-                    min: 0,
-                    max: 1,
-                    effect: {
+                  paidToHand("p036-life", [
+                    {
                       kind: "modify-power",
-                      binding: "p036-leader",
+                      binding: SOURCE_BINDING,
                       amount: 1_000,
                       expiresAfterTurns: 0,
                     },
-                  },
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "self",
+                        zone: [],
+                        includeLeader: true,
+                      },
+                      bind: "p036-leader",
+                      min: 0,
+                      max: 1,
+                      effect: {
+                        kind: "modify-power",
+                        binding: "p036-leader",
+                        amount: 1_000,
+                        expiresAfterTurns: 0,
+                      },
+                    },
+                  ]),
                 ],
               },
             },

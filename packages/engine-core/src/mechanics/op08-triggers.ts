@@ -8,7 +8,7 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { asOnPlayTrigger, payFromHand } from "./shared.js";
+import { asOnPlayTrigger, paidToHand, payFromHand } from "./shared.js";
 import {
   donMinusOne,
   koCostAtMost,
@@ -341,18 +341,20 @@ export const op08TriggerMechanics: SetMechanics = {
                   binding: "op08-burn-blade-trigger",
                   to: { player: "self", zone: "hand" },
                 },
-                {
-                  kind: "choose",
-                  selector: { player: "self", zone: "hand" },
-                  bind: "op08-burn-blade-stack",
-                  min: 0,
-                  max: 1,
-                  effect: {
-                    kind: "move",
-                    binding: "op08-burn-blade-stack",
-                    to: { player: "self", zone: "life", position: "top" },
+                paidToHand("op08-burn-blade-trigger", [
+                  {
+                    kind: "choose",
+                    selector: { player: "self", zone: "hand" },
+                    bind: "op08-burn-blade-stack",
+                    min: 0,
+                    max: 1,
+                    effect: {
+                      kind: "move",
+                      binding: "op08-burn-blade-stack",
+                      to: { player: "self", zone: "life", position: "top" },
+                    },
                   },
-                },
+                ]),
               ],
             },
           },

@@ -13,10 +13,11 @@ import {
   turnLifeFaceDown,
 } from "./op11-shared.js";
 import {
-  haveNamed,
   donMinus,
+  haveNamed,
   lookAndAdd,
   lookAndAddOrTrash,
+  paidToHand,
   payFromHand,
 } from "./shared.js";
 
@@ -454,20 +455,22 @@ export const op11OnPlayMechanics: SetMechanics = {
                   binding: "op11-brulee-cost",
                   to: { player: "self", zone: "hand" },
                 },
-                {
-                  kind: "if",
-                  condition: {
-                    kind: "leader-has-type",
-                    player: "self",
-                    type: "Big Mom Pirates",
+                paidToHand("op11-brulee-cost", [
+                  {
+                    kind: "if",
+                    condition: {
+                      kind: "leader-has-type",
+                      player: "self",
+                      type: "Big Mom Pirates",
+                    },
+                    then: {
+                      kind: "add-don",
+                      player: "self",
+                      count: 1,
+                      rested: false,
+                    },
                   },
-                  then: {
-                    kind: "add-don",
-                    player: "self",
-                    count: 1,
-                    rested: false,
-                  },
-                },
+                ]),
               ],
             },
           },
@@ -898,19 +901,21 @@ function fukaboshi(position: "top" | "bottom"): MechanicEffect {
           binding: "op11-fukaboshi-cost",
           to: { player: "self", zone: "hand" },
         },
-        {
-          kind: "choose",
-          selector: {
-            player: "opponent",
-            zone: "board",
-            category: "character",
-            maxCost: 1,
+        paidToHand("op11-fukaboshi-cost", [
+          {
+            kind: "choose",
+            selector: {
+              player: "opponent",
+              zone: "board",
+              category: "character",
+              maxCost: 1,
+            },
+            bind: "op11-fukaboshi-ko",
+            min: 0,
+            max: 1,
+            effect: { kind: "knock-out", binding: "op11-fukaboshi-ko" },
           },
-          bind: "op11-fukaboshi-ko",
-          min: 0,
-          max: 1,
-          effect: { kind: "knock-out", binding: "op11-fukaboshi-ko" },
-        },
+        ]),
       ],
     },
   };

@@ -6,7 +6,7 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { donMinus } from "./shared.js";
+import { donMinus, paidToHand } from "./shared.js";
 import {
   chopperDig,
   deckTopToLife,
@@ -189,23 +189,25 @@ export const op08BattleMechanics: SetMechanics = {
                     binding: "op08-bazooka-life",
                     to: { player: "self", zone: "hand" },
                   },
-                  {
-                    kind: "choose",
-                    selector: {
-                      player: "self",
-                      zone: "hand",
-                      type: "Shandian Warrior",
+                  paidToHand("op08-bazooka-life", [
+                    {
+                      kind: "choose",
+                      selector: {
+                        player: "self",
+                        zone: "hand",
+                        type: "Shandian Warrior",
+                      },
+                      bind: "op08-bazooka-stack",
+                      min: 0,
+                      max: 1,
+                      effect: {
+                        kind: "move",
+                        binding: "op08-bazooka-stack",
+                        to: { player: "self", zone: "life", position: "top" },
+                        faceUp: true,
+                      },
                     },
-                    bind: "op08-bazooka-stack",
-                    min: 0,
-                    max: 1,
-                    effect: {
-                      kind: "move",
-                      binding: "op08-bazooka-stack",
-                      to: { player: "self", zone: "life", position: "top" },
-                      faceUp: true,
-                    },
-                  },
+                  ]),
                 ],
               },
             },

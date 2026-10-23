@@ -846,21 +846,24 @@ describe("EB05-010 Nico Robin's K.O. watcher", () => {
 
     koInBattle(game, "pasia");
     expect(trashIds(game)).toContain("pasia");
-    expect(effectOptions(game.state)).toContain("apply");
-    pick(game, "apply");
+    // Mandatory: no apply/skip offer, only the "up to 1" choice of the card.
+    expect(effectOptions(game.state)).not.toContain("apply");
+    expect(effectOptions(game.state)).toContain("banked");
+    pick(game, "banked");
     settle(game);
 
     expect(game.state.players.p1.life).toHaveLength(lifeBefore + 1);
     expect(game.state.players.p1.life[0]?.instanceId).toBe("banked");
   });
 
-  it("keeps its one use when declined, for a later K.O. that turn", () => {
+  it("spends its use when it banks nothing, so a later K.O. that turn gets nothing", () => {
     const game = defending("eb05-010-decline")
       .withLeader("p1", "EB05-010")
       .withBoard("p1", [
         character("pasia", "EB05-003", { rested: true }),
         character("pasia-2", "EB05-003", { rested: true }),
       ])
+      .withDeckTop("p1", [instance("top", "FIX-001")])
       .withBoard("p2", [
         character("attacker", "ST31-002", { playedTurn: 1 }),
         character("attacker-2", "ST31-002", { playedTurn: 1 }),
@@ -869,7 +872,8 @@ describe("EB05-010 Nico Robin's K.O. watcher", () => {
     const lifeBefore = game.state.players.p1.life.length;
 
     koInBattle(game, "pasia");
-    pick(game, "skip");
+    expect(effectOptions(game.state)).toContain("top");
+    pick(game, "done");
     settle(game);
     expect(game.state.players.p1.life).toHaveLength(lifeBefore);
 
@@ -879,9 +883,9 @@ describe("EB05-010 Nico Robin's K.O. watcher", () => {
       targetInstanceId: "pasia-2",
     });
     declineDefence(game);
-    pick(game, "apply");
-    settle(game);
-    expect(game.state.players.p1.life).toHaveLength(lifeBefore + 1);
+    expect(trashIds(game)).toContain("pasia-2");
+    expect(effectOptions(game.state)).not.toContain("top");
+    expect(game.state.players.p1.life).toHaveLength(lifeBefore);
   });
 
   it("answers once per turn", () => {
@@ -891,6 +895,10 @@ describe("EB05-010 Nico Robin's K.O. watcher", () => {
         character("pasia", "EB05-003", { rested: true }),
         character("pasia-2", "EB05-003", { rested: true }),
       ])
+      .withDeckTop("p1", [
+        instance("top", "FIX-001"),
+        instance("second", "FIX-001"),
+      ])
       .withBoard("p2", [
         character("attacker", "ST31-002", { playedTurn: 1 }),
         character("attacker-2", "ST31-002", { playedTurn: 1 }),
@@ -899,7 +907,7 @@ describe("EB05-010 Nico Robin's K.O. watcher", () => {
     const lifeBefore = game.state.players.p1.life.length;
 
     koInBattle(game, "pasia");
-    pick(game, "apply");
+    pick(game, "top");
     settle(game);
     game.play({
       type: "attack",
@@ -908,7 +916,8 @@ describe("EB05-010 Nico Robin's K.O. watcher", () => {
     });
     declineDefence(game);
 
-    expect(effectOptions(game.state)).not.toContain("apply");
+    expect(trashIds(game)).toContain("pasia-2");
+    expect(effectOptions(game.state)).not.toContain("second");
     expect(game.state.players.p1.life).toHaveLength(lifeBefore + 1);
   });
 

@@ -34,6 +34,7 @@ import { knockOut } from "./removal.js";
 import {
   charactersArriveRested,
   effectPlayBarred,
+  faceUpLifeBanksToDeck,
   trashPlayGrantsRush,
   isRemovalImmune,
   isRestImmune,
@@ -2285,8 +2286,19 @@ export function continueExecution(
         // Per card, not per node: an `"either"` selector can hand this binding
         // one card from each side, and "the owner's hand" is a different hand
         // for each of them.
-        const playerId =
-          destination === "owner"
+        // ST13-003's Leader sends its controller's face-up Life cards to the
+        // bottom of the deck instead of the hand, an effect's "add to hand"
+        // included (Bandai's ST13-003#2 and #3).
+        const banked =
+          from === "life" &&
+          effect.to.zone === "hand" &&
+          card.faceUp === true &&
+          faceUpLifeBanksToDeck(state, ownerId, db);
+        const toZone = banked ? "deck" : effect.to.zone;
+        const toPosition = banked ? "bottom" : effect.to.position;
+        const playerId = banked
+          ? ownerId
+          : destination === "owner"
             ? ownerId
             : resolvePlayer(execution.context, destination);
         const moved = {
@@ -2305,7 +2317,7 @@ export function continueExecution(
             card.faceUp === true)
             ? { faceUp: true }
             : {}),
-          ...(effect.to.zone === "board"
+          ...(toZone === "board"
             ? {
                 rested: effect.rested ?? false,
                 playedTurn: state.turn,
@@ -2314,18 +2326,12 @@ export function continueExecution(
               }
             : {}),
         };
-        insertCard(
-          state,
-          playerId,
-          effect.to.zone,
-          moved,
-          effect.to.position ?? "bottom",
-        );
+        insertCard(state, playerId, toZone, moved, toPosition ?? "bottom");
         // "[printed text omitted -- pnpm card:text <card>]" -- OP14-045,
         // OP14-049 and OP14-056. Every hand trash in the declarative path is
         // this node, whether it is the owner's own cost or an opponent's
         // discard, and the printed clause draws no distinction between them.
-        if (from === "hand" && effect.to.zone === "trash") {
+        if (from === "hand" && toZone === "trash") {
           state.handTrashedByEffectOnTurn = {
             ...state.handTrashedByEffectOnTurn,
             [ownerId]: state.turn,
@@ -2336,22 +2342,17 @@ export function continueExecution(
           card: { instanceId: card.instanceId, cardNumber: card.cardNumber },
           ownerId,
           from,
-          to: effect.to.zone,
+          to: toZone,
           sourceCardNumber: mover.cardNumber,
           sourcePlayerId: mover.playerId,
         });
         events.push({
           type: "card-moved",
           playerId,
-          ...visibilityOf(card, from, effect.to.zone, playerId, effect.faceUp),
+          ...visibilityOf(card, from, toZone, playerId, effect.faceUp),
           from,
-          to: effect.to.zone,
-          ...movePosition(
-            from,
-            effect.to.zone,
-            effect.to.position,
-            originPosition,
-          ),
+          to: toZone,
+          ...movePosition(from, toZone, toPosition, originPosition),
           ...(effect.faceUp === undefined ? {} : { faceUp: effect.faceUp }),
           sourceCardNumber: mover.cardNumber,
         });
@@ -2364,7 +2365,7 @@ export function continueExecution(
         // `card-moved` identity and no public event is added.
         if (
           from === "deck" &&
-          effect.to.zone === "hand" &&
+          toZone === "hand" &&
           searchRevealIsPublic(execution.context.source.cardNumber, db)
         ) {
           events.push({

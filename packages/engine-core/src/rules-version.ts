@@ -92,5 +92,13 @@
  * of the turn, PRB02-014's discount is a cost layer, and PRB02-006 cannot
  * swap with a Character that cannot be rested. A recorded action list can
  * meet offers that changed.
+ *
+ * Bumped to 1.14 for Bandai's ST-01 to ST-14 Q&As: a [Once Per Turn]
+ * reaction is optional only when it prints "This effect can be activated
+ * when ..." or a "you may", "trash N cards from your opponent's hand" is a
+ * face-down pick by the effect's user, and under ST13-003's Leader a
+ * face-up Life card cannot trigger and goes to the bottom of the deck even
+ * when an effect adds it to the hand -- leaving a "Life card to hand" cost
+ * unpaid. A recorded action list can meet offers that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.13";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.14";

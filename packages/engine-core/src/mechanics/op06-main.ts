@@ -13,7 +13,12 @@
  */
 import { SOURCE_BINDING, type MechanicEffect } from "../mechanics.js";
 import { type SetMechanics } from "./registry.js";
-import { lookAndAdd, payFromHand } from "./shared.js";
+import {
+  lookAndAdd,
+  paidToHand,
+  payFromHand,
+  trashFromOpponentHandBlind,
+} from "./shared.js";
 import { costDebuff, koCostAtMost, powerDebuff } from "./op08-shared.js";
 import {
   buffOwnCardForTurn,
@@ -211,23 +216,12 @@ export const killingTime: MechanicEffect = {
   ],
 };
 
-/** "Trash 1 card from your opponent's hand" -- they choose which. */
-const opponentDiscardsOne = (bind: string): MechanicEffect => ({
-  kind: "choose",
-  selector: { player: "opponent", zone: "hand" },
-  bind,
-  chooser: "opponent",
-  min: 1,
-  max: 1,
-  effect: {
-    kind: "move",
-    binding: bind,
-    to: { player: "owner", zone: "trash" },
-  },
-});
-
-/** OP06-097 Negative Hollow, printed on the `[Main]` and re-run by its own `[Trigger]`. */
-export const negativeHollow: MechanicEffect = opponentDiscardsOne(
+/**
+ * OP06-097 Negative Hollow, printed on the `[Main]` and re-run by its own
+ * `[Trigger]`: its user picks the card, face-down.
+ */
+export const negativeHollow: MechanicEffect = trashFromOpponentHandBlind(
+  1,
   "op06-negative-hollow",
 );
 
@@ -261,7 +255,9 @@ export const op06MainMechanics: SetMechanics = {
                     binding: "op06-meteor-cost",
                     to: { player: "self", zone: "hand" },
                   },
-                  buffOwnCardForTurn(3_000, "op06-meteor"),
+                  paidToHand("op06-meteor-cost", [
+                    buffOwnCardForTurn(3_000, "op06-meteor"),
+                  ]),
                 ],
               },
             },
@@ -557,7 +553,9 @@ export const op06MainMechanics: SetMechanics = {
                     binding: "op06-meteor-counter-cost",
                     to: { player: "self", zone: "hand" },
                   },
-                  buffOwnCardForTurn(3_000, "op06-meteor-counter"),
+                  paidToHand("op06-meteor-counter-cost", [
+                    buffOwnCardForTurn(3_000, "op06-meteor-counter"),
+                  ]),
                 ],
               },
             },
@@ -622,7 +620,7 @@ export const op06MainMechanics: SetMechanics = {
                     binding: "op06-nothing-cost",
                     to: { player: "self", zone: "hand" },
                   },
-                  battleShield,
+                  paidToHand("op06-nothing-cost", [battleShield]),
                 ],
               },
             },

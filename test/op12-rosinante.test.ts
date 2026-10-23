@@ -492,7 +492,7 @@ describe("the Leader's K.O. protection", () => {
   });
 });
 
-describe("ST10-010 trashes the opponent's own choice of cards", () => {
+describe("ST10-010 trashes two cards its controller picks face-down", () => {
   const scene = (opponentHand: number): GameState => {
     const state = scenario(8);
     state.players.p1.hand = [inHand("p1-law", "ST10-010")];
@@ -503,7 +503,7 @@ describe("ST10-010 trashes the opponent's own choice of cards", () => {
   };
 
   covers("ST10-010", "[On Play]");
-  it("hands the choice to the opponent and takes two cards", () => {
+  it("has its controller pick two cards face-down and takes them", () => {
     const state = scene(7);
     const donDeck = state.players.p1.donDeck.length;
     const played = submit(
@@ -517,8 +517,7 @@ describe("ST10-010 trashes the opponent's own choice of cards", () => {
         action.type === "resolve-effect" && action.optionId === "apply",
     );
     expect(paid.players.p1.donDeck.length).toBe(donDeck + 1);
-    // The `DON!! −1` is answered by the player who paid it before the discard
-    // choice this effect queued for the opponent is handed over.
+    // The `DON!! −1` is answered first, by the player who paid it.
     expect(paid.activePlayer).toBe("p1");
     expect(paid.pendingEffect?.kind).toBe("return-don");
     const placed = submit(
@@ -527,17 +526,20 @@ describe("ST10-010 trashes the opponent's own choice of cards", () => {
         action.type === "resolve-effect" &&
         action.optionId === "return-don:rested",
     );
-    expect(placed.activePlayer).toBe("p2");
+    // Law's controller picks, by position only (Bandai's ST10-010#1).
+    expect(placed.activePlayer).toBe("p1");
     const first = submit(
       placed,
       (action) =>
-        action.type === "resolve-effect" && action.optionId === "p2-hand-0",
+        action.type === "resolve-effect" &&
+        action.optionId.startsWith("face-down:"),
     );
-    expect(first.activePlayer).toBe("p2");
+    expect(first.activePlayer).toBe("p1");
     const second = submit(
       first,
       (action) =>
-        action.type === "resolve-effect" && action.optionId === "p2-hand-1",
+        action.type === "resolve-effect" &&
+        action.optionId.startsWith("face-down:"),
     );
     expect(second.players.p2.hand).toHaveLength(5);
     expect(second.players.p2.trash).toHaveLength(2);

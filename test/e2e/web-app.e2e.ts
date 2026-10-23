@@ -523,9 +523,9 @@ test("a printed DON!! -N is composed on the same surface as a variable one", asy
   // Both pools are on screen at once, counting what they held before the cost
   // was paid -- the engine has already taken the DON!! out of them, so the
   // board alone can no longer say what there was to choose between. The
-  // OP09-061 Leader's answer to the return, an active and a rested DON!! from
-  // the deck, is a [Once Per Turn] reaction put to the player after the
-  // payment, so it is not on the field yet.
+  // OP09-061 Leader answers the return with an active and a rested DON!!
+  // from the deck, and those two are not counted: they were not on the field
+  // to pay with.
   const rows = page.locator(".don-pool-row");
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText("Rested DON!!");
@@ -539,9 +539,9 @@ test("a printed DON!! -N is composed on the same surface as a variable one", asy
   // And the field it describes is the field as it stands, the DON!! deck
   // included: a printed cost is paid before this is asked, so nothing here is
   // still to be added to the pile.
-  await expect(page.locator(".don-return-summary")).toContainText("1 active");
+  await expect(page.locator(".don-return-summary")).toContainText("2 active");
   await expect(page.locator(".don-return-summary")).toContainText(
-    "8 in your DON!! deck",
+    "6 in your DON!! deck",
   );
 
   // The size of a printed cost cannot move, so the steppers move a DON!! from
@@ -556,18 +556,13 @@ test("a printed DON!! -N is composed on the same surface as a variable one", asy
   await expect(page.locator("#don-return-confirm")).toHaveText(
     "Return 2 DON!!",
   );
-  await expect(page.locator(".don-return-summary")).toContainText("0 active");
-  await expect(page.locator(".don-return-summary")).toContainText("2 rested");
+  await expect(page.locator(".don-return-summary")).toContainText("1 active");
+  await expect(page.locator(".don-return-summary")).toContainText("3 rested");
 
   // Confirming answers both pool prompts off the plan, as the variable count
-  // does: the next question is the Leader's refund, not a second pool modal.
+  // does: the player is back on their turn, not in a second modal.
   await page.locator("#don-return-confirm").click();
   await expect(page.locator(".don-pool-list")).toHaveCount(0);
-  await page
-    .getByRole("button", {
-      name: "Apply Monkey.D.Luffy [OP09-061]'s optional effect",
-    })
-    .click();
   await expect(page.locator(".actions-heading")).toHaveCount(0);
   // The split it confirmed is the one the cost area ends up with: the active
   // DON!! the player chose to spend is gone, and a rested one stayed.

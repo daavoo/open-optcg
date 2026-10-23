@@ -2190,8 +2190,9 @@ export type MechanicEffect =
    */
   | { kind: "at-end-of-turn-effect"; effect: MechanicEffect }
   /**
-   * Spend a `[Once Per Turn]` use, as the first step of a declinable reaction
-   * its controller chose to apply (see `MechanicProgramInvocation.declinable`).
+   * Spend a `[Once Per Turn]` use, as the first step of a reaction -- once its
+   * controller applies it, when it may be declined (see
+   * `MechanicProgramInvocation.declinable`).
    * Stops the clause if the use is already gone -- the same reaction queued
    * twice before either resolved -- and otherwise announces it, since the
    * clause only fires once it is applied.
@@ -2328,12 +2329,12 @@ export interface MechanicProgramInvocation {
    */
   automatic?: true;
   /**
-   * A `[Once Per Turn]` reaction, which its controller may decline and keep
-   * the use for a later signal that turn (Bandai's OP07-038#1, Boa Hancock's
-   * draw; OP12-081#3, Koala passing on Sanji to answer the Linlin it plays).
-   * `program` is then the clause wrapped in an `optional` whose apply spends
-   * the use; this is the clause as printed, which `dispatchMechanicInvocations`
-   * dry-runs first so a clause that would do nothing is skipped, not asked.
+   * A `[Once Per Turn]` reaction's clause as printed. `program` spends the
+   * use as its first step -- inside an `optional` when the controller may
+   * decline it and keep the use for a later signal that turn (Bandai's
+   * OP07-038#1, Boa Hancock's draw; OP12-081#3, Koala passing on Sanji to
+   * answer the Linlin it plays). `dispatchMechanicInvocations` dry-runs this
+   * first, so a clause that would do nothing is skipped, not asked.
    */
   declinable?: MechanicProgram;
   /**
