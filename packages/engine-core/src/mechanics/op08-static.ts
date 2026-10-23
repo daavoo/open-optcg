@@ -3,7 +3,7 @@
  * into power, cost and keyword queries. A clause with no timing marker lives
  * here; one with a marker is a program in this set's other modules.
  */
-import { cardAttributes, hasCardName } from "@one-piece-sim/cards";
+import { hasCardName } from "@one-piece-sim/cards";
 import {
   type StaticAbility,
   opponentOf,
@@ -131,8 +131,7 @@ export const op08StaticAbilities: readonly StaticAbility[] = [
     cardNumber: "OP08-114",
     scope: "self",
     battleKoImmune: (context, attacker) =>
-      hawkArmed(context) &&
-      cardAttributes(context.db.require(attacker.cardNumber)).includes("Slash"),
+      hawkArmed(context) && attacker.attributes.includes("Slash"),
   },
 ];
 

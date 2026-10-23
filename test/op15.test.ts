@@ -1907,6 +1907,45 @@ describe("OP15 remaining Green and Purple clauses", () => {
     expect(luffy.rushCharacterUntilTurn).toBe(game.state.turn);
     expect(luffy.grantedAttributes?.attributes).toEqual(["Slash"]);
   });
+
+  // The granted <Slash> is the attacker's attribute for the turn, so the
+  // "cannot be K.O.'d in battle by <Slash>" clauses read it like a printed one.
+  // Four given DON!! put the 4000 Luffy at 8000, over both bodies, so power
+  // alone would win either fight.
+  it.each([
+    ["OP03-008", 0],
+    ["P-052", 1],
+  ] as const)(
+    "OP15-093's granted <Slash> attacker cannot K.O. %s in battle",
+    (defender, givenDon) => {
+      const game = table(`op15-093-slash-${defender}`)
+        .withBoard("p1", [
+          character("risky", "OP15-093"),
+          character("luffy", "OP15-051", { playedTurn: 11 }),
+        ])
+        .withTrash("p1", copies(15, "ST32-005", "fuel"))
+        .withBoard("p2", [character("target", defender, { rested: true })])
+        .withGivenDon("p1", "luffy", 4)
+        .withGivenDon("p2", "target", givenDon)
+        .build();
+
+      game.play({ type: "activate-main", sourceInstanceId: "risky" });
+      game.play({ type: "resolve-effect", optionId: "luffy" });
+      game.play({
+        type: "attack",
+        attackerInstanceId: "luffy",
+        targetInstanceId: "target",
+      });
+      while (game.state.phase === "block" || game.state.phase === "counter") {
+        game.pass();
+      }
+      while (game.state.pendingEffect) game.play({ type: "resolve-effect" });
+
+      expect(
+        game.state.players.p2.board.map((card) => card.instanceId),
+      ).toContain("target");
+    },
+  );
 });
 
 /**

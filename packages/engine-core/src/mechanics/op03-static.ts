@@ -3,7 +3,6 @@
  * `static-abilities.ts` folds into its queries. See `op03.ts` for why the set
  * is here only in part.
  */
-import { cardAttributes } from "@one-piece-sim/cards";
 import type { StaticAbility } from "../static-abilities.js";
 
 export const op03StaticAbilities: readonly StaticAbility[] = [
@@ -15,6 +14,6 @@ export const op03StaticAbilities: readonly StaticAbility[] = [
     cardNumber: "OP03-008",
     scope: "self",
     battleKoImmune: (context, attacker) =>
-      cardAttributes(context.db.require(attacker.cardNumber)).includes("Slash"),
+      attacker.attributes.includes("Slash"),
   },
 ];

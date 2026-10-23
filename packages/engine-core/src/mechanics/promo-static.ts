@@ -7,7 +7,7 @@
  * and magazine inserts, so the rows are grouped by the shape of the layer
  * rather than by anything the cards share.
  */
-import { cardAttributes, hasCardType } from "@one-piece-sim/cards";
+import { hasCardType } from "@one-piece-sim/cards";
 import {
   attachedDon,
   buggyCostBandBan,
@@ -113,10 +113,7 @@ export const promoStaticAbilities: readonly StaticAbility[] = [
     cardNumber: "P-007",
     scope: "self",
     battleKoImmune: (context, attacker) =>
-      attachedDon(context) >= 1 &&
-      cardAttributes(context.db.require(attacker.cardNumber)).includes(
-        "Strike",
-      ),
+      attachedDon(context) >= 1 && attacker.attributes.includes("Strike"),
   },
   {
     // P-025 Smoker: the inverted reading -- safe from every Character *without*
@@ -127,27 +124,21 @@ export const promoStaticAbilities: readonly StaticAbility[] = [
     battleKoImmune: (context, attacker) =>
       attachedDon(context) >= 1 &&
       !attacker.isLeader &&
-      !cardAttributes(context.db.require(attacker.cardNumber)).includes(
-        "Special",
-      ),
+      !attacker.attributes.includes("Special"),
   },
   {
     // P-052 Dracule Mihawk: safe from <Slash>, from cards of any kind.
     cardNumber: "P-052",
     scope: "self",
     battleKoImmune: (context, attacker) =>
-      attachedDon(context) >= 1 &&
-      cardAttributes(context.db.require(attacker.cardNumber)).includes("Slash"),
+      attachedDon(context) >= 1 && attacker.attributes.includes("Slash"),
   },
   {
     // P-054 Monkey.D.Garp: the same, for <Strike>.
     cardNumber: "P-054",
     scope: "self",
     battleKoImmune: (context, attacker) =>
-      attachedDon(context) >= 1 &&
-      cardAttributes(context.db.require(attacker.cardNumber)).includes(
-        "Strike",
-      ),
+      attachedDon(context) >= 1 && attacker.attributes.includes("Strike"),
   },
   // Promos whose power moves with the board.
   {

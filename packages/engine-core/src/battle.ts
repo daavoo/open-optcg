@@ -9,6 +9,7 @@
  * work of migrating them to `mechanics/` has one place to start.
  */
 import {
+  cardAttributes,
   cards as defaultCardDatabase,
   hasCardTypeIncluding,
   type CardDatabase,
@@ -33,6 +34,7 @@ import { bankDamagedLifeCard } from "./life.js";
 import { damageReplacementProtectors } from "./damage-replacement.js";
 import {
   battleParticipant,
+  boardCardAttributes,
   conditionMatches,
   leaderBattledCharacterKey,
   programBattlePower,
@@ -898,6 +900,25 @@ function attackingCardNumber(state: GameState, attack: ActiveAttack): string {
   );
 }
 
+/**
+ * The attacker's attributes, printed or granted. A Character handed <Slash>
+ * for the turn (OP15-093) is a <Slash> attacker to every "cannot be K.O.'d in
+ * battle by <Slash>" clause, so the battle site reads the board card rather
+ * than its card number.
+ */
+function attackingCardAttributes(
+  state: GameState,
+  attack: ActiveAttack,
+  db: CardDatabase,
+): readonly string[] {
+  const board = state.players[attack.attackerPlayerId].board.find(
+    (card) => card.instanceId === attack.attackerInstanceId,
+  );
+  return board
+    ? boardCardAttributes(state, board, db)
+    : cardAttributes(db.require(attackingCardNumber(state, attack)));
+}
+
 export function resolveBattle(
   state: GameState,
   events: PublicEvent[],
@@ -956,12 +977,19 @@ export function resolveBattle(
     // cannot happen would spend a card for nothing.
     if (
       threatened &&
-      survivesBattleKo(state, attack.defenderPlayerId, threatened, {
-        isLeader:
-          attack.attackerInstanceId ===
-          leaderInstanceId(attack.attackerPlayerId),
-        cardNumber: attackingCardNumber(state, attack),
-      })
+      survivesBattleKo(
+        state,
+        attack.defenderPlayerId,
+        threatened,
+        {
+          isLeader:
+            attack.attackerInstanceId ===
+            leaderInstanceId(attack.attackerPlayerId),
+          cardNumber: attackingCardNumber(state, attack),
+          attributes: attackingCardAttributes(state, attack, db),
+        },
+        db,
+      )
     ) {
       events.push({
         type: "battle-resolved",
