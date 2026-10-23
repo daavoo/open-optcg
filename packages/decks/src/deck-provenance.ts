@@ -260,7 +260,7 @@ export type CommunityDeckId =
    * EB05-010 Leader, which has no placed list of its own kind yet. Each
    * manifest says why that list.
    */
-  | "(Blue) Buggy - 33rd Place ChinoizeCup #124"
+  | "(Blue) Buggy - 12th Place ChinoizeCup #124"
   | "(Red) Trafalgar Law - 9th Place ChinoizeCup #125"
   | "(Green/Yellow) Nico Robin - EB05 Wisdom List"
   /**
@@ -363,7 +363,7 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op07VegapunkTournamentManifest,
     "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
       op14HancockTournamentManifest,
-    "(Blue) Buggy - 33rd Place ChinoizeCup #124": op09BuggyTournamentManifest,
+    "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
     "(Red) Trafalgar Law - 9th Place ChinoizeCup #125":
       op14LawTournamentManifest,
     "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinManifest,

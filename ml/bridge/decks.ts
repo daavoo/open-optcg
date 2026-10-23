@@ -71,6 +71,33 @@ const LISTS: Record<string, DeckManifest> = {
       "ST26-005": 4,
     },
   },
+  // Purple OP12-061 Rosinante, 2nd of 120 (6-1) for FlyestRaven at [EB05]
+  // ChinoizeCup #125 on 20 Oct 2026, an online event that allowed EB-05 ahead
+  // of its release (https://play.limitlesstcg.com/tournament/6ad092328a8383117e3ec30c/standings).
+  // No selectable deck fronts this Leader, so it trains as a list of its own;
+  // it plays four P-093 Trafalgar Law and four EB05-040.
+  "op12-061-eb05": {
+    id: "op12-061-eb05",
+    leader: "OP12-061",
+    cards: {
+      "EB03-062": 1,
+      "EB04-038": 4,
+      "EB04-058": 4,
+      "EB05-034": 2,
+      "EB05-040": 4,
+      "OP07-076": 1,
+      "OP10-065": 4,
+      "OP12-115": 4,
+      "OP13-076": 1,
+      "OP15-078": 4,
+      "OP16-064": 2,
+      "OP16-065": 4,
+      "OP16-078": 4,
+      "P-088": 4,
+      "P-093": 4,
+      "ST10-010": 3,
+    },
+  },
 };
 
 /**

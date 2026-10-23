@@ -2013,7 +2013,7 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "7th of 120 (6-1), [EB05] ChinoizeCup #125, 2026-10-20 (https://play.limitlesstcg.com/tournament/6ad092328a8383117e3ec30c/standings)",
   },
   {
-    base: "(Blue) Buggy - 33rd Place ChinoizeCup #124",
+    base: "(Blue) Buggy - 12th Place ChinoizeCup #124",
     label: "NikolayBaydanov - EB05 ChinoizeCup #124",
     cards: {
       "EB05-021": 4,
@@ -2032,7 +2032,52 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "ST33-004": 3,
     },
     source:
-      "unplaced (3-2, dropped), [EB05] ChinoizeCup #124, 2026-10-19 (https://play.limitlesstcg.com/tournament/6ad09157115c12b73a5a4654/standings): the Alvida core with four ST25-004 Buggy and four Mohji & Cabaji, and no P-084, which the registry cannot carry",
+      "unplaced (3-2, dropped), [EB05] ChinoizeCup #124, 2026-10-19 (https://play.limitlesstcg.com/tournament/6ad09157115c12b73a5a4654/standings): the Alvida core with four ST25-004 Buggy and four Mohji & Cabaji, and no P-084",
+  },
+  {
+    base: "(Blue) Buggy - 12th Place ChinoizeCup #124",
+    label: "Lonezwiebel - EB05 ChinoizeCup #124",
+    cards: {
+      "OP09-056": 4,
+      "ST33-003": 3,
+      "ST25-001": 4,
+      "ST25-005": 4,
+      "ST25-002": 3,
+      "OP16-056": 3,
+      "OP17-046": 3,
+      "OP09-048": 4,
+      "OP16-051": 3,
+      "ST33-004": 2,
+      "ST25-003": 4,
+      "EB05-021": 4,
+      "OP09-051": 4,
+      "OP09-057": 4,
+      "OP06-058": 1,
+    },
+    source:
+      "33rd of 128 (4-3), [EB05] ChinoizeCup #124, 2026-10-19 (https://play.limitlesstcg.com/tournament/6ad09157115c12b73a5a4654/standings): the Alvida core with ST33-003 Smoker and OP17-046 Gloriosa in the cheap slots and no P-084",
+  },
+  {
+    base: "(Blue) Buggy - 12th Place ChinoizeCup #124",
+    label: "Car D. Kaizoku - EB05 Alvida creator list",
+    cards: {
+      "EB05-021": 4,
+      "OP06-058": 2,
+      "OP09-048": 4,
+      "OP09-051": 4,
+      "OP09-056": 4,
+      "OP09-057": 4,
+      "OP12-049": 2,
+      "OP16-051": 4,
+      "P-084": 2,
+      "ST25-001": 4,
+      "ST25-002": 4,
+      "ST25-003": 4,
+      "ST25-004": 4,
+      "ST25-005": 4,
+    },
+    source:
+      "Car D. Kaizoku, 'Alvida is Busted! Is Buggy Back?!', 2026-10-15 (https://www.youtube.com/watch?v=jULeKpwklYI): the creator list most EB-05 Buggy entries follow",
   },
   {
     base: "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",

@@ -20,7 +20,7 @@ import { instance, scenario } from "./support/index.js";
  * feature deck does.
  */
 
-const LIST = "(Blue) Buggy - 33rd Place ChinoizeCup #124";
+const LIST = "(Blue) Buggy - 12th Place ChinoizeCup #124";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP09-042";

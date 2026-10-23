@@ -320,7 +320,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
   "(Yellow) Vegapunk - 1st Place Store Battle",
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
-  "(Blue) Buggy - 33rd Place ChinoizeCup #124",
+  "(Blue) Buggy - 12th Place ChinoizeCup #124",
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
   "(Green/Yellow) Nico Robin - EB05 Wisdom List",
 ] as const;
@@ -477,7 +477,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Yellow) Vegapunk - 1st Place Store Battle": op07VegapunkTournamentManifest,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentManifest,
-  "(Blue) Buggy - 33rd Place ChinoizeCup #124": op09BuggyTournamentManifest,
+  "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
   "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinManifest,
 };

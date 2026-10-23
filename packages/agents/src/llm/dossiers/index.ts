@@ -139,7 +139,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentDossier,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentDossier,
-  "(Blue) Buggy - 33rd Place ChinoizeCup #124": op09BuggyTournamentDossier,
+  "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentDossier,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentDossier,
   "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
