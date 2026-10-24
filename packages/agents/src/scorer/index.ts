@@ -38,6 +38,7 @@ export {
 export { Tokenizer } from "./tokenizer.js";
 export { GpuEncoder, requestGpuDevice } from "./gpu.js";
 export {
+  isDebuffForADecidedBattle,
   isDoomedAttack,
   isSpentLeaderOverride,
   isWastedCounter,

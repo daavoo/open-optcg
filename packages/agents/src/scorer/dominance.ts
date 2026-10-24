@@ -183,6 +183,76 @@ export function isSpentLeaderOverride(
   return !theirs.some((card) => watching.has(card));
 }
 
+/**
+ * The once-per-turn `DON!! −N` debuffs a Leader offers on each of the
+ * opponent's attacks, keyed by card, with the power they take off one opposing
+ * Character for the turn.
+ *
+ * OP17-058 Kaido prints the clause in two windows, `[When Attacking]` and
+ * `[On Your Opponent's Attack]`; only the second is argued here.
+ */
+const DEFENDING_LEADER_DEBUFFS: Readonly<Record<string, number>> = {
+  "OP17-058": 2000,
+};
+
+/**
+ * Paying a defending Leader debuff in a battle it cannot change.
+ *
+ * Weakly worse than declining. The window reopens on every attack the
+ * opponent declares, and declining does not spend the `[Once Per Turn]`, so
+ * a seat that declines can still pay later in the turn, against the
+ * Character that is actually attacking, with the DON!! still on its field.
+ * Paying now buys only a −2000 on a body whose battle is already decided:
+ * - the attacker is the opposing Leader, which the clause cannot target; or
+ * - the attack lands even after −2000 and every Counter in hand, with no
+ *   active Blocker to take the hit. Any Event in hand keeps the offer: a
+ *   `[Counter]` Event can do more than the `currentCounter` it reports.
+ *
+ * Later in the turn the seat may also know more. Life cards taken in this
+ * battle come to hand, and they can be the Counters that make the next
+ * battle one the −2000 changes.
+ *
+ * Not argued: an opposing effect that reads a Character's power outside a
+ * battle, which a −2000 paid now could switch off. `test/scorer-dominance.test.ts`
+ * plays the declined offer forward and checks that the window opens again
+ * on the next attack.
+ */
+export function isDebuffForADecidedBattle(
+  action: LegalAction,
+  observation: GameObservation,
+): boolean {
+  if (action.type !== "resolve-effect") return false;
+  if (action.option.kind !== "confirm" || action.option.choice !== "apply") {
+    return false;
+  }
+  const amount = DEFENDING_LEADER_DEBUFFS[action.sourceCardNumber];
+  const battle = observation.activeBattle;
+  if (amount === undefined || !battle) return false;
+  const { self, turnPlayer, viewer, cardFacts } = observation;
+  if (turnPlayer === viewer) return false;
+  if (battle.attackerInstanceId === `${turnPlayer}-leader`) return true;
+  if (
+    self.board.some(
+      (card) => !card.rested && card.effectiveKeywords.includes("Blocker"),
+    )
+  ) {
+    return false;
+  }
+  if (
+    self.hand.some((card) => cardFacts[card.cardNumber]?.category === "event")
+  ) {
+    return false;
+  }
+  const counters = self.hand.reduce(
+    (sum, card) => sum + card.currentCounter,
+    0,
+  );
+  return (
+    battle.attackPower - amount >=
+    battle.targetPower + battle.counterPower + counters
+  );
+}
+
 /** Indices of the offered actions the seat never plays. */
 export function prunedActions(observation: GameObservation): Set<number> {
   const pruned = new Set<number>();
@@ -191,7 +261,8 @@ export function prunedActions(observation: GameObservation): Set<number> {
       isAsideCounter(action) ||
       isDoomedAttack(action, observation) ||
       isWastedCounter(action, observation) ||
-      isSpentLeaderOverride(action, observation)
+      isSpentLeaderOverride(action, observation) ||
+      isDebuffForADecidedBattle(action, observation)
     ) {
       pruned.add(index);
     }
