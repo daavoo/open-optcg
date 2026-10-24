@@ -82,7 +82,6 @@ export const BESPOKE_TRIGGERS = [
   "EB04-028",
   "OP12-057",
   "ST36-002",
-  "ST36-003",
   "OP10-109",
   "OP12-113",
   "P-088",

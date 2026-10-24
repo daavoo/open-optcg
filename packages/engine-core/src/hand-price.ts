@@ -167,14 +167,6 @@ export function playCostFromHand(
   db: CardDatabase = cards,
 ): number {
   const player = state.players[playerId];
-  // ST33-004 Bepo, whose own text prices itself at 3 for the turn its
-  // controller's hand was trashed by an effect. Predates the general discount
-  // and stays a special case because it replaces the price rather than
-  // reducing it.
-  const base =
-    cardNumber === "ST33-004" && player.handTrashedByEffectTurn === state.turn
-      ? 3
-      : printedCost;
   const staticDiscount = staticHandDiscount(state, playerId, cardNumber, db);
   const discount = player.playDiscount;
   if (
@@ -183,10 +175,10 @@ export function playCostFromHand(
     printedCost < discount.minCost ||
     !hasCardName(cardNumber, discount.name)
   ) {
-    return Math.max(0, base - staticDiscount);
+    return Math.max(0, printedCost - staticDiscount);
   }
   if (options.spend) delete player.playDiscount;
-  return Math.max(0, base - staticDiscount - discount.amount);
+  return Math.max(0, printedCost - staticDiscount - discount.amount);
 }
 
 /**

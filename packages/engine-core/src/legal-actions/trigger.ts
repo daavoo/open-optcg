@@ -213,8 +213,6 @@ export function triggerActions(state: GameState): LegalAction[] {
     trigger.card.cardNumber === "OP11-081" ||
     triggerProgramCanAct(state, trigger.playerId, trigger.card) ||
     (trigger.card.cardNumber === "ST36-002" && attackerLife <= 3) ||
-    (trigger.card.cardNumber === "ST36-003" &&
-      hasCardType(player.leaderCardNumber, "Supernovas")) ||
     (trigger.card.cardNumber === "P-088" &&
       hasCardType(player.leaderCardNumber, "Supernovas") &&
       player.life.length + attackerLife <= 5);

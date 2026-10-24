@@ -121,7 +121,7 @@ describe("ST33 rules", () => {
       "leader-draw",
       "koby-draw",
     ]);
-    expect(state.players.p1.handTrashedByEffectTurn).toBe(3);
+    expect(state.handTrashedByEffectOnTurn?.p1).toBe(3);
   });
 
   covers("ST33-003", "[On Play]");
@@ -205,7 +205,7 @@ describe("ST33 rules", () => {
     const state = scenario();
     state.players.p1.hand = [card("borsalino", "ST33-004")];
     state.players.p1.activeDon = ["one", "two", "three"];
-    state.players.p1.handTrashedByEffectTurn = state.turn;
+    state.handTrashedByEffectOnTurn = { p1: state.turn };
     expect(
       getLegalActions(state, "p1").some(
         (action) =>
@@ -222,7 +222,7 @@ describe("ST33 rules", () => {
     const full = observe(state, "p1").self.hand[0]!;
     expect(full).toMatchObject({ cost: 6, currentCost: 6 });
 
-    state.players.p1.handTrashedByEffectTurn = state.turn;
+    state.handTrashedByEffectOnTurn = { p1: state.turn };
     const discounted = observe(state, "p1").self.hand[0]!;
     // The printed number stays put -- the played body is still a 6-cost
     // Character -- and the price the seat is being offered sits beside it.

@@ -7,6 +7,7 @@ import { cardAttributes } from "@one-piece-sim/cards";
 import {
   always,
   attachedDon,
+  handTrashedThisTurn,
   totalGivenDon,
   turnPlayer,
 } from "./static-shared.js";
@@ -82,5 +83,15 @@ export const formatStaticAbilities: readonly StaticAbility[] = [
     scope: "self",
     cost: () => 1,
     keyword: { keyword: "Blocker", when: always },
+  },
+  // ST33-004 Borsalino: −3 cost in hand on a turn a card in its controller's
+  // hand was trashed by an effect -- either player's: an opponent's effect
+  // that makes them trash counts (Bandai's ST33-004#1). A cost layer, so a
+  // "cost N or less" clause reading the hand sees the discount as well.
+  {
+    cardNumber: "ST33-004",
+    scope: "self",
+    costZone: "hand",
+    cost: (context) => (handTrashedThisTurn(context) ? -3 : 0),
   },
 ];

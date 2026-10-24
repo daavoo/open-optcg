@@ -24,7 +24,7 @@ import {
 import { type EffectContext } from "./context.js";
 import { damageReplacementOption } from "../damage-replacement.js";
 import { resumeMainAfterBattle } from "../pending.js";
-import { navyHandTrashDraws } from "./discards.js";
+import { markHandTrashedByEffect, navyHandTrashDraws } from "./discards.js";
 import { type PublicEvent } from "@one-piece-sim/protocol";
 
 /** `character-area-replacement`. */
@@ -148,13 +148,8 @@ export function resolveHandTrashReplacement({
   const [card] = player.hand.splice(handIndex, 1);
   if (!card) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
   player.trash.push(card);
-  // A hand card trashed by the protector's effect: ST33-004's price and
-  // OP14-045/049/056's clauses read these two marks.
-  player.handTrashedByEffectTurn = state.turn;
-  state.handTrashedByEffectOnTurn = {
-    ...state.handTrashedByEffectOnTurn,
-    [effect.playerId]: state.turn,
-  };
+  // A hand card trashed by the protector's effect.
+  markHandTrashedByEffect(state, effect.playerId);
   const leaderDrawCount =
     (effect.leaderDrawCount ?? 0) +
     navyHandTrashDraws(state, effect.playerId, effect.sourceCardNumber, db);

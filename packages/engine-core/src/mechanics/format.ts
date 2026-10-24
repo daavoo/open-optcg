@@ -104,6 +104,34 @@ export const formatMechanics: SetMechanics = {
   ],
   trigger: [
     [
+      // ST36-003 Scratchmen Apoo: the draw always happens; only the base
+      // power waits on a {Supernovas} Leader (Bandai's ST36-003#1). A base
+      // power setter, so it meets OP17's setters under rule 4-9-2-1.
+      "ST36-003",
+      {
+        effect: {
+          kind: "sequence",
+          effects: [
+            { kind: "draw", player: "self", count: 1 },
+            {
+              kind: "if",
+              condition: {
+                kind: "leader-has-type",
+                player: "self",
+                type: "Supernovas",
+              },
+              then: {
+                kind: "set-leader-base-power",
+                player: "self",
+                value: 7000,
+                expiresAfterTurns: 0,
+              },
+            },
+          ],
+        },
+      },
+    ],
+    [
       "OP12-098",
       {
         effect: {

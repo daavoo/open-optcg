@@ -8,6 +8,7 @@ import { drawCards } from "../effects.js";
 import { searchRevealIsPublic } from "../queries.js";
 import { leaderEffectsNegated } from "../static-abilities.js";
 import { type EffectContext } from "./context.js";
+import { markHandTrashedByEffect } from "./discards.js";
 import { type PublicEvent } from "@one-piece-sim/protocol";
 
 /** `navy-search`. */
@@ -156,16 +157,14 @@ export function resolveDrawTrash({
   const [card] = player.hand.splice(handIndex, 1);
   if (!card) throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
   player.trash.push(card);
+  markHandTrashedByEffect(state, effect.playerId);
   const source = db.require(effect.sourceCardNumber);
-  const events = source.types.includes("Navy")
-    ? (() => {
-        player.handTrashedByEffectTurn = state.turn;
-        return player.leaderCardNumber === "OP12-040" &&
-          !leaderEffectsNegated(state, effect.playerId)
-          ? drawCards(state, effect.playerId, 1, effect.sourceCardNumber)
-          : [];
-      })()
-    : [];
+  const events =
+    source.types.includes("Navy") &&
+    player.leaderCardNumber === "OP12-040" &&
+    !leaderEffectsNegated(state, effect.playerId)
+      ? drawCards(state, effect.playerId, 1, effect.sourceCardNumber)
+      : [];
   if (effect.trashCount > 1) {
     state.pendingEffect = { ...effect, trashCount: effect.trashCount - 1 };
   } else if (effect.resumePhase && effect.resumePlayerId) {

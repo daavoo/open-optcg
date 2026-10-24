@@ -107,7 +107,7 @@ describe("ordering simultaneous automatic clauses", () => {
     expect(game.state.players.p1.activeDon).toHaveLength(active + 1);
   });
 
-  it("resolves the Leader first when picked, and passes over Pudding with nothing left to add", () => {
+  it("resolves the Leader first when picked, and Pudding has nothing left to add", () => {
     const { game, seen, play } = payTwo("order-leader");
     const active = game.state.players.p1.activeDon.length;
 
@@ -119,8 +119,7 @@ describe("ordering simultaneous automatic clauses", () => {
       { source: "OP09-061", count: 1, rested: true },
     ]);
     expect(game.state.players.p1.activeDon).toHaveLength(active + 1);
-    // Pudding is not activated for nothing: no line for it, and its
-    // [Once Per Turn] use is kept.
+    // Pudding adds nothing, so there is no line for it.
     expect(
       seen.some(
         (event) =>
@@ -128,9 +127,11 @@ describe("ordering simultaneous automatic clauses", () => {
           event.sourceCardNumber === "OP08-067",
       ),
     ).toBe(false);
+    // Mandatory, so it fired all the same and its use is spent (Bandai's
+    // ST34-001#1 for the same shape).
     expect(
       game.state.oncePerTurn.some((key) => key.includes(":OP08-067:")),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("does not ask for an order when only one card answers", () => {
@@ -155,7 +156,7 @@ describe("ordering simultaneous automatic clauses", () => {
 });
 
 describe("the Leader, Pudding and Kid on one returned pair", () => {
-  it("asks for the order twice, then passes over the last one with nothing left to add", () => {
+  it("asks for the order twice, then the last one has nothing left to add", () => {
     const { game, seen, play } = payTwo("order-three", [
       character("pudding", "OP08-067"),
       character("kid", "OP05-074"),
@@ -180,7 +181,8 @@ describe("the Leader, Pudding and Kid on one returned pair", () => {
       { source: "OP08-067", count: 1, rested: true },
     ]);
     // The DON!! deck held only the two that went back, so the Leader, last,
-    // would add nothing: it is not asked, not announced, and keeps its use.
+    // would add nothing: it is not asked and not announced, but as a mandatory
+    // clause it has fired, so its use is spent (Bandai's ST34-001#1).
     expect(game.state.players.p1.donDeck).toHaveLength(0);
     expect(
       seen.some(
@@ -191,6 +193,6 @@ describe("the Leader, Pudding and Kid on one returned pair", () => {
     ).toBe(false);
     expect(
       game.state.oncePerTurn.some((key) => key.includes(":OP09-061:")),
-    ).toBe(false);
+    ).toBe(true);
   });
 });
