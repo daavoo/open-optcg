@@ -11,11 +11,14 @@
  * ST26-005's DON!! −2 paid again once the Leader is already 7000 is pruned,
  * unless a card that gains from DON!! leaving the field is where it can gain
  * -- a reaction in play, a ceiling or a starved ramp in play or in hand -- or
- * an opposing one reads the payer's count.
+ * an opposing one reads the payer's count. OP17-058's −2000 on the
+ * opponent's attack is pruned where the battle is decided without it, and
+ * kept where it or the hand's Counters with it can stop the attack.
  */
 import { describe, expect, it } from "vitest";
 import { getLegalActions, observe } from "@one-piece-sim/engine-core";
 import {
+  isDebuffForADecidedBattle,
   isDoomedAttack,
   isSpentLeaderOverride,
   isWastedCounter,
@@ -23,7 +26,13 @@ import {
 } from "@one-piece-sim/agents/scorer";
 import { isAsideCounter } from "@one-piece-sim/agents/local";
 import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
-import { character, instance, scenario, type Game } from "./support/index.js";
+import {
+  character,
+  copies,
+  instance,
+  scenario,
+  type Game,
+} from "./support/index.js";
 
 function position(attacker: string, defenders: Parameters<typeof character>[]) {
   const game = scenario()
@@ -363,5 +372,125 @@ describe("ST26-005's DON!! −2 kept where the return still buys something", () 
     // EB02-061 gains [Rush] while its opponent has 5 or more DON!!.
     const { second } = secondLuffyPayment({ opponentBoard: ["EB02-061"] });
     expect(isSpentLeaderOverride(payment(second), second)).toBe(false);
+  });
+});
+
+/**
+ * OP17-058 Kaido's Leader debuff on the opponent's attack, from a recorded
+ * game: Kaido at 2 Life with an empty hand paid `DON!! −1` to take a 7000
+ * attacker to 5000 -- a hit either way -- and then had no −2000 for the third
+ * attack, where the two Life cards it had taken were Counters enough to stop
+ * it.
+ */
+describe("OP17-058's −2000 on a battle it cannot change", () => {
+  function kaidoDefends(
+    attacker: string,
+    options: {
+      hand?: Parameters<typeof instance>[];
+      board?: Parameters<typeof character>[];
+    } = {},
+  ): Game {
+    const game = scenario()
+      .decks(
+        "(Purple) Kaido - Official Feature Deck",
+        "(Red) Portgas.D.Ace - Official Feature Deck",
+      )
+      .seed("scorer-dominance-kaido")
+      .bareTable()
+      .atTurn(6, { active: "p2" })
+      .withLife("p1", copies(2, "OP17-075", "p1-life"))
+      .withLife("p2", copies(4, "OP16-015", "p2-life"))
+      .withHand(
+        "p1",
+        (options.hand ?? []).map((args) => instance(...args)),
+      )
+      .withBoard(
+        "p1",
+        (options.board ?? []).map((args) => character(...args)),
+      )
+      .withBoard("p2", [
+        character("luffy", "OP16-015", { playedTurn: 4 }),
+        character("newgate", "OP16-003", { playedTurn: 4 }),
+      ])
+      .build();
+    game.play({
+      type: "attack",
+      attackerInstanceId: attacker,
+      targetInstanceId: "p1-leader",
+    });
+    return game;
+  }
+
+  function payment(observation: GameObservation): LegalAction {
+    const found = observation.legalActions.find(
+      (action) =>
+        action.type === "resolve-effect" &&
+        action.sourceCardNumber === "OP17-058" &&
+        action.option.kind === "confirm" &&
+        action.option.choice === "apply",
+    );
+    if (!found) throw new Error("no OP17-058 payment offered");
+    return found;
+  }
+
+  const pruned = (game: Game): boolean => {
+    const observation = observe(game.state, "p1");
+    const pay = payment(observation);
+    expect(
+      prunedActions(observation).has(observation.legalActions.indexOf(pay)),
+    ).toBe(isDebuffForADecidedBattle(pay, observation));
+    return isDebuffForADecidedBattle(pay, observation);
+  };
+
+  it("prunes it when the attack lands after −2000 and the hand is empty", () => {
+    expect(
+      observe(kaidoDefends("newgate").state, "p1").activeBattle,
+    ).toMatchObject({ attackPower: 10000, targetPower: 5000 });
+    expect(pruned(kaidoDefends("newgate"))).toBe(true);
+  });
+
+  it("is offered again on the next attack once declined", () => {
+    const game = kaidoDefends("newgate");
+    game.play({ type: "resolve-effect", optionId: "skip" });
+    game.pass();
+    game.pass();
+    game.play({
+      type: "attack",
+      attackerInstanceId: "luffy",
+      targetInstanceId: "p1-leader",
+    });
+    const observation = observe(game.state, "p1");
+    expect(isDebuffForADecidedBattle(payment(observation), observation)).toBe(
+      false,
+    );
+  });
+
+  it("prunes it against the opposing Leader, which it cannot target", () => {
+    expect(
+      pruned(kaidoDefends("p2-leader", { hand: [["hawkins", "OP17-073"]] })),
+    ).toBe(true);
+  });
+
+  it("keeps it when −2000 alone stops the attack", () => {
+    expect(pruned(kaidoDefends("luffy"))).toBe(false);
+  });
+
+  it("keeps it when −2000 brings the attack within the hand's Counters", () => {
+    // 10000 - 2000 = 8000 against 5000 + 2000 + 2000: stopped only with it.
+    const game = kaidoDefends("newgate", {
+      hand: [
+        ["hawkins-a", "OP17-073"],
+        ["hawkins-b", "OP17-073"],
+      ],
+    });
+    const hand = observe(game.state, "p1").self.hand;
+    expect(hand.map((card) => card.currentCounter)).toEqual([2000, 2000]);
+    expect(pruned(game)).toBe(false);
+  });
+
+  it("keeps it beside an active Blocker", () => {
+    expect(
+      pruned(kaidoDefends("newgate", { board: [["wall", "OP12-118"]] })),
+    ).toBe(false);
   });
 });
