@@ -232,7 +232,6 @@ export interface PlayerState {
   leaderPowerModifiers: PowerModifier[];
   leaderRested: boolean;
   activateDonAtEndOfTurn: number;
-  handTrashedByEffectTurn?: number;
   /**
    * A pending discount on the next card played from hand that matches it, as
    * the OP12-061 Leader's `[Activate: Main]` grants.

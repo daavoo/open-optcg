@@ -108,5 +108,13 @@
  * already-rested Character, OP10-030 stops ST24-005's end-of-turn
  * activation, and ST28-004 picks which cards give back its two DON!!. A
  * recorded action list can meet offers that changed.
+ *
+ * Bumped to 1.16 for Bandai's ST-31 to ST-36 Q&As: a hand card trashed by
+ * the opponent's effect counts for ST33-004 Borsalino (now a −3 cost layer),
+ * ST36-003's [Trigger] draws under any Leader and sets the Supernovas
+ * Leader's base power, ST36-005's activation needs a face-down edge Life
+ * card, ST34-001 needs its {Big Mom Pirates} Leader, and a mandatory
+ * [Once Per Turn] reaction that does nothing still spends its use. A
+ * recorded action list can meet offers that changed.
  */
-export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.15";
+export const RULES_VERSION = "st31-st32-st33-st34-st35-st36-1.16";

@@ -15,7 +15,7 @@ import {
   createTriggerResult,
   placeCharacter,
 } from "../effects.js";
-import { leaderInstanceId, opponentOf } from "../board.js";
+import { opponentOf } from "../board.js";
 import { bankDamagedLifeCard } from "../life.js";
 import { addPowerModifier, resumeAfterTrigger } from "../pending.js";
 import { knockOut, replacementOptionsFor } from "../removal.js";
@@ -209,34 +209,6 @@ export function applyResolveTrigger({
     } else if (attackerPlayerId) {
       state.activePlayer = attackerPlayerId;
     }
-  } else if (trigger.card.cardNumber === "ST36-003") {
-    const drawn = player.deck.shift();
-    if (drawn) {
-      player.hand.push(drawn);
-      events.push({
-        type: "cards-drawn",
-        playerId: trigger.playerId,
-        count: 1,
-      });
-    }
-    const key = `${state.turn}:${trigger.playerId}:ST36-003:base-power`;
-    if (!state.oncePerTurn.includes(key)) {
-      const printed = db.require(player.leaderCardNumber).power ?? 0;
-      addPowerModifier(
-        state,
-        trigger.playerId,
-        leaderInstanceId(trigger.playerId),
-        7000 - printed,
-        state.turn,
-        trigger.card,
-      );
-      state.oncePerTurn.push(key);
-    }
-    player.trash.push({
-      instanceId: trigger.card.instanceId,
-      cardNumber: trigger.card.cardNumber,
-    });
-    resumeAfterTrigger(state);
   } else if (trigger.card.cardNumber === "OP11-079") {
     const drawn = player.deck.shift();
     if (drawn) {

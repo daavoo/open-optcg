@@ -1177,10 +1177,12 @@ export function dispatchMechanicInvocations(
       queuePendingContinuations(state, [invocation, ...continuations]);
       return { pending: null, invocation: null, continuations: [], events };
     }
-    // A `[Once Per Turn]` clause that would do nothing is not put to its
-    // controller: nobody activates it for nothing, so it is passed over and
-    // keeps its use -- OP12-081 Koala on a Sanji played at 0 Life still
-    // answers the Linlin Sanji plays (Bandai's OP12-081#3).
+    // A `[Once Per Turn]` clause that would do nothing is not run. One its
+    // controller may decline is not put to them either, and keeps its use --
+    // OP12-081 Koala on a Sanji played at 0 Life still answers the Linlin
+    // Sanji plays (Bandai's OP12-081#3). A mandatory one has still fired and
+    // spends it -- a second ST34-001 Katakuri that found the DON!! deck empty
+    // does not answer a later return (ST34-001#1).
     // Nor is one whose use went while it waited, to an earlier offer of the
     // same clause applied first.
     const onceKey = invocation.declinable
@@ -1201,6 +1203,12 @@ export function dispatchMechanicInvocations(
         invocation.bindings,
       )
     ) {
+      if (
+        onceKey !== undefined &&
+        invocation.program.effect.kind !== "optional"
+      ) {
+        state.oncePerTurn.push(onceKey);
+      }
       continue;
     }
     const result = executeMechanicProgram(

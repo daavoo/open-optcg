@@ -2278,11 +2278,11 @@ describe("OP08-067 Charlotte Pudding", () => {
     expect(game.state.players.p1.restedDon).toHaveLength(before + 1);
   });
 
-  it("passes over quietly and keeps its turn when the DON!! deck has nothing left", () => {
+  it("passes quietly and spends its turn when the DON!! deck has nothing left", () => {
     // The Leader answers the same two-DON!! return first and takes both back,
-    // so Pudding would add from an empty DON!! deck. A clause that would do
-    // nothing is not activated: no line for it, and its [Once Per Turn] use
-    // is still there for the next return this turn.
+    // so Pudding would add from an empty DON!! deck. Nothing is shown for it,
+    // but the clause is mandatory, so it has fired and its [Once Per Turn] use
+    // is gone (Bandai's ST34-001#1 for the same shape).
     const game = table("op08-067-empty")
       .bareTable()
       .withLeader("p1", "OP09-061")
@@ -2323,7 +2323,7 @@ describe("OP08-067 Charlotte Pudding", () => {
     ).toBe(false);
     expect(
       game.state.oncePerTurn.some((key) => key.includes(":OP08-067:")),
-    ).toBe(false);
+    ).toBe(true);
   });
 });
 

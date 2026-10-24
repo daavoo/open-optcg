@@ -2083,10 +2083,6 @@ export type MechanicEffect =
    * 4-9-2-1 applies the highest live one whatever order they resolved in --
    * Bandai's OP17 Q&A: OP17-008 Jozu's 8000 lifts a Leader already set to
    * 7000, and OP17-043 Ganzui's 6000 leaves it there.
-   *
-   * (ST36-003 predates this and approximates the same clause as a
-   * `7000 - printed` power modifier. It is left alone deliberately: it is in a
-   * shipped deck, and rewriting it would move that deck's replay hashes.)
    */
   | {
       kind: "set-leader-base-power";
