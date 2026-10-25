@@ -98,6 +98,65 @@ const LISTS: Record<string, DeckManifest> = {
       "ST10-010": 3,
     },
   },
+  // Purple OP15-058 Enel, the Europe Championship 26-27 S1 winner ("Frle",
+  // Utrecht, 6 Sep 2026, read off onepiecetopdecks.com's OP-17 `deckgen`
+  // record and checked against Bandai's decklist graphic). It was the
+  // Leader's Community list until the Store Battle build the model wins more
+  // with replaced it there; it stays here under its old id because the meta
+  // field (`meta-decks.txt`), checkpoints and its variants name it.
+  "(Purple) Enel - 1st Place EU Championship 26-27 S1": {
+    id: "(Purple) Enel - 1st Place EU Championship 26-27 S1",
+    format: "standard",
+    leader: "OP15-058",
+    cards: {
+      "OP05-077": 3,
+      "OP07-064": 1,
+      "OP09-077": 1,
+      "OP10-067": 3,
+      "OP12-071": 4,
+      "OP13-076": 1,
+      "OP15-061": 4,
+      "OP15-066": 2,
+      "OP15-067": 4,
+      "OP15-071": 3,
+      "OP15-074": 3,
+      "OP15-075": 4,
+      "OP15-076": 4,
+      "OP15-077": 4,
+      "OP15-078": 4,
+      "OP15-118": 2,
+      "ST10-010": 3,
+    },
+  },
+  // Yellow OP07-097 Vegapunk, 1st (3-0) for "RyByte" at a Store Battle at Sci
+  // Fi Factory (US) on 3 Aug 2025, off onepiecetopdecks.com's EB-02 page. It
+  // was the Leader's Community list until the 2026-06-19 Store Battle build
+  // replaced it there; it stays here under its old id because checkpoints and
+  // its variants name it.
+  "(Yellow) Vegapunk - 1st Place Store Battle": {
+    id: "(Yellow) Vegapunk - 1st Place Store Battle",
+    format: "standard",
+    leader: "OP07-097",
+    cards: {
+      "EB02-054": 2,
+      "EB02-056": 4,
+      "OP07-098": 4,
+      "OP07-100": 4,
+      "OP07-101": 4,
+      "OP07-105": 4,
+      "OP07-107": 3,
+      "OP07-109": 3,
+      "OP07-111": 4,
+      "OP07-114": 2,
+      "OP07-115": 4,
+      "OP07-117": 2,
+      "OP08-106": 4,
+      "OP08-112": 1,
+      "OP09-117": 2,
+      "OP10-112": 2,
+      "ST13-011": 1,
+    },
+  },
 };
 
 /**

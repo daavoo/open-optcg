@@ -10,7 +10,7 @@ import { character, covers, instance, scenario } from "./support/index.js";
  * {Egghead} core, and the line the deck is built around: the Leader banks an
  * {Egghead} body face-up on Life, and the hit that turns it over plays it.
  */
-const DECK = "(Yellow) Vegapunk - 1st Place Store Battle";
+const DECK = "(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19";
 const OPPONENT = "(Green) Roronoa Zoro - Starter Deck 32";
 
 const table = (seed: string) =>

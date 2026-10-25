@@ -139,7 +139,10 @@ describe("deck provenance rows", () => {
     // The three EB-05 lists add 46: the ChinoizeCup #124 Buggy and #125 Law
     // lists 16 each (fifteen distinct deck cards and a Leader), and the EB05
     // Wisdom Robin list 14 (thirteen and a Leader).
-    expect(communityDeckCardRows).toHaveLength(999);
+    // The best-measured lists for sixteen Leaders add 258 (each list's
+    // distinct deck cards and its Leader), and the EU Final Enel and the 2025
+    // Vegapunk lists they replace on the Community shelf take 36 away.
+    expect(communityDeckCardRows).toHaveLength(1221);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -209,7 +212,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(71);
+    expect(reports).toHaveLength(85);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);

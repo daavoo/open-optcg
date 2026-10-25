@@ -282,7 +282,56 @@ describe("OP12-096 Ursa Shock", () => {
 });
 
 describe("OP12-102 Shirahoshi", () => {
-  covers("OP12-102", "[Opponent's Turn]");
+  covers("OP12-102", "[Opponent's Turn]", "static");
+
+  it("turns a Life card face-up to keep another of your Characters on the field", () => {
+    // The replacement watches every Character of base cost 6 or less its
+    // controller has, not only Shirahoshi: here p2's OP12-075 Ms. All Sunday
+    // K.O.s the cost-2 ST31-003 Brook beside it.
+    const game = scenario()
+      .decks(
+        "(Black/Yellow) Koala - Official Feature Deck",
+        "(Purple) Charlotte Katakuri - Starter Deck 34",
+      )
+      .seed("op12-102-static")
+      .atTurn(12, { active: "p2" })
+      .bareTable()
+      .withBoard("p1", [
+        character("shirahoshi", "OP12-102"),
+        character("brook", "ST31-003"),
+      ])
+      .withLife("p1", [
+        instance("life-1", "ST31-003"),
+        instance("life-2", "ST31-003"),
+      ])
+      .withHand("p2", [instance("sunday", "OP12-075")])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "OP12-075" });
+    game.play({ type: "resolve-effect", optionId: "brook" });
+    expect(game.player).toBe("p1");
+    game.play({ type: "resolve-effect", summary: "Turn 1 card" });
+    let guard = 0;
+    while (game.state.pendingEffect) {
+      if (guard++ > 40) throw new Error("pending effect never settled");
+      const skip = game
+        .legalActions()
+        .find(
+          (action) =>
+            action.type === "resolve-effect" && action.optionId === "skip",
+        );
+      game.play(
+        skip
+          ? { type: "resolve-effect", optionId: "skip" }
+          : { type: "resolve-effect" },
+      );
+    }
+
+    expect(
+      game.state.players.p1.board.map((card) => card.instanceId).sort(),
+    ).toEqual(["brook", "shirahoshi"]);
+    expect(game.state.players.p1.life[0]?.faceUp).toBe(true);
+  });
 
   it("buffs its {Neptunian} teammates until a second copy of itself lands", () => {
     const alone = defending("op12-102")

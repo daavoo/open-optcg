@@ -12,7 +12,6 @@ import { genericDossier } from "./generic.js";
 import { op13SaboDossier } from "./op13-sabo.js";
 import { op14MihawkDossier } from "./op14-mihawk.js";
 import { op16EnelDossier } from "./op16-enel.js";
-import { op16EnelEuFinalDossier } from "./op16-enel-eu-final.js";
 import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
 import { op16AceOpenDossier } from "./op16-ace-open.js";
 import { op17XebecOpenDossier } from "./op17-xebec-open.js";
@@ -39,7 +38,6 @@ import { eb02LuffyDossier } from "./eb02-luffy.js";
 import { op11ShirahoshiDossier } from "./op11-shirahoshi.js";
 import { op06ReijuDossier } from "./op06-reiju.js";
 import { op11KobyDossier } from "./op11-koby.js";
-import { op07VegapunkDossier } from "./op07-vegapunk.js";
 import { op13AceDossier } from "./op13-ace.js";
 import { op12SanjiDossier } from "./op12-sanji.js";
 import { op10UsoppDossier } from "./op10-usopp.js";
@@ -81,6 +79,22 @@ import { eb05RobinDossier } from "./eb05-robin.js";
 import { st34Dossier } from "./st34.js";
 import { st35Dossier } from "./st35.js";
 import { st36Dossier } from "./st36.js";
+import { st29LuffyTournamentDossier } from "./st29-luffy-tournament.js";
+import { op11KatakuriTournamentDossier } from "./op11-katakuri-tournament.js";
+import { op05LuffyTournamentDossier } from "./op05-luffy-tournament.js";
+import { op10KidTournamentDossier } from "./op10-kid-tournament.js";
+import { op11ShirahoshiTournamentDossier } from "./op11-shirahoshi-tournament.js";
+import { op12SanjiTournamentDossier } from "./op12-sanji-tournament.js";
+import { op06YamatoTournamentDossier } from "./op06-yamato-tournament.js";
+import { op07VegapunkStoreBattleDossier } from "./op07-vegapunk-store-battle.js";
+import { op09ShanksTournamentDossier } from "./op09-shanks-tournament.js";
+import { op13RogerTournamentDossier } from "./op13-roger-tournament.js";
+import { eb03ViviTournamentDossier } from "./eb03-vivi-tournament.js";
+import { op14DoflamingoTournamentDossier } from "./op14-doflamingo-tournament.js";
+import { op12KoalaTournamentDossier } from "./op12-koala-tournament.js";
+import { op14MoriaTournamentDossier } from "./op14-moria-tournament.js";
+import { op17ShanksTournamentDossier } from "./op17-shanks-tournament.js";
+import { op15EnelTournamentDossier } from "./op15-enel-tournament.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 export type { DeckStrategyDossier } from "./types.js";
@@ -95,7 +109,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue/Yellow) Nami - Official Feature Deck": op16NamiDossier,
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck": op16TeachDossier,
   "(Purple) Enel - Official Feature Deck": op16EnelDossier,
-  "(Purple) Enel - 1st Place EU Championship 26-27 S1": op16EnelEuFinalDossier,
   "(Purple) Sengoku - Official Feature Deck": op16SengokuDossier,
   "(Red/Green) Krieg - Official Feature Deck": op15KriegDossier,
   "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinDossier,
@@ -117,7 +130,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Green/Yellow) Shirahoshi - Official Feature Deck": op11ShirahoshiDossier,
   "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle": op06ReijuDossier,
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final": op11KobyDossier,
-  "(Yellow) Vegapunk - 1st Place Store Battle": op07VegapunkDossier,
   "(Red/Blue) Portgas.D.Ace - Official Feature Deck": op13AceDossier,
   "(Blue/Purple) Sanji - Official Feature Deck": op12SanjiDossier,
   "(Blue/Black) Usopp - Official Feature Deck": op10UsoppDossier,
@@ -162,6 +174,35 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Yellow) Monkey.D.Luffy - Starter Deck 29": st29Dossier,
   "(Red/Green) Luffy & Ace - Starter Deck 30": st30Dossier,
   "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceDossier,
+  "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
+    st29LuffyTournamentDossier,
+  "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":
+    op11KatakuriTournamentDossier,
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01":
+    op05LuffyTournamentDossier,
+  "(Yellow) Eustass Kid - ChinoizeCup #104": op10KidTournamentDossier,
+  "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125":
+    op11ShirahoshiTournamentDossier,
+  "(Blue/Purple) Sanji - ChinoizeCup #116": op12SanjiTournamentDossier,
+  "(Green/Yellow) Yamato - 1st Place Pirates Party 2026-09-20":
+    op06YamatoTournamentDossier,
+  "(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19":
+    op07VegapunkStoreBattleDossier,
+  "(Red) Shanks - 1st Place Store Battle 2026-06-29":
+    op09ShanksTournamentDossier,
+  "(Red/Purple) Gol.D.Roger - 1st Place OPTCGSim 2026-04-22":
+    op13RogerTournamentDossier,
+  "(Red/Blue) Nefeltari Vivi - 1st Place Store Battle 2026-05-28":
+    eb03ViviTournamentDossier,
+  "(Purple) Donquixote Doflamingo - 1st Place Store Battle 2026-01-30":
+    op14DoflamingoTournamentDossier,
+  "(Black/Yellow) Koala - 30th Place ChinoizeCup #113":
+    op12KoalaTournamentDossier,
+  "(Black/Yellow) Gecko Moria - 5th Place ChinoizeCup #120":
+    op14MoriaTournamentDossier,
+  "(Green) Shanks - 16th Place Rumble League #9": op17ShanksTournamentDossier,
+  "(Purple) Enel - 1st Place Store Battle 2026-04-11":
+    op15EnelTournamentDossier,
 };
 
 /**
