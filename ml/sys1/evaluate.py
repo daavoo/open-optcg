@@ -41,6 +41,13 @@ def catalog(env: VectorEnv) -> tuple[list[str], dict[str, str]]:
     return reply["decks"], reply["divisions"]
 
 
+def selectable_decks(env: VectorEnv) -> list[str]:
+    """The decks a player can pick in the app: `catalog` without the
+    training-only lists and scratch variants, in the app's order."""
+    env.workers[0].send({"cmd": "decks"})
+    return env.workers[0].receive()["selectable"]
+
+
 def deck_variants(env: VectorEnv) -> dict[str, list[str]]:
     """Variant ids by base deck (`bridge/deck-variants.ts`): other builds of a
     training deck, resolvable by id but never in the catalog on their own."""

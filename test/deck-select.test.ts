@@ -273,11 +273,12 @@ describe("the shelves the picker groups decks into", () => {
     expect(tileIndex(html, first)).toBeLessThan(tileIndex(html, second));
   });
 
-  it("leads its shelf with a Leader's recommended list, and marks it", () => {
+  it("leads its shelf with a Leader's recommended list, unmarked", () => {
     // Two lists share OP14-041. The ChinoizeCup list is the one the app hands
-    // a player, so it is the first tile on the shelf the grid opens on and the
-    // only Hancock tile wearing the mark; Bandai's feature deck stays on its
-    // own shelf, unmarked.
+    // a player, so with no standings in the build it is the first tile on the
+    // shelf the grid opens on; Bandai's feature deck stays on its own shelf.
+    // No tile wears a mark for it: a badge read as the app recommending that
+    // deck over every other one on the shelf, not over the Leader's other list.
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: true,
     });
@@ -289,12 +290,7 @@ describe("the shelves the picker groups decks into", () => {
     expect(html.indexOf("data-deck-id=", community)).toBe(
       tileIndex(html, tuned),
     );
-    const badge = (deckId: string) => {
-      const at = tileIndex(html, deckId);
-      return html.slice(at, html.indexOf("</button>", at));
-    };
-    expect(badge(tuned)).toContain("deck-tile-badge");
-    expect(badge(feature)).not.toContain("deck-tile-badge");
+    expect(html).not.toContain("Recommended");
   });
 
   it("groups the select the same way, saved decks first", () => {

@@ -5,7 +5,9 @@
  * The model is a release asset, not a committed file: a ~12 MB pack would weigh
  * down every clone and every commit that retrains it. The newest release whose
  * tag starts with `model-` is the published one; it carries `scorer-model.json`
- * and any deck adapters over it as `scorer-adapter-<deck>.json`.
+ * and any deck adapters over it as `scorer-adapter-<deck>.json`, and may carry
+ * `deck-standings.json` (`ml/sys1/deck_standings.py`), the model's win rate
+ * with each shipped deck, which orders the deck picker's Community shelf.
  *
  *   pnpm model:fetch            # the newest model-* release
  *   pnpm model:fetch model-v6   # a named one
@@ -13,7 +15,7 @@
  * Reads the public GitHub API, so no account is needed; `GITHUB_TOKEN`, when
  * set (CI), only lifts the anonymous rate limit.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const REPO = process.env.GITHUB_REPOSITORY ?? "daavoo/open-optcg";
@@ -89,5 +91,22 @@ for (const asset of release.assets) {
   );
   console.log(
     `${release.tag_name}: ${asset.name} (${Math.round(bytes / 1024)} KB)`,
+  );
+}
+
+// Standings belong to the model they were measured with, so a release without
+// them clears any left by an earlier fetch rather than ordering the shelf by
+// another model's games.
+const standings = release.assets.find((a) => a.name === "deck-standings.json");
+const standingsPath = join(webRoot, "deck-standings.json");
+if (standings) {
+  const bytes = await download(standings.browser_download_url, standingsPath);
+  console.log(
+    `${release.tag_name}: deck-standings.json (${Math.round(bytes / 1024)} KB)`,
+  );
+} else {
+  await rm(standingsPath, { force: true });
+  console.log(
+    `${release.tag_name}: no deck-standings.json; the Community shelf keeps its authored order`,
   );
 }

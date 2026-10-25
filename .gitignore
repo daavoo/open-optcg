@@ -56,3 +56,6 @@ ml/**/__pycache__/
 # pack is committed; a build inlines one only when it is present.
 packages/web/src/scorer-model.json
 packages/web/src/scorer-adapters/
+# The model's per-deck standings (ml/sys1/deck_standings.py), a release asset
+# beside the pack; they order the deck picker's Community shelf.
+packages/web/src/deck-standings.json

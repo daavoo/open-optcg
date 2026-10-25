@@ -236,6 +236,49 @@ gh release create model-<run> /tmp/model/scorer-model.json \
 `gh` names an asset after the file (a `#` suffix is only a display label), and
 those names are what `tools/fetch-model.ts` looks for.
 
+The release also carries `deck-standings.json`: the shipped checkpoint's win
+rate with each selectable deck, piloting both seats of every pairing. The app's
+deck picker orders its Community shelf by it, best first, so each release
+reorders the shelf; a deck it does not rank follows in the shelf's authored
+order, and a release without the file leaves that order whole.
+`pnpm model:fetch` downloads it beside the pack, and every build inlines it
+(`--external-model` too: it is a few KB the picker needs at first paint).
+
+```sh
+.venv/bin/python -m sys1.deck_standings checkpoints/<run>/final --games 10 \
+  --model model-<run> --out /tmp/model/deck-standings.json
+gh release upload model-<run> /tmp/model/deck-standings.json
+```
+
+`--games` is per ordered pairing, so each pair of decks plays twice that, the
+two seat orders on the same seeds. With 72 selectable decks that is 5,112
+pairings, about 51,000 games at `--games 10`, roughly an hour at the
+`best_variants` rate below. It prints the planned count first, and SIGTERM or
+Ctrl-C writes the games finished so far, marked `partial`. `--decks FILE` (one
+deck id a line) narrows the field for a smoke run. A truncated game counts for
+neither deck and is reported in `truncated`.
+
+### After every training run
+
+Both are required before a model ships:
+
+1. **Deck standings.** `sys1.deck_standings` with the shipped checkpoint, as
+   above, and `deck-standings.json` uploaded to the `model-<run>` release next
+   to `scorer-model.json`. Without it the Community shelf keeps its authored
+   order and drifts from the model players are facing.
+2. **Best list per Leader.** `sys1.best_variants` with the same checkpoint
+   against the meta field (below):
+
+   ```sh
+   .venv/bin/python -m sys1.best_variants checkpoints/<run>/final --games 20 \
+     --field meta-decks.txt \
+     --out data/best-variants.json --report data/best-variants.md
+   ```
+
+   For each Leader whose best build beats its shipped list by more than 2 SE,
+   propose that build as the shipped (recommended) list. The maintainer
+   approves each swap; nothing ships from the report alone.
+
 ## Using the Mac
 
 - **MLX, not PyTorch MPS.** MLX drives the M5 GPU's neural accelerators, which
@@ -363,6 +406,7 @@ data/feedback.jsonl` rebuilds each flagged position from the file and
 | `sys1.evaluate`           | paired win rate vs the rules agents, per deck                           |
 | `sys1.evaluate --against` | paired win rate of one checkpoint against another                       |
 | `sys1.best_variants`      | which build of each Leader the checkpoint pilots best                   |
+| `sys1.deck_standings`     | the checkpoint's win rate per selectable deck, for the picker's order   |
 | `sys1.ladder`             | Elo ratings and a win-rate matrix over checkpoints and the rules agents |
 | `sys1.audit_attacks`      | doomed attacks chosen, and the dominance rule's false alarms            |
 | `bridge/parity-web.ts`    | the TypeScript/WebGPU scorer vs the MLX model it came from              |

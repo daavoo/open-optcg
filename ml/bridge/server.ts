@@ -48,6 +48,7 @@ import {
   type LegalAction,
   type PlayerId,
 } from "@one-piece-sim/protocol";
+import { SELECTABLE_DECK_IDS } from "@one-piece-sim/decks";
 import {
   TRAINING_DECK_IDS,
   createTrainingRulesAgent,
@@ -539,6 +540,9 @@ async function dispatch(request: Record<string, unknown>): Promise<unknown> {
           TRAINING_DECK_IDS.map((deck) => [deck, trainingDeckDivision(deck)]),
         ),
         variants: TRAINING_DECK_VARIANTS,
+        // The decks a player can pick in the app, without the training-only
+        // lists and scratch variants `decks` also carries.
+        selectable: [...SELECTABLE_DECK_IDS],
       };
     case "reset": {
       const results = [];
