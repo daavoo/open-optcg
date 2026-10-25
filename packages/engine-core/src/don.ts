@@ -283,13 +283,21 @@ export function returnDonToDeck(
 
   if (returned.length > 0) {
     if (state.turnPlayerId === playerId) {
-      // ST34-001 Katakuri: once per turn, returning DON!! gives two back rested.
+      // ST34-001 Katakuri: once per turn, returning DON!! gives two back
+      // rested behind a {Big Mom Pirates} Leader. The trigger is mandatory, so
+      // it spends its use even when the Leader check or an empty DON!! deck
+      // leaves it nothing to add (Bandai's ST34-001#1).
+      const bigMomLeader = hasCardType(
+        player.leaderCardNumber,
+        "Big Mom Pirates",
+      );
       for (const katakuri of player.board.filter(
         (card) => card.cardNumber === "ST34-001",
       )) {
         const key = `${state.turn}:${playerId}:${katakuri.instanceId}:don-return`;
         if (state.oncePerTurn.includes(key)) continue;
         state.oncePerTurn.push(key);
+        if (!bigMomLeader) continue;
         const given = addDonFromDeck(state, playerId, 2, "rested");
         if (given > 0) {
           events.push({

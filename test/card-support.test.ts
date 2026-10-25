@@ -109,12 +109,11 @@ const LEGACY_IMPERATIVE_CARDS: readonly string[] = [
   "ST35-003",
   "ST36-001",
   "ST36-002",
-  "ST36-003",
   "ST36-004",
 ];
 
 /** Ratchet. Lower this as cards migrate; never raise it. */
-const IMPERATIVE_BUDGET = 50;
+const IMPERATIVE_BUDGET = 47;
 
 /**
  * Printed clauses nothing in the engine runs.

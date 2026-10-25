@@ -10,6 +10,22 @@ import { addToLife } from "../life.js";
 import { leaderEffectsNegated } from "../static-abilities.js";
 import { type GameState } from "../model.js";
 import { type EffectContext } from "./context.js";
+
+/**
+ * Records that a card left `playerId`'s hand for the trash by an effect this
+ * turn -- read by ST33-004 Borsalino's price and OP14-045/049/056's clauses
+ * through `handTrashedByEffectOnTurn`. Every trash out of a hand an effect
+ * makes, whoever's effect it is, sets it.
+ */
+export function markHandTrashedByEffect(
+  state: GameState,
+  playerId: PlayerId,
+): void {
+  state.handTrashedByEffectOnTurn = {
+    ...state.handTrashedByEffectOnTurn,
+    [playerId]: state.turn,
+  };
+}
 import { type CardDatabase } from "@one-piece-sim/cards";
 import { type PlayerId, type PublicEvent } from "@one-piece-sim/protocol";
 
@@ -120,7 +136,7 @@ export function resolveNavyDiscard({
   const [discard] = player.hand.splice(handIndex, 1);
   if (!discard) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
   player.trash.push(discard);
-  player.handTrashedByEffectTurn = state.turn;
+  markHandTrashedByEffect(state, effect.playerId);
   // `navy-discard` is the generic trash-from-hand-as-a-cost step, and cards
   // outside the type raise it too -- OP13-076 Divine Departure and OP15-078
   // Mamaragan both do -- which is why the Leader's draw reads the source's
@@ -256,6 +272,9 @@ export function resolveOpponentDiscard({
   const [discard] = player.hand.splice(handIndex, 1);
   if (!discard) throw new Error(`MISSING_EFFECT_TARGET: ${optionId}`);
   player.trash.push(discard);
+  // Trashed by the opponent's effect, which is still "by an effect"
+  // (Bandai's ST33-004#1).
+  markHandTrashedByEffect(state, effect.playerId);
   const remaining = (effect.remaining ?? 1) - 1;
   const eligibleInstanceIds = effect.eligibleInstanceIds.filter(
     (candidate) => candidate !== optionId,

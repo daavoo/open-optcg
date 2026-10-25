@@ -103,11 +103,20 @@ export const stMainMechanics: SetMechanics = {
       //
       // Its `[On Your Opponent's Attack]` half is below, and the two have
       // separate `[Once Per Turn]` budgets -- they always did, under two
-      // different hand-written keys.
+      // different hand-written keys. `lifeCardsMatching` keeps the activation
+      // off the offer when neither end of the Life stack is face-down: there
+      // is no cost to pay, and taking it would spend the turn's use on nothing
+      // (Bandai's ST36-005#2).
       "ST36-005",
       {
         oncePerTurn: true,
-        requires: { restedDon: 1 },
+        requires: {
+          restedDon: 1,
+          lifeCardsMatching: {
+            match: { position: "edge", faceUp: false },
+            count: 1,
+          },
+        },
         program: {
           effect: {
             kind: "optional",
