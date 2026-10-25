@@ -414,16 +414,6 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
       <button class="secondary wide" id="sealed-auto-build">${icon("sparkles", "Auto-build")}Auto-build a deck</button>
       <button class="secondary wide" id="sealed-export">${icon("download", "Export deck list")}Export deck list</button>
       <div class="deck-rule-status ${validation.errors.length ? "invalid" : "valid"}"><strong>${validation.errors.length ? "Deck needs attention" : "Ready to play"}</strong>${validation.errors.length ? `<ul>${validation.errors.map((error) => `<li>${escapeHtml(error)}</li>`).join("")}</ul>` : `<p>${SEALED_DECK_SIZE} cards, all from your opened pool.</p>`}</div>
-      <label>Opponent controller
-        <select id="p2-controller">
-          <option value="rules" ${run.opponentController === "rules" ? "selected" : ""}>Heuristics</option>
-          ${
-            ctx.scorerAvailable()
-              ? `<option value="scorer" ${run.opponentController === "scorer" ? "selected" : ""}>Learned model</option>`
-              : ""
-          }
-        </select>
-      </label>
       ${packNote("Opponent's pool", run.opponentPacksOpened)}
       <button class="primary wide" id="sealed-start" ${validation.errors.length ? "disabled" : ""}>${icon("play", "Start match")}Start match</button>
       ${state.message ? `<p class="editor-message">${escapeHtml(state.message)}</p>` : ""}
@@ -456,15 +446,6 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
     }
   });
   ctx.bindCardDetailDialog(() => {
-    ctx.rerender();
-  });
-  document.querySelector("#p2-controller")?.addEventListener("change", () => {
-    if (state.run) {
-      state.run.opponentController = valueOf("p2-controller") as Exclude<
-        ControllerKind,
-        "human"
-      >;
-    }
     ctx.rerender();
   });
   document

@@ -6,14 +6,6 @@ import {
   type SetupContext,
 } from "../packages/web/src/screens/setup.js";
 
-/** The chosen pilot's card, matched inside one tag so the sibling card's
-    `data-controller` cannot satisfy it. */
-function pickedCard(kind: "rules" | "scorer"): RegExp {
-  return new RegExp(
-    `class="controller-card picked"\\s+type="button"\\s+data-controller="${kind}"`,
-  );
-}
-
 function stubContext(overrides: Partial<SetupContext> = {}): SetupContext {
   return {
     savedDecks: {},
@@ -120,30 +112,27 @@ describe("setup screen render", () => {
     expect(html).not.toContain('data-lucide="home"');
   });
 
-  it("defaults the opponent to the learned model, with Heuristics beside it", () => {
+  // The rules agents are a development tool, reached from the CLI: the app
+  // plays the opponent with the learned model and offers no choice of pilot.
+  it("plays the opponent with the learned model, and offers no pilot choice", () => {
     const html = render(stubContext({ scorerAvailable: () => true }));
-    expect(html).toContain('id="p2-controller" value="scorer"');
-    expect(html).toMatch(pickedCard("scorer"));
-    expect(html).not.toMatch(pickedCard("rules"));
-    expect(html).toContain('data-controller="rules"');
+    expect(html).toContain(
+      '<input type="hidden" id="p2-controller" value="scorer" />',
+    );
+    expect(html).not.toContain("data-controller");
+    expect(html).not.toContain("Heuristics");
   });
 
-  it("offers Heuristics alone in a build without the learned model", () => {
+  it("falls back to the rules agent, unoffered, in a build without the learned model", () => {
     const html = render(stubContext());
-    expect(html).toContain('id="p2-controller" value="rules"');
-    expect(html).toMatch(pickedCard("rules"));
-    expect(html).not.toContain('data-controller="scorer"');
+    expect(html).toContain(
+      '<input type="hidden" id="p2-controller" value="rules" />',
+    );
+    expect(html).not.toContain("data-controller");
+    expect(html).not.toContain("Heuristics");
   });
 
-  it("says what each pilot is like, rather than naming it in a dropdown", () => {
-    const html = render(stubContext({ scorerAvailable: () => true }));
-    expect(html).not.toContain('<select id="p2-controller"');
-    expect(html).toMatch(/neural network trained by self-play/);
-    expect(html).toMatch(/deterministic, fast/);
-    expect(html).not.toContain('data-controller="llm"');
-  });
-
-  it("puts the builder in your picker, first, and the pilot in the dialog", () => {
+  it("puts the builder in your picker, first", () => {
     const html = render(stubContext());
     // One empty slot per seat's grid, and it is a tile in the grid rather than
     // a button on the form.
@@ -158,10 +147,6 @@ describe("setup screen render", () => {
     const picker = html.slice(html.indexOf('id="p1-deck-picker"'));
     expect(picker.indexOf("deck-tile-builder")).toBeLessThan(
       picker.indexOf("data-pick-deck"),
-    );
-    // Who pilots the opponent is configured in the dialog, not on the form.
-    expect(html.indexOf('id="p2-controller"')).toBeGreaterThan(
-      html.indexOf('id="matchup-config"'),
     );
     expect(html).not.toContain("Matchup analytics");
   });
@@ -178,12 +163,6 @@ describe("setup screen render", () => {
       }),
     );
     expect(html).toContain("My Zoro deck");
-  });
-
-  it("names the in-browser pilot Heuristics, not an AI of its own", () => {
-    const html = render(stubContext());
-    expect(html).toContain(">Heuristics</span>");
-    expect(html).not.toContain("Rules AI");
   });
 });
 
@@ -241,18 +220,17 @@ describe("who plays each seat", () => {
     expect(html).toContain(
       '<input type="hidden" id="p1-controller" value="scorer" />',
     );
-    // The learned model is the opponent's default pilot too.
-    expect(html).toMatch(pickedCard("scorer"));
+    // The learned model is the opponent's pilot too.
+    expect(html).toContain(
+      '<input type="hidden" id="p2-controller" value="scorer" />',
+    );
   });
 
-  it("lets the second seat be yours too, and drops its pilot choice", () => {
+  it("lets the second seat be yours too", () => {
     const html = render(withPilots("you", "you"));
-    // Two people at one screen: there is no agent in the match, so the pilot
-    // cards have nothing to say about it.
     expect(html).toContain(
       '<input type="hidden" id="p2-controller" value="human" />',
     );
-    expect(html).not.toContain('data-controller="rules"');
     expect(html).toContain('class="hub-face hub-play" title="Start match"');
   });
 });

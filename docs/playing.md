@@ -18,14 +18,14 @@ right, and three controls on the hub between them.
   ST31 to ST36 structure decks, an upgraded ST31 list, and OP-16 and OP-12
   tournament lists. **Custom deck** opens the deck editor for either seat.
 - **Configure matchup** (the top cell of the hub) holds the rest:
-  - **Opponent controller**: the **Learned model**, a small neural network
-    trained by self-play and the default where the page has one, or
-    **Heuristics**, the built-in deck policies. You always pilot your own
-    seat.
   - **Starting player**: you, the opponent, or decided by the seed.
   - **Seed**: every shuffle, random choice and turn order comes from this
     string. Reuse a seed to replay the same game. Swap the two decks and keep
     the seed to play the same matchup from the other side.
+- **You / AI** above each Leader says who plays that deck. An AI seat is
+  played by the learned model, a small neural network trained by self-play.
+  The hand-written deck policies are a development tool and are only offered
+  by the terminal client (see below).
 - **Start match** is the play cell (the triangle), and **Load match from
   trace** the bottom one (see below). With **AI** on both seats, the play cell
   asks whether to watch one game or simulate 100, 250 or 500 of them.
