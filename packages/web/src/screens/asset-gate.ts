@@ -1,5 +1,5 @@
 import { escapeHtml } from "../card-text.js";
-import { bookmarklet } from "../get-cards-bookmarklet.js";
+import { bookmarklet, missingCardsUrl } from "../get-cards-bookmarklet.js";
 import { icon } from "../icons.js";
 import * as footer from "./footer.js";
 
@@ -14,7 +14,8 @@ import * as footer from "./footer.js";
  * that zip to the page: one control, the same on every device.
  *
  * The same status line and control are printed in the Configure dialog once a
- * pack is in, which is where a newer one is loaded after a new set.
+ * pack is in, which is where a newer one is loaded after a new set -- or just
+ * the cards that set added, through `missingArt`.
  */
 export interface AssetGateContext {
   /** What is loaded so far; see `assetSummary()` in ../assets.ts. */
@@ -26,6 +27,8 @@ export interface AssetGateContext {
    * pack -- under the status line; null when there is nothing to say.
    */
   assetNotice: () => string | null;
+  /** Cards with no image yet; see `missingCardArt()` in ../assets.ts. */
+  missingArt: () => readonly string[];
 }
 
 const BANDAI_CARDLIST_URL = "https://en.onepiece-cardgame.com/cardlist/";
@@ -84,8 +87,26 @@ export function renderSetting(ctx: AssetGateContext): string {
   return `<div class="dialog-assets" data-asset-setting>
     <h3>Card text and art</h3>
     ${renderStatus(ctx)}
+    ${renderMissing(ctx)}
     ${ZIP_CONTROL}
   </div>`;
+}
+
+/**
+ * After a new set, the pack a player loaded lacks its cards. Rather than the
+ * whole pack again, the card list is opened with those numbers on the link,
+ * and the bookmark run there saves a zip of just them (see
+ * `missingCardsUrl`). Only while the pack holds more than it lacks: a pack
+ * missing most of the cards wants replacing whole, which the zip control
+ * below already does.
+ */
+function renderMissing(ctx: AssetGateContext): string {
+  const missing = ctx.missingArt().length;
+  if (missing === 0 || ctx.assets().images <= missing) return "";
+  const cards = `${missing} card${missing === 1 ? "" : "s"}`;
+  return `<p class="home-assets-missing">${cards} ${missing === 1 ? "has" : "have"} no art yet, usually a set added since your pack.
+      <button class="home-assets-help" type="button" data-get-missing>Get only ${missing === 1 ? "that card" : `those ${missing}`}</button>
+      opens Bandai's card list: click your Get cards bookmark there, then load the zip it saves here.</p>`;
 }
 
 /** Wires the controls wherever they are printed: the gate or the dialog. */
@@ -149,6 +170,17 @@ export function bindControls(ctx: AssetGateContext): void {
     .forEach((button) => {
       button.addEventListener("click", () => {
         window.open(BANDAI_CARDLIST_URL, "_blank", "noopener");
+      });
+    });
+  document
+    .querySelectorAll<HTMLElement>("[data-get-missing]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        window.open(
+          missingCardsUrl(BANDAI_CARDLIST_URL, ctx.missingArt()),
+          "_blank",
+          "noopener",
+        );
       });
     });
 }

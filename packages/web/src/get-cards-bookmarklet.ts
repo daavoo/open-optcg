@@ -26,3 +26,41 @@ export function bookmarklet(scriptUrl = GET_CARDS_SCRIPT_URL): string {
     "})()"
   );
 }
+
+/**
+ * How the app tells the downloader which cards it has no art for: their
+ * numbers in the fragment of the card list link it opens, e.g.
+ * `…/cardlist/#open-optcg-missing=EB05-001,EB05-002`. A fragment never reaches
+ * Bandai's server, and the page ignores it, so it stays on the URL until the
+ * player clicks the bookmark there. With it, the zip carries the printed text
+ * and those cards' images alone -- the app adds images to what it already has
+ * rather than replacing them, so a pack plus that zip is the whole set.
+ */
+const MISSING_KEY = "open-optcg-missing";
+const CARD_NUMBER = /^(?:[A-Z]{1,5}\d{0,2}|P)-\d{3}$/;
+
+export function missingCardsUrl(
+  cardlistUrl: string,
+  cards: readonly string[],
+): string {
+  return `${cardlistUrl}#${MISSING_KEY}=${cards.join(",")}`;
+}
+
+/**
+ * The card numbers a fragment asks for, or null for one that asks for none.
+ * Anything not shaped like a card number is dropped: the fragment is the one
+ * input to the downloader that a link, rather than the build, supplies.
+ */
+export function parseMissingCards(hash: string): string[] | null {
+  const prefix = `#${MISSING_KEY}=`;
+  if (!hash.startsWith(prefix)) return null;
+  const cards = [
+    ...new Set(
+      decodeURIComponent(hash.slice(prefix.length))
+        .split(",")
+        .map((card) => card.trim().toUpperCase())
+        .filter((card) => CARD_NUMBER.test(card)),
+    ),
+  ];
+  return cards.length > 0 ? cards : null;
+}

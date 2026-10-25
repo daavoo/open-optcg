@@ -36,6 +36,7 @@ import { boardViewer } from "./viewer.js";
 import {
   applyAssetAnchors,
   assetSummary,
+  missingCardArt,
   assetsReady,
   cacheAssetFiles,
   loadBuiltInPrintedText,
@@ -482,6 +483,7 @@ const assetGateDeps: AssetGateContext = {
     rerenderAssets();
   },
   assetNotice: () => assetNotice,
+  missingArt: missingCardArt,
 };
 
 /** Shows the gate, or the lobby again when a load came from its dialog. */

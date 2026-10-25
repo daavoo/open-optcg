@@ -45,6 +45,24 @@ the new cards and saves a complete zip. **Forget the saved images**, in the
 panel, deletes them; so does clearing that site's data in your browser. A
 private window keeps nothing, so there every run starts from scratch.
 
+After a new set, you need only its cards, not the whole zip again:
+
+- **From the app.** _Configure matchup_, under _Card text and art_, says how
+  many cards have no art yet and offers **Get only those**. It opens Bandai's
+  card list with their numbers on the link (in the `#` fragment, which never
+  reaches Bandai's server). Click the bookmark there: the panel offers just
+  those cards, and saves `open-optcg-assets-update.zip` with their images and
+  the printed text. Load it in the app as usual. The app adds the images to
+  the ones it has, and the text in every zip is complete, so the pack you
+  loaded before plus this zip is the whole set. This works whatever the
+  browser on Bandai's side has saved.
+- **From the bookmark alone.** Once the browser has saved images from an
+  earlier run, the panel also offers **Only the cards this browser has not
+  saved yet**, the same small zip worked out from what that browser saved
+  rather than from what the app has.
+
+**Download the cards** still saves the whole pack, as before.
+
 It runs several downloads at once, more while Bandai's site keeps up and
 fewer, after a pause, the moment it pushes back. Each failed request is
 retried with a growing delay before that card is given up on, and the panel

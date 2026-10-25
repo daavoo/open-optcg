@@ -10,6 +10,7 @@ function ctx(overrides: Partial<AssetGateContext> = {}): AssetGateContext {
     assets: () => ({ images: 0, textCards: 0 }),
     loadAssets: async () => {},
     assetNotice: () => null,
+    missingArt: () => [],
     ...overrides,
   };
 }
@@ -64,5 +65,31 @@ describe("asset gate", () => {
   it("prints the same control as the Configure dialog's setting", () => {
     expect(renderSetting(ctx())).toContain("data-asset-zip");
     expect(renderSetting(ctx())).not.toContain("data-asset-folder");
+  });
+
+  it("offers just the cards with no art, once a pack is in", () => {
+    const missing = () => ["EB05-001", "EB05-002"];
+    const html = renderSetting(
+      ctx({
+        assets: () => ({ images: 2000, textCards: 2000 }),
+        missingArt: missing,
+      }),
+    );
+    expect(html).toContain("2 cards have no art yet");
+    expect(html).toContain("data-get-missing");
+    expect(html).not.toMatch(/href=["'](?!#)/);
+    // Not for a pack that lacks more than it holds -- that one wants
+    // replacing whole -- nor once every card has its art.
+    expect(
+      renderSetting(
+        ctx({
+          assets: () => ({ images: 1, textCards: 2000 }),
+          missingArt: missing,
+        }),
+      ),
+    ).not.toContain("data-get-missing");
+    expect(
+      renderSetting(ctx({ assets: () => ({ images: 2000, textCards: 2000 }) })),
+    ).not.toContain("data-get-missing");
   });
 });

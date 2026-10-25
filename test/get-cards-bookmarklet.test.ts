@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { cardRegistry } from "@one-piece-sim/cards";
+import { SEALED_LEADER } from "@one-piece-sim/decks";
 import {
   bookmarklet,
   GET_CARDS_SCRIPT_URL,
+  missingCardsUrl,
+  parseMissingCards,
 } from "../packages/web/src/get-cards-bookmarklet.js";
 
 /** Runs the bookmarklet's body against stand-ins for the page's globals. */
@@ -58,5 +62,40 @@ describe("Get cards bookmarklet", () => {
     expect(appended).toEqual([]);
     expect(alerts).toHaveLength(1);
     expect(alerts[0]).toContain("404");
+  });
+});
+
+describe("missing-cards link", () => {
+  const CARDLIST = "https://en.onepiece-cardgame.com/cardlist/";
+
+  it("carries the card numbers in the fragment, which the downloader reads back", () => {
+    const url = missingCardsUrl(CARDLIST, ["EB05-001", "P-118", "PRB02-004"]);
+    expect(url.startsWith(`${CARDLIST}#`)).toBe(true);
+    expect(parseMissingCards(new URL(url).hash)).toEqual([
+      "EB05-001",
+      "P-118",
+      "PRB02-004",
+    ]);
+  });
+
+  it("reads every card number a pack carries", () => {
+    // The pack's own predicate: `wantedCards` in tools/download-assets.ts.
+    const cards = [...cardRegistry.keys()].filter(
+      (card) => !card.startsWith("FIX-") && card !== SEALED_LEADER,
+    );
+    expect(
+      parseMissingCards(new URL(missingCardsUrl(CARDLIST, cards)).hash),
+    ).toEqual(cards);
+  });
+
+  it("asks for nothing without the fragment, and drops what is not a card number", () => {
+    expect(parseMissingCards("")).toBeNull();
+    expect(parseMissingCards("#top")).toBeNull();
+    expect(parseMissingCards("#open-optcg-missing=")).toBeNull();
+    expect(
+      parseMissingCards(
+        "#open-optcg-missing=op01-016,<script>,OP01-016,%20EB05-002",
+      ),
+    ).toEqual(["OP01-016", "EB05-002"]);
   });
 });

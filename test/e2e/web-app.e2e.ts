@@ -4,6 +4,8 @@ import { join, resolve } from "node:path";
 import { expect, test, type Page } from "./fixtures.js";
 import { pathToFileURL } from "node:url";
 import { strToU8, zipSync } from "fflate";
+import { cardRegistry } from "@one-piece-sim/cards";
+import { SEALED_LEADER } from "@one-piece-sim/decks";
 import { openShelfOf } from "./deck-picker.js";
 
 /**
@@ -1488,6 +1490,42 @@ test("a newer pack loads from the Configure dialog and survives a reload", async
   await expect(
     page.locator(".dialog-assets .home-assets-status"),
   ).toContainText("printed text for 2 cards");
+});
+
+test("after a new set, the Configure dialog asks for just its cards", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const cards = [...cardRegistry.keys()]
+    .filter((card) => !card.startsWith("FIX-") && card !== SEALED_LEADER)
+    .sort((left, right) => left.localeCompare(right));
+  const newSet = cards.slice(-2);
+  await page.goto(appUrl);
+  await page
+    .locator(".dialog-assets [data-asset-zip]")
+    .setInputFiles(
+      await writePackZip(
+        { "OP01-016": { effect: "Text." } },
+        cards.slice(0, -2),
+      ),
+    );
+  await expect(
+    page.locator(".dialog-assets .home-assets-missing"),
+  ).toContainText("2 cards have no art yet");
+  const opened = await page.evaluate(() => {
+    const urls: string[] = [];
+    window.open = (url) => {
+      urls.push(String(url));
+      return null;
+    };
+    document
+      .querySelector<HTMLElement>(".dialog-assets [data-get-missing]")!
+      .click();
+    return urls;
+  });
+  expect(opened).toEqual([
+    `https://en.onepiece-cardgame.com/cardlist/#open-optcg-missing=${newSet.join(",")}`,
+  ]);
 });
 
 test("the card popup says when the loaded pack has no text for a card", async ({

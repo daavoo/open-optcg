@@ -323,7 +323,8 @@
   font-size: 0.9rem;
   text-align: center;
 }
-.home-assets-status {
+.home-assets-status,
+.home-assets-missing {
   margin: 0;
   flex-basis: 100%;
 }
@@ -458,6 +459,7 @@
   font: 700 0.95rem var(--font-display);
 }
 .dialog-assets .home-assets-status,
+.dialog-assets .home-assets-missing,
 .dialog-assets .home-assets-notice {
   margin: 0;
   color: var(--editor-muted);

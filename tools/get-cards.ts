@@ -32,6 +32,7 @@ import {
   CARDLIST_SERIES,
   cardlistUrl,
 } from "./fetch-reference/src/sources.js";
+import { parseMissingCards } from "../packages/web/src/get-cards-bookmarklet.js";
 
 /** Every card number the engine knows, sorted; injected by the build. */
 declare const __WANTED_CARDS__: string[];
@@ -55,7 +56,7 @@ interface ZipWriter {
   finish(): Promise<void>;
 }
 
-function zipWriter(): ZipWriter {
+function zipWriter(name: string): ZipWriter {
   // Streamed into chunks rather than one buffer: a full run is a few hundred
   // MB of PNGs, and a Blob made of parts never needs them contiguous.
   const parts: Uint8Array[] = [];
@@ -82,7 +83,7 @@ function zipWriter(): ZipWriter {
       );
       const link = document.createElement("a");
       link.href = url;
-      link.download = "open-optcg-assets.zip";
+      link.download = name;
       document.body.append(link);
       link.click();
       link.remove();
@@ -109,6 +110,8 @@ interface ArtCache {
   get(card: string, path: string | null): Promise<Uint8Array | null>;
   put(card: string, path: string, bytes: Uint8Array): Promise<void>;
   count(): Promise<number>;
+  /** The card numbers saved, whatever path each came from. */
+  cards(): Promise<Set<string>>;
   clear(): Promise<void>;
 }
 
@@ -169,6 +172,14 @@ async function openArtCache(): Promise<ArtCache | null> {
         return 0;
       }
     },
+    async cards() {
+      try {
+        const keys = await request(store("readonly").getAllKeys());
+        return new Set(keys.map(String));
+      } catch {
+        return new Set();
+      }
+    },
     async clear() {
       try {
         await request(store("readwrite").clear());
@@ -205,13 +216,22 @@ function panel() {
   };
 }
 
+/**
+ * One run: the printed text of every card, and the images of `only` -- or of
+ * every card when it is null. The text is always whole because the app
+ * replaces its text pack with each one it loads, while images are added to
+ * the ones it has; so a zip of some images is an update, not a pack.
+ */
 async function run(
   cache: ArtCache | null,
   say: (line: string) => void,
+  only: readonly string[] | null,
 ): Promise<string> {
-  const zip = zipWriter();
-  const wanted = __WANTED_CARDS__;
-  const wantedSet = new Set(wanted);
+  const zip = zipWriter(
+    only ? "open-optcg-assets-update.zip" : "open-optcg-assets.zip",
+  );
+  const wantedSet = new Set(__WANTED_CARDS__);
+  const wanted = only ?? __WANTED_CARDS__;
   const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
   const pages = new Map<string, string>();
   let read = 0;
@@ -300,7 +320,7 @@ async function run(
   say("Finishing…");
   await zip.finish();
   return (
-    `Printed text for ${Object.keys(sorted).length} of ${wanted.length} cards, ` +
+    `Printed text for ${Object.keys(sorted).length} of ${__WANTED_CARDS__.length} cards, ` +
     `${wanted.length - failed.length} images` +
     (saved ? ` (${saved} of them saved from an earlier run)` : "") +
     (failed.length
@@ -349,18 +369,42 @@ async function start(): Promise<void> {
   }
   const cache = await openArtCache();
   const kept = (await cache?.count()) ?? 0;
+  // The cards the app said it has no art for, when it opened this page.
+  const asked = parseMissingCards(location.hash);
+  // Otherwise, after an earlier run, the cards that run did not save: the
+  // new set since then, offered as an update beside the whole pack.
+  const saved = kept && !asked ? await cache!.cards() : new Set<string>();
+  const unsaved = __WANTED_CARDS__.filter((card) => !saved.has(card));
+  const offerUnsaved =
+    kept > 0 && unsaved.length > 0 && unsaved.length < __WANTED_CARDS__.length;
   const small = "margin:8px 0 0;font-size:12px;opacity:.75";
+  const linkButton = (attribute: string, label: string) =>
+    `<button type="button" ${attribute} style="${small};display:block;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit;text-align:left">${label}</button>`;
+  const cards = (count: number) => `${count} card${count === 1 ? "" : "s"}`;
+  const keepGoing = `<p style="margin:8px 0 0">You can switch to other tabs while it runs. If this tab is closed or reloaded, run the bookmark again: it carries on from the images already saved.</p>`;
   ui.show(
-    `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, into one zip. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
-      (kept
-        ? `<p style="margin:8px 0 0">${kept} card images are already saved in this browser from an earlier run; only the rest are downloaded.</p>`
-        : "") +
-      `<p style="margin:8px 0 0">You can switch to other tabs while it runs. If this tab is closed or reloaded, run the bookmark again: it carries on from the images already saved.</p>` +
-      ui.button("Download the cards") +
-      `<p style="${small}">Then, in Open OPTCG, load the zip.</p>` +
-      (kept
-        ? `<button type="button" data-forget style="${small};background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit">Forget the saved images</button>`
-        : ""),
+    asked
+      ? `<p style="margin:0">Open OPTCG asked for the ${cards(asked.length)} it has no art for. This downloads their images and the printed text into a small zip, to load on top of the cards you already have.</p>` +
+          keepGoing +
+          ui.button(
+            `Download ${asked.length === 1 ? "that card" : `those ${asked.length} cards`}`,
+          ) +
+          `<p style="${small}">Then, in Open OPTCG, load the zip.</p>` +
+          linkButton("data-run-all", "Download every card instead")
+      : `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, into one zip. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
+          (kept
+            ? `<p style="margin:8px 0 0">${kept} card images are already saved in this browser from an earlier run; only the rest are downloaded.</p>`
+            : "") +
+          keepGoing +
+          ui.button("Download the cards") +
+          `<p style="${small}">Then, in Open OPTCG, load the zip.</p>` +
+          (offerUnsaved
+            ? linkButton(
+                "data-run-unsaved",
+                `Only the ${cards(unsaved.length)} this browser has not saved yet: a small zip to load on top of the one you loaded before`,
+              )
+            : "") +
+          (kept ? linkButton("data-forget", "Forget the saved images") : ""),
   );
   ui.box
     .querySelector<HTMLButtonElement>("[data-forget]")
@@ -372,7 +416,7 @@ async function start(): Promise<void> {
       ui.box.remove();
     };
   };
-  ui.box.querySelector("button")!.onclick = async () => {
+  const begin = async (only: readonly string[] | null) => {
     const status = (line: string) => {
       ui.show(`<p style="margin:0" aria-live="polite">${line}</p>`);
     };
@@ -384,9 +428,15 @@ async function start(): Promise<void> {
     };
     window.addEventListener("beforeunload", holdPage);
     try {
-      const summary = await run(cache, status);
+      const summary = await run(cache, status, only);
+      const name = only
+        ? "open-optcg-assets-update.zip"
+        : "open-optcg-assets.zip";
       ui.show(
-        `<p style="margin:0">Done: <strong>open-optcg-assets.zip</strong> is in your downloads. ${summary}</p>` +
+        `<p style="margin:0">Done: <strong>${name}</strong> is in your downloads. ${summary}</p>` +
+          (only
+            ? `<p style="${small}">Load it in Open OPTCG on top of the cards you already have.</p>`
+            : "") +
           (cache
             ? `<p style="${small}">The images stay saved in this browser, so after a new set the next run fetches only the new cards.</p>`
             : "") +
@@ -401,6 +451,19 @@ async function start(): Promise<void> {
     window.removeEventListener("beforeunload", holdPage);
     close();
   };
+  ui.box.querySelector("button")!.onclick = () => {
+    void begin(asked);
+  };
+  ui.box
+    .querySelector<HTMLButtonElement>("[data-run-all]")
+    ?.addEventListener("click", () => {
+      void begin(null);
+    });
+  ui.box
+    .querySelector<HTMLButtonElement>("[data-run-unsaved]")
+    ?.addEventListener("click", () => {
+      void begin(unsaved);
+    });
 }
 
 void start();
