@@ -322,17 +322,17 @@ const communityDecks: Array<{
     cardlistFiles: ["cardlist-op07.html", "cardlist-op14-eb04.html"],
     cardNumbers: ["EB04-030", "EB04-031", "EB04-032", "OP07-077"],
   },
-  // The OP-14 Green Mihawk list. Its OP14 slots and its Leader are stamped by
-  // the set-level pass below, its ST32 and OP12-023 slots by the ST31-36 loop
-  // above, and OP07-026 and OP13-031 by their set passes, so these are the
-  // identities nothing else in the repo carries. OP06-035, OP12-037 and
-  // ST24-004 are no longer in the list but stay in the registry, and a
-  // hand-authored identity takes its `officialTextHash` from this pass and
-  // nowhere else, so dropping them here would leave the definitions unstamped
-  // rather than tidy. OP01 and ST24 were added to `tools/fetch-reference` for
+  // The off-set identities of the OP-14 Green Mihawk list. The list itself is
+  // no longer shipped -- Bandai banned its Leader, OP14-020, from 12 Oct 2026
+  // -- but its cards stay in the registry, and a hand-authored identity takes
+  // its `officialTextHash` from this pass and nowhere else, so dropping the
+  // entry would leave the definitions unstamped rather than tidy. Its OP14
+  // slots and its Leader are stamped by the set-level pass below, its ST32 and
+  // OP12-023 slots by the ST31-36 loop above, and OP07-026 and OP13-031 by
+  // their set passes. OP01 and ST24 were added to `tools/fetch-reference` for
   // OP01-055 and ST24-004.
   {
-    id: "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
+    id: "OP-14 Green Mihawk off-set singles (list retired)",
     cardlistFiles: [
       "cardlist-op01.html",
       "cardlist-op06.html",

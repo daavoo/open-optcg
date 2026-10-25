@@ -555,11 +555,8 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
  * and `pnpm deck:ab --disable search:<slug>` is what would re-open one.
  *
  * They are here because a table on each of them is worse than the deck order
- * it replaces, and the three failures say different things:
+ * it replaces, and the two failures say different things:
  *
- * - **op14-mihawk** has the strongest regret signal of any deck in the format
- *   and ranking on it still buys nothing. Regret existing at a decision does
- *   not mean which card answers it can be predicted from card identity.
  * - **op16-ace** wins most of the field either way, which leaves a search
  *   decision little to decide -- and against a fixed opponent an alternative
  *   can win by walking into a line that one opponent misplays, so a clean
@@ -568,53 +565,6 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
  *   flat band on thin samples. Its table is the dossier reading.
  */
 export const REJECTED_SEARCH_TABLES: readonly SearchTable[] = [
-  {
-    // The sharpest case in this file for what a table can and cannot do. This
-    // deck has the format's highest share of contested searches where *some*
-    // alternative would have won the game, and ranking on that still buys
-    // nothing: a winning alternative existing does not mean which card it is
-    // can be predicted from card identity.
-    //   OP06-038           2/20  10%     OP12-023  0/6    0%
-    //                                    OP17-022  0/3    0%
-    //
-    // Not the "expensive card converts" shape Teach's rollouts show, which is
-    // why each deck is priced rather than assumed: here a 1-cost and
-    // a 10-cost share the top, and the deck's *other* 10-cost is the one card a
-    // search should not fetch. OP17-022 Shanks was what the deck took at 18 of
-    // these 57 decisions, more than any other card.
-    //
-    // Kin'emon is the cost-5-or-more enabler this Leader's DON!! engine waits
-    // on, at 1 cost -- so it is both the cheapest card here and the one that
-    // switches the deck on. Shanks rests the opponent's board for a turn, which
-    // this deck can already do; what it cannot otherwise arrange is the engine
-    // running early.
-    //
-    // OP17-022's 0/3 is a thin sample on its own -- it is thin *because* it
-    // was usually the card taken rather than the alternative -- so it is not
-    // demoted on that evidence. It is demoted by the card above it, which has
-    // 43 rollouts behind it.
-    //
-    // The rollouts were run against the deck's previous list; the table names
-    // the cards the current list's searchers can find.
-    slug: "op14-mihawk",
-    leader: "OP14-020",
-    order: [
-      // The engine enabler.
-      ["ST32-001"],
-      // No measured preference between these, and none imposed.
-      [
-        "OP01-055",
-        "OP06-038",
-        "OP08-036",
-        "OP13-031",
-        "ST32-002",
-        "OP12-023",
-        "OP14-023",
-        "OP17-031",
-        "OP17-022",
-      ],
-    ],
-  },
   {
     // The one deck where the counterfactual method that works for Teach does
     // not transfer, and the reason matters for the next attempt. The rollouts

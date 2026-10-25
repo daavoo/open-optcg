@@ -21,7 +21,6 @@ import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
 import { op08PuddingManifest } from "./op08-pudding-manifest.js";
 import { op05EnelOpenManifest } from "./op05-enel-open-manifest.js";
 import { op12ZoroManifest } from "./op12-zoro-manifest.js";
-import { op14MihawkManifest } from "./op14-mihawk-manifest.js";
 import { op16AceManifest } from "./op16-ace-manifest.js";
 import { op06YamatoManifest } from "./op06-yamato-manifest.js";
 import { eb04BonneyManifest } from "./eb04-bonney-manifest.js";
@@ -319,7 +318,6 @@ export const TOURNAMENT_DECK_IDS = [
   "(Purple) Donquixote Doflamingo - Official Feature Deck",
   "(Yellow) Charlotte Linlin - Official Feature Deck",
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
-  "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
   "(Purple) Kaido - Open OPTCG",
   "(Red/Green) Luffy & Ace - Open OPTCG",
   "(Red/Green) Monkey.D.Luffy - Open OPTCG",
@@ -486,8 +484,6 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinManifest,
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1":
     op09RobinManifest,
-  "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1":
-    op14MihawkManifest,
   "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
   "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceManifest,
   "(Red/Green) Monkey.D.Luffy - Open OPTCG": op13LuffyManifest,

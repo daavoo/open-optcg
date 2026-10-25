@@ -107,6 +107,16 @@ describe("deck editor rules", () => {
       ]),
     );
   });
+
+  it("rejects a banned Leader as it does a banned deck card", () => {
+    // OP14-020 Dracule Mihawk, banned from 12 Oct 2026. A Leader is never in
+    // `cards`, so the ban has to be read off the Leader slot as well.
+    const deck = deckFromBase("(Green) Roronoa Zoro - Starter Deck 32");
+    expect(validateDeck(deck).errors).toEqual([]);
+    expect(validateDeck({ ...deck, leader: "OP14-020" }).errors).toEqual([
+      "OP14-020 is currently banned from official decks. Choose another Leader.",
+    ]);
+  });
 });
 
 /** A shipped deck the editor can hold, by any id -- `deckFromBase` is typed to

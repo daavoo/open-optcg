@@ -189,10 +189,9 @@ const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
  * mulligan rule that discards every opening hand is a bug to be made
  * unreachable, not an effect size to be estimated.
  *
- * The two matchups these rules do not reach are the two fastest clocks in the
- * field, Green Mihawk and ST31 aggro. A deck whose plan starts at a 4-cost
- * giant is structurally behind both, and an ordering rule does not change
- * that.
+ * The matchup these rules do not reach is the fastest clock in the field,
+ * ST31 aggro. A deck whose plan starts at a 4-cost giant is structurally
+ * behind it, and an ordering rule does not change that.
  */
 export function createOp13SaboRulesPolicy(): PolicyModule {
   return heuristics("op13-sabo", [

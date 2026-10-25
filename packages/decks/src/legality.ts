@@ -35,12 +35,21 @@ export interface DeckValidation {
   errors: readonly string[];
 }
 
+/**
+ * Bandai's Banned Card list, as identities: a parallel (alt-art) printing
+ * shares its card number, so it is banned with it. A Leader on this list is
+ * as illegal as a main-deck card -- "cannot be included in any deck".
+ *
+ * OP14-020 Dracule Mihawk from 12 Oct 2026, the only change that notice made:
+ * https://en.onepiece-cardgame.com/news/restriction-261001.html
+ */
 const BANNED_CARDS = new Set([
   "OP06-047",
   "OP03-040",
   "OP06-086",
   "ST10-001",
   "OP06-116",
+  "OP14-020",
 ]);
 const BANNED_PAIRS: readonly (readonly [string, string])[] = [
   ["OP07-115", "EB04-058"],
@@ -71,6 +80,10 @@ export function validateDeck(deck: EditableDeck): DeckValidation {
   const leader = cardRegistry.get(deck.leader);
   if (!leader || leader.category !== "leader") {
     errors.push("Choose one supported Leader card.");
+  } else if (BANNED_CARDS.has(leader.cardNumber)) {
+    errors.push(
+      `${leader.cardNumber} is currently banned from official decks. Choose another Leader.`,
+    );
   } else if (isEventRestricted(leader)) {
     errors.push(
       `${leader.cardNumber} may only be used in designated events, not in constructed decks.`,

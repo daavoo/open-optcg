@@ -209,8 +209,7 @@ export function deckGroups(
   // Bandai's feature-deck index newest first, and the starter products by
   // number -- ST-26 before ST-31, which reading them as strings would get
   // right only by accident. The Community shelf above them starts in the order
-  // the id tuples list, which puts the two lists from one final in the order
-  // they placed.
+  // the id tuples list.
   shelves[2]!.deckIds.sort((left, right) =>
     compareFeaturePageEntries(deckManifests[left], deckManifests[right]),
   );

@@ -406,12 +406,11 @@ export function createReplacementBlockerModule(): PolicyModule {
  * the Stage from hand, 1 DON!! and a hand card to select one card. A deck whose
  * Stage ability paid more than a card would want a narrower rule of its own.
  *
- * Two decks had already written this rule for themselves before it was a format
- * fundamental -- `op14-mihawk-policy.ts` scores `self.stage === null` at 80
- * against 10, and `op17-xebec-policy.ts` reads `stageInPlay` -- which is the
+ * A deck had already written this rule for itself before it was a format
+ * fundamental -- `op17-xebec-policy.ts` reads `stageInPlay` -- which is the
  * signature section 6 of the deck-policy playbook names: a rule about a
- * game-state property, written per deck. Both are left in place; they are
- * redundant with this and not in conflict with it.
+ * game-state property, written per deck. It is left in place; it is redundant
+ * with this and not in conflict with it.
  *
  * Expect a mirror to read it as a wash and expect that to be misleading: the
  * seat it fires most for is OP-16 Teach, the only list holding four copies of

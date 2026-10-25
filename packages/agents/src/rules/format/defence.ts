@@ -716,7 +716,7 @@ function deployedNextTurn(observation: GameObservation): ReadonlySet<string> {
  * The single Counter card that closes this Leader hit and is surplus to the
  * next turn's development, if there is one.
  *
- * Two conditions, and the rule below needs both.
+ * Two conditions, and a rule that reads this needs both.
  *
  * **One card closes it** -- the whole shortfall, not a dent in it. What the
  * rule is trading is the *entire* price of the defence against one Life, and a
@@ -745,56 +745,4 @@ export function surplusCardClosesLeaderHit(
       (action.counterPower ?? 0) >= required &&
       !deployed.has(action.cardInstanceId),
   );
-}
-
-/**
- * Pay one card for one Life whenever one card is the whole price.
- *
- * `mustPreventCurrentLeaderHit` is the only reason `chooseGenericCounter` ever
- * spends on a Leader hit, and it is a survival test: above 2 Life it counts
- * only the damage that can still land *this* turn, so a hit that is not part of
- * a lethal sequence is absorbed however cheaply it could have been stopped. The
- * card is kept for "future defense", and the reason string says so.
- *
- * What that reasoning leaves out is the exchange rate. A Counter card saved is
- * saved to stop a later hit, and stopping a later hit costs the same one card.
- * So holding it does not buy a cheaper save; it buys the *same* save, later,
- * against a board that is bigger. Where one card is the whole price, the trade
- * is available now and will not improve.
- *
- * `LEADER_COUNTER_BUDGET`'s own doc prices a one-card line as "roughly even",
- * because absorbing a hit puts the Life card into hand -- so the deck that
- * should take this trade is one for which that extra card is worth least. That
- * is a claim about a deck's curve, not about the rules, which is why this ships
- * per deck rather than format-wide: a seat holding cost-5 bodies it cannot cast
- * for several turns is holding Counter cards whatever it calls them, and the
- * Life card it would gain lands in a hand that is already past what its DON!!
- * can deploy.
- *
- * Measured on (Green) Dracule Mihawk, whose hand is four-of cost-5 bodies: over
- * 20 games against the OP-17 Sabo list the seat faced 11.2 Leader-hit Counter
- * decisions a game and declined 2.55 of them a game that its hand could have
- * stopped -- every one of the 20 at 5 Life, 14 of 27 at 4 Life. Restricting the
- * rule to a one-card close reaches 63% of those declines while speaking at 39%
- * of the decisions; adding a hand-liquidity term on top changed no decision,
- * because a hand that can spare the card is exactly the hand that has one.
- *
- * A `mustAct` rather than a preference, for the reason that terminal exists:
- * the decision it has to overturn is `chooseGenericCounter` choosing `pass`,
- * and `resolveWithModules` applies a `pass` veto only when a non-`pass` action
- * survives -- so a position where `counter-budget` has refused the whole line
- * is left exactly as it was.
- */
-export function createOneCardLifeSaveModule(): PolicyModule {
-  return heuristics("one-card-life-save", [
-    mustAct(
-      "Spend the one Counter card that stops this Leader hit: holding it buys the same one-card save later, against a bigger board.",
-    )
-      .when(
-        (t) =>
-          t.opponentArchetype === "aggro" &&
-          surplusCardClosesLeaderHit(t.observation),
-      )
-      .insteadOfPass((t) => surplusCardClosesLeaderHit(t.observation)),
-  ]);
 }

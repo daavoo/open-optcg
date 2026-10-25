@@ -77,14 +77,6 @@ const ARCHETYPE_BY_LEADER: ReadonlyMap<string, Archetype> = new Map([
   // removed, and the deck spends its Leader's attack as a cost to dig and K.O.
   // rather than racing, closing late with OP10-058 Rebecca into Kyros.
   ["OP10-042", "control"],
-  // OP14 Green Dracule Mihawk. A rest-lock deck that pays for itself: the Leader
-  // rests one of its own cards to refund three DON!!, and OP01-055 turns two
-  // more rested cards into two cards drawn. What it does with the tempo is deny
-  // rather than race: OP17-022 rests the opponent's whole board, OP08-036 and
-  // OP07-026 hold what is rested down through their Refresh Phase, ST32-002
-  // locks a body active, and OP06-033 shoots what is rested. Control, and for
-  // the same reason OP17-020 is.
-  ["OP14-020", "control"],
   // OP17 Black Monkey.D.Luffy. The Elbaph shell: cheap giants that reach 12 cost
   // through a static layer and, in doing so, switch a board of 2-drops from 2000
   // to 5000. It commits bodies early and contests the board, which is midrange

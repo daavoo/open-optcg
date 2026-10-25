@@ -365,9 +365,8 @@ export function createSt35MulliganModule(): PolicyModule {
  *
  * Kept as a `decide` module rather than dissolved into rules because it is not a
  * claim about narrowing candidates: `protectedCards` parameterises the generic
- * policy's own Counter arithmetic, which is where that arithmetic belongs. The
- * same shape as `createOp14MihawkDefensePolicy`. See {@link ST35_PROTECTED_CARDS}
- * for what this set is worth.
+ * policy's own Counter arithmetic, which is where that arithmetic belongs. See
+ * {@link ST35_PROTECTED_CARDS} for what this set is worth.
  */
 export function createSt35DefensePolicy(): RulesPolicy {
   return (observation: GameObservation): PolicyDecision | undefined => {

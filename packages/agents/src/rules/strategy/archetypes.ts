@@ -1188,8 +1188,7 @@ const midrangeKidSt36: StrategyProfile = {
  * Each is measurable despite being outside the format: a mirror match needs a
  * deck list and a Leader, both of which `deckManifests` has for every selectable
  * deck, so `pnpm heuristic:ab --deck <id>` takes any of them and `--all` sweeps
- * them. Note that `preserve-life` never fires for OP14 Mihawk at all, because
- * that deck's own answers reach the attacker before its Life floor does.
+ * them.
  */
 const midrangeLuffyOp17: StrategyProfile = {
   id: "midrange-luffy-op17",
@@ -1610,15 +1609,6 @@ const controlDoflamingoOp14: StrategyProfile = {
   leaders: ["OP14-060"],
 };
 
-const controlMihawkOp14: StrategyProfile = {
-  id: "control-mihawk-op14",
-  extends: "control",
-  summary:
-    "OP14 Green Dracule Mihawk: a rest-lock deck that refunds its own DON!!, denying attackers rather than building a clock.",
-  pattern: "control",
-  leaders: ["OP14-020"],
-};
-
 /**
  * OP17 (Red) Edward.Newgate, OP17-001.
  *
@@ -2014,7 +2004,6 @@ export const BUILT_IN_STRATEGY_PROFILES: readonly StrategyProfile[] = [
   controlKatakuriSt34,
   controlShanksOp17,
   controlXebecOp17,
-  controlMihawkOp14,
   controlDoflamingoOp14,
   controlNewgateOp17,
   controlSengokuOp16,

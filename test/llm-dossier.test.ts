@@ -187,9 +187,7 @@ describe("LLM deck dossiers", () => {
     expect(standard.format).toContain("Standard");
 
     const extraManifest = {
-      ...deckManifests[
-        "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1"
-      ]!,
+      ...deckManifests["(Green) Roronoa Zoro - OP17 Post-Ban List"]!,
       format: "extra" as const,
     };
     const extra = deckDossierPrompt(extraManifest.id, extraManifest) as {
