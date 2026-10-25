@@ -40,6 +40,7 @@ export { GpuEncoder, requestGpuDevice } from "./gpu.js";
 export {
   isDebuffForADecidedBattle,
   isDoomedAttack,
+  isNoOpActivation,
   isSpentLeaderOverride,
   isWastedCounter,
   prunedActions,

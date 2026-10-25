@@ -82,6 +82,7 @@ export {
   whenRestedCards,
   registerWhenRestedCards,
   effectSelectsNothing,
+  programChangesNothing,
   programBuffsOwnPowerForTheTurn,
   programKeywordGrant,
   programRestedDonGift,

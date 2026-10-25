@@ -9,7 +9,10 @@
  *
  * One of the five kinds of offer the Main phase makes; `index.ts` composes them.
  */
-import { pendingDefenseBoost } from "../../battle.js";
+import {
+  eligibleWhenAttackingProgram,
+  pendingDefenseBoost,
+} from "../../battle.js";
 import {
   actionCardLabel,
   battleForecast,
@@ -22,9 +25,13 @@ import {
   leaderInstanceId,
   opponentOf,
 } from "../../board.js";
-import type { GameState } from "../../model.js";
+import { conditionMatches, SOURCE_BINDING } from "../../mechanics.js";
+import type { BoardCard, GameState } from "../../model.js";
 import { currentPower } from "../../queries.js";
-import { attacksActiveCharacters } from "../../static-abilities.js";
+import {
+  attacksActiveCharacters,
+  effectsNegated,
+} from "../../static-abilities.js";
 import { hasCardType, type CardDatabase } from "@one-piece-sim/cards";
 import type { LegalAction, PlayerId } from "@one-piece-sim/protocol";
 
@@ -159,6 +166,52 @@ function unspentDonNote(
 ): string {
   if (activeDon === 0) return "";
   return `; declaring now leaves ${activeDon} active DON!! unspent, and each one given to this attacker first raises the requirement by 1000, to ${counterShortfall(attackPower + activeDon * 1000, targetPower)} if all ${activeDon} go here -- DON!! spread over other attackers raises theirs instead`;
+}
+
+/**
+ * Whether the attacker's own `[When Attacking]` clause would resolve nothing
+ * if this attack were declared now, because the condition the whole clause
+ * hangs on is false.
+ *
+ * Asked while the caller holds the declaration simulated in
+ * `state.activeAttack`, and with the attacker rested as `applyAttack` leaves
+ * it, so the condition reads the board the clause itself will be dispatched
+ * against: OP14-002 Urouge's "if this Character has 5000 power or more" is
+ * read off the power the attack is declared with, DON!! given beforehand
+ * included.
+ *
+ * Narrow on purpose. Only a program whose entire effect is one `if` with no
+ * `else` is read -- the shape `bareGateCondition` withholds an `[Activate:
+ * Main]` for -- because a clause that does anything ahead of its condition
+ * fires whatever the condition says. An attacker whose clause is negated,
+ * spent for the turn or taxed by OP08-043 (the tax resolves first, out of the
+ * hand a condition could read) is not reported either: those are decided
+ * elsewhere in the declaration, and absent means "not known to be inert".
+ */
+function whenAttackingInert(
+  state: GameState,
+  playerId: PlayerId,
+  attacker: BoardCard,
+  db: CardDatabase,
+): boolean {
+  if (effectsNegated(state, attacker.instanceId)) return false;
+  if ((attacker.attackTaxUntilTurn ?? -1) >= state.turn) return false;
+  const eligible = eligibleWhenAttackingProgram(state, playerId, attacker);
+  const effect = eligible?.program.program.effect;
+  if (effect?.kind !== "if" || effect.else !== undefined) return false;
+  const restedBefore = attacker.rested;
+  attacker.rested = true;
+  try {
+    return !conditionMatches(
+      state,
+      { sourcePlayerId: playerId, source: attacker },
+      effect.condition,
+      { [SOURCE_BINDING]: [attacker.instanceId] },
+      db,
+    );
+  } finally {
+    attacker.rested = restedBefore;
+  }
 }
 
 export function attackOffers(
@@ -310,6 +363,12 @@ export function attackOffers(
           true,
           db,
         );
+        const attackerCard = player.board.find(
+          (card) => card.instanceId === attackerInstanceId,
+        );
+        const inertWhenAttacking =
+          attackerCard !== undefined &&
+          whenAttackingInert(state, playerId, attackerCard, db);
         state.activeAttack = null;
         const targetPower = currentPower(
           state,
@@ -317,9 +376,6 @@ export function attackOffers(
           targetInstanceId,
           false,
           db,
-        );
-        const attackerCard = player.board.find(
-          (card) => card.instanceId === attackerInstanceId,
         );
         const attackerIsBlocker = Boolean(
           attackerCard && canBlock(state, playerId, attackerCard, db),
@@ -386,6 +442,7 @@ export function attackOffers(
           unspentActiveDon: player.activeDon.length,
           attackerIsBlocker,
           attackerIsLeader,
+          ...(inertWhenAttacking ? { whenAttackingInert: true as const } : {}),
           summary: `Attack ${actionCardLabel(state, defenderPlayerId, targetInstanceId, false, db)} with ${actionCardLabel(state, playerId, attackerInstanceId, true, db)} (${battleForecast(attackPower, targetPower, battleStake(state, defenderPlayerId, targetInstanceId, { playerId, instanceId: attackerInstanceId }, db))}${pendingTotal > 0 ? `; the defender still holds an unused once-per-turn ability that raises this target to ${effectiveTargetPower}, so ${counterShortfall(attackPower, effectiveTargetPower) === 0 ? "this attack fails outright once it is paid, and paying it costs the defender only 1 card" : `the real requirement is ${counterShortfall(attackPower, effectiveTargetPower)} Counter power${pendingDefense.turn > 0 ? ` and every later attack this turn meets ${laterTargetPower} too` : ", though that ability only lasts for this battle"}`}` : ""}${attackerIsBlocker ? "; declaring rests this Blocker, so it cannot block on the opponent's next turn" : ""}${attackerIsLeader ? "; the Leader can never block and is a legal target whether rested or active, so declaring here costs nothing beyond the attack itself" : ""}${donToReach === undefined ? unspentDonNote(player.activeDon.length, attackPower, targetPower) : donToReach <= player.activeDon.length ? `; giving this attacker ${donToReach} of your ${player.activeDon.length} active DON!! first would raise it into range` : `; no amount of your ${player.activeDon.length} active DON!! reaches this target, which needs ${donToReach}`})`,
         });
       }
