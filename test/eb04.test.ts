@@ -39,8 +39,7 @@ import {
  * No shipped list plays these, so every position seats two starter decks and
  * puts the card under test in a zone with a `with*` setter. That is the
  * documented shape for a card outside a manifest, and it is also why nothing
- * here asserts on win rates: the set import moves no deck's standing, which
- * `docs/rules-map/deck-standings-featured.csv` and `docs/rules-map/deck-standings-starter.csv` record.
+ * here asserts on win rates: the set import changes no shipped deck's list.
  */
 
 const P1 = "(Red) Monkey.D.Luffy - Starter Deck 31";

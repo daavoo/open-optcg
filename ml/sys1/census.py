@@ -18,8 +18,9 @@ disagreement mass: the summed gap between the model's probability for its
 own choice and for the rules agent's. It is a pointer to positions worth
 reading, not a verdict: the model's probabilities are a policy, not a value
 per move, and on a deck the model pilots no better than its rules agent (the
-`model` and `rules` columns) a disagreement is weak evidence. Every rule it
-suggests is measured on its own (`pnpm heuristic:probe`).
+`model` and `rules` columns) a disagreement is weak evidence. `rules` is read
+from the corpus itself: the deck's win rate in these rules-against-rules
+games. Every rule it suggests is measured on its own (`pnpm heuristic:probe`).
 
 `rows.jsonl.gz` holds every disagreement with its game's seed and decision
 index, to find the position again.
@@ -28,7 +29,6 @@ index, to find the position again.
 from __future__ import annotations
 
 import argparse
-import csv
 import gzip
 import json
 from collections import defaultdict
@@ -38,8 +38,6 @@ import numpy as np
 
 from .policy import Policy
 
-ROOT = Path(__file__).resolve().parents[2]
-STANDINGS = [ROOT / "docs/rules-map/deck-standings-featured.csv", ROOT / "docs/rules-map/deck-standings-starter.csv"]
 # A gap this large is the model all but sure of a move the rules agent did not make.
 CONFIDENT = 0.5
 
@@ -60,15 +58,6 @@ def games(corpus: Path):
                 yield json.loads(line)
 
 
-def standings() -> dict[str, float]:
-    rates = {}
-    for path in STANDINGS:
-        with path.open() as handle:
-            for row in csv.DictReader(handle):
-                rates[row["deck"]] = float(row["winRatePct"]) / 100
-    return rates
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("corpus", help="a directory of `dump.ts --prune` shards")
@@ -83,6 +72,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     decks_games: dict[str, int] = defaultdict(int)
+    decks_wins: dict[str, int] = defaultdict(int)
     decks_decisions: dict[str, int] = defaultdict(int)
     decks_disagree: dict[str, int] = defaultdict(int)
     decks_confident: dict[str, int] = defaultdict(int)
@@ -123,6 +113,8 @@ def main() -> None:
     for game in games(Path(args.corpus)):
         for seat in ("p1", "p2"):
             decks_games[game[seat]] += 1
+        if game["winner"] in ("p1", "p2"):
+            decks_wins[game[game["winner"]]] += 1
         for index, decision in enumerate(game["decisions"]):
             deck = game[decision["seat"]]
             decks_decisions[deck] += 1
@@ -137,7 +129,6 @@ def main() -> None:
     rows.close()
 
     model = json.loads(Path(args.eval).read_text())["per_deck"] if args.eval else {}
-    rules_rate = standings()
     lines = [
         f"# Census: {args.checkpoint} against the rules agents",
         "",
@@ -148,8 +139,8 @@ def main() -> None:
         "## Per deck",
         "",
         "Per game the deck played. `model` is the checkpoint's win rate piloting the deck against the "
-        "rules agents (`--eval`), `rules` the deck's standing (rules agents on both seats, within its "
-        "division): not the same test, but a deck where `model` is not well above `rules` is one "
+        "rules agents (`--eval`), `rules` its rules agent's win rate in this corpus (rules agents on "
+        "both seats, an unfinished game a loss): not the same test, but a deck where `model` is not well above `rules` is one "
         "where the model is no authority.",
         "",
         "| deck | model | rules | decisions | disagree | confident | dominated |",
@@ -158,7 +149,7 @@ def main() -> None:
     for deck in sorted(decks_games, key=lambda d: -decks_confident[d] / decks_games[d]):
         n = decks_games[deck]
         lines.append(
-            f"| {deck} | {model.get(deck, float('nan')):.2f} | {rules_rate.get(deck, float('nan')):.2f} | "
+            f"| {deck} | {model.get(deck, float('nan')):.2f} | {decks_wins[deck] / n:.2f} | "
             f"{decks_decisions[deck] / n:.1f} | {decks_disagree[deck] / n:.2f} | "
             f"{decks_confident[deck] / n:.2f} | {decks_dominated[deck] / n:.2f} |"
         )

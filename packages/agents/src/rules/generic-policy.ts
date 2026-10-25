@@ -370,7 +370,7 @@ export function chooseDamageReplacement(
  * for `chooseStrongestOpponentTarget`.
  *
  * Its evidence is the position `test/policy-keyword-grant.test.ts` pins, not
- * the standings: a field-wide instrument cannot see a rule about a card most
+ * a whole-field benchmark: a field-wide instrument cannot see a rule about a card most
  * matchups never draw, and there the wrong choice loses a game that was won.
  */
 export function chooseKeywordGrantTarget(
@@ -432,8 +432,8 @@ export function chooseKeywordGrantTarget(
  * Format-scoped rather than written into `op17-kaido-policy.ts`, by the test in
  * the audit playbook's section 6: the rule names a printed clause and a rule of
  * the game -- a "during this battle" debuff decides the battle it is in -- both
- * of which mean the same thing in every deck. The committed standings are the
- * containment check.
+ * of which mean the same thing in every deck. A whole-field `deck:benchmark`
+ * run is the containment check.
  */
 export function chooseBattleDebuffTarget(
   observation: GameObservation,

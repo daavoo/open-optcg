@@ -6,10 +6,9 @@ name: Rotation watch
 # moved months ago while every gate in the repo went on passing.
 #
 # This is the one workflow in the repo that pushes. Every other derived artefact
-# (`standings:check`, `coverage:clauses:check`,
-# `decks:provenance:check`, `fixtures:check`) is a check-only ratchet the author
-# refreshes by hand, and `standings.yml` explains why: a push from CI races the
-# author's own pushes and cannot work on a fork PR. Neither applies to a cron on
+# (`coverage:clauses:check`, `decks:provenance:check`, `fixtures:check`) is a
+# check-only ratchet the author refreshes by hand, because a push from CI races
+# the author's own pushes and cannot work on a fork PR. Neither applies to a cron on
 # a branch of its own, with no author to race. The alternative -- waiting for
 # somebody to think to run the check -- is exactly what failed here before.
 #

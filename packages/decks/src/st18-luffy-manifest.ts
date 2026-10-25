@@ -46,8 +46,8 @@ import type { DeckManifest } from "./index.js";
  * ## What it is not
  *
  * A precon, not a tuned list, and here as a shipped deck rather than as a
- * benchmark target: expect it to sit near the bottom of
- * `docs/rules-map/deck-standings-starter.csv`. What deck knowledge it has is in
+ * benchmark target: expect it to sit near the bottom of the
+ * starter decks' win rates. What deck knowledge it has is in
  * `st18-luffy-policy.ts`, and both of its in-game rules are about the Leader's
  * activation: take it before the turn's plays, and stop taking it at the
  * bottom of the Life stack. Everything else falls to the generic rules ladder,

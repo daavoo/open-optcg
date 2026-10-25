@@ -117,10 +117,10 @@ import type { DeckManifest } from "./index.js";
  *
  * ## How it measures
  *
- * Enters the upper half of `docs/rules-map/deck-standings-featured.csv`, over 13.2 turns a game. That turn
- * count is the one number in the row that reads like the deck's own plan: it
- * is among the longest of any deck above even, and the decks that take longer
- * are below it.
+ * Enters the upper half of the featured field under the rules agents, over
+ * 13.2 turns a game. That turn count is the one number in its result that
+ * reads like the deck's own plan: it is among the longest of any deck above
+ * even, and the decks that take longer are below it.
  *
  * `pnpm deck:ab` over the same field puts its two worst matchups at 18.0%
  * against `eb04-bonney-manifest.ts` and 24.0% against

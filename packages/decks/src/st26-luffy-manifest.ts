@@ -44,8 +44,8 @@ import type { DeckManifest } from "./index.js";
  * ## What it is not
  *
  * It is a precon, not a tuned list, and it is here as a shipped deck rather
- * than as a benchmark target: expect it to sit near the bottom of
- * `docs/rules-map/deck-standings-starter.csv`. What deck knowledge it has is in
+ * than as a benchmark target: expect it to sit near the bottom of the
+ * starter decks' win rates. What deck knowledge it has is in
  * `st26-luffy-policy.ts`: an opening-hand rule, and the one in-game rule the
  * deck cannot do without -- how many DON!! a "return 1 or more" clause sends
  * back, and whether the Leader's refund is still there to answer it.

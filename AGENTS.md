@@ -92,8 +92,6 @@ pnpm decks:legality        # each deck's format, and its cards' block icons
 pnpm rotation:report       # has Bandai's block data or the Standard floor moved
 pnpm heuristic:probe       # a candidate rule at the decision it changes, not the win rate
 pnpm coverage:clauses      # which printed clause has no test, per card
-pnpm standings:check       # are the two committed deck-standings CSVs current
-pnpm standings --group X   # rewrite one division only: featured or starter
 ```
 
 The whole suite is ~80s -- most of it the whole-format sweeps, which play every

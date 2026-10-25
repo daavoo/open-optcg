@@ -461,8 +461,8 @@ describe("ST36 rules", () => {
     // "your opponent's Characters" from its controller, but the resolution
     // used to read it from the resume seat, look for the chosen Character on
     // the controller's own board, and throw MISSING_EFFECT_TARGET on a target
-    // the offer had just listed. Found by `pnpm standings:check`: ST36 Kid vs
-    // the Nami feature deck, seed `...-2`, which crashed the whole run.
+    // the offer had just listed. Found by a whole-field rules-agent sweep: ST36
+    // Kid vs the Nami feature deck, seed `...-2`, which crashed the whole run.
     let state = scenario();
     state.phase = "trigger";
     state.activePlayer = "p1";
