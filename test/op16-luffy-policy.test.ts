@@ -67,7 +67,7 @@ async function chosen(
 }
 
 /**
- * OP16-LUFFY-GREENBLUE in a posed main phase against OP14-MIHAWK-SLASH.
+ * OP16-LUFFY-GREENBLUE in a posed main phase against the OP-17 post-ban Zoro list.
  *
  * The opponent is a deck this one has no matchup module against -- none exist --
  * chosen because its Leader ability changes none of the arithmetic these rules
@@ -88,7 +88,7 @@ function luffyTurn(options: {
   const scene = scenario()
     .decks(
       "(Green/Blue) Monkey.D.Luffy - Official Feature Deck",
-      "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
+      "(Green) Roronoa Zoro - OP17 Post-Ban List",
     )
     .seed("op16-luffy-policy")
     .bareTable()
@@ -463,7 +463,7 @@ function luffyTurnAgainstLife(
   return scenario()
     .decks(
       "(Green/Blue) Monkey.D.Luffy - Official Feature Deck",
-      "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
+      "(Green) Roronoa Zoro - OP17 Post-Ban List",
     )
     .seed("op16-luffy-policy-lethal")
     .bareTable()

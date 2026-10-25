@@ -77,9 +77,8 @@ import { tacticsFor } from "../tactics.js";
  * defence, and the generic ladder was spending it a card at a time on battles
  * that did not turn on it.
  *
- * Two matchups are structural and nothing here moves them: OP14-020 Mihawk
- * and OP-17 Red Ace. A 5000 Leader against a deck that grows past it on both
- * axes is not a sequencing problem. Ace's shape is better understood: this deck
+ * One matchup is structural and nothing here moves it: OP-17 Red Ace. Its
+ * shape is understood: this deck
  * loses late holding a full hand and an unfilled board, having rarely cast
  * OP17-118. It dies rich. The obvious answer -- develop wider, cheapest first --
  * is catastrophic here, because cheapest-first spends the turn on 2000-power
@@ -100,10 +99,11 @@ export function createOp17XebecRulesPolicy(): PolicyModule {
  * `chooseGenericRules` only ever declares a `viableAttack` -- one whose
  * `attackerPower >= targetPower` -- and this Leader is a 5000 body in a format
  * of 6000-and-up Leaders, so for most of the field *no* Leader attack is ever
- * viable and the generic ladder passes the turn with it untapped. Against
- * OP14-020 Mihawk that is the whole game: the Leader attacks on a minority of
- * main phases, and the turn can reach a state whose only legal actions are
- * `attack` and `pass` and still choose `pass` holding ten rested DON!!.
+ * viable and the generic ladder passes the turn with it untapped. Against a
+ * Leader that grows past 5000 that is the whole game: the Leader attacks on a
+ * minority of main phases, and the turn can reach a state whose only legal
+ * actions are `attack` and `pass` and still choose `pass` holding ten rested
+ * DON!!.
  *
  * For this Leader viability is the wrong question twice over:
  *

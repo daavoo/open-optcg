@@ -31,7 +31,7 @@ describe("deck provenance rows", () => {
     // 18 Nami identities and 15 Enel ones, plus the OP-17 Xebec and Black
     // Luffy lists at 15 each, the OP-17 Green Shanks feature deck at 17 (it
     // was 16 as the OPDeckGuide list), the OP-17 Elbaph Sabo list at 15, the
-    // OP-14 Mihawk list at 16, the OP-16 Red Ace feature deck at 14 (15 as the
+    // OP-16 Red Ace feature deck at 14 (15 as the
     // OP-17-tuned list), the OP-17 Purple Kaido list at 15, the EB-04 Red/Yellow
     // Bonney list at 14, the OP-06 (Green/Yellow) Yamato list at 15 and the
     // OP-17 (Red) Edward.Newgate list at 16, the OP-17 (Purple/Yellow) Nico
@@ -141,8 +141,9 @@ describe("deck provenance rows", () => {
     // Wisdom Robin list 14 (thirteen and a Leader).
     // The best-measured lists for sixteen Leaders add 258 (each list's
     // distinct deck cards and its Leader), and the EU Final Enel and the 2025
-    // Vegapunk lists they replace on the Community shelf take 36 away.
-    expect(communityDeckCardRows).toHaveLength(1221);
+    // Vegapunk lists they replace on the Community shelf take 36 away. The
+    // OP-14 Green Mihawk list (16) went with its Leader's ban.
+    expect(communityDeckCardRows).toHaveLength(1205);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -212,7 +213,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(85);
+    expect(reports).toHaveLength(84);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
@@ -226,13 +227,12 @@ describe("deck provenance rows", () => {
   it("would fail a deck that named a rotated-out printing", () => {
     // The gate has to be able to fail, and the shipped catalog contains no
     // case that makes it. OP01-025 is block 1 on its only printing and on no
-    // block-number update, so it is genuinely out; OP01-055, which the Mihawk
-    // list runs, is block 1 on every printing too and stays legal only
-    // because Bandai's update page assigns it to block 4.
+    // block-number update, so it is genuinely out; OP01-055 is block 1 on
+    // every printing too and stays legal only because Bandai's update page
+    // assigns it to block 4.
     const row = deckCardRows.find(
       (candidate) =>
-        candidate.deckId ===
-        "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
+        candidate.deckId === "(Green) Roronoa Zoro - OP17 Post-Ban List",
     )!;
     const rotated: DeckCardRow = {
       ...row,

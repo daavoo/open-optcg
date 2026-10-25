@@ -23,7 +23,6 @@ import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
 import { op08PuddingManifest } from "./op08-pudding-manifest.js";
 import { op05EnelOpenManifest } from "./op05-enel-open-manifest.js";
 import { op12ZoroManifest } from "./op12-zoro-manifest.js";
-import { op14MihawkManifest } from "./op14-mihawk-manifest.js";
 import { op16AceManifest } from "./op16-ace-manifest.js";
 import { op06YamatoManifest } from "./op06-yamato-manifest.js";
 import { eb04BonneyManifest } from "./eb04-bonney-manifest.js";
@@ -159,7 +158,6 @@ export type CommunityDeckId =
   | "(Green) Shanks - Official Feature Deck"
   | "(Blue) Rocks.D.Xebec - Official Feature Deck"
   | "(Black) Monkey.D.Luffy - Official Feature Deck"
-  | "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1"
   | "(Red) Portgas.D.Ace - Official Feature Deck"
   | "(Purple) Kaido - Official Feature Deck"
   | "(Red/Yellow) Jewelry Bonney - Official Feature Deck"
@@ -338,8 +336,6 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Green) Shanks - Official Feature Deck": op17ShanksManifest,
     "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecManifest,
     "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyManifest,
-    "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1":
-      op14MihawkManifest,
     "(Red) Portgas.D.Ace - Official Feature Deck": op16AceManifest,
     "(Purple) Kaido - Official Feature Deck": op17KaidoManifest,
     "(Red/Yellow) Jewelry Bonney - Official Feature Deck": eb04BonneyManifest,

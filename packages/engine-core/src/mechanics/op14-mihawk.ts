@@ -1,5 +1,7 @@
 /**
- * The off-set identities `OP14-MIHAWK-SLASH` plays, as programs.
+ * The off-set identities the OP-14 Green Mihawk list played, as programs. The
+ * list is gone with its Leader's ban (OP14-020, 12 Oct 2026), but its cards
+ * stay in the registry and other lists play several of them.
  *
  * One module for cards from six different series, for the same reason
  * `cards/src/op14-mihawk.ts` is one file: none of them belongs to a set this

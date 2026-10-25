@@ -240,14 +240,6 @@ describe("the shelves the picker groups decks into", () => {
     expect(html.indexOf('data-shelf-label="Community"')).toBeLessThan(
       html.indexOf('data-shelf-label="Official Featured"'),
     );
-    // The Mihawk list that placed 3rd at the same event sits on the shelf
-    // too, after the one that placed 2nd: the shelf keeps its declared order,
-    // and the ids are declared by placing.
-    const euThird =
-      "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1";
-    expect(deckShelf(euThird)).toBe("tournament");
-    expect(shelfOf(html, euThird)).toBe("Community");
-    expect(tileIndex(html, euFinal)).toBeLessThan(tileIndex(html, euThird));
     // A list transcribed from a tournament aggregator without a placing in
     // its id sits on the same shelf: it was read from an event too, and there
     // is no other shelf for a list that is neither a product nor Bandai's.
@@ -255,24 +247,6 @@ describe("the shelves the picker groups decks into", () => {
     expect(deckShelf(elbaph)).toBe("tournament");
     expect(shelfOf(html, elbaph)).toBe("Community");
     expect(html.indexOf("Community Decks")).toBe(-1);
-  });
-
-  it("orders the two lists from the same final by their placing", () => {
-    // Both are from the Europe Championship 26-27 Season 1 Final at Utrecht,
-    // so the shelf reads as the standings of that event did. The order comes
-    // from `TOURNAMENT_DECK_IDS` rather than from parsing the placing out of
-    // the id, which is why the two entries are adjacent there.
-    const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
-      offerBuilder: true,
-    });
-    const first =
-      "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1";
-    const second =
-      "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1";
-
-    expect(deckShelf(second)).toBe("tournament");
-    expect(shelfOf(html, second)).toBe("Community");
-    expect(tileIndex(html, first)).toBeLessThan(tileIndex(html, second));
   });
 
   it("does not mark or lead with a Leader's recommended list", () => {

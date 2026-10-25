@@ -10,7 +10,6 @@ import {
 } from "@one-piece-sim/decks";
 import { genericDossier } from "./generic.js";
 import { op13SaboDossier } from "./op13-sabo.js";
-import { op14MihawkDossier } from "./op14-mihawk.js";
 import { op16EnelDossier } from "./op16-enel.js";
 import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
 import { op16AceOpenDossier } from "./op16-ace-open.js";
@@ -157,8 +156,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,
-  "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1":
-    op14MihawkDossier,
   "(Purple) Kaido - Official Feature Deck": op17KaidoDossier,
   "(Purple) Kaido - Open OPTCG": op17KaidoFieldDossier,
   "(Green/Yellow) Yamato - Official Feature Deck": op06YamatoDossier,

@@ -78,7 +78,7 @@ function luffyTurn(options: {
   return scenario()
     .decks(
       "(Green/Blue) Monkey.D.Luffy - Official Feature Deck",
-      "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
+      "(Green) Roronoa Zoro - OP17 Post-Ban List",
     )
     .seed("op16-luffy-don-tempo")
     .bareTable()

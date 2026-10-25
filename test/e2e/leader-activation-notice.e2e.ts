@@ -10,17 +10,21 @@ const appUrl = pathToFileURL(
  * A Leader's `[Activate: Main]`, reported to the player who clicked it.
  *
  * A Leader never leaves the board, so its activation has no card movement to
- * stand in for a report: OP14-020 Dracule Mihawk stood three DON!! back up and
- * took the turn's plays away, and the only thing on screen that had changed
- * was the DON!! row. Both halves of the payoff are `activate-don` and
- * `restrict-player`, neither of which the board narrates, and the panel that
+ * stand in for a report: OP16-022 Monkey.D.Luffy stands two rested DON!! back
+ * up, and the only thing on screen that changes is the DON!! row. The payoff
+ * is `activate-don`, which the board does not narrate, and the panel that
  * exists for exactly this question only ever ran off an `ability-triggered`
  * marker -- which a clause the player activated is deliberately outside.
  *
- * Driven to a real position rather than a constructed one: turn 5 of a game
- * the rules agents played out, stopped on the action before the one the Green
- * policy chose. Clicked rather than replayed, because the panel is derived
- * from the events of an action this page took.
+ * Driven to a real position rather than a constructed one: turn 3 of a game
+ * the rules agents played out, stopped on the action before the one the
+ * Green/Blue policy chose -- Mr.2 Bon Clay is the only Character on the board,
+ * an {Impel Down} body, and it rested the two DON!! that paid for it. Clicked
+ * rather than replayed, because the panel is derived from the events of an
+ * action this page took.
+ *
+ * The activation that stops for a cost first (OP14-020's rest) is pinned in
+ * `test/battle-ui.test.ts`, where the marker has to survive the suspension.
  */
 test("a Leader's activation reports what it did to the player who clicked it", async ({
   page,
@@ -31,7 +35,7 @@ test("a Leader's activation reports what it did to the player who clicked it", a
   const savedMatch = {
     version: 1,
     config: {
-      p1Deck: "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
+      p1Deck: "(Green/Blue) Monkey.D.Luffy - Official Feature Deck",
       p2Deck: "(Red) Monkey.D.Luffy - Starter Deck 31",
       p1Controller: "human",
       p2Controller: "rules",
@@ -40,35 +44,12 @@ test("a Leader's activation reports what it did to the player who clicked it", a
       seedMode: "matchup",
     },
     actions: [
-      "r0:mulligan:mulligan",
+      "r0:mulligan:keep",
       "r1:mulligan:mulligan",
-      "r2:play:4:p1-card-47",
-      "r3:pass",
-      "r4:play:0:p2-card-11",
-      "r5:pass",
-      "r6:play:3:p1-card-12",
-      "r7:effect:don",
-      "r8:effect:p1-card-25",
-      "r9:play:0:p1-card-13",
-      "r10:attack:p1-leader:p2-leader",
-      "r11:pass-block",
-      "r12:pass-counter",
-      "r13:pass",
-      "r14:attach:p2-leader",
-      "r15:play:6:p2-card-12",
-      "r16:play:2:p2-card-18",
-      "r17:effect:search-select:p2-card-5",
-      "r18:activate:mechanic-main:p2-leader",
-      "r19:effect:p2-card-11",
-      "r20:attack:p2-card-11:p1-leader",
-      "r21:pass-block",
-      "r22:pass-counter",
-      "r23:attack:p2-leader:p1-leader",
-      "r24:pass-block",
-      "r25:pass-counter",
-      "r26:pass",
-      "r27:play:4:p1-card-24",
-      "r28:effect:p2-card-11",
+      "r2:pass",
+      "r3:play:1:p2-card-13",
+      "r4:pass",
+      "r5:play:5:p1-card-10",
     ],
     initialEvents: [],
     checkpoints: [],
@@ -97,26 +78,15 @@ test("a Leader's activation reports what it did to the player who clicked it", a
     .click();
   await page.getByRole("button", { name: /Activate: Main/ }).click();
 
-  // The cost comes up as a decision, and used to be the whole of what the
-  // player saw: this prompt, then a board that had quietly changed.
-  const choice = page.locator(".decision-modal");
-  await expect(choice).toContainText("Resolve Dracule Mihawk's card effect");
-  await expect(page.locator(".opponent-action-modal")).toHaveCount(0);
-  await page.getByRole("button", { name: "Kin'emon Choose Kin'emon" }).click();
-
   const notice = page.locator(".opponent-action-modal");
   // Titled for a clause the player asked for, not "Fired on its own".
   await expect(notice).toContainText("Ability resolved");
-  await expect(notice).toContainText("Rested");
-  await expect(notice).toContainText("Set 3 DON!! active");
-  await expect(notice).toContainText(/cannot play Characters/i);
-  // One face for the Leader, not one per step. Drawn a card apiece, these two
-  // steps plus the rest above them are the same Leader printed three times
-  // down a panel capped at `46rem`, which put the restriction under the fold.
+  await expect(notice).toContainText("Set 2 DON!! active");
+  // One face for the Leader, with its step beside it.
   await expect(notice.locator(".opponent-action-single")).toHaveCount(1);
   await expect(
     notice.locator(".opponent-action-single .single-action"),
-  ).toHaveCount(2);
+  ).toHaveCount(1);
   await page.screenshot({
     path: "test-results/leader-activation-notice.png",
     fullPage: false,

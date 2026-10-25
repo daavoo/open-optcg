@@ -326,7 +326,6 @@ export {
   createDonReservationModule,
   createDonThresholdModule,
   createKoReachAttachmentModule,
-  createKoMarginAttachmentModule,
   createLethalCloseModule,
   createNoHopelessAttackModule,
   createKoPayoffTargetModule,

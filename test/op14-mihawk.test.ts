@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  loadDeck,
-  requireSupportedDeck,
-  resolveDeck,
-} from "@one-piece-sim/decks";
-import {
-  applyAction,
-  createGame,
   currentPower,
   getLegalActions,
   reorderAction,
@@ -21,17 +14,17 @@ import {
 } from "./support/index.js";
 
 /**
- * OP-14 Green Mihawk: the Slash rest-lock list in
- * `packages/decks/src/op14-mihawk-manifest.ts`.
+ * The off-set identities of the OP-14 Green Mihawk list, whose programs are in
+ * `packages/engine-core/src/mechanics/op14-mihawk.ts`, plus OP12-037. The list
+ * is no longer shipped -- its Leader, OP14-020, is banned from 12 Oct 2026 --
+ * but the cards stay in the registry, so their clauses keep their tests.
  *
- * The deck's OP14 slots and its Leader are covered by `test/op14.test.ts` and
- * its ST32 slots by the format tests, so what is here is the six identities the
- * list reaches outside those: the five in `packages/cards/src/op14-mihawk.ts`
- * plus OP12-037, whose two clauses this deck is the first *shipped* list to
- * bring under `pnpm coverage:clauses`.
+ * The positions are posed on the green OP-17 post-ban Zoro list with OP14-020
+ * put back in p1's Leader slot: the Leader is what these positions were built
+ * around, and `bareTable()` leaves nothing of the list but its Leader anyway.
  */
 
-const DECK = "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1";
+const DECK = "(Green) Roronoa Zoro - OP17 Post-Ban List";
 
 /**
  * Decline the block and Counter steps of a declared attack, so the battle
@@ -52,6 +45,7 @@ const declineDefence = (game: {
 const table = (seed: string) =>
   scenario()
     .decks(DECK, "(Red) Monkey.D.Luffy - Starter Deck 31")
+    .withLeader("p1", "OP14-020")
     .seed(seed)
     .atTurn(11, { active: "p1" })
     .bareTable();
@@ -60,6 +54,7 @@ const table = (seed: string) =>
 const defending = (seed: string) =>
   scenario()
     .decks(DECK, "(Red) Monkey.D.Luffy - Starter Deck 31")
+    .withLeader("p1", "OP14-020")
     .seed(seed)
     .atTurn(12, { active: "p2" })
     .bareTable();
@@ -78,14 +73,6 @@ function effectOptions(state: GameState): string[] {
     .filter((action) => action.type === "resolve-effect")
     .map((action) => action.optionId);
 }
-
-describe("OP-14 Green Mihawk deck list", () => {
-  it("loads the 50-card tournament list behind OP14-020", () => {
-    const manifest = requireSupportedDeck(DECK);
-    expect(manifest.leader).toBe("OP14-020");
-    expect(loadDeck(DECK)).toHaveLength(50);
-  });
-});
 
 describe("OP07-022 Otama", () => {
   covers("OP07-022", "[On Play]");
@@ -803,27 +790,5 @@ describe("OP12-037 Demon Aura Nine Sword Style Asura", () => {
         .legalActions()
         .find((action) => action.type === "activate-counter-event"),
     ).toBeUndefined();
-  });
-});
-
-describe("the deck plays a full game against the format", () => {
-  it("full-game-smoke reaches a result against ST31 without an illegal state", () => {
-    let state = createGame({
-      gameId: "op14-mihawk-smoke",
-      p1: resolveDeck(DECK),
-      p2: resolveDeck("(Red) Monkey.D.Luffy - Starter Deck 31"),
-      seed: "op14-mihawk-smoke",
-    });
-    for (let step = 0; step < 4_000 && state.phase !== "finished"; step += 1) {
-      const legal = getLegalActions(state, state.activePlayer);
-      expect(legal.length, `no legal action in ${state.phase}`).toBeGreaterThan(
-        0,
-      );
-      state = applyAction(state, {
-        ...legal[0]!,
-        revision: state.revision,
-      }).state;
-    }
-    expect(state.phase).toBe("finished");
   });
 });

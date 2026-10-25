@@ -299,23 +299,6 @@ import {
   KAIDO_FIELD_LIST_RULES,
 } from "./decks/op17-kaido-policy.js";
 import {
-  createOp14MihawkBlockerHomeModule,
-  createOp14MihawkBodySaveModule,
-  createOp14MihawkDeadRemovalModule,
-  createOp14MihawkDefensePolicy,
-  createOp14MihawkHandCostModule,
-  createOp14MihawkKinemonFirstModule,
-  createOp14MihawkLeaderSwingModule,
-  createOp14MihawkOpeningHoldModule,
-  createOp14MihawkRemovalPairingModule,
-  createOp14MihawkReplayPickModule,
-  createOp14MihawkUnpaidRemovalModule,
-  createOp14MihawkLinlinBranchModule,
-  createOp14MihawkLunaHoldModule,
-  createOp14MihawkMulliganModule,
-  createOp14MihawkRulesPolicy,
-} from "./decks/op14-mihawk-policy.js";
-import {
   createSt32MulliganModule,
   createSt32RulesPolicy,
 } from "./decks/st32-policy.js";
@@ -342,7 +325,6 @@ import {
 import {
   createCounterBudgetModule,
   createCounterEventReserveModule,
-  createOneCardLifeSaveModule,
   createDeadAttachmentModule,
   createPreCombatAttachmentModule,
   createDeadOpeningPlayModule,
@@ -365,7 +347,6 @@ import {
   createCounterOverDyingBlockModule,
   createDonThresholdModule,
   createKoReachAttachmentModule,
-  createKoMarginAttachmentModule,
   createPressThroughBlockersModule,
   createFreeBlockModule,
   LETHAL_CLOSE_RULES,
@@ -408,7 +389,6 @@ export const LEADERS = {
   ENEL: "OP15-058",
   SHANKS: "OP17-020",
   XEBEC: "OP17-039",
-  OP14_MIHAWK: "OP14-020",
   OP16_ACE: "OP16-001",
   KAIDO: "OP17-058",
   LUFFY_ACE: "ST30-001",
@@ -1085,11 +1065,6 @@ registerPolicy({
   deck: LEADERS.OP16_LUFFY,
   priority: MULLIGAN_PRIORITY,
   create: createOp16LuffyMulliganModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  priority: MULLIGAN_PRIORITY,
-  create: createOp14MihawkMulliganModule,
 });
 registerPolicy({
   deck: LEADERS.KAIDO,
@@ -2476,119 +2451,6 @@ registerPolicy({
   deck: LEADERS.OP16_ACE,
   priority: MULLIGAN_PRIORITY,
   create: createOp16AceMulliganModule,
-});
-
-// OP-14 Green Dracule Mihawk. Two registrations, so each half is measurable on
-// its own with `pnpm deck:ab --disable <id>`.
-//
-// It keeps its `control` archetype layer from `registerStrategyProfiles` rather
-// than moving to `control-unenrolled`: the deck policy is `rank`/`veto` plus a
-// Counter-phase `decide`, so the archetype root still composes underneath it.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkRulesPolicy,
-});
-// A note on the format-wide `counter-event-reserve`, which holds a seat's last
-// DON!! active to pay for a [Counter] Event rather than attaching it for +1000
-// power: it cannot be tuned per deck today. `resolveWithModules` collects
-// vetoes from every applicable module and never removes one, so a
-// Mihawk-scoped rule cannot lift a format-wide veto, and the only knob is that
-// module's own gate. The reservation would have to move into
-// `strategy/profile.ts`, where per-deck `StrategyParams` already exist, before
-// "turn it down for this deck" is expressible at all.
-//
-// Note also that "has a [Main] clause" does not predict "will be spent before
-// the Counter step", so a gate written on the card text does not generalise:
-// OP-15 Enel casts its dual-purpose Events in the Main phase almost always,
-// OP-17 Xebec holds them for the Counter step most of the time. That is a
-// property of a deck's policy, not of its card text.
-
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: () =>
-    decideModule("op14-mihawk-defense", createOp14MihawkDefensePolicy()),
-});
-// The two decisions OP17-099 Charlotte Linlin's [When Attacking] hands to the
-// seat it attacks. See `createOp14MihawkLinlinBranchModule`: a format claim,
-// registered for this Leader alone while it is measured.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkLinlinBranchModule,
-});
-// Three more, each from the same pair of human-won traces against the OP-17
-// Sabo list, and each its own module so `pnpm deck:ab --disable <id>` prices
-// it apart. See the doc comment on each in `op14-mihawk-policy.ts`.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkLunaHoldModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  priority: 199,
-  create: createKoReachAttachmentModule,
-});
-// Behind `ko-reach-attachment` in the same window: that rule arms a body onto
-// its target exactly, this one buys the thousand that puts the K.O. past one
-// Counter card. Scoped here while it is measured.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  priority: 199,
-  create: createKoMarginAttachmentModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkHandCostModule,
-});
-// Ahead of `op14-mihawk-defense` so an attack on a cost-5 body reaches the
-// uncapped save first; every other Counter decision falls through to it.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  priority: 1,
-  create: createOp14MihawkBodySaveModule,
-});
-// Five more from human-piloted traces against this seat, each its own module
-// so `pnpm deck:ab --disable <id>` prices it apart. See the doc comment on each
-// in `op14-mihawk-policy.ts`.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkOpeningHoldModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkDeadRemovalModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkReplayPickModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkBlockerHomeModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkRemovalPairingModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkUnpaidRemovalModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkLeaderSwingModule,
-});
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOp14MihawkKinemonFirstModule,
-});
-// `createOneCardLifeSaveModule` is shared code in `format/defence.ts`, scoped
-// here to one Leader while it is measured: it is a *trade* -- a card for a Life
-// -- and the exchange rate belongs to a deck's curve, not to the rules. This
-// deck's hand is four-of cost-5 bodies against a DON!! count that reaches 5 on
-// turn 5, so a Counter card held is usually a card that was never castable.
-registerPolicy({
-  deck: LEADERS.OP14_MIHAWK,
-  create: createOneCardLifeSaveModule,
 });
 
 // OP17 sealed (`"SEALED-LUFFY"`, `SEALED_LEADER` in `packages/decks`), which

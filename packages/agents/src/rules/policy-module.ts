@@ -373,7 +373,7 @@ function keepOnePerType(
  * Stage, which is both of the ways a hand can be retired whole, and so the deck
  * where `board-replacement-cost` and `stage-replacement` meet.
  *
- *   pnpm deck:benchmark run --deck "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1" --seeds 100
+ *   pnpm deck:benchmark run --deck "<that deck>" --seeds 100
  */
 function withoutVetoedPlays(
   context: PolicyContext,
