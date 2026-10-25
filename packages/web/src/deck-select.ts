@@ -4,11 +4,15 @@ import {
   deckDisplayName,
   deckManifests,
   deckShelf,
-  isRecommendedDeck,
   starterDeckNumber,
   SELECTABLE_DECK_IDS,
 } from "@one-piece-sim/decks";
 import { assetUrl } from "./assets.js";
+import {
+  builtInDeckStandings,
+  orderByWinRate,
+  type DeckStandings,
+} from "./deck-standings.js";
 import { escapeHtml } from "./card-text.js";
 import { icon } from "./icons.js";
 import { deckManifestFor, type SavedDeck } from "./deck-labels.js";
@@ -170,17 +174,20 @@ export function deckChoiceButton(
  * lists read from an event, then the lists Bandai features, then the products
  * it sells.
  */
-interface DeckGroup {
+export interface DeckGroup {
   /** Stable handle for the shelf's tab and panel ids. */
   key: "saved" | "meta" | "official" | "starter";
   label: string;
   deckIds: string[];
 }
 
-function deckGroups(
+/** Exported for its tests, which pass `standings` rather than building a
+    page with them inlined. */
+export function deckGroups(
   savedDecks: Record<string, SavedDeck>,
   candidates: readonly string[],
   saved: readonly string[],
+  standings: DeckStandings | null = builtInDeckStandings(),
 ): DeckGroup[] {
   const shelves: DeckGroup[] = [
     { key: "saved", label: "Your decks", deckIds: [...saved] },
@@ -201,9 +208,9 @@ function deckGroups(
   // Each shipped shelf in the order a player reads the source it came from:
   // Bandai's feature-deck index newest first, and the starter products by
   // number -- ST-26 before ST-31, which reading them as strings would get
-  // right only by accident. The Community shelf above them is left in the order the
-  // id tuples list, which puts the two lists from one final in the order they
-  // placed.
+  // right only by accident. The Community shelf above them starts in the order
+  // the id tuples list, which puts the two lists from one final in the order
+  // they placed.
   shelves[2]!.deckIds.sort((left, right) =>
     compareFeaturePageEntries(deckManifests[left], deckManifests[right]),
   );
@@ -211,16 +218,14 @@ function deckGroups(
     (left, right) =>
       (starterDeckNumber(left) ?? 0) - (starterDeckNumber(right) ?? 0),
   );
-  // A Leader's recommended list (`DeckManifest.recommended`) leads its shelf,
-  // ahead of every order above: it is the list the app means a player to be
-  // handed for that Leader, so it is the first tile they read. The sort is
-  // stable, so the rest of each shelf keeps the order it was just given.
-  for (const shelf of shelves.slice(1)) {
-    shelf.deckIds.sort(
-      (left, right) =>
-        Number(isRecommendedDeck(right)) - Number(isRecommendedDeck(left)),
-    );
-  }
+  // The Community shelf, last of all, by how the published learned model does
+  // with each list (`deck-standings.ts`), best first: its lists come from
+  // different events and placings, which say little about how they compare,
+  // and the model release is the one measurement every list on it shares. A
+  // list the standings do not rank -- one added since the model was measured
+  // -- follows the ranked ones in the order above, and a build without
+  // standings keeps that order whole.
+  shelves[1]!.deckIds = orderByWinRate(shelves[1]!.deckIds, standings);
   return shelves;
 }
 
@@ -296,7 +301,6 @@ export function deckPickerDialog(
         <button class="deck-tile ${deckId === selected ? "picked" : ""}" type="button" data-pick-deck="${seat}" data-deck-id="${escapeHtml(deckId)}" aria-pressed="${deckId === selected}"${originTitle(deckId)}>
           ${renderDeckLeaderPreview(savedDecks, deckId)}
           <span class="deck-tile-name">${escapeHtml(deckLabel(savedDecks, deckId))}</span>
-          ${isRecommendedDeck(deckId) ? `<span class="deck-tile-badge">Recommended</span>` : ""}
         </button>
         ${options.offerBuilder ? `<button class="deck-tile-edit" type="button" data-edit-deck="${seat}" data-deck-id="${escapeHtml(deckId)}" title="Open ${escapeHtml(deckLabel(savedDecks, deckId))} in the deck editor">${icon("settings", `Open ${deckLabel(savedDecks, deckId)} in the deck editor`)}</button>` : ""}
         ${

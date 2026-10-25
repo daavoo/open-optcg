@@ -622,8 +622,8 @@ export interface NamedDeckList {
 /**
  * The display names of a set of lists, keyed by id.
  *
- * Lists behind one Leader on different shelves share a name: the shelf, and
- * the Recommended badge, tell them apart. Two on the same shelf would be two
+ * Lists behind one Leader on different shelves share a name: the shelf tells
+ * them apart. Two on the same shelf would be two
  * identical tiles side by side, so the second and later get a counter, "(2)",
  * in the order given with the recommended list first -- a counter rather than
  * the origin, which is the word that goes stale when the list is replaced.

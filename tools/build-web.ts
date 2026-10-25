@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { build, transform } from "esbuild";
+import {
+  parseDeckStandings,
+  type DeckStandings,
+} from "../packages/web/src/deck-standings.js";
 
 /**
  * `--with-art` inlines whatever card art is already on this machine. Nothing is
@@ -394,6 +398,32 @@ const learnedModel = learnedModelFile
 const inlinePack = learnedModel ? null : scorerPack;
 const inlineAdapters = learnedModel ? [] : scorerAdapters;
 
+/**
+ * The learned model's per-deck standings (`ml/sys1/deck_standings.py`), which
+ * order the deck picker's Community shelf (`packages/web/src/deck-standings.ts`).
+ * Gitignored and fetched beside the pack by `pnpm model:fetch`. Always
+ * inlined, `--external-model` or not: a few KB the picker needs at first
+ * paint. Without the file the shelf keeps its authored order; a file that
+ * does not parse is left out and named, never a failed build.
+ */
+const deckStandingsText = await readFile(
+  join(webRoot, "deck-standings.json"),
+  "utf8",
+).catch(() => null);
+let deckStandings: DeckStandings | null = null;
+if (deckStandingsText) {
+  try {
+    deckStandings = parseDeckStandings(deckStandingsText);
+    console.log(
+      `Inlined the deck standings from ${deckStandings.model} (${Object.keys(deckStandings.decks).length} decks)`,
+    );
+  } catch (error) {
+    console.log(
+      `Left out deck-standings.json: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
 const workerSource = await buildWorker("worker.ts", "EMPTY_WEB_WORKER_BUNDLE", {
   __SCORER_PACK__: inlinePack ?? "null",
   __SCORER_ADAPTERS__: `[${inlineAdapters.join(",")}]`,
@@ -429,6 +459,7 @@ const appBuild = await build({
     __BUILT_IN_PRINTED_TEXT__: JSON.stringify(builtInPrintedText),
     __SCORER_AVAILABLE__: scorerPack ? "true" : "false",
     __LEARNED_MODEL__: JSON.stringify(learnedModel),
+    __DECK_STANDINGS__: JSON.stringify(deckStandings),
   },
   logLevel: "silent",
 });

@@ -20,8 +20,8 @@ describe("deckDisplayName", () => {
   });
 
   it("gives two lists behind one Leader on different shelves the same name", () => {
-    // The shelf and the Recommended badge tell them apart; an origin in the
-    // name would go stale the day the recommended list is replaced.
+    // The shelf tells them apart; an origin in the name would go stale the
+    // day the recommended list is replaced.
     expect(deckShelf(HANCOCK_FEATURE)).not.toBe(deckShelf(HANCOCK_CUP));
     expect(deckDisplayName(HANCOCK_FEATURE)).toBe(deckDisplayName(HANCOCK_CUP));
   });
