@@ -273,12 +273,11 @@ describe("the shelves the picker groups decks into", () => {
     expect(tileIndex(html, first)).toBeLessThan(tileIndex(html, second));
   });
 
-  it("leads its shelf with a Leader's recommended list, unmarked", () => {
+  it("does not mark or lead with a Leader's recommended list", () => {
     // Two lists share OP14-041. The ChinoizeCup list is the one the app hands
-    // a player, so with no standings in the build it is the first tile on the
-    // shelf the grid opens on; Bandai's feature deck stays on its own shelf.
-    // No tile wears a mark for it: a badge read as the app recommending that
-    // deck over every other one on the shelf, not over the Leader's other list.
+    // a player for that Leader, but that says nothing about it against the
+    // other Leaders on its shelf, so it neither wears a mark nor moves to the
+    // front: Community is ordered by the standings alone.
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: true,
     });
@@ -287,7 +286,7 @@ describe("the shelves the picker groups decks into", () => {
     expect(shelfOf(html, tuned)).toBe("Community");
     expect(shelfOf(html, feature)).toBe("Official Featured");
     const community = html.indexOf('data-shelf-label="Community"');
-    expect(html.indexOf("data-deck-id=", community)).toBe(
+    expect(html.indexOf("data-deck-id=", community)).not.toBe(
       tileIndex(html, tuned),
     );
     expect(html).not.toContain("Recommended");

@@ -4,7 +4,6 @@ import {
   deckDisplayName,
   deckManifests,
   deckShelf,
-  isRecommendedDeck,
   starterDeckNumber,
   SELECTABLE_DECK_IDS,
 } from "@one-piece-sim/decks";
@@ -219,16 +218,6 @@ export function deckGroups(
     (left, right) =>
       (starterDeckNumber(left) ?? 0) - (starterDeckNumber(right) ?? 0),
   );
-  // A Leader's recommended list (`DeckManifest.recommended`) leads its shelf,
-  // ahead of every order above: it is the list the app means a player to be
-  // handed for that Leader, so it is the first tile they read. The sort is
-  // stable, so the rest of each shelf keeps the order it was just given.
-  for (const shelf of shelves.slice(1)) {
-    shelf.deckIds.sort(
-      (left, right) =>
-        Number(isRecommendedDeck(right)) - Number(isRecommendedDeck(left)),
-    );
-  }
   // The Community shelf, last of all, by how the published learned model does
   // with each list (`deck-standings.ts`), best first: its lists come from
   // different events and placings, which say little about how they compare,
