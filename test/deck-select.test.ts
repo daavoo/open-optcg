@@ -50,15 +50,16 @@ describe("deck labels in the picker and the selects", () => {
   });
 
   it("keeps a shipped list's origin as the tile's tooltip, and filters on it", () => {
-    const enel = "(Purple) Enel - 1st Place EU Championship 26-27 S1";
+    const enel =
+      "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1";
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: false,
     });
     const tile = html.slice(tileIndex(html, enel));
-    expect(tile).toMatch(/^[^>]*title="1st Place EU Championship 26-27 S1"/);
+    expect(tile).toMatch(/^[^>]*title="2nd Place EU Championship 26-27 S1"/);
     const wrap = html.lastIndexOf("data-deck-filter=", tileIndex(html, enel));
     expect(html.slice(wrap, html.indexOf(">", wrap))).toContain(
-      "1st place eu championship 26-27 s1",
+      "2nd place eu championship 26-27 s1",
     );
   });
 
@@ -229,7 +230,8 @@ describe("the shelves the picker groups decks into", () => {
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: true,
     });
-    const euFinal = "(Purple) Enel - 1st Place EU Championship 26-27 S1";
+    const euFinal =
+      "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1";
     expect(deckShelf(euFinal)).toBe("tournament");
     expect(shelfOf(html, euFinal)).toBe("Community");
     expect(html.indexOf("<h3>Your decks</h3>")).toBeLessThan(
@@ -239,7 +241,7 @@ describe("the shelves the picker groups decks into", () => {
       html.indexOf('data-shelf-label="Official Featured"'),
     );
     // The Mihawk list that placed 3rd at the same event sits on the shelf
-    // too, after the list that won it: the shelf keeps its declared order,
+    // too, after the one that placed 2nd: the shelf keeps its declared order,
     // and the ids are declared by placing.
     const euThird =
       "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1";
@@ -257,16 +259,16 @@ describe("the shelves the picker groups decks into", () => {
 
   it("orders the two lists from the same final by their placing", () => {
     // Both are from the Europe Championship 26-27 Season 1 Final at Utrecht,
-    // so the shelf reads as the standings of that event did: the list that
-    // won it, then the one it beat. The order comes from `TOURNAMENT_DECK_IDS`
-    // rather than from parsing the placing out of the id, which is why the
-    // two entries are adjacent there.
+    // so the shelf reads as the standings of that event did. The order comes
+    // from `TOURNAMENT_DECK_IDS` rather than from parsing the placing out of
+    // the id, which is why the two entries are adjacent there.
     const html = deckPickerDialog({}, "p1", "Your deck", LUFFY_ST31, {
       offerBuilder: true,
     });
-    const first = "(Purple) Enel - 1st Place EU Championship 26-27 S1";
-    const second =
+    const first =
       "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1";
+    const second =
+      "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1";
 
     expect(deckShelf(second)).toBe("tournament");
     expect(shelfOf(html, second)).toBe("Community");

@@ -255,6 +255,12 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP17-024", // Howling Gab -- 8 cost for one rest; Banish needs a hit first
       "ST16-004", // Shanks -- 9 cost, and needs something rested already
       "OP17-022", // Shanks -- the 10-DON!! finisher
+      // The Community list's own cards, last: none is a {Red-Haired Pirates}
+      // card the crew's searches look for first, so they only fill a look
+      // that offers nothing above.
+      "OP08-036", // Electrical Luna -- keeps the rested board rested
+      "OP10-030", // Smoker
+      "ST32-002", // Kouzuki Oden
     ],
   },
   {
@@ -340,16 +346,15 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP15-077", // Lightning Dragon -- draw and rest-lock, but no Counter half
       "OP15-118", // Enel -- the finisher, and uncastable before six DON!!
       "OP10-067", // Senor Pink -- late recovery only, never a plan
-      // The EU Championship 26-27 S1 list under the same Leader, whose
-      // searchers find the same Events plus the bodies below. Holly sits
-      // with the vassals: 3 cost, and the [Double Attack] it grants every
-      // Ohm is what the Leader's gift is for in that list. The two Blockers
-      // sit where Franky and Reiju do, and the two removal Events after
-      // Gamma Knife -- each answers one body, and neither has a Counter half.
+      // The Community list under the same Leader, whose searchers find the
+      // same Events plus the bodies below. Holly sits with the vassals: 3
+      // cost, and the [Double Attack] it grants every Ohm is what the
+      // Leader's gift is for in that list. Sanji and OP15-060 Enel are its
+      // Blockers, after Franky and Reiju; Divine Departure is the removal
+      // after Gamma Knife, with no Counter half.
       "OP15-071", // Holly -- 3 cost, [Double Attack] for every Ohm and itself
-      "ST10-010", // Trafalgar Law -- Blocker
       "OP07-064", // Sanji -- Blocker, 3 cost once two DON!! behind
-      "OP09-077", // Gum-Gum Lightning -- DON!! −2 K.O., a Trigger that ramps
+      "OP15-060", // Enel -- Blocker, re-armed for DON!! −1 and a card
       "OP13-076", // Divine Departure -- −8000 off five rested DON!!
     ],
   },
@@ -494,6 +499,9 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP14-069",
       ["OP14-061", "OP14-068", "OP14-073"],
       ["OP10-065", "OP10-078", "OP14-076"],
+      // The Community list's own cards, after the feature deck's, which the
+      // order above was written for.
+      ["OP10-072", "EB04-038", "OP14-078"],
     ],
   },
   {

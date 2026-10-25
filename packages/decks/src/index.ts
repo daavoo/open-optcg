@@ -2,7 +2,6 @@ import { requireKnownCard, type DeckFormat } from "@one-piece-sim/cards";
 import type { ResolvedDeck } from "@one-piece-sim/protocol";
 import { formatDeckManifests } from "./generated.js";
 import { op16EnelManifest } from "./op16-enel-manifest.js";
-import { op16EnelEuFinalManifest } from "./op16-enel-eu-final-manifest.js";
 import { op16SengokuManifest } from "./op16-sengoku-manifest.js";
 import { op16NamiManifest } from "./op16-nami-manifest.js";
 import { op16TeachManifest } from "./op16-teach-manifest.js";
@@ -17,7 +16,6 @@ import { op17LuffyTournamentManifest } from "./op17-luffy-tournament-manifest.js
 import { st33KuzanTournamentManifest } from "./st33-kuzan-tournament-manifest.js";
 import { op06ReijuTournamentManifest } from "./op06-reiju-tournament-manifest.js";
 import { op11KobyTournamentManifest } from "./op11-koby-tournament-manifest.js";
-import { op07VegapunkTournamentManifest } from "./op07-vegapunk-tournament-manifest.js";
 import { op16AceOpenManifest } from "./op16-ace-open-manifest.js";
 import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
 import { op08PuddingManifest } from "./op08-pudding-manifest.js";
@@ -41,6 +39,22 @@ import { eb03ViviManifest } from "./eb03-vivi-manifest.js";
 import { op14LawManifest } from "./op14-law-manifest.js";
 import { op14HancockManifest } from "./op14-hancock-manifest.js";
 import { op14HancockTournamentManifest } from "./op14-hancock-tournament-manifest.js";
+import { st29LuffyTournamentManifest } from "./st29-luffy-tournament-manifest.js";
+import { op11KatakuriTournamentManifest } from "./op11-katakuri-tournament-manifest.js";
+import { op05LuffyTournamentManifest } from "./op05-luffy-tournament-manifest.js";
+import { op10KidTournamentManifest } from "./op10-kid-tournament-manifest.js";
+import { op11ShirahoshiTournamentManifest } from "./op11-shirahoshi-tournament-manifest.js";
+import { op12SanjiTournamentManifest } from "./op12-sanji-tournament-manifest.js";
+import { op06YamatoTournamentManifest } from "./op06-yamato-tournament-manifest.js";
+import { op07VegapunkStoreBattleManifest } from "./op07-vegapunk-store-battle-manifest.js";
+import { op09ShanksTournamentManifest } from "./op09-shanks-tournament-manifest.js";
+import { op13RogerTournamentManifest } from "./op13-roger-tournament-manifest.js";
+import { eb03ViviTournamentManifest } from "./eb03-vivi-tournament-manifest.js";
+import { op14DoflamingoTournamentManifest } from "./op14-doflamingo-tournament-manifest.js";
+import { op12KoalaTournamentManifest } from "./op12-koala-tournament-manifest.js";
+import { op14MoriaTournamentManifest } from "./op14-moria-tournament-manifest.js";
+import { op17ShanksTournamentManifest } from "./op17-shanks-tournament-manifest.js";
+import { op15EnelTournamentManifest } from "./op15-enel-tournament-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -304,7 +318,6 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red) Silvers Rayleigh - Official Feature Deck",
   "(Purple) Donquixote Doflamingo - Official Feature Deck",
   "(Yellow) Charlotte Linlin - Official Feature Deck",
-  "(Purple) Enel - 1st Place EU Championship 26-27 S1",
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
   "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1",
   "(Purple) Kaido - Open OPTCG",
@@ -319,11 +332,26 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue) Kuzan - 1st Place Bandai Hiroshima",
   "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle",
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
-  "(Yellow) Vegapunk - 1st Place Store Battle",
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
   "(Blue) Buggy - 12th Place ChinoizeCup #124",
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
   "(Green/Yellow) Nico Robin - EB05 Wisdom List",
+  "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15",
+  "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02",
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01",
+  "(Yellow) Eustass Kid - ChinoizeCup #104",
+  "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125",
+  "(Blue/Purple) Sanji - ChinoizeCup #116",
+  "(Green/Yellow) Yamato - 1st Place Pirates Party 2026-09-20",
+  "(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19",
+  "(Red) Shanks - 1st Place Store Battle 2026-06-29",
+  "(Red/Purple) Gol.D.Roger - 1st Place OPTCGSim 2026-04-22",
+  "(Red/Blue) Nefeltari Vivi - 1st Place Store Battle 2026-05-28",
+  "(Purple) Donquixote Doflamingo - 1st Place Store Battle 2026-01-30",
+  "(Black/Yellow) Koala - 30th Place ChinoizeCup #113",
+  "(Black/Yellow) Gecko Moria - 5th Place ChinoizeCup #120",
+  "(Green) Shanks - 16th Place Rumble League #9",
+  "(Purple) Enel - 1st Place Store Battle 2026-04-11",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -456,7 +484,6 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Purple) Donquixote Doflamingo - Official Feature Deck":
     op14DoflamingoManifest,
   "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinManifest,
-  "(Purple) Enel - 1st Place EU Championship 26-27 S1": op16EnelEuFinalManifest,
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1":
     op09RobinManifest,
   "(Green) Dracule Mihawk - 3rd Place EU Championship 26-27 S1":
@@ -475,12 +502,40 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op06ReijuTournamentManifest,
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final":
     op11KobyTournamentManifest,
-  "(Yellow) Vegapunk - 1st Place Store Battle": op07VegapunkTournamentManifest,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentManifest,
   "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
   "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinManifest,
+  "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
+    st29LuffyTournamentManifest,
+  "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":
+    op11KatakuriTournamentManifest,
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01":
+    op05LuffyTournamentManifest,
+  "(Yellow) Eustass Kid - ChinoizeCup #104": op10KidTournamentManifest,
+  "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125":
+    op11ShirahoshiTournamentManifest,
+  "(Blue/Purple) Sanji - ChinoizeCup #116": op12SanjiTournamentManifest,
+  "(Green/Yellow) Yamato - 1st Place Pirates Party 2026-09-20":
+    op06YamatoTournamentManifest,
+  "(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19":
+    op07VegapunkStoreBattleManifest,
+  "(Red) Shanks - 1st Place Store Battle 2026-06-29":
+    op09ShanksTournamentManifest,
+  "(Red/Purple) Gol.D.Roger - 1st Place OPTCGSim 2026-04-22":
+    op13RogerTournamentManifest,
+  "(Red/Blue) Nefeltari Vivi - 1st Place Store Battle 2026-05-28":
+    eb03ViviTournamentManifest,
+  "(Purple) Donquixote Doflamingo - 1st Place Store Battle 2026-01-30":
+    op14DoflamingoTournamentManifest,
+  "(Black/Yellow) Koala - 30th Place ChinoizeCup #113":
+    op12KoalaTournamentManifest,
+  "(Black/Yellow) Gecko Moria - 5th Place ChinoizeCup #120":
+    op14MoriaTournamentManifest,
+  "(Green) Shanks - 16th Place Rumble League #9": op17ShanksTournamentManifest,
+  "(Purple) Enel - 1st Place Store Battle 2026-04-11":
+    op15EnelTournamentManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {

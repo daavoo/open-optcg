@@ -6,7 +6,7 @@ import { character, instance, scenario } from "./support/index.js";
 
 /** (Yellow) Vegapunk's rules: the opening hand. */
 
-const VEGAPUNK = "(Yellow) Vegapunk - 1st Place Store Battle";
+const VEGAPUNK = "(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP07-097";

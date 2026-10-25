@@ -11,11 +11,10 @@ import {
 } from "./support/index.js";
 
 /**
- * The (Purple) Enel list that won the EU Championship 26-27 Season 1 Final.
+ * The (Purple) Enel Community list, the 2026-04-11 Store Battle build.
  *
  * The feature deck already drives every card the two lists share; this file
- * covers the one identity the winning list adds that no shipped deck ran
- * before, OP15-071 Holly, whose two clauses are both continuous: a [Double
+ * covers OP15-071 Holly, which the feature deck does not run, whose two clauses are both continuous: a [Double
  * Attack] grant to every [Ohm] and to itself, and a base power that becomes
  * 6000 on the opponent's turn. Both are rows in `static-abilities.ts`, so the
  * test reads them off the engine's queries rather than off an event.
@@ -28,12 +27,12 @@ import {
  * change that reverses one shows up here rather than only in the benchmark.
  */
 
-const EU_FINAL = "(Purple) Enel - 1st Place EU Championship 26-27 S1";
+const LIST = "(Purple) Enel - 1st Place Store Battle 2026-04-11";
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 
 const board = (active: "p1" | "p2") =>
   scenario()
-    .decks(EU_FINAL, OPPONENT)
+    .decks(LIST, OPPONENT)
     .seed("op16-enel-eu-final")
     .bareTable()
     .atTurn(6, { active })
@@ -44,11 +43,11 @@ const board = (active: "p1" | "p2") =>
     ])
     .build();
 
-describe("the EU Final list", () => {
+describe("the Community Enel list", () => {
   it("is a legal 50 shelved under Tournaments", () => {
-    expect(loadDeck(EU_FINAL)).toHaveLength(50);
-    expect(deckManifests[EU_FINAL]?.leader).toBe("OP15-058");
-    expect(deckShelf(EU_FINAL)).toBe("tournament");
+    expect(loadDeck(LIST)).toHaveLength(50);
+    expect(deckManifests[LIST]?.leader).toBe("OP15-058");
+    expect(deckShelf(LIST)).toBe("tournament");
   });
 });
 
@@ -94,7 +93,7 @@ describe("the Leader's gift once Holly is on the board", () => {
     // one. Holly itself is the turn's play, so it cannot swing and is not the
     // answer either way.
     const game = scenario()
-      .decks(EU_FINAL, OPPONENT)
+      .decks(LIST, OPPONENT)
       .seed("op16-enel-eu-final-gift")
       .bareTable()
       .atTurn(7, { active: "p1" })
@@ -127,7 +126,7 @@ describe("the Counter phase for this list's Blockers", () => {
     // replaceable body `chooseGenericCounter` passes; against a Blocker the
     // 1000 shortfall is one vassal from hand.
     const game = scenario()
-      .decks(EU_FINAL, OPPONENT)
+      .decks(LIST, OPPONENT)
       .seed("op16-enel-eu-final-counter")
       .bareTable()
       .atTurn(8, { active: "p2" })
@@ -160,7 +159,7 @@ describe("the Counter phase for this list's Blockers", () => {
     // vassal is listed first in hand so first-offered and the rule's answer
     // are different cards.
     const game = scenario()
-      .decks(EU_FINAL, OPPONENT)
+      .decks(LIST, OPPONENT)
       .seed("op16-enel-eu-final-holly-counter")
       .bareTable()
       .atTurn(8, { active: "p2" })
@@ -195,7 +194,7 @@ describe("the turn's active DON!! once Holly is on the board", () => {
     // three active DON!! the Ohm reaches 5000 and connects for two Life; the
     // Leader at 5000 connects on the tie with none.
     const game = scenario()
-      .decks(EU_FINAL, OPPONENT)
+      .decks(LIST, OPPONENT)
       .seed("op16-enel-eu-final-attach")
       .bareTable()
       .atTurn(7, { active: "p1" })
