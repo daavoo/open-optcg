@@ -22,7 +22,7 @@ import { valueOf } from "../dom.js";
 import * as footer from "./footer.js";
 
 /**
- * The 1v1 lobby: two decks, who pilots the opponent, and the seed.
+ * The 1v1 lobby: two decks, who plays each, and the seed.
  *
  * It owns no state of its own -- the deck picks live in the root store
  * because the analytics page shows the same two selects. What is local to this
@@ -87,17 +87,17 @@ export interface SetupContext {
 }
 
 /**
- * The agent a seat gets when nobody picked another: the learned model
- * wherever the build carries one, as the strongest pilot there is, and
- * Heuristics in a build without it.
+ * The agent an AI seat gets: the learned model wherever the build carries one,
+ * as the strongest pilot there is, and the rules agent only in a build without
+ * it. The player never picks between them -- the rules agents are a
+ * development tool, reached from the CLI.
  */
 function browserAgent(ctx: SetupContext): ControllerKind {
   return ctx.scorerAvailable() ? "scorer" : "rules";
 }
 
-/** Player two's pilot is chosen in the matchup dialog and player one's on the
-    seat itself, but the match config reads both off the form, so whichever is
-    not a visible control travels as a hidden field. */
+/** Each seat's pilot is chosen on its heading, but the match config reads
+    both off the form, so each travels as a hidden field. */
 function fixedControllerField(id: string, kind: ControllerKind): string {
   return `<input type="hidden" id="${id}" value="${kind}" />`;
 }
@@ -151,13 +151,14 @@ export function render(ctx: SetupContext): string {
           </div>
           ${renderHub(start)}
           ${fixedControllerField("p1-controller", pilots.p1 === "ai" ? browserAgent(ctx) : "human")}
+          ${fixedControllerField("p2-controller", pilots.p2 === "ai" ? browserAgent(ctx) : "human")}
           <input type="file" id="trace-input" accept=".json,.jsonl,application/json" hidden />
         </form>
       </div>
       ${footer.render()}
       ${renderOwnPicker(ctx)}
       ${renderOpponentPicker(ctx)}
-      ${renderMatchupDialog(ctx, pilots, landing.settings)}
+      ${renderMatchupDialog(ctx, landing.settings)}
       ${renderTraceChoiceDialog()}
       ${simulating ? renderAgentsChoiceDialog() : ""}
     </main>`;
@@ -291,17 +292,16 @@ function renderOpponentPicker(ctx: SetupContext): string {
 }
 
 /**
- * Everything about the match that is not a deck: who pilots the opponent, who
- * goes first, and the seed.
+ * Everything about the match that is not a deck or a pilot: who goes first,
+ * and the seed.
  *
- * In a dialog rather than on the form, because these three are the settings a
+ * In a dialog rather than on the form, because these are the settings a
  * player changes once and then leaves alone, while the decks are what they come
  * back to change every match. The fields keep their ids -- the submit handler
  * reads them by id, from wherever they are on the page.
  */
 function renderMatchupDialog(
   ctx: SetupContext,
-  pilots: Record<PlayerId, SeatPilot>,
   /** The asset pack, as a setting: what the landing page hands this dialog. */
   assets: string,
 ): string {
@@ -311,11 +311,6 @@ function renderMatchupDialog(
         <h2>Configure matchup</h2>
         <button class="text-button" type="button" data-close-dialog="matchup-config">${icon("x", "Close")}Close</button>
       </div>
-      ${
-        pilots.p2 === "ai"
-          ? renderControllerChoice(ctx.scorerAvailable())
-          : fixedControllerField("p2-controller", "human")
-      }
       <label>Starting player
         <select id="starting-player">
           <option value="random">Seeded random</option>
@@ -332,72 +327,6 @@ function renderMatchupDialog(
       </div>
     </div>
   </div>`;
-}
-
-/**
- * Who pilots the opponent, as cards rather than a dropdown, so each pilot can
- * say what it is like to play against before it is chosen.
- *
- * The hidden input is what keeps the rest of the screen unchanged: the submit
- * handler and `updateControllerUi` read `#p2-controller` by id and only ever
- * touch its `value`, so the control below them can be anything that carries
- * one. `sealed.ts`, which uses a select of the same id, keeps working.
- *
- * Heuristics stays on offer beside the learned model as the gentler opponent;
- * a build without a model pack offers it alone.
- */
-function renderControllerChoice(scorerAvailable: boolean): string {
-  const initial = scorerAvailable ? "scorer" : "rules";
-  return `<fieldset class="controller-choice">
-    <legend>Opponent controller</legend>
-    <div class="controller-cards">
-      ${
-        scorerAvailable
-          ? controllerCard({
-              kind: "scorer",
-              title: "Learned model",
-              note: "A small neural network trained by self-play. Runs in the browser, on the GPU where there is one.",
-              picked: initial === "scorer",
-            })
-          : ""
-      }
-      ${controllerCard({
-        kind: "rules",
-        title: "Heuristics",
-        note: "Hand-written rules: deterministic, fast, and the less challenging opponent.",
-        picked: initial === "rules",
-      })}
-    </div>
-    <input type="hidden" id="p2-controller" value="${initial}" />
-  </fieldset>`;
-}
-
-function controllerCard(card: {
-  kind: ControllerKind;
-  title: string;
-  note: string;
-  picked: boolean;
-}): string {
-  return `<button
-      class="controller-card${card.picked ? " picked" : ""}"
-      type="button"
-      data-controller="${card.kind}"
-      aria-pressed="${card.picked}"
-    >
-      <span class="controller-card-title">${card.title}</span>
-      <span class="controller-card-note">${card.note}</span>
-    </button>`;
-}
-
-/** Point the hidden field at one pilot and mark its card as the chosen one. */
-function markController(kind: ControllerKind): void {
-  const field = document.querySelector<HTMLInputElement>("#p2-controller");
-  if (field) field.value = kind;
-  document.querySelectorAll<HTMLElement>(".controller-card").forEach((card) => {
-    const picked = card.dataset.controller === kind;
-    card.classList.toggle("picked", picked);
-    card.setAttribute("aria-pressed", String(picked));
-  });
 }
 
 /**
@@ -576,13 +505,6 @@ export function bind(ctx: SetupContext): void {
         ctx.refreshLobby();
       });
     });
-  document.querySelectorAll<HTMLElement>(".controller-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      markController(
-        (card.dataset.controller ?? browserAgent(ctx)) as ControllerKind,
-      );
-    });
-  });
   document
     .querySelector("#open-matchup-config")
     ?.addEventListener("click", () => {

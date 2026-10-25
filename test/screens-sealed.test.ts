@@ -101,8 +101,8 @@ describe("sealed screen render", () => {
     const html = renderBuilder(runningState(), stubContext());
     expect(html).toContain("deck-editor-shell");
     expect(html).toContain('id="sealed-start"');
-    expect(html).toContain("Heuristics");
-    expect(html).not.toContain("Rules AI");
+    expect(html).not.toContain("Heuristics");
+    expect(html).not.toContain('id="p2-controller"');
   });
 
   it("names the run's own expansion in the builder, not the newest", () => {
@@ -147,20 +147,6 @@ describe("sealed screen render", () => {
       stubContext({ scorerAvailable: () => false }),
     );
     expect(state.run!.opponentController).toBe("rules");
-  });
-
-  it("offers the learned model beside Heuristics, and no LLM", () => {
-    const state = runningState();
-    state.run!.opponentController = "scorer";
-    const html = renderBuilder(
-      state,
-      stubContext({ scorerAvailable: () => true }),
-    );
-    expect(html).toContain(
-      '<option value="scorer" selected>Learned model</option>',
-    );
-    expect(html).toContain('<option value="rules" ');
-    expect(html).not.toContain('value="llm"');
   });
 
   it("shows an inline message when one is set", () => {

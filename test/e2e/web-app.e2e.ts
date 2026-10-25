@@ -681,12 +681,10 @@ test("the standalone artifact offers the in-browser pilots only", async ({
 }) => {
   await openSetup(page);
 
-  // A build without a model pack has one pilot to offer, and no LLM.
-  await openMatchupConfig(page);
+  // A build without a model pack falls back to the rules agent, and offers no
+  // choice of pilot.
   await expect(page.locator("#p2-controller")).toHaveValue("rules");
-  await expect(page.locator('[data-controller="rules"]')).toHaveClass(/picked/);
-  await expect(page.locator('[data-controller="llm"]')).toHaveCount(0);
-  await closeMatchupConfig(page);
+  await expect(page.locator("[data-controller]")).toHaveCount(0);
   const opponentDeckColumn = page.locator('.deck-column[data-seat="p2"]');
   await expect(opponentDeckColumn.locator(".deck-select-preview")).toHaveCount(
     1,
@@ -3136,7 +3134,6 @@ test("sealed mode opens packs, builds a deck, and starts a match", async ({
   await expect(page.locator(".deck-count b")).toHaveText("40");
   await expect(page.locator(".deck-rule-status")).toHaveClass(/valid/);
 
-  await page.locator("#p2-controller").selectOption("rules");
   await page.getByRole("button", { name: /Start match/ }).click();
   await expect(page.locator(".game-shell")).toBeVisible();
 });

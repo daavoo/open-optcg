@@ -18,7 +18,7 @@ Free, open source, nothing to install.
 4. Have fun.
 
 > [!TIP]
-> The engine and AI run completely in your browser. You can download the HTML (i.e. `Save page as` in your browser) and play without internet connection. The learned opponent is fetched by the hosted page after it loads and kept in your browser, so a saved copy plays against the Heuristics opponent instead; `pnpm web:build` from a checkout makes one file that carries the learned model too.
+> The engine and AI run completely in your browser. You can download the HTML (i.e. `Save page as` in your browser) and play without internet connection. The learned opponent is fetched by the hosted page after it loads and kept in your browser, so a saved copy falls back to the hand-written rules agent; `pnpm web:build` from a checkout makes one file that carries the learned model too.
 
 ## Found a bug?
 
