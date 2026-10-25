@@ -1,4 +1,9 @@
-import { loadPrintedText, parsePrintedTextPack } from "@one-piece-sim/cards";
+import {
+  cardRegistry,
+  loadPrintedText,
+  parsePrintedTextPack,
+} from "@one-piece-sim/cards";
+import { SEALED_LEADER } from "@one-piece-sim/decks";
 import { unzipSync } from "fflate";
 
 /**
@@ -367,6 +372,24 @@ export function loadBuiltInPrintedText(): number {
   const count = loadPrintedText(builtIn);
   textCards = Math.max(textCards, count);
   return count;
+}
+
+/**
+ * The cards a player can meet that have no image yet, sorted: after a new set
+ * is added, the pack loaded before it lacks that set. The same predicate as
+ * `wantedCards` in tools/download-assets.ts, which is what a pack carries --
+ * every registered card but the fixtures and the sealed promo Leader, which
+ * Bandai lists nowhere.
+ */
+export function missingCardArt(): string[] {
+  return [...cardRegistry.keys()]
+    .filter(
+      (card) =>
+        !card.startsWith("FIX-") &&
+        card !== SEALED_LEADER &&
+        assetUrl(card) === null,
+    )
+    .sort((left, right) => left.localeCompare(right));
 }
 
 /**

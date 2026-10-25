@@ -11,6 +11,7 @@ function ctx(overrides: Partial<HomeContext> = {}): HomeContext {
       assets: () => ({ images: 12, textCards: 40 }),
       loadAssets: async () => {},
       assetNotice: () => null,
+      missingArt: () => [],
     },
     resumable: () => null,
     resume: () => {},

@@ -6,7 +6,8 @@
  * offline, quick, and touches nothing of Bandai's, while the script still sees
  * the origin it checks for. What is under test is what a player sees between
  * runs: a tab closed half way carries on from the images already saved, and a
- * run after a finished one fetches none.
+ * run after a finished one fetches none -- and, after a new set, a zip of just
+ * the cards the app asked for.
  */
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -54,17 +55,25 @@ async function standInBandai(context: BrowserContext, script: string) {
 }
 
 /** Opens the card list and clicks the bookmark, as a player does. */
-async function clickBookmark(page: Page): Promise<void> {
-  await page.goto(`${BANDAI}/cardlist/`);
+async function clickBookmark(page: Page, fragment = ""): Promise<void> {
+  await page.goto(`${BANDAI}/cardlist/${fragment}`);
   await page.evaluate(bookmarklet().slice("javascript:".length));
 }
 
-async function artInZip(page: Page): Promise<number> {
+async function savedZip(page: Page) {
   const download = await page.waitForEvent("download", { timeout: 120_000 });
-  const entries = unzipSync(
-    new Uint8Array(await readFile(await download.path())),
+  const entries = Object.keys(
+    unzipSync(new Uint8Array(await readFile(await download.path()))),
   );
-  return Object.keys(entries).filter((name) => name.startsWith("art/")).length;
+  return {
+    name: download.suggestedFilename(),
+    art: entries.filter((name) => name.startsWith("art/")).sort(),
+    text: entries.includes("printed-text.json"),
+  };
+}
+
+async function artInZip(page: Page): Promise<number> {
+  return (await savedZip(page)).art.length;
 }
 
 test("a closed run carries on from the images it saved, and a finished one fetches none", async ({
@@ -117,6 +126,49 @@ test("a closed run carries on from the images it saved, and a finished one fetch
   ).toHaveCount(0);
   await expect(page.locator("#open-optcg-get-cards")).not.toContainText(
     "card images are already saved",
+  );
+  await context.close();
+});
+
+test("the cards the app asks for come as a small update zip", async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const script = await readFile(resolve("dist/get-cards.js"), "utf8");
+  const total = wantedCards(script).length;
+  const asked = wantedCards(script).slice(-2);
+  const context = await browser.newContext({ acceptDownloads: true });
+  const images = await standInBandai(context, script);
+  const page = await context.newPage();
+
+  // A fresh browser has nothing saved, so nothing to offer as an update.
+  await clickBookmark(page);
+  await expect(page.locator("#open-optcg-get-cards")).toContainText(
+    "Download the cards",
+  );
+  await expect(page.locator("[data-run-unsaved]")).toHaveCount(0);
+
+  await clickBookmark(page, `#open-optcg-missing=${asked.join(",")}`);
+  await expect(page.locator("#open-optcg-get-cards")).toContainText(
+    "asked for the 2 cards it has no art for",
+  );
+  await expect(page.locator("[data-run-all]")).toBeVisible();
+  await page.getByRole("button", { name: "Download those 2 cards" }).click();
+  const zip = await savedZip(page);
+  expect(zip.name).toBe("open-optcg-assets-update.zip");
+  expect(zip.art).toEqual(asked.map((card) => `art/${card}.png`));
+  expect(zip.text).toBe(true);
+  expect(images.count).toBe(2);
+
+  // Clicked straight from the bookmarks bar afterwards, the whole pack is
+  // still the first choice, and the cards this browser has not saved are the
+  // second.
+  await clickBookmark(page);
+  await expect(
+    page.getByRole("button", { name: "Download the cards" }),
+  ).toBeVisible();
+  await expect(page.locator("[data-run-unsaved]")).toContainText(
+    `Only the ${total - 2} cards this browser has not saved yet`,
   );
   await context.close();
 });
