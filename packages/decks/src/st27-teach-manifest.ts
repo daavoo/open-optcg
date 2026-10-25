@@ -47,7 +47,7 @@ import type { DeckManifest } from "./index.js";
  *
  * A tuned list. It is Bandai's teaching build for the product, and it is here
  * as a shipped deck rather than as a benchmark target: expect it near the
- * bottom of `docs/rules-map/deck-standings-starter.csv`, beside ST-26.
+ * bottom of the starter decks' win rates, beside ST-26.
  *
  * Lives in its own module, rather than inline in `index.ts`, for the same
  * reason every other community manifest does: `deck-provenance.ts` reads the

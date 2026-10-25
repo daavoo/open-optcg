@@ -76,10 +76,9 @@ import type { DeckManifest } from "./index.js";
  * from the OP-17 one, and OP14-020, OP14-023 and OP14-039 from the OP-14 one,
  * so their data is already in the pool.
  *
- * `docs/rules-map/deck-standings-featured.csv` is the deck's share of games
- * against the rest of the featured field under `op14-mihawk-policy.ts`. Read
- * it as a rating of the policy, not of the list: every number in that table is
- * a share against the field, so adopting a new list for any *other* deck moves
+ * A `deck:benchmark` rate for this deck is its share of games against the
+ * rest of the field under `op14-mihawk-policy.ts`. Read it as a rating of the
+ * policy, not of the list: every such rate is a share against the field, so adopting a new list for any *other* deck moves
  * this row without anything here changing.
  *
  * Lives in its own module, rather than inline in `index.ts`, for the same

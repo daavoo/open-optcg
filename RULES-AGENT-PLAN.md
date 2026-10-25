@@ -45,14 +45,15 @@ The rules agents do three jobs, and a stronger one improves all three:
 2. **Most of the model's training opponents.** 70% of every PPO batch is
    against them, and the model now wins 76% of those games.
 3. **The AI opponent for everyone without the model pack**, and the baseline
-   every deck's standing is measured against.
+   the model's evaluation is measured against.
 
 The model already pilots most decks well above their rules agent: on the
-weak starters it is 20-45pt ahead of the rules agents' standing (Luffy
+weak starters it is 20-45pt ahead of the rules agents' own win rate (Luffy
 ST-29 0.71 against 0.24, Luffy ST-18 0.56 against 0.28, Katakuri ST-34 0.48
 against 0.26). That gap is knowledge a rules agent could have. The two
-numbers are not the same test -- the standings play within a division, the
-model's evaluation across both -- so the gap is a pointer, not a measurement.
+numbers are not the same test -- the rules agents' rate was played within a
+division, the model's evaluation across both -- so the gap is a pointer, not a
+measurement.
 
 ## What the last training run showed
 
@@ -71,7 +72,7 @@ Paired on 3,720 unseen games against the rules agents:
   decks were flat over 120 iterations, and the in-run checks flattened after
   iteration 100.
 - **The weakest decks are weak for both pilots.** Rebecca (model 0.37, rules
-  agents 0.31 in the standings), Vivi (0.39, 0.18), Imu (0.41, 0.22), Law
+  agents 0.31), Vivi (0.39, 0.18), Imu (0.41, 0.22), Law
   (0.44, 0.45). The model learned these from their rules agents and trains
   against rules agents; where the rules agent is weak it has little to start
   from. These want an ordinary policy audit, not the census below: the model
@@ -186,7 +187,6 @@ The `audit-deck-policy` playbook, unchanged:
 - `pnpm heuristic:probe` measures it at the decision it changes; then the
   paired `deck:ab` or `deck:benchmark` the playbook asks for.
 - One PR per deck, with the census rows that prompted it in the body.
-  `pnpm standings` is rerun when a PR changes a deck's standing.
 
 ### Step 3 results: the Counter window (2026-09-30, PR #410)
 

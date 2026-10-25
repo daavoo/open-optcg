@@ -196,12 +196,13 @@ export function deckShelf(deckId: string): DeckShelf {
 }
 
 /**
- * Which half of the deck standings a deck is measured in.
+ * Which half of the field a deck is measured in.
  *
- * The committed standings are two closed round-robins rather than one, because
+ * The learned model's evaluation (`ml/sys1/evaluate.py`) can restrict its
+ * games to pairings within one division and reports each apart, because
  * an all-vs-all field has a mean of exactly 50% by construction: a rate in it is
  * a statement about the field it was measured in, so mixing Bandai's precons
- * with built lists made every rate a statement about that mixture. OP13-004
+ * with built lists makes every rate a statement about that mixture. OP13-004
  * shows it plainly by fronting a deck on each shelf, ST-35 and the OP-17 Elbaph
  * list, whose rates in a mixed field sat at opposite ends of it. Read against
  * its own shelf, a precon's rate says whether its policy is piloting the product

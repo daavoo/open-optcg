@@ -52,8 +52,6 @@
     "art:download": "tsx tools/download-deck-art.ts",
     "assets:download": "tsx tools/download-assets.ts",
     "deck:benchmark": "tsx tools/deck-benchmark.ts",
-    "standings": "tsx tools/deck-standings.ts",
-    "standings:check": "tsx tools/deck-standings.ts --check",
     "census": "tsx tools/attribution-census.ts",
     "benchmark:diff": "tsx tools/benchmark-diff.ts",
     "deck:ab": "tsx tools/deck-ab.ts",

@@ -46,7 +46,7 @@ import type { DeckManifest } from "./index.js";
  *
  * A tuned list. It is a precon, and it is here as a shipped deck rather than as
  * a benchmark target: expect it near the bottom of
- * `docs/rules-map/deck-standings-starter.csv`, beside ST-26 and ST-27.
+ * the starter decks' win rates, beside ST-26 and ST-27.
  *
  * Lives in its own module, rather than inline in `index.ts`, for the same
  * reason every other hand-authored manifest does: `deck-provenance.ts` reads

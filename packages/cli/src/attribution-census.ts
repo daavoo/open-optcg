@@ -14,7 +14,7 @@
  *
  * - **A deck with no policy.** Four of the fifteen selectable decks have no
  *   deck-scoped registration at all; three of those four are in the bottom six
- *   of the standings. Reads as a high `generic` and `format` share.
+ *   of the benchmark field. Reads as a high `generic` and `format` share.
  * - **A branch swallowing a phase.** ST33 lost 22.8pt to one branch classifying
  *   96% of its effect decisions, with all seventeen of its tests still passing.
  *   Reads as one module taking an implausible share of one action type.

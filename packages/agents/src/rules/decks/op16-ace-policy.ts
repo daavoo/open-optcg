@@ -317,8 +317,8 @@ const WHITEBEARD_BODY_POWER = 8_000;
 /**
  * The opening hand: the keystone, or a searcher with something to find.
  *
- * This deck went into the change as the best in the field -- top of
- * `docs/rules-map/deck-standings-featured.csv`, and no keep predicate at all, which #172
+ * This deck went into the change as the best in the field -- top of the
+ * featured decks' rules-agent round-robin, and no keep predicate at all, which #172
  * flags as a standing warning that its opening hand may matter less than the
  * arithmetic suggests. The arithmetic is mild to begin with: twelve of
  * the 50 cost 2 or less, so the generic keep is true on 76.3% of hands, and

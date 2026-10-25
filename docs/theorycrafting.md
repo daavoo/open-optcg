@@ -35,93 +35,6 @@ deck the 1v1 setup screen offers (`SELECTABLE_DECK_IDS`), so a deck cannot be
 playable without being measured. `--deck <ID>` plays one deck against the six
 format decks. `--json` on a `report` emits the game rows.
 
-## The committed standings
-
-```sh
-pnpm standings                   # rewrite both files
-pnpm standings --group starter   # rewrite one division, leaving the other alone
-pnpm standings:check             # regenerate into memory, fail on a real difference
-```
-
-Two closed round-robins, each committed as its own CSV:
-
-| File                                                                           | Decks | Seeds | Games per deck |
-| ------------------------------------------------------------------------------ | ----- | ----- | -------------- |
-| [rules-map/deck-standings-featured.csv](rules-map/deck-standings-featured.csv) | 18    | 8     | 272            |
-| [rules-map/deck-standings-starter.csv](rules-map/deck-standings-starter.csv)   | 9     | 16    | 256            |
-
-`featured` is every built list, Bandai's own feature decks and the tournament
-lists together; `starter` is Bandai's precons. `deckDivision` derives the split
-from the deck id, so a deck added to the roster is placed by the name it already
-has.
-
-They are two files rather than one because a rate is only a statement about the
-field it was measured in. An all-vs-all field has a mean of exactly 50% by
-construction, so mixing precons with tournament lists made every number a
-statement about the mixture. OP13-004 shows it plainly: it fronts a deck on each
-shelf, ST-35 and the OP-17 Elbaph list, and in the single mixed field those two
-sat at opposite ends of the table. Read against its own shelf, a precon's rate
-says whether its policy pilots the product it came in, and a built list's says
-whether it beats the lists people bring.
-
-The other reason is the diff. A change to one division leaves the other file
-untouched, so a starter policy change is nine rows moving rather than
-twenty-seven, and `--group starter` replays under a third of the games. Each
-file carries its own rules stamp, so the check can say one division is stale
-while the other is current.
-
-The point is still the diff: a mechanic fix that moves a deck from 29% to 41%,
-or a "harmless" refactor that flips sixty games, shows up as rows moving in a
-pull request. `.github/workflows/standings.yml` runs the check on a pull request
-that touches the engine or the rules policies.
-
-**Read the numbers coarsely.** A matchup is 16 games in `featured` and 32 in
-`starter`, which is roughly ±13pp and ±9pp on any single pair: enough for the
-30%-vs-80% gaps that matter and useless for a small policy change -- `pnpm
-deck:ab` is the instrument for that. A 2pp move is
-not signal, and neither is a deck crossing 50%: the two halves of a ten-seed run
-disagreed by 8.8pp on the widest row, and a no-change run already moves several
-rows on its own. The seed counts differ per division so that a row rests on
-about 260 games either way, which is what the single 27-deck field gave it; see
-`STANDINGS_SEEDS` for that reasoning. The spread is far wider than a real
-metagame, so this measures policy quality at least as much as deck quality.
-
-`incomplete` counts games that hit the action cap with no winner. It is a
-tracked column rather than a failure: a game that cannot finish is a real
-finding, but it belongs in the file, not in a red check.
-
-Every row repeats the run's rules stamp and configuration, which is what lets a
-file be read on its own and what makes a hand-edited row detectable -- its
-neighbours disagree with it. Everything in a file is a pure function of the
-build (a rules stamp rather than a date), or the check would be noise.
-
-`pnpm standings:check` **reads the numbers rather than the bytes**: a rate
-within 5pp of a fresh run, and a turn average within 5% of itself, is noise at
-these seed counts and passes. It prints tolerated moves anyway, and goes red on
-a bigger move, a stale rules stamp, a changed configuration, or a deck entering
-or leaving a division. `--tolerance` tightens the bound.
-
-Each division is quadratic in its deck count, so CI splits the sweep across
-eight runners rather than playing it on one:
-
-```sh
-pnpm standings --shard 3/8 --shard-out shards/3.json   # one machine's stripe
-pnpm standings:check --merge shards                    # assemble and compare
-```
-
-`--shard` stripes whole matchups within each division and composes with the
-`--jobs` fork inside each machine, so the split is exact rather than
-approximate: the merged files are the ones a single process would have produced.
-A shard writes one report per division it played. `--merge` plays nothing, and
-fails rather than rendering a file from an incomplete set of shards. Locally
-there is no reason to reach for either -- `pnpm standings` forks over your cores
-on its own.
-
-What the split gives up is the cross-division matchups: a featured deck never
-plays a precon here. Nothing reads per-matchup numbers out of these files, and
-`pnpm deck:benchmark` still plays a deck against the whole roster, so what is
-lost is sweep coverage as a crash net rather than a number anyone quotes.
-
 ## Who is actually piloting each deck?
 
 ```sh
@@ -135,7 +48,7 @@ The benchmark says who wins; this says who is playing. For every deck it
 reports the share of its decisions shaped by a rule written for that deck, by a
 shared rule, and by nothing at all (the generic ladder answering alone).
 
-That last column is the one to read. A deck low in the standings with a high
+That last column is the one to read. A deck low in the benchmark with a high
 "no rule at all" share is not badly tuned, it is unpiloted, and that is a
 different piece of work. A rule counts as shaping a decision whether it decided
 it or only narrowed the candidates; `narrowedBy` on the decision tells the two

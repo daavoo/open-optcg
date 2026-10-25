@@ -4,8 +4,8 @@
  * `pnpm deck:benchmark` reports who wins. This reports who is *playing*: for
  * every deck in the field, the share of its decisions decided by its own policy,
  * by a shared archetype layer, by the format fundamentals, or by nothing at all
- * -- the fallthrough to `chooseGenericRules`. A deck near the bottom of the
- * standings with a high generic share is not badly tuned, it is unpiloted, and
+ * -- the fallthrough to `chooseGenericRules`. A deck near the bottom of
+ * `deck:benchmark` with a high generic share is not badly tuned, it is unpiloted, and
  * those are different pieces of work.
  *
  * See `packages/cli/src/attribution-census.ts` for what the shapes in this data
