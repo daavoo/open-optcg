@@ -13,13 +13,21 @@
  * -- a reaction in play, a ceiling or a starved ramp in play or in hand -- or
  * an opposing one reads the payer's count. OP17-058's −2000 on the
  * opponent's attack is pruned where the battle is decided without it, and
- * kept where it or the hand's Counters with it can stop the attack.
+ * kept where it or the hand's Counters with it can stop the attack. A
+ * `[When Attacking]` gated on the attacker's power is pruned where the gate is
+ * unmet, and OP14-001's Leader swap where every pairing writes back the base
+ * powers already there.
  */
 import { describe, expect, it } from "vitest";
-import { getLegalActions, observe } from "@one-piece-sim/engine-core";
+import {
+  currentPower,
+  getLegalActions,
+  observe,
+} from "@one-piece-sim/engine-core";
 import {
   isDebuffForADecidedBattle,
   isDoomedAttack,
+  isNoOpActivation,
   isSpentLeaderOverride,
   isWastedCounter,
   prunedActions,
@@ -492,5 +500,150 @@ describe("OP17-058's −2000 on a battle it cannot change", () => {
     expect(
       pruned(kaidoDefends("newgate", { board: [["wall", "OP12-118"]] })),
     ).toBe(false);
+  });
+});
+
+describe("a [When Attacking] gated on the attacker's power", () => {
+  /**
+   * Red Law's board: OP14-002 Urouge (2000, "if this Character has 5000 power
+   * or more, draw 1 card and K.O. ...") with `given` DON!! on it, beside
+   * OP14-013 Luffy (0, an unconditional −1000), into a rested 10000 wall and
+   * a 5000 Leader.
+   */
+  function gated(given: number) {
+    const game = scenario()
+      .decks(
+        "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
+        "(Green) Roronoa Zoro - Starter Deck 32",
+      )
+      .seed("scorer-dominance-gated")
+      .atTurn(5, { active: "p1" })
+      .bareTable()
+      .withLeader("p1", "OP14-001")
+      .withBoard("p1", [
+        character("urouge", "OP14-002"),
+        character("luffy", "OP14-013"),
+      ])
+      .withBoard("p2", [character("wall", "OP05-044", { rested: true })])
+      .withDeckTop("p1", copies(3, "ST31-003", "p1-deck"))
+      .withGivenDon("p1", "urouge", given)
+      .build();
+    return { game, observation: observe(game.state, "p1") };
+  }
+
+  it("prunes the swing whose gate is unmet: 4000 into a 5000 Leader", () => {
+    const { game, observation } = gated(2);
+    const swing = attack(observation, "urouge", "p2-leader");
+    expect(swing).toMatchObject({
+      counterShortfall: 0,
+      attackPower: 4000,
+      whenAttackingInert: true,
+    });
+    expect(isDoomedAttack(swing, observation)).toBe(true);
+    expect(
+      prunedActions(observation).has(observation.legalActions.indexOf(swing)),
+    ).toBe(true);
+    // And the engine agrees it buys nothing: no draw, no K.O. offer.
+    const before = game.state.players.p1.hand.length;
+    game.play({
+      type: "attack",
+      attackerInstanceId: "urouge",
+      targetInstanceId: "p2-leader",
+    });
+    expect(game.state.players.p1.hand).toHaveLength(before);
+    expect(game.state.pendingEffect).toBeNull();
+  });
+
+  it("keeps the swing whose gate is met, though the attack still fails", () => {
+    // 5000 into the 10000 wall: short, but Urouge draws on declaring.
+    const { game, observation } = gated(3);
+    const swing = attack(observation, "urouge", "wall");
+    expect(swing).toMatchObject({ counterShortfall: 0, attackPower: 5000 });
+    expect(swing).not.toHaveProperty("whenAttackingInert");
+    expect(isDoomedAttack(swing, observation)).toBe(false);
+    const before = game.state.players.p1.hand.length;
+    game.play({
+      type: "attack",
+      attackerInstanceId: "urouge",
+      targetInstanceId: "wall",
+    });
+    expect(game.state.players.p1.hand).toHaveLength(before + 1);
+  });
+
+  it("keeps an unconditional [When Attacking] (OP14-013's −1000)", () => {
+    const { observation } = gated(0);
+    const swing = attack(observation, "luffy", "wall");
+    expect(swing.type === "attack" && swing.counterShortfall).toBe(0);
+    expect(swing).not.toHaveProperty("whenAttackingInert");
+    expect(isDoomedAttack(swing, observation)).toBe(false);
+  });
+});
+
+describe("OP14-001 Trafalgar Law's swap when no pairing changes anything", () => {
+  function lawBoard(board: Parameters<typeof character>[]) {
+    const game = scenario()
+      .decks(
+        "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
+        "(Green) Roronoa Zoro - Starter Deck 32",
+      )
+      .seed("scorer-dominance-swap")
+      .atTurn(5, { active: "p1" })
+      .bareTable()
+      .withLeader("p1", "OP14-001")
+      .withBoard(
+        "p1",
+        board.map((args) => character(...args)),
+      )
+      .build();
+    const observation = observe(game.state, "p1");
+    const swap = observation.legalActions.find(
+      (action) =>
+        action.type === "activate-main" &&
+        action.sourceInstanceId === "p1-leader",
+    );
+    if (!swap) throw new Error("the Leader swap is not offered");
+    return { game, observation, swap };
+  }
+
+  it("prunes it when every eligible Character shares one base power", () => {
+    // Urouge, Shachi & Penguin and Bepo: 2000 each.
+    const { game, observation, swap } = lawBoard([
+      ["urouge", "OP14-002"],
+      ["shachi", "OP14-006"],
+      ["bepo", "OP14-012"],
+    ]);
+    expect(swap).toMatchObject({ changesNothing: true });
+    expect(isNoOpActivation(swap)).toBe(true);
+    expect(
+      prunedActions(observation).has(observation.legalActions.indexOf(swap)),
+    ).toBe(true);
+    // Taking it writes back the powers already there.
+    game.submit(swap);
+    game.play({ type: "resolve-effect", optionId: "urouge" });
+    game.play({ type: "resolve-effect", optionId: "shachi" });
+    for (const id of ["urouge", "shachi", "bepo"]) {
+      expect(currentPower(game.state, "p1", id)).toBe(2000);
+    }
+  });
+
+  it("keeps it when a pairing moves power: Urouge for OP14-009 Law", () => {
+    const { observation, swap } = lawBoard([
+      ["urouge", "OP14-002"],
+      ["law", "OP14-009"],
+    ]);
+    expect(swap).not.toHaveProperty("changesNothing");
+    expect(isNoOpActivation(swap)).toBe(false);
+    expect(
+      prunedActions(observation).has(observation.legalActions.indexOf(swap)),
+    ).toBe(false);
+  });
+
+  it("keeps it when a 0-power body is among equals: OP14-013 Luffy", () => {
+    const { swap } = lawBoard([
+      ["urouge", "OP14-002"],
+      ["shachi", "OP14-006"],
+      ["luffy", "OP14-013"],
+    ]);
+    expect(isNoOpActivation(swap)).toBe(false);
   });
 });

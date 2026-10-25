@@ -550,6 +550,24 @@ export type LegalAction =
        */
       selectsNothing?: true;
       /**
+       * Set when an ability on the field would change nothing however it
+       * resolved, and charges nothing to try: every selection is empty, or
+       * what it selects comes out as it went in.
+       *
+       * Stricter than {@link selectsNothing}, which allows a price in front of
+       * an empty payoff. The case it exists for is a swap: OP14-001 Trafalgar
+       * Law's Leader swaps the base power of two of its own Characters, and on
+       * a board where every eligible Character has the same base power each
+       * pairing writes back the numbers already there. Taking it then buys
+       * only the spent `[Once Per Turn]`, which a Character played later in
+       * the turn could have used.
+       *
+       * Absent means "not known to change nothing". Only abilities on the
+       * Leader, a Character or the Stage report it; an Event's `[Main]` always
+       * moves the Event.
+       */
+      changesNothing?: true;
+      /**
        * Rested DON!! this activation gives one of the controller's own cards,
        * when the ability hands DON!! over rather than adding it to the cost
        * area.
@@ -727,6 +745,24 @@ export type LegalAction =
       unspentActiveDon?: number;
       attackerIsBlocker?: boolean;
       attackerIsLeader?: boolean;
+      /**
+       * Set when the attacker prints a `[When Attacking]` clause that this
+       * declaration would not fire: the condition the whole clause hangs on
+       * is false at the power the attack is declared with.
+       *
+       * The Red Supernovas and Revolutionary Army packages are built on such
+       * clauses -- OP14-002 Urouge draws and K.O.s only "if this Character has
+       * 5000 power or more" -- and a caller that can only see that the card
+       * prints `[When Attacking]` has to treat every one of its attacks as
+       * buying something. Whether the condition holds is a question about the
+       * declaration (DON!! given beforehand count, "while attacking" layers
+       * count), which is why the engine answers it rather than a caller
+       * re-reading the condition per card.
+       *
+       * Absent means "not known to be inert", not "fires": it is only read for
+       * a clause whose entire program is one condition and what follows it.
+       */
+      whenAttackingInert?: true;
       summary: string;
     }
   | {

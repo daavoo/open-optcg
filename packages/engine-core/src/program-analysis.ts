@@ -17,6 +17,7 @@ import {
   type PlayerRef,
 } from "./mechanic-dsl.js";
 import {
+  baseCardPower,
   conditionMatches,
   selectCards,
   stepIsPriceOnly,
@@ -199,6 +200,90 @@ export function effectSelectsNothing(
       // Anything that is not a selection does something on its own.
       return false;
   }
+}
+
+/**
+ * True when no way of resolving this program changes the game: whatever the
+ * controller picks, every card ends where and as it was.
+ *
+ * Stricter than {@link programSelectsNothing}, which lets a price stand in
+ * front of an empty payoff -- the price is still paid, and an Event still
+ * leaves the hand. Here nothing may be paid: every step must be a no-op,
+ * so a `[Once Per Turn]` spent on such a program is the only thing taking it
+ * buys.
+ *
+ * The no-op leaves it recognises:
+ *  - a `choose` or `select` with no candidate (or fewer than its `min`), which
+ *    the resolver skips whole;
+ *  - a `choose` whose whole effect is `swap-base-power` over the cards it
+ *    picks, when every candidate already has the same base power. OP14-001
+ *    Trafalgar Law's Leader swaps two of its own {Supernovas} or {Heart
+ *    Pirates} Characters, and a board of two 2000-power bodies swaps 2000 for
+ *    2000 -- the base powers it writes are the ones already in force.
+ *  - an `if` whose taken branch is one of these, or absent.
+ *
+ * Anything else answers `false`, so absent means "not known to change
+ * nothing".
+ */
+export function programChangesNothing(
+  state: GameState,
+  context: MechanicContext,
+  program: MechanicProgram,
+  db: CardDatabase,
+): boolean {
+  const bindings: Record<string, string[]> = {
+    [SOURCE_BINDING]: [context.source.instanceId],
+  };
+  const visit = (effect: MechanicEffect): boolean => {
+    switch (effect.kind) {
+      case "choose": {
+        const candidates = selectCards(
+          state,
+          context,
+          effect.selector,
+          bindings,
+          db,
+        );
+        if (candidates.length === 0 || candidates.length < effect.min) {
+          return true;
+        }
+        const swap = effect.effect;
+        if (
+          swap.kind !== "swap-base-power" ||
+          swap.first !== effect.bind ||
+          swap.second !== undefined
+        ) {
+          return false;
+        }
+        const powers = new Set(
+          candidates.map((card) => baseCardPower(state, card.instanceId, db)),
+        );
+        return powers.size === 1 && !powers.has(undefined);
+      }
+      case "select":
+        return (
+          selectCards(state, context, effect.selector, bindings, db).length ===
+          0
+        );
+      case "sequence":
+        return effect.effects.every(visit);
+      case "if": {
+        const taken = conditionMatches(
+          state,
+          context,
+          effect.condition,
+          bindings,
+          db,
+        )
+          ? effect.then
+          : effect.else;
+        return taken === undefined || visit(taken);
+      }
+      default:
+        return false;
+    }
+  };
+  return visit(program.effect);
 }
 
 /**

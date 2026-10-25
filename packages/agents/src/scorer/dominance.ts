@@ -24,11 +24,14 @@ import { turnStart } from "./render.js";
  * attack target itself. Exempt:
  * - a Leader, which loses nothing by declaring (see `attackerIsLeader`);
  * - an attacker whose derived rules print `[When Attacking]` (the clause can
- *   raise its power or do something else worth the swing) or `[Your Turn]`
- *   (where "when this Character becomes rested" lives: ST32-003 draws and
- *   trashes when it rests, so its sure-fail swing is a card filter). The
- *   second is broader than the rest trigger it is there for, which only
- *   leaves some doomed attacks unpruned.
+ *   raise its power or do something else worth the swing), unless the engine
+ *   reports the clause inert for this declaration (`whenAttackingInert`):
+ *   OP14-002 Urouge's "if this Character has 5000 power or more" swinging
+ *   at 2000 resolves nothing, and the attacker is left rested all the same;
+ * - an attacker that prints `[Your Turn]` (where "when this Character becomes
+ *   rested" lives: ST32-003 draws and trashes when it rests, so its sure-fail
+ *   swing is a card filter). This is broader than the rest trigger it is
+ *   there for, which only leaves some doomed attacks unpruned.
  */
 export function isDoomedAttack(
   action: LegalAction,
@@ -42,9 +45,10 @@ export function isDoomedAttack(
   if (!attacker) return false;
   const clauses = observation.cardFacts[attacker.cardNumber]?.rules.clauses;
   if (!clauses) return false;
-  return !clauses.some(
-    (clause) =>
-      clause.includes("When Attacking") || clause.includes("Your Turn"),
+  if (clauses.some((clause) => clause.includes("Your Turn"))) return false;
+  return (
+    action.whenAttackingInert === true ||
+    !clauses.some((clause) => clause.includes("When Attacking"))
   );
 }
 
@@ -253,6 +257,28 @@ export function isDebuffForADecidedBattle(
   );
 }
 
+/**
+ * An ability on the field that would change nothing however it resolved,
+ * offered for free.
+ *
+ * Weakly worse than declining: the engine reports `changesNothing` only for a
+ * program with no price step and no outcome that moves a card or a number,
+ * so taking it leaves the game as it was apart from a spent `[Once Per Turn]`
+ * -- and declining keeps that use for later in the turn, when a Character
+ * played since may give the same ability something to do. OP14-001 Trafalgar
+ * Law's Leader is the case: with every eligible Character on the same base
+ * power, each swap it could make writes back the numbers already there.
+ * `action.cost` is checked as well, so a DON!! or hand price the program does
+ * not spell out as a step still keeps the offer.
+ */
+export function isNoOpActivation(action: LegalAction): boolean {
+  return (
+    action.type === "activate-main" &&
+    action.changesNothing === true &&
+    action.cost === undefined
+  );
+}
+
 /** Indices of the offered actions the seat never plays. */
 export function prunedActions(observation: GameObservation): Set<number> {
   const pruned = new Set<number>();
@@ -262,7 +288,8 @@ export function prunedActions(observation: GameObservation): Set<number> {
       isDoomedAttack(action, observation) ||
       isWastedCounter(action, observation) ||
       isSpentLeaderOverride(action, observation) ||
-      isDebuffForADecidedBattle(action, observation)
+      isDebuffForADecidedBattle(action, observation) ||
+      isNoOpActivation(action)
     ) {
       pruned.add(index);
     }

@@ -22,6 +22,7 @@ import {
   leaderInstanceId,
 } from "../../board.js";
 import {
+  programChangesNothing,
   programKeywordGrant,
   programRestedDonGift,
   programSelectsNothing,
@@ -71,6 +72,14 @@ export function mechanicActivationOffers(
         db,
       )
         ? { selectsNothing: true as const }
+        : {}),
+      ...(programChangesNothing(
+        state,
+        { sourcePlayerId: playerId, source },
+        activation.program,
+        db,
+      )
+        ? { changesNothing: true as const }
         : {}),
       ...(grant ? { grants: grant } : {}),
       ...(activationGift ? { donGift: activationGift } : {}),
@@ -131,6 +140,14 @@ export function mechanicActivationOffers(
             db,
           )
             ? { selectsNothing: true as const }
+            : {}),
+          ...(programChangesNothing(
+            state,
+            { sourcePlayerId: playerId, source: leaderSource },
+            leaderActivation.program,
+            db,
+          )
+            ? { changesNothing: true as const }
             : {}),
           ...(leaderGrant ? { grants: leaderGrant } : {}),
           ...(leaderGift ? { donGift: leaderGift } : {}),
