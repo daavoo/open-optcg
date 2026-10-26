@@ -2,7 +2,7 @@
 /** A block icon as Bandai prints it. `X` never rotates out of Standard. */
 export type GeneratedBlockIcon = "1" | "2" | "3" | "4" | "5" | "X";
 /** The reference snapshot these printings were read from. */
-export const blockPrintingSnapshot = "2026-08-22";
+export const blockPrintingSnapshot = "2026-10-26";
 /** Every block icon each card number is printed with, across the snapshot. */
 export const cardBlockPrintings: Readonly<
   Record<string, readonly GeneratedBlockIcon[]>
@@ -2362,6 +2362,7 @@ export const cardBlockPrintings: Readonly<
   "P-153": ["5"],
   "P-154": ["5"],
   "P-155": ["5"],
+  "P-157": ["5"],
   "PRB02-001": ["3"],
   "PRB02-002": ["3"],
   "PRB02-003": ["3"],
