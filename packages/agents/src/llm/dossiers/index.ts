@@ -15,7 +15,6 @@ import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
 import { op16AceOpenDossier } from "./op16-ace-open.js";
 import { op17XebecOpenDossier } from "./op17-xebec-open.js";
 import { op08PuddingDossier } from "./op08-pudding.js";
-import { op05EnelOpenDossier } from "./op05-enel-open.js";
 import { op12ZoroPostBanDossier } from "./op12-zoro-post-ban.js";
 import { op15KriegDossier } from "./op15-krieg.js";
 import { op17LinlinDossier } from "./op17-linlin.js";
@@ -94,6 +93,12 @@ import { op12KoalaTournamentDossier } from "./op12-koala-tournament.js";
 import { op14MoriaTournamentDossier } from "./op14-moria-tournament.js";
 import { op17ShanksTournamentDossier } from "./op17-shanks-tournament.js";
 import { op15EnelTournamentDossier } from "./op15-enel-tournament.js";
+import { op12RayleighTournamentDossier } from "./op12-rayleigh-tournament.js";
+import { eb04BonneyTournamentDossier } from "./eb04-bonney-tournament.js";
+import { op14JinbeTournamentDossier } from "./op14-jinbe-tournament.js";
+import { op13AceTournamentDossier } from "./op13-ace-tournament.js";
+import { op05EnelTcgmmDossier } from "./op05-enel-tcgmm.js";
+import { eb02LuffyTournamentDossier } from "./eb02-luffy-tournament.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 export type { DeckStrategyDossier } from "./types.js";
@@ -145,7 +150,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenDossier,
   "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenDossier,
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingDossier,
-  "(Yellow) Enel - Open OPTCG": op05EnelOpenDossier,
   "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroPostBanDossier,
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentDossier,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
@@ -200,6 +204,16 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Green) Shanks - 16th Place Rumble League #9": op17ShanksTournamentDossier,
   "(Purple) Enel - 1st Place Store Battle 2026-04-11":
     op15EnelTournamentDossier,
+  "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124":
+    op12RayleighTournamentDossier,
+  "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104":
+    eb04BonneyTournamentDossier,
+  "(Blue) Jinbe - 11th Place ChinoizeCup #120": op14JinbeTournamentDossier,
+  "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01":
+    op13AceTournamentDossier,
+  "(Yellow) Enel - TCG Match Making OP17.5 #3": op05EnelTcgmmDossier,
+  "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25":
+    eb02LuffyTournamentDossier,
 };
 
 /**

@@ -13,7 +13,9 @@ const HANCOCK_CUP = "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105";
 describe("deckDisplayName", () => {
   it("names a shipped list by its Leader and the Leader's colours", () => {
     expect(deckDisplayName(HANCOCK_CUP)).toBe("Boa Hancock (Blue/Yellow)");
-    expect(deckDisplayName("(Yellow) Enel - Open OPTCG")).toBe("Enel (Yellow)");
+    expect(deckDisplayName("(Yellow) Enel - TCG Match Making OP17.5 #3")).toBe(
+      "Enel (Yellow)",
+    );
     expect(deckDisplayName("(Red/Black) Sabo - Starter Deck 35")).toBe(
       "Sabo (Red/Black)",
     );

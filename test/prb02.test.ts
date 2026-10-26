@@ -287,7 +287,7 @@ describe("PRB02-004 Jewelry Bonney", () => {
 });
 
 describe("PRB02-005 Monkey.D.Luffy", () => {
-  covers("PRB02-005", "[On Play]");
+  covers("PRB02-005", "[On Play]", "[Your Turn]");
 
   it("takes a DON!! out of the opponent's next turn behind a multicolored Leader", () => {
     const game = table("prb02-005-hold")
@@ -330,6 +330,38 @@ describe("PRB02-005 Monkey.D.Luffy", () => {
     game.play({ type: "play-card", cardNumber: "PRB02-005" });
     settle(game);
 
+    expect(game.state.players.p2.donRestedAtNextMain ?? 0).toBe(0);
+  });
+
+  it("[Your Turn] holds nothing when it is played on the opponent's turn", () => {
+    // OP13-023 Uta's [On K.O.] plays a cost-5-or-less Character from hand, so
+    // K.O.'d in p2's battle it puts Luffy on the field on p2's turn.
+    const game = defending("prb02-005-their-turn")
+      .withLeader("p1", "EB04-001")
+      .withBoard("p1", [character("uta", "OP13-023", { rested: true })])
+      .withHand("p1", [instance("luffy", "PRB02-005")])
+      .withBoard("p2", [character("attacker", "ST32-004")])
+      .withDonDeck("p2", 5)
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "uta",
+    });
+    while (game.state.phase === "block" || game.state.phase === "counter") {
+      game.pass();
+    }
+    game.play({ type: "resolve-effect", optionId: "luffy" });
+    settle(game);
+
+    expect(game.state.players.p1.board.map((card) => card.instanceId)).toEqual([
+      "luffy",
+    ]);
+    // p2 has 7 or fewer DON!! and the Leader is multicolored, so only the
+    // turn keeps the clause from booking a rest.
+    const p2 = game.state.players.p2;
+    expect(p2.activeDon.length + p2.restedDon.length).toBeLessThanOrEqual(7);
     expect(game.state.players.p2.donRestedAtNextMain ?? 0).toBe(0);
   });
 

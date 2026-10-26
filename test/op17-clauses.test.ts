@@ -690,3 +690,61 @@ describe("OP17-057 Fullalead", () => {
     expect(game.state.pendingEffect).toBeNull();
   });
 });
+
+describe("OP17-053 Barbell Activate: Main", () => {
+  covers("OP17-053", "[Activate: Main]");
+
+  const table = (seed: string) =>
+    scenario()
+      .decks(XEBEC, "(Red) Monkey.D.Luffy - Starter Deck 31")
+      .seed(seed)
+      .atTurn(11, { active: "p1" })
+      .bareTable()
+      .withBoard("p1", [character("barbell", "OP17-053")])
+      .withHand("p1", [
+        instance("fodder", "OP17-042"),
+        instance("kept", "OP17-046"),
+      ])
+      .build();
+
+  const activations = (game: ReturnType<typeof table>) =>
+    game
+      .legalActions()
+      .filter(
+        (action) =>
+          action.type === "activate-main" &&
+          action.sourceInstanceId === "barbell",
+      );
+
+  it("trashes a hand card for +3000 this turn, once per turn", () => {
+    const game = table("op17-053-activate");
+    expect(activations(game)).toHaveLength(1);
+
+    game.play({ type: "activate-main", sourceInstanceId: "barbell" });
+    while (game.state.pendingEffect) {
+      const options = game
+        .legalActions()
+        .filter((action) => action.type === "resolve-effect")
+        .map((action) => action.optionId);
+      game.play({
+        type: "resolve-effect",
+        optionId: options.includes("fodder")
+          ? "fodder"
+          : options.includes("apply")
+            ? "apply"
+            : options[0],
+      });
+    }
+
+    expect(game.state.players.p1.trash.map((card) => card.instanceId)).toEqual([
+      "fodder",
+    ]);
+    expect(game.state.players.p1.hand.map((card) => card.instanceId)).toEqual([
+      "kept",
+    ]);
+    expect(currentPower(game.state, "p1", "barbell")).toBe(10000);
+    expect(activations(game)).toHaveLength(0);
+    game.pass();
+    expect(currentPower(game.state, "p1", "barbell", false)).toBe(7000);
+  });
+});
