@@ -157,6 +157,33 @@ const LISTS: Record<string, DeckManifest> = {
       "ST13-011": 1,
     },
   },
+  // Yellow OP05-098 Enel built for the OP-17 field, supplied as a card list by
+  // the maintainer on 28 Sep 2026 without an event or pilot. It was the
+  // Leader's Community list until the TCG Match Making OP17.5 #3 build the
+  // model wins more with replaced it there; it stays here under its old id
+  // because the meta field (`meta-decks.txt`), checkpoints and its variants
+  // name it.
+  "(Yellow) Enel - Open OPTCG": {
+    id: "(Yellow) Enel - Open OPTCG",
+    format: "standard",
+    leader: "OP05-098",
+    cards: {
+      "EB01-056": 2,
+      "OP11-106": 4,
+      "OP17-107": 4,
+      "OP17-109": 4,
+      "OP15-113": 4,
+      "OP17-102": 4,
+      "EB04-058": 4,
+      "OP17-106": 3,
+      "OP17-114": 3,
+      "OP16-119": 4,
+      "OP17-112": 4,
+      "OP06-115": 4,
+      "EB01-059": 4,
+      "OP06-117": 2,
+    },
+  },
 };
 
 /**

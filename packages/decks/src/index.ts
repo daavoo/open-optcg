@@ -19,7 +19,6 @@ import { op11KobyTournamentManifest } from "./op11-koby-tournament-manifest.js";
 import { op16AceOpenManifest } from "./op16-ace-open-manifest.js";
 import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
 import { op08PuddingManifest } from "./op08-pudding-manifest.js";
-import { op05EnelOpenManifest } from "./op05-enel-open-manifest.js";
 import { op12ZoroManifest } from "./op12-zoro-manifest.js";
 import { op16AceManifest } from "./op16-ace-manifest.js";
 import { op06YamatoManifest } from "./op06-yamato-manifest.js";
@@ -54,6 +53,12 @@ import { op12KoalaTournamentManifest } from "./op12-koala-tournament-manifest.js
 import { op14MoriaTournamentManifest } from "./op14-moria-tournament-manifest.js";
 import { op17ShanksTournamentManifest } from "./op17-shanks-tournament-manifest.js";
 import { op15EnelTournamentManifest } from "./op15-enel-tournament-manifest.js";
+import { op12RayleighTournamentManifest } from "./op12-rayleigh-tournament-manifest.js";
+import { eb04BonneyTournamentManifest } from "./eb04-bonney-tournament-manifest.js";
+import { op14JinbeTournamentManifest } from "./op14-jinbe-tournament-manifest.js";
+import { op13AceTournamentManifest } from "./op13-ace-tournament-manifest.js";
+import { op05EnelTcgmmManifest } from "./op05-enel-tcgmm-manifest.js";
+import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -325,7 +330,6 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red) Portgas.D.Ace - Open OPTCG",
   "(Blue) Rocks.D.Xebec - Open OPTCG",
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG",
-  "(Yellow) Enel - Open OPTCG",
   "(Green) Roronoa Zoro - OP17 Post-Ban List",
   "(Blue) Kuzan - 1st Place Bandai Hiroshima",
   "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle",
@@ -350,6 +354,12 @@ export const TOURNAMENT_DECK_IDS = [
   "(Black/Yellow) Gecko Moria - 5th Place ChinoizeCup #120",
   "(Green) Shanks - 16th Place Rumble League #9",
   "(Purple) Enel - 1st Place Store Battle 2026-04-11",
+  "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124",
+  "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104",
+  "(Blue) Jinbe - 11th Place ChinoizeCup #120",
+  "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01",
+  "(Yellow) Enel - TCG Match Making OP17.5 #3",
+  "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -491,7 +501,6 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
   "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingManifest,
-  "(Yellow) Enel - Open OPTCG": op05EnelOpenManifest,
   "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroManifest,
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentManifest,
   "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle":
@@ -532,6 +541,16 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Green) Shanks - 16th Place Rumble League #9": op17ShanksTournamentManifest,
   "(Purple) Enel - 1st Place Store Battle 2026-04-11":
     op15EnelTournamentManifest,
+  "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124":
+    op12RayleighTournamentManifest,
+  "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104":
+    eb04BonneyTournamentManifest,
+  "(Blue) Jinbe - 11th Place ChinoizeCup #120": op14JinbeTournamentManifest,
+  "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01":
+    op13AceTournamentManifest,
+  "(Yellow) Enel - TCG Match Making OP17.5 #3": op05EnelTcgmmManifest,
+  "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25":
+    eb02LuffyTournamentManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {

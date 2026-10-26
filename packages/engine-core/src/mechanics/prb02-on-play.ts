@@ -71,9 +71,9 @@ export const prb02OnPlayMechanics: SetMechanics = {
       // clause names the pool the opponent will have once their Refresh Phase
       // and their two new DON!! have run, and so always costs them one.
       //
-      // `[Your Turn]` needs no gate of its own: a Character is played in its
-      // controller's Main Phase, so an `[On Play]` never resolves on the
-      // opponent's turn.
+      // `[Your Turn]` is checked: an effect such as OP13-023 Uta's [On K.O.]
+      // can play this Character from hand during the opponent's turn, and
+      // then the clause does nothing.
       "PRB02-005",
       {
         effect: {
@@ -81,6 +81,7 @@ export const prb02OnPlayMechanics: SetMechanics = {
           condition: {
             kind: "all-of",
             conditions: [
+              { kind: "turn-player", player: "self" },
               { kind: "leader-multicolored", player: "self" },
               {
                 kind: "field-don",

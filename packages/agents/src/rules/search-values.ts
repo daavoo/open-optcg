@@ -525,6 +525,22 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "EB02-041", // Merry Go -- draws a card on play
       "OP03-072", // Gum-Gum Jet Gatling
       "EB02-017", // Nami
+      // The Community list's own cards, after the feature deck's, which the
+      // order above was written for.
+      [
+        "OP07-064",
+        "OP08-036",
+        "OP09-078",
+        "OP12-037",
+        "OP13-040",
+        "OP13-118",
+        "OP14-031",
+        "OP15-032",
+        "OP15-078",
+        "P-111",
+        "PRB02-005",
+        "PRB02-012",
+      ],
     ],
   },
   {

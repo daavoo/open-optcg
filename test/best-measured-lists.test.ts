@@ -78,6 +78,27 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Green) Shanks - Official Feature Deck",
   ],
   ["(Purple) Enel - 1st Place Store Battle 2026-04-11", null],
+  [
+    "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124",
+    "(Red) Silvers Rayleigh - Official Feature Deck",
+  ],
+  [
+    "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104",
+    "(Red/Yellow) Jewelry Bonney - Official Feature Deck",
+  ],
+  [
+    "(Blue) Jinbe - 11th Place ChinoizeCup #120",
+    "(Blue) Jinbe - Official Feature Deck",
+  ],
+  [
+    "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01",
+    "(Red/Blue) Portgas.D.Ace - Official Feature Deck",
+  ],
+  ["(Yellow) Enel - TCG Match Making OP17.5 #3", null],
+  [
+    "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
+    "(Green/Purple) Monkey.D.Luffy - Official Feature Deck",
+  ],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {
@@ -106,13 +127,14 @@ describe.each(LISTS)("%s", (list, other) => {
 });
 
 describe("the Community lists the new builds replace", () => {
-  // Two Leaders already had a Community list, and a shelf with two lists of
+  // Three Leaders already had a Community list, and a shelf with two lists of
   // one Leader would be two identical tiles. The old lists leave the catalog
   // and stay training lists under their ids, which the meta field,
   // checkpoints and their variants name.
   it.each([
     ["(Purple) Enel - 1st Place EU Championship 26-27 S1", "OP15-058"],
     ["(Yellow) Vegapunk - 1st Place Store Battle", "OP07-097"],
+    ["(Yellow) Enel - Open OPTCG", "OP05-098"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();
