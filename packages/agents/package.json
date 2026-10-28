@@ -38,7 +38,7 @@
     "@one-piece-sim/decks": "workspace:*",
     "@one-piece-sim/engine-core": "workspace:*",
     "@one-piece-sim/protocol": "workspace:*",
-    "openai": "^7.38.0"
+    "openai": "^7.43.0"
   },
   "license": "MIT"
 }
