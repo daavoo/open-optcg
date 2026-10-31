@@ -59,6 +59,8 @@ import { op14JinbeTournamentManifest } from "./op14-jinbe-tournament-manifest.js
 import { op13AceTournamentManifest } from "./op13-ace-tournament-manifest.js";
 import { op05EnelTcgmmManifest } from "./op05-enel-tcgmm-manifest.js";
 import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js";
+import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
+import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -360,6 +362,8 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01",
   "(Yellow) Enel - TCG Match Making OP17.5 #3",
   "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
+  "(Green) Jinbe - 1st Place Shop Event 2026-09-16",
+  "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -551,6 +555,10 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Yellow) Enel - TCG Match Making OP17.5 #3": op05EnelTcgmmManifest,
   "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25":
     eb02LuffyTournamentManifest,
+  "(Green) Jinbe - 1st Place Shop Event 2026-09-16":
+    op11JinbeTournamentManifest,
+  "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
+    op09LuffyTournamentManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {

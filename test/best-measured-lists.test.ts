@@ -99,6 +99,14 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
     "(Green/Purple) Monkey.D.Luffy - Official Feature Deck",
   ],
+  [
+    "(Green) Jinbe - 1st Place Shop Event 2026-09-16",
+    "(Green) Jinbe - Official Feature Deck",
+  ],
+  [
+    "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
+    "(Purple/Black) Monkey.D.Luffy - Starter Deck 26",
+  ],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {

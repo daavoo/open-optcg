@@ -560,6 +560,21 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP11-038", // Gum-Gum Elephant Gatling
       "OP11-030", // Shirahoshi
       "OP11-032", // Surume
+      // The Community list's own cards, after the feature deck's, which the
+      // order above was written for.
+      [
+        "EB04-015",
+        "EB04-018",
+        "EB04-020",
+        "OP06-025",
+        "OP06-033",
+        "OP07-026",
+        "OP14-031",
+        "OP15-023",
+        "OP15-032",
+        "OP17-022",
+        "OP17-029",
+      ],
     ],
   },
 ];

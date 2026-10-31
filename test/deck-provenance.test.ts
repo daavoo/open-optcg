@@ -144,8 +144,9 @@ describe("deck provenance rows", () => {
     // Vegapunk lists they replace on the Community shelf take 36 away. The
     // OP-14 Green Mihawk list (16) went with its Leader's ban. The
     // best-measured lists for six more Leaders add 96, and the Yellow Enel
-    // Open OPTCG list one of them replaces takes 15 away.
-    expect(communityDeckCardRows).toHaveLength(1286);
+    // Open OPTCG list one of them replaces takes 15 away. The best-measured
+    // lists for Green Jinbe and Purple/Black Luffy add 32.
+    expect(communityDeckCardRows).toHaveLength(1318);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -215,7 +216,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(89);
+    expect(reports).toHaveLength(91);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
