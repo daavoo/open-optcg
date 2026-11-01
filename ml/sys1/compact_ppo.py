@@ -289,6 +289,7 @@ class Rollouts:
         teachers: dict[str, object] | None = None,
         variants: dict[str, list[str]] | None = None, variant_share: float = 0.0,
         schedule: int = 0, midgame: float = 0.0, midgame_turns: tuple[int, int] = (3, 9),
+        restarts: float = 0.0, restart_band: tuple[float, float] = (0.2, 0.4), restart_bank: int = 4096,
     ):
         self.env, self.concurrent, self.workers, self.rules, self.rng, self.seed = env, concurrent, workers, rules, rng, seed
         self.league, self.league_share = league, league_share if league else 0.0
@@ -319,6 +320,21 @@ class Rollouts:
         # `midgame_turns`, and the learner takes over there, in positions its
         # own play would not have steered to.
         self.midgame, self.midgame_turns = midgame, midgame_turns
+        # A share of games restart from a position a learner seat went on to
+        # lose (`--restarts`), self-play from there with the hidden cards
+        # reshuffled. A position is banked where the seat's own value put its
+        # chance at `restart_band`: behind but not yet lost, so a win from it
+        # is a comeback the critic did not expect, and the advantage pays it
+        # without any reward of its own. Each banked position is played once.
+        # A resumed run starts with an empty bank, which refills in minutes.
+        self.restarts, self.restart_band, self.restart_bank = restarts, restart_band, restart_bank
+        self.bank: list[dict] = []
+        # (slot, seat) -> (step, value) at each restartable learner decision
+        self.marks: dict[tuple[int, str], list[tuple[int, float]]] = {}
+        # slot -> the spec of a game whose positions may be banked
+        self.played: dict[int, dict] = {}
+        # slot -> the seat that lost the position a restarted game began from
+        self.restarted: dict[int, str] = {}
         self.draws = bool(pilot or mirror or close or opponent_pilot or deck_weights or deck_power or teachers
                           or self.variant_share or schedule)
         # How often each deck is the learner's: weighted where it is piloted
@@ -376,6 +392,8 @@ class Rollouts:
         other seat is still played by the learner, but is trained on only if
         its deck is a pilot deck too.
         """
+        if slot not in self.upcoming and self.bank and self.rng.random() < self.restarts:
+            self.upcoming[slot] = self.restart(slot)
         if slot not in self.upcoming:
             draw = self.rng.random()
             if draw < self.rules + self.league_share or self.draws:
@@ -418,9 +436,40 @@ class Rollouts:
                 low, high = self.midgame_turns
                 spec["opening"] = int(self.rng.integers(low, high + 1))
                 self.results["midgame_games"] = self.results.get("midgame_games", 0) + 1
+            if self.restarts and kind != "rules":
+                spec["replayable"] = True
             self.generation[slot] += 1
             self.upcoming[slot] = {"seats": seats, "spec": spec, "kind": kind, "opponent": opponent, "pairing": pairing}
         return self.upcoming[slot]
+
+    def restart(self, slot: int) -> dict:
+        """A banked position, taken out of the bank, as the next game in `slot`."""
+        index = int(self.rng.integers(len(self.bank)))
+        entry = self.bank[index]
+        self.bank[index] = self.bank[-1]
+        self.bank.pop()
+        spec = {"id": slot, "p1": entry["p1"], "p2": entry["p2"], "rules": "none", "seed": entry["seed"],
+                "replay": entry["taken"], "reshuffle": f"{self.seed}-{slot}-{self.generation[slot]}"}
+        self.generation[slot] += 1
+        seats = {"p1", "p2"}
+        if self.pilot:
+            seats = {seat for seat in seats if self.base_of.get(entry[seat], entry[seat]) in self.pilot}
+        return {"seats": seats, "spec": spec, "kind": "self", "opponent": None, "pairing": None,
+                "restart": entry["loser"]}
+
+    def bank_position(self, seat: str, marks: list[tuple[int, float]], spec: dict, taken: list[str]) -> None:
+        """Bank one of `seat`'s positions in the game it lost, where it was behind."""
+        low, high = self.restart_band
+        steps = [step for step, value in marks if low <= (value + 1) / 2 <= high]
+        if not steps:
+            return
+        step = steps[int(self.rng.integers(len(steps)))]
+        entry = {"p1": spec["p1"], "p2": spec["p2"], "seed": spec["seed"], "taken": taken[:step], "loser": seat}
+        if len(self.bank) < self.restart_bank:
+            self.bank.append(entry)
+        else:
+            self.bank[int(self.rng.integers(len(self.bank)))] = entry
+        self.results["banked"] = self.results.get("banked", 0) + 1
 
     def pilot_probs(self) -> np.ndarray | None:
         if not self.deck_power:
@@ -492,7 +541,13 @@ class Rollouts:
         """The slot's upcoming game has started: its seats and trajectories begin."""
         upcoming = self.upcoming.pop(slot)
         self.learner[slot] = upcoming["seats"]
-        self.game[slot] = upcoming["spec"]["seed"]
+        # A restarted game shares its seed with the game it came from; its
+        # reshuffle tells the two apart.
+        self.game[slot] = upcoming["spec"].get("reshuffle", upcoming["spec"]["seed"])
+        if upcoming.get("restart"):
+            self.restarted[slot] = upcoming["restart"]
+        if upcoming["spec"].get("replayable"):
+            self.played[slot] = upcoming["spec"]
         self.kind[slot] = upcoming["kind"]
         played = {seat: upcoming["spec"][seat] for seat in ("p1", "p2")}
         self.decks[slot] = {seat: self.base_of.get(deck, deck) for seat, deck in played.items()}
@@ -530,8 +585,21 @@ class Rollouts:
             if slot in self.varied:
                 self.varied.discard(slot)
                 self.results["variant_games"] += 1
-            if "failed" not in r and not r["truncated"]:
+            restarted = self.restarted.pop(slot, None)
+            played = self.played.pop(slot, None)
+            marks = {seat: self.marks.pop((slot, seat), None) for seat in ("p1", "p2")}
+            clean = "failed" not in r and not r["truncated"] and r["winner"] is not None
+            # A restarted game's result says how its position was dealt, not
+            # how the decks fare.
+            if clean and not restarted:
                 self.record_decks(decks, r["winner"])
+            if clean and restarted:
+                self.results["restart_games"] = self.results.get("restart_games", 0) + 1
+                self.results["restart_flipped"] = self.results.get("restart_flipped", 0) + int(r["winner"] == restarted)
+            if clean and played and "taken" in r:
+                for seat in seats:
+                    if r["winner"] != seat and marks[seat]:
+                        self.bank_position(seat, marks[seat], played, r["taken"])
             opponent = self.opponent.pop(slot, None)
             pairing = self.pairing.pop(slot, None)
             if pairing:
@@ -614,6 +682,8 @@ class Rollouts:
                     actions[r["id"]] = action
                     nexts[r["id"]] = self.next_spec(r["id"])["spec"]
                     if chooser is policy and r["seat"] in self.learner[r["id"]]:
+                        if "step" in r and r["turn"] >= 3:
+                            self.marks.setdefault((r["id"], r["seat"]), []).append((r["step"], float(v)))
                         hidden = {"hidden": np.asarray(r["privileged"], dtype=np.float32)[list(HIDDEN_INDICES)]} if "privileged" in r else {}
                         self.steps[(r["id"], r["seat"])].append({**hidden,
                             "compact": r["compact"], "seat": r["seat"], "game_seed": self.game[r["id"]], "deck": self.decks[r["id"]][r["seat"]], "chosen": action, "old_logp": float(np.log(max(p[action] / cumulative[-1], 1e-12))),
@@ -763,7 +833,8 @@ def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarr
 # weights saved have the shape `--lora` and `--aux-hidden` give the model, and
 # the league is restored rather than rebuilt from `--league-seed`.
 RESUME_ARGS = ("init", "out", "iterations", "lr", "lr_final", "lr_schedule", "lr_div", "warmup", "kick", "kick_final",
-               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed", "schedule", "midgame")
+               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed", "schedule", "midgame",
+               "restarts")
 
 
 def resume_identity(args: argparse.Namespace, schedule: str, lr_final: float) -> dict:
@@ -776,6 +847,8 @@ def resume_identity(args: argparse.Namespace, schedule: str, lr_final: float) ->
         del values["schedule"]
     if not args.midgame:
         del values["midgame"]
+    if not args.restarts:
+        del values["restarts"]
     values.update(lr_schedule=schedule, lr_final=lr_final, init=str(Path(args.init).resolve()),
                   out=str(Path(args.out).resolve()), league_seed=[str(Path(p).resolve()) for p in args.league_seed])
     return values
@@ -891,6 +964,14 @@ def main() -> None:
         "taking over at a turn drawn from --midgame-turns",
     )
     parser.add_argument("--midgame-turns", type=int, nargs=2, default=[3, 9], metavar=("FIRST", "LAST"))
+    parser.add_argument(
+        "--restarts", type=float, default=0.0,
+        help="share of games that restart, as self-play with the hidden cards reshuffled, from a position a "
+        "learner seat went on to lose while its value put it inside --restart-band",
+    )
+    parser.add_argument("--restart-band", type=float, nargs=2, default=[0.2, 0.4], metavar=("LOW", "HIGH"),
+                        help="the win chance, from the seat's own value, of a position worth restarting from")
+    parser.add_argument("--restart-bank", type=int, default=4096, help="positions the restart bank holds")
     parser.add_argument("--kick", type=float, default=1.0, help="weight of the --teacher cross-entropy")
     parser.add_argument(
         "--kick-final", type=float, default=None,
@@ -1096,7 +1177,8 @@ def main() -> None:
                         deck_weights=json.loads(Path(args.deck_weights).read_text()) if args.deck_weights else None,
                         matchup_power=args.matchup_power, deck_power=args.deck_power, teachers=teachers,
                         variants=deck_variants(env) if args.variant_share else None, variant_share=args.variant_share,
-                        schedule=args.schedule, midgame=args.midgame, midgame_turns=tuple(args.midgame_turns))
+                        schedule=args.schedule, midgame=args.midgame, midgame_turns=tuple(args.midgame_turns),
+                        restarts=args.restarts, restart_band=tuple(args.restart_band), restart_bank=args.restart_bank)
 
     # Everything that carries from one iteration to the next, so a run that
     # stops and resumes is the run that did not: the weights, the optimizer's

@@ -11,6 +11,7 @@
  *
  *   -> {"cmd":"reset","games":[{"id":0,"p1":"<deck id>","p2":"<deck id>","seed":"s","rules":"p2"}]}
  *   -> {"cmd":"reset","games":[{"id":0,"p1":"..","p2":"..","seed":"s","opening":6}]}
+ *   -> {"cmd":"reset","games":[{"id":0,"p1":"..","p2":"..","seed":"s","replay":["..",".."],"reshuffle":"t"}]}
  *   -> {"cmd":"step","actions":[{"id":0,"action":3,"next":{"id":0,...reset spec}}]}
  *   <- {"results":[{"id":0,"seat":"p1","state":"..","actions":[..],"done":false}, ...]}
  *
@@ -30,6 +31,14 @@
  * header, with the offered list on each decision Python made, so a caller can
  * join what its model thought onto the move. The trace carries the game's
  * `timeLimit`, which the header's config needs for the app to replay it.
+ *
+ * A game reset with `"replayable": true` reports `taken` when it ends, every
+ * action id in order, and each of its decisions carries `step`, how many of
+ * those had been taken -- present only where the game can be restarted from
+ * (`restartable`). A reset with `replay` plays those action ids from the
+ * seed before handing the game over, and with `reshuffle` then reorders what
+ * neither player can see (`reshuffleHidden`): a lost position played again
+ * without the draws that lost it.
  */
 import { writeFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
@@ -46,6 +55,8 @@ import {
 import { acceptsSimulator, type Agent } from "@one-piece-sim/agents/local";
 import {
   STANDARD_TIME_LIMIT,
+  seedRng,
+  shuffle,
   type LegalAction,
   type PlayerId,
 } from "@one-piece-sim/protocol";
@@ -279,6 +290,11 @@ interface ResetSpec {
    * from a position the learner's own play would not have steered to.
    */
   opening?: number;
+  replayable?: boolean;
+  /** Action ids played from the seed before Python takes the game. */
+  replay?: string[];
+  /** Seeds `reshuffleHidden` once `replay` is played. */
+  reshuffle?: string;
 }
 
 const games = new Map<number, Game>();
@@ -345,6 +361,10 @@ async function advance(id: number, game: Game) {
       continue;
     }
     game.pending = offered;
+    const at =
+      game.spec.replayable && restartable(game.state)
+        ? { step: game.taken.length }
+        : {};
     const [primary, ...others] = RENDERS.map((version) => {
       const rendered = renderDecision(observation, version);
       return {
@@ -357,6 +377,7 @@ async function advance(id: number, game: Game) {
       id,
       seat,
       turn: observation.turn,
+      ...at,
       ...(primary
         ? {
             render: primary.version,
@@ -404,6 +425,7 @@ async function advance(id: number, game: Game) {
     truncated,
     ...(truncated ? { capped: game.state.turnPlayerId } : {}),
     turn: game.state.turn,
+    ...(game.spec.replayable ? { taken: game.taken } : {}),
     ...(game.log
       ? {
           trace: {
@@ -455,7 +477,55 @@ async function reset(spec: ResetSpec) {
     taken: [],
   };
   games.set(spec.id, game);
+  for (const actionId of spec.replay ?? []) {
+    const offer = observe(
+      game.state,
+      game.state.activePlayer,
+    ).legalActions.find((action) => action.actionId === actionId);
+    if (!offer) throw new Error(`replay: ${actionId} is not offered`);
+    act(game, offer);
+  }
+  if (spec.reshuffle) game.state = reshuffleHidden(game.state, spec.reshuffle);
   return { ...(await advance(spec.id, game)), p1, p2 };
+}
+
+/**
+ * Nothing is mid-resolution: no effect is waiting on a choice, so no card the
+ * engine holds by its place in a deck or Life could be moved by
+ * `reshuffleHidden`.
+ */
+function restartable(state: GameState): boolean {
+  return (
+    state.pendingEffect === null &&
+    !state.pendingContinuations?.length &&
+    !state.pendingDamageReactions?.length
+  );
+}
+
+/**
+ * Both decks and the face-down Life cards in a new order, and a new seed for
+ * whatever the engine draws at random from here. Neither player can see any
+ * of them, so every order is one the game could have reached; a card an
+ * effect put on top or at the bottom loses the place its owner knew.
+ */
+function reshuffleHidden(state: GameState, salt: string): GameState {
+  let rng = seedRng(salt);
+  const players = { ...state.players };
+  for (const seat of ["p1", "p2"] as const) {
+    const player = state.players[seat];
+    const deck = shuffle(player.deck, rng);
+    const hidden = shuffle(
+      player.life.filter((card) => !card.faceUp),
+      deck.state,
+    );
+    rng = hidden.state;
+    let next = 0;
+    const life = player.life.map((card) =>
+      card.faceUp ? card : hidden.items[next++]!,
+    );
+    players[seat] = { ...player, deck: deck.items, life };
+  }
+  return { ...state, players, rngState: rng };
 }
 
 const deckLists = new Map<string, Record<string, number>>();
