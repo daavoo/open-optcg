@@ -288,7 +288,7 @@ class Rollouts:
         deck_weights: dict[str, float] | None = None, matchup_power: float = 0.0, deck_power: float = 0.0,
         teachers: dict[str, object] | None = None,
         variants: dict[str, list[str]] | None = None, variant_share: float = 0.0,
-        schedule: int = 0,
+        schedule: int = 0, midgame: float = 0.0, midgame_turns: tuple[int, int] = (3, 9),
     ):
         self.env, self.concurrent, self.workers, self.rules, self.rng, self.seed = env, concurrent, workers, rules, rng, seed
         self.league, self.league_share = league, league_share if league else 0.0
@@ -314,6 +314,11 @@ class Rollouts:
         self.base_of = {v: base for base, ids in self.variants.items() for v in ids}
         # Slots whose game in flight plays a variant, counted when it ends.
         self.varied: set[int] = set()
+        # A share of self-play and league games start mid-way (`--midgame`):
+        # both seats' rules agents play the opening up to a turn drawn from
+        # `midgame_turns`, and the learner takes over there, in positions its
+        # own play would not have steered to.
+        self.midgame, self.midgame_turns = midgame, midgame_turns
         self.draws = bool(pilot or mirror or close or opponent_pilot or deck_weights or deck_power or teachers
                           or self.variant_share or schedule)
         # How often each deck is the learner's: weighted where it is piloted
@@ -409,6 +414,10 @@ class Rollouts:
             if self.variant_share:
                 decks = {seat: self.vary(deck) for seat, deck in decks.items()}
             spec = {"id": slot, **decks, "rules": rules, "seed": f"{self.seed}-{slot}-{self.generation[slot]}"}
+            if self.midgame and kind != "rules" and self.rng.random() < self.midgame:
+                low, high = self.midgame_turns
+                spec["opening"] = int(self.rng.integers(low, high + 1))
+                self.results["midgame_games"] = self.results.get("midgame_games", 0) + 1
             self.generation[slot] += 1
             self.upcoming[slot] = {"seats": seats, "spec": spec, "kind": kind, "opponent": opponent, "pairing": pairing}
         return self.upcoming[slot]
@@ -754,7 +763,7 @@ def normalised(adv: np.ndarray, records: list[dict], per_deck: bool) -> np.ndarr
 # weights saved have the shape `--lora` and `--aux-hidden` give the model, and
 # the league is restored rather than rebuilt from `--league-seed`.
 RESUME_ARGS = ("init", "out", "iterations", "lr", "lr_final", "lr_schedule", "lr_div", "warmup", "kick", "kick_final",
-               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed", "schedule")
+               "concurrent", "lora", "lora_alpha", "aux_hidden", "league", "league_seed", "schedule", "midgame")
 
 
 def resume_identity(args: argparse.Namespace, schedule: str, lr_final: float) -> dict:
@@ -765,6 +774,8 @@ def resume_identity(args: argparse.Namespace, schedule: str, lr_final: float) ->
         # Recorded only for a scheduled run: a run from before the flag
         # existed resumes as it would have.
         del values["schedule"]
+    if not args.midgame:
+        del values["midgame"]
     values.update(lr_schedule=schedule, lr_final=lr_final, init=str(Path(args.init).resolve()),
                   out=str(Path(args.out).resolve()), league_seed=[str(Path(p).resolve()) for p in args.league_seed])
     return values
@@ -874,6 +885,12 @@ def main() -> None:
         "--variant-share", type=float, default=0.0,
         help="share of drawn decks played as one of their variants (bridge/deck-variants.ts), where a deck has any",
     )
+    parser.add_argument(
+        "--midgame", type=float, default=0.0,
+        help="share of self-play and league games whose opening both seats' rules agents play, the learner "
+        "taking over at a turn drawn from --midgame-turns",
+    )
+    parser.add_argument("--midgame-turns", type=int, nargs=2, default=[3, 9], metavar=("FIRST", "LAST"))
     parser.add_argument("--kick", type=float, default=1.0, help="weight of the --teacher cross-entropy")
     parser.add_argument(
         "--kick-final", type=float, default=None,
@@ -1079,7 +1096,7 @@ def main() -> None:
                         deck_weights=json.loads(Path(args.deck_weights).read_text()) if args.deck_weights else None,
                         matchup_power=args.matchup_power, deck_power=args.deck_power, teachers=teachers,
                         variants=deck_variants(env) if args.variant_share else None, variant_share=args.variant_share,
-                        schedule=args.schedule)
+                        schedule=args.schedule, midgame=args.midgame, midgame_turns=tuple(args.midgame_turns))
 
     # Everything that carries from one iteration to the next, so a run that
     # stops and resumes is the run that did not: the weights, the optimizer's

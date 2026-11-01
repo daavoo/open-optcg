@@ -10,6 +10,7 @@
  * against a snapshot is the same protocol with no in-process seat.
  *
  *   -> {"cmd":"reset","games":[{"id":0,"p1":"<deck id>","p2":"<deck id>","seed":"s","rules":"p2"}]}
+ *   -> {"cmd":"reset","games":[{"id":0,"p1":"..","p2":"..","seed":"s","opening":6}]}
  *   -> {"cmd":"step","actions":[{"id":0,"action":3,"next":{"id":0,...reset spec}}]}
  *   <- {"results":[{"id":0,"seat":"p1","state":"..","actions":[..],"done":false}, ...]}
  *
@@ -240,6 +241,8 @@ interface Game {
   state: GameState;
   actions: number;
   rules: Partial<Record<PlayerId, Agent>>;
+  /** Both seats' rules agents, for the turns before `spec.opening`. */
+  opening?: Record<PlayerId, Agent>;
   /** The actions offered to Python, in its index order: legal minus pruned. */
   pending: LegalAction[];
   /** Every action taken, when the game was reset with `record`. */
@@ -270,6 +273,12 @@ interface ResetSpec {
   /** Seats played in this process by their deck's rules agent. */
   rules?: PlayerId | "both" | "none";
   record?: boolean;
+  /**
+   * Both seats are played by their deck's rules agent until this turn
+   * begins, and Python takes the game from there: a game started mid-way,
+   * from a position the learner's own play would not have steered to.
+   */
+  opening?: number;
 }
 
 const games = new Map<number, Game>();
@@ -299,7 +308,11 @@ async function advance(id: number, game: Game) {
   while (game.state.phase !== "finished" && game.actions < MAX_ACTIONS) {
     const seat = game.state.activePlayer;
     const observation = observe(game.state, seat);
-    const agent = game.rules[seat];
+    const agent =
+      game.rules[seat] ??
+      (game.opening && game.state.turn < game.spec.opening!
+        ? game.opening[seat]
+        : undefined);
     markStep(game, agent ? `rules agent ${seat} choosing` : "offering");
     if (agent) {
       if (acceptsSimulator(agent)) {
@@ -428,6 +441,14 @@ async function reset(spec: ResetSpec) {
         createTrainingRulesAgent(seat === "p1" ? p1 : p2),
       ]),
     ),
+    ...(spec.opening
+      ? {
+          opening: {
+            p1: createTrainingRulesAgent(p1),
+            p2: createTrainingRulesAgent(p2),
+          },
+        }
+      : {}),
     pending: [],
     ...(spec.record ? { log: [] } : {}),
     spec: { ...spec, p1, p2, timeLimit: TRAINING_TIME_LIMIT },
