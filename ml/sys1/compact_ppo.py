@@ -290,6 +290,7 @@ class Rollouts:
         variants: dict[str, list[str]] | None = None, variant_share: float = 0.0,
         schedule: int = 0, midgame: float = 0.0, midgame_turns: tuple[int, int] = (3, 9),
         restarts: float = 0.0, restart_band: tuple[float, float] = (0.2, 0.4), restart_bank: int = 4096,
+        restart_opponent=None, restart_seat: str = "loser",
     ):
         self.env, self.concurrent, self.workers, self.rules, self.rng, self.seed = env, concurrent, workers, rules, rng, seed
         self.league, self.league_share = league, league_share if league else 0.0
@@ -327,7 +328,14 @@ class Rollouts:
         # is a comeback the critic did not expect, and the advantage pays it
         # without any reward of its own. Each banked position is played once.
         # A resumed run starts with an empty bank, which refills in minutes.
+        # With `restart_opponent`, a restart is not self-play: the learner
+        # takes one seat (`restart_seat`, the side that lost or the side that
+        # won) and that frozen policy the other, so the learner is measured
+        # and trained against an opponent that does not adapt with it -- an
+        # exploiter learning to come back against the main, or the main
+        # learning to close out against that exploiter.
         self.restarts, self.restart_band, self.restart_bank = restarts, restart_band, restart_bank
+        self.restart_opponent, self.restart_seat = restart_opponent, restart_seat
         self.bank: list[dict] = []
         # (slot, seat) -> (step, value) at each restartable learner decision
         self.marks: dict[tuple[int, str], list[tuple[int, float]]] = {}
@@ -370,7 +378,7 @@ class Rollouts:
         self.dead: list[int] = []
         # slot -> the seed of the game in it, carried on its decisions
         self.game: dict[int, str] = {}
-        # slot -> "self", "rules" or "league"
+        # slot -> "self", "rules", "league" or "restart"
         self.kind: dict[int, str] = {}
         # slot -> seat -> the deck id the spec named ("random": the server draws)
         self.decks: dict[int, dict[str, str]] = {}
@@ -451,10 +459,15 @@ class Rollouts:
         spec = {"id": slot, "p1": entry["p1"], "p2": entry["p2"], "rules": "none", "seed": entry["seed"],
                 "replay": entry["taken"], "reshuffle": f"{self.seed}-{slot}-{self.generation[slot]}"}
         self.generation[slot] += 1
-        seats = {"p1", "p2"}
+        seats, opponent = {"p1", "p2"}, None
+        if self.restart_opponent is not None:
+            winner = "p2" if entry["loser"] == "p1" else "p1"
+            mine = entry["loser"] if self.restart_seat == "loser" else winner
+            seats = {mine}
+            opponent = ("p2" if mine == "p1" else "p1", "restart-opponent", self.restart_opponent)
         if self.pilot:
             seats = {seat for seat in seats if self.base_of.get(entry[seat], entry[seat]) in self.pilot}
-        return {"seats": seats, "spec": spec, "kind": "self", "opponent": None, "pairing": None,
+        return {"seats": seats, "spec": spec, "kind": "restart", "opponent": opponent, "pairing": None,
                 "restart": entry["loser"]}
 
     def bank_position(self, seat: str, marks: list[tuple[int, float]], spec: dict, taken: list[str]) -> None:
@@ -596,6 +609,7 @@ class Rollouts:
             if clean and restarted:
                 self.results["restart_games"] = self.results.get("restart_games", 0) + 1
                 self.results["restart_flipped"] = self.results.get("restart_flipped", 0) + int(r["winner"] == restarted)
+                self.results["restart_won"] = self.results.get("restart_won", 0) + int(r["winner"] in seats)
             if clean and played and "taken" in r:
                 for seat in seats:
                     if r["winner"] != seat and marks[seat]:
@@ -612,7 +626,7 @@ class Rollouts:
                 self.results["truncated"] += int(truncated)
                 if kind == "self":
                     self.results["self_games"] += 1
-                else:
+                elif kind != "restart":
                     won = not truncated and r["winner"] in seats
                     self.results[f"{kind}_games"] += 1
                     self.results[f"{kind}_won"] += int(won)
@@ -972,6 +986,10 @@ def main() -> None:
     parser.add_argument("--restart-band", type=float, nargs=2, default=[0.2, 0.4], metavar=("LOW", "HIGH"),
                         help="the win chance, from the seat's own value, of a position worth restarting from")
     parser.add_argument("--restart-bank", type=int, default=4096, help="positions the restart bank holds")
+    parser.add_argument("--restart-opponent", default=None,
+                        help="a compact checkpoint that plays the other seat of every restart, instead of self-play")
+    parser.add_argument("--restart-seat", choices=("loser", "winner"), default="loser",
+                        help="with --restart-opponent: the learner's seat, the one that lost from there or the one that won")
     parser.add_argument("--kick", type=float, default=1.0, help="weight of the --teacher cross-entropy")
     parser.add_argument(
         "--kick-final", type=float, default=None,
@@ -1178,7 +1196,9 @@ def main() -> None:
                         matchup_power=args.matchup_power, deck_power=args.deck_power, teachers=teachers,
                         variants=deck_variants(env) if args.variant_share else None, variant_share=args.variant_share,
                         schedule=args.schedule, midgame=args.midgame, midgame_turns=tuple(args.midgame_turns),
-                        restarts=args.restarts, restart_band=tuple(args.restart_band), restart_bank=args.restart_bank)
+                        restarts=args.restarts, restart_band=tuple(args.restart_band), restart_bank=args.restart_bank,
+                        restart_opponent=CompactPolicy(Path(args.restart_opponent)) if args.restart_opponent else None,
+                        restart_seat=args.restart_seat)
 
     # Everything that carries from one iteration to the next, so a run that
     # stops and resumes is the run that did not: the weights, the optimizer's
