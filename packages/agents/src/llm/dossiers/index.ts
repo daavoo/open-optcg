@@ -101,6 +101,7 @@ import { op05EnelTcgmmDossier } from "./op05-enel-tcgmm.js";
 import { eb02LuffyTournamentDossier } from "./eb02-luffy-tournament.js";
 import { op11JinbeTournamentDossier } from "./op11-jinbe-tournament.js";
 import { op09LuffyTournamentDossier } from "./op09-luffy-tournament.js";
+import { st21LuffyOpenDossier } from "./st21-luffy-open.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 export type { DeckStrategyDossier } from "./types.js";
@@ -219,6 +220,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16": op11JinbeTournamentDossier,
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
     op09LuffyTournamentDossier,
+  "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenDossier,
 };
 
 /**

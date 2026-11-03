@@ -66,6 +66,7 @@ import { op05EnelTcgmmManifest } from "./op05-enel-tcgmm-manifest.js";
 import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js";
 import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
+import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -302,6 +303,7 @@ export type CommunityDeckId =
   | "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25"
   | "(Green) Jinbe - 1st Place Shop Event 2026-09-16"
   | "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13"
+  | "(Red) Monkey.D.Luffy - Open OPTCG"
   /**
    * Bandai's ST-18 precon, whose Leader is the OP05-060 reprint. Same standing
    * as ST-26 below: off a Bandai page rather than out of the ST31-36 loop, so
@@ -443,6 +445,7 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op11JinbeTournamentManifest,
     "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
       op09LuffyTournamentManifest,
+    "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,
