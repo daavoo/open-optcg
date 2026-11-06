@@ -3,8 +3,8 @@ import { deckManifests, deckShelf, loadDeck } from "@one-piece-sim/decks";
 import { character, covers, instance, scenario } from "./support/index.js";
 
 /**
- * The 1st-place Store Battle Blue/Purple Vinsmoke Reiju list, played through
- * its own fifty.
+ * The Blue/Purple Vinsmoke Reiju Community list, the 2025-09-27 Regional
+ * build, played through its own fifty.
  *
  * Most of the list's clauses are driven in `test/op06.test.ts` and
  * `test/op07.test.ts`. What this file adds is the two {GERMA} searchers that no
@@ -13,7 +13,7 @@ import { character, covers, instance, scenario } from "./support/index.js";
  * on: a small sibling's DON!! −1 into its namesake, which the Leader turns into
  * a card.
  */
-const LIST = "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle";
+const LIST = "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27";
 const OPPONENT = "(Red) Monkey.D.Luffy - Starter Deck 31";
 /** OP12-081 Koala: a {Revolutionary Army} Leader, neither GERMA nor Vinsmoke. */
 const OTHER_LEADER = "OP12-081";
@@ -62,7 +62,7 @@ function answer(game: Game, ...preferred: string[]): void {
 const ids = (cards: readonly { instanceId: string }[]) =>
   cards.map((card) => card.instanceId);
 
-describe("the Store Battle Reiju list", () => {
+describe("the Regional Reiju list", () => {
   it("is a legal 50 under the OP06-042 Leader, shelved under Tournaments", () => {
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(deckManifests[LIST]?.leader).toBe("OP06-042");

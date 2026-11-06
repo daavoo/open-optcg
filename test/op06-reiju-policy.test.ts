@@ -14,7 +14,7 @@ import { character, instance, scenario } from "./support/index.js";
  * would have done as well as what the rule does.
  */
 
-const REIJU = "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle";
+const REIJU = "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP06-042";
