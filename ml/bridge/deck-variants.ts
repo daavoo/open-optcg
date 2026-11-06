@@ -2011,6 +2011,28 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
       "20th of 120 (5-2), [EB05] ChinoizeCup #125, 2026-10-20 (https://onepiecedecklists.com/decklists/rg-luffy/20th-solmyr-eb05-chinoizecup-125-tuesday.html)",
   },
   {
+    base: "(Red/Green) Monkey.D.Luffy - Open OPTCG",
+    label: "Miracle Luffy - EB05 Land of Wano",
+    cards: {
+      "EB01-013": 4,
+      "EB05-001": 4,
+      "OP01-055": 3,
+      "OP06-033": 4,
+      "OP07-022": 4,
+      "OP08-036": 2,
+      "OP12-023": 4,
+      "OP13-016": 4,
+      "OP13-031": 4,
+      "OP14-031": 4,
+      "OP17-022": 1,
+      "PRB02-003": 4,
+      "ST30-004": 4,
+      "ST32-002": 4,
+    },
+    source:
+      "OPTCG Web Sim's Miracle Luffy EB05 guide, updated 2026-11-05 (https://optcgwebsim.com/learn/miracle-luffy-eb05-guide/)",
+  },
+  {
     base: "(Blue) Buggy - 12th Place ChinoizeCup #124",
     label: "NikolayBaydanov - EB05 ChinoizeCup #124",
     cards: {
