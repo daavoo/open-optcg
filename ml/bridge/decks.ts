@@ -184,6 +184,37 @@ const LISTS: Record<string, DeckManifest> = {
       "OP06-117": 2,
     },
   },
+  // Blue/Purple OP06-042 Vinsmoke Reiju, 1st (4-0) for "TheKlet_OPTCG" at a
+  // Store Battle at goodgames (Australia) on 9 Jun 2025, off
+  // onepiecetopdecks.com's EB-02 page. It was the Leader's Community list until
+  // the 2025-09-27 Regional build the model wins more with replaced it there;
+  // it stays here under its old id because checkpoints and its variants name
+  // it. The event list's one OP06-047 Charlotte Pudding is on Bandai's banned
+  // list, and a training list is held to Standard, so its slot is a third
+  // OP06-063 Vinsmoke Sora.
+  "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle": {
+    id: "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle",
+    format: "standard",
+    leader: "OP06-042",
+    cards: {
+      "OP06-063": 3,
+      "OP10-063": 4,
+      "OP06-068": 4,
+      "OP07-066": 4,
+      "OP06-064": 2,
+      "OP07-072": 4,
+      "OP08-074": 4,
+      "OP06-060": 4,
+      "OP06-069": 4,
+      "OP06-065": 2,
+      "OP06-061": 4,
+      "OP06-062": 1,
+      "OP11-047": 4,
+      "OP11-045": 1,
+      "OP06-078": 1,
+      "OP06-079": 4,
+    },
+  },
 };
 
 /**

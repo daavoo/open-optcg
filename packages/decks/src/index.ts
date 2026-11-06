@@ -14,7 +14,7 @@ import { op13LuffyManifest } from "./op13-luffy-manifest.js";
 import { op17LuffyManifest } from "./op17-luffy-manifest.js";
 import { op17LuffyTournamentManifest } from "./op17-luffy-tournament-manifest.js";
 import { st33KuzanTournamentManifest } from "./st33-kuzan-tournament-manifest.js";
-import { op06ReijuTournamentManifest } from "./op06-reiju-tournament-manifest.js";
+import { op06ReijuRegionalManifest } from "./op06-reiju-regional-manifest.js";
 import { op11KobyTournamentManifest } from "./op11-koby-tournament-manifest.js";
 import { op16AceOpenManifest } from "./op16-ace-open-manifest.js";
 import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
@@ -61,6 +61,7 @@ import { op05EnelTcgmmManifest } from "./op05-enel-tcgmm-manifest.js";
 import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js";
 import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
+import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -334,7 +335,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG",
   "(Green) Roronoa Zoro - OP17 Post-Ban List",
   "(Blue) Kuzan - 1st Place Bandai Hiroshima",
-  "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle",
+  "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27",
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
   "(Blue) Buggy - 12th Place ChinoizeCup #124",
@@ -364,6 +365,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16",
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
+  "(Yellow) Charlotte Linlin - ChinoizeCup #121",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -507,8 +509,8 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingManifest,
   "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroManifest,
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentManifest,
-  "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle":
-    op06ReijuTournamentManifest,
+  "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27":
+    op06ReijuRegionalManifest,
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final":
     op11KobyTournamentManifest,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
@@ -559,6 +561,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op11JinbeTournamentManifest,
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
     op09LuffyTournamentManifest,
+  "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {
