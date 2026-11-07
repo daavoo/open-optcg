@@ -215,6 +215,60 @@ const LISTS: Record<string, DeckManifest> = {
       "OP06-079": 4,
     },
   },
+  // Red/Black OP13-004 Sabo in front of the OP-17 Elbaph shell, built from the
+  // top-placing gumgum.gg list of 26 Aug 2026 with its Block 1 red splash
+  // swapped for OP17-082 Sanji and OP17-091 Brook. It was the Leader's
+  // Community list until the PlayTCG EGB 2026-09-20 build the model wins more
+  // with replaced it there; it stays here under its old id because the meta
+  // field (`meta-decks.txt`), checkpoints and its variants name it.
+  "(Red/Black) Sabo - OP17 Elbaph List": {
+    id: "(Red/Black) Sabo - OP17 Elbaph List",
+    format: "standard",
+    leader: "OP13-004",
+    cards: {
+      "OP04-016": 3,
+      "OP17-082": 4,
+      "OP17-091": 4,
+      "OP15-094": 1,
+      "OP15-088": 4,
+      "OP17-084": 3,
+      "OP17-086": 4,
+      "OP17-080": 4,
+      "OP17-087": 3,
+      "OP17-095": 4,
+      "OP17-089": 4,
+      "OP17-093": 4,
+      "OP17-119": 4,
+      "OP17-098": 4,
+    },
+  },
+  // Purple OP15-058 Enel, 1st (6-0) for "Bloodya" at a Store Battle in
+  // Argentina on 11 Apr 2026, off onepiecetopdecks.com's OP-15/EB-04 page. It
+  // was the Leader's Community list until the 2026-08-25 ChinoizeCup build the
+  // model wins more with replaced it there; it stays here under its old id
+  // because checkpoints name it.
+  "(Purple) Enel - 1st Place Store Battle 2026-04-11": {
+    id: "(Purple) Enel - 1st Place Store Battle 2026-04-11",
+    format: "standard",
+    leader: "OP15-058",
+    cards: {
+      "OP07-064": 4,
+      "OP12-063": 3,
+      "OP12-071": 2,
+      "OP13-076": 1,
+      "OP15-060": 3,
+      "OP15-061": 4,
+      "OP15-066": 4,
+      "OP15-067": 4,
+      "OP15-071": 4,
+      "OP15-074": 2,
+      "OP15-075": 3,
+      "OP15-076": 4,
+      "OP15-077": 4,
+      "OP15-078": 4,
+      "OP15-118": 4,
+    },
+  },
   // Red/Green OP13-001 Monkey.D.Luffy, the Straw Hat DON!!-refresh list that
   // won the Malmo Regional (1st, 13-1, 22 Aug 2026), read off the `deckgen`
   // link on onepiecetopdecks.com's English OP-16 page. It was the Leader's

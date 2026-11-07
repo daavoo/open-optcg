@@ -77,7 +77,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Green) Shanks - 16th Place Rumble League #9",
     "(Green) Shanks - Official Feature Deck",
   ],
-  ["(Purple) Enel - 1st Place Store Battle 2026-04-11", null],
+  ["(Purple) Enel - 2nd Place ChinoizeCup 2026-08-25", null],
   [
     "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124",
     "(Red) Silvers Rayleigh - Official Feature Deck",
@@ -116,6 +116,10 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Yellow) Charlotte Linlin - ChinoizeCup #121",
     "(Yellow) Charlotte Linlin - Official Feature Deck",
   ],
+  [
+    "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+    "(Red/Black) Sabo - Starter Deck 35",
+  ],
   ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", null],
 ];
 
@@ -145,8 +149,8 @@ describe.each(LISTS)("%s", (list, other) => {
 });
 
 describe("the Community lists the new builds replace", () => {
-  // Five Leaders already had a Community list, and a shelf with two lists of
-  // one Leader would be two identical tiles. The old lists leave the catalog
+  // Each of these was its Leader's Community list, and a shelf with two lists
+  // of one Leader would be two identical tiles. The old lists leave the catalog
   // and stay training lists under their ids, which the meta field,
   // checkpoints and their variants name.
   it.each([
@@ -154,6 +158,8 @@ describe("the Community lists the new builds replace", () => {
     ["(Yellow) Vegapunk - 1st Place Store Battle", "OP07-097"],
     ["(Yellow) Enel - Open OPTCG", "OP05-098"],
     ["(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle", "OP06-042"],
+    ["(Purple) Enel - 1st Place Store Battle 2026-04-11", "OP15-058"],
+    ["(Red/Black) Sabo - OP17 Elbaph List", "OP13-004"],
     ["(Red/Green) Monkey.D.Luffy - Open OPTCG", "OP13-001"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);

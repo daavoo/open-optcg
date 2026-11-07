@@ -44,9 +44,10 @@ export const DECK_FORMATS: readonly DeckFormat[] = ["standard", "extra"];
  * Only `en` is stamped here, because Bandai's English cardlist is the only
  * primary source `tools/fetch-reference` reads. It is not an assumption that
  * every region shares it: the OP-17 RB Sabo list that surfaced this
- * (`op13-sabo-manifest.ts`) is scoped `/east/` on gumgum.gg and ran three Block
- * 1 cards, so either that region rotates later or the event was Extra. Adding a
- * region means adding a source for it, not relaxing this one.
+ * (now a training list in `ml/bridge/decks.ts`) is scoped `/east/` on
+ * gumgum.gg and ran three Block 1 cards, so either that region rotates later or
+ * the event was Extra. Adding a region means adding a source for it, not
+ * relaxing this one.
  */
 export type FormatRegion = "en";
 

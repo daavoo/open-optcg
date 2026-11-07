@@ -639,7 +639,7 @@ describe("inert activation detection", () => {
   function kongGun(opponentBoard: ReturnType<typeof character>[]) {
     return scenario()
       .decks(
-        "(Red/Black) Sabo - OP17 Elbaph List",
+        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("format-inert-kong")
@@ -817,7 +817,7 @@ describe("don-reservation: the last payable DON!! and the ability it completes",
   const lastPayableDon = (leaderAttached: number) =>
     scenario()
       .decks(
-        "(Red/Black) Sabo - OP17 Elbaph List",
+        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
         "(Green) Roronoa Zoro - Starter Deck 32",
       )
       .seed("don-reservation-aura")

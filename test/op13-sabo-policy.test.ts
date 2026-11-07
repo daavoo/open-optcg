@@ -15,7 +15,7 @@ import { character, copies, instance, scenario } from "./support/index.js";
  * back. A benchmark cannot tell that apart from a deck that is merely weak,
  * which is why it is pinned here as behaviour.
  */
-const ELBAPH = "(Red/Black) Sabo - OP17 Elbaph List";
+const ELBAPH = "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20";
 const ST35 = "(Red/Black) Sabo - Starter Deck 35";
 const OPPONENT = "(Green) Roronoa Zoro - Starter Deck 32";
 

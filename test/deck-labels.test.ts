@@ -53,9 +53,9 @@ describe("deck labels", () => {
     // Every shipped list is Standard now, and the leader line is where a
     // player reads that rather than assuming it. A saved deck built for Extra
     // says so in the same place.
-    expect(deckLeaderLine("(Red/Black) Sabo - OP17 Elbaph List", {})).toContain(
-      "Standard",
-    );
+    expect(
+      deckLeaderLine("(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20", {}),
+    ).toContain("Standard");
     expect(
       deckLeaderLine("CUSTOM-extra", {
         "CUSTOM-extra": {

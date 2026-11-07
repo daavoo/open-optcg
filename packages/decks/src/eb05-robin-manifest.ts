@@ -10,8 +10,9 @@ import type { DeckManifest } from "./index.js";
  * https://opdeckguide.com/deck-guides/nico-robin-eb05/ -- both retrieved
  * 23 Oct 2026. Thornberry Media's 13 Oct early build describes the same core.
  *
- * Pre-release, like the OP-17 Elbaph Sabo list (`op13-sabo-manifest.ts`): EB-05
- * reaches English shelves on 30 Oct 2026, so the id names the format and the
+ * Pre-release, like the OP-17 Elbaph Sabo list (now a training list in
+ * `ml/bridge/decks.ts`): EB-05 reaches English shelves on 30 Oct 2026, so the
+ * id names the format and the
  * archetype rather than a placing. Why this list rather than a placed one: the
  * only EB05-010 list with a top-eight finish so far is 2nd of 24 at an online
  * league, a small event, and it is a different deck -- the OP-17 yellow Big

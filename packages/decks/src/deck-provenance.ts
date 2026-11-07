@@ -10,7 +10,7 @@ import { op16EnelManifest } from "./op16-enel-manifest.js";
 import { op16NamiManifest } from "./op16-nami-manifest.js";
 import { op16SengokuManifest } from "./op16-sengoku-manifest.js";
 import { op16TeachManifest } from "./op16-teach-manifest.js";
-import { op13SaboManifest } from "./op13-sabo-manifest.js";
+import { op13SaboTournamentManifest } from "./op13-sabo-tournament-manifest.js";
 import { op17ShanksManifest } from "./op17-shanks-manifest.js";
 import { op17XebecManifest } from "./op17-xebec-manifest.js";
 import { op17KaidoManifest } from "./op17-kaido-manifest.js";
@@ -56,7 +56,7 @@ import { op14DoflamingoTournamentManifest } from "./op14-doflamingo-tournament-m
 import { op12KoalaTournamentManifest } from "./op12-koala-tournament-manifest.js";
 import { op14MoriaTournamentManifest } from "./op14-moria-tournament-manifest.js";
 import { op17ShanksTournamentManifest } from "./op17-shanks-tournament-manifest.js";
-import { op15EnelTournamentManifest } from "./op15-enel-tournament-manifest.js";
+import { op15EnelChinoizeManifest } from "./op15-enel-chinoize-manifest.js";
 import { op12RayleighTournamentManifest } from "./op12-rayleigh-tournament-manifest.js";
 import { eb04BonneyTournamentManifest } from "./eb04-bonney-tournament-manifest.js";
 import { op14JinbeTournamentManifest } from "./op14-jinbe-tournament-manifest.js";
@@ -163,7 +163,7 @@ export type CommunityDeckId =
   | "(Blue/Yellow) Nami - Official Feature Deck"
   | "(Black/Yellow) Marshall.D.Teach - Official Feature Deck"
   | "(Purple) Enel - Official Feature Deck"
-  | "(Red/Black) Sabo - OP17 Elbaph List"
+  | "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20"
   | "(Green) Shanks - Official Feature Deck"
   | "(Blue) Rocks.D.Xebec - Official Feature Deck"
   | "(Black) Monkey.D.Luffy - Official Feature Deck"
@@ -290,7 +290,7 @@ export type CommunityDeckId =
   | "(Black/Yellow) Koala - 30th Place ChinoizeCup #113"
   | "(Black/Yellow) Gecko Moria - 5th Place ChinoizeCup #120"
   | "(Green) Shanks - 16th Place Rumble League #9"
-  | "(Purple) Enel - 1st Place Store Battle 2026-04-11"
+  | "(Purple) Enel - 2nd Place ChinoizeCup 2026-08-25"
   | "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124"
   | "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104"
   | "(Blue) Jinbe - 11th Place ChinoizeCup #120"
@@ -347,7 +347,8 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Black/Yellow) Marshall.D.Teach - Official Feature Deck":
       op16TeachManifest,
     "(Purple) Enel - Official Feature Deck": op16EnelManifest,
-    "(Red/Black) Sabo - OP17 Elbaph List": op13SaboManifest,
+    "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20":
+      op13SaboTournamentManifest,
     "(Green) Shanks - Official Feature Deck": op17ShanksManifest,
     "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecManifest,
     "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyManifest,
@@ -431,8 +432,8 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op14MoriaTournamentManifest,
     "(Green) Shanks - 16th Place Rumble League #9":
       op17ShanksTournamentManifest,
-    "(Purple) Enel - 1st Place Store Battle 2026-04-11":
-      op15EnelTournamentManifest,
+    "(Purple) Enel - 2nd Place ChinoizeCup 2026-08-25":
+      op15EnelChinoizeManifest,
     "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124":
       op12RayleighTournamentManifest,
     "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104":

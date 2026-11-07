@@ -1,0 +1,87 @@
+import type { DeckStrategyDossier } from "./types.js";
+
+export const op15EnelChinoizeDossier: DeckStrategyDossier = {
+  version: 1,
+  deckId: "(Purple) Enel - 2nd Place ChinoizeCup 2026-08-25",
+  archetype:
+    "Purple Enel DON!! ramp behind OP15-058: a six-card DON!! deck spent on turn 2 to arm a 1-cost body, Holly giving every Ohm [Double Attack], four removal-proof OP15-118 Enels, the 0-cost thunder Events as both removal and Counters, and Franky and Vinsmoke Reiju as the Blockers.",
+  gamePlan: [
+    "Turn 1, play a 1-cost body: Ohm first if you hold one, otherwise Shura or Charlotte Pudding. Ohm is the body Holly makes a two-damage attacker, so it is the one you want down before the Leader's gift arrives.",
+    "On your second turn, activate the Leader: it adds 1 active DON!! and 4 rested ones, then gives the 4 rested DON!! to one of your Characters. Give them to a body that can attack this turn. Given DON!! returns at Refresh, so a gift saved for next turn is a gift wasted.",
+    "OP15-071 Holly is the 3-cost play for turn 2 or 3. With Holly on the field every Ohm and Holly itself has [Double Attack], so the gift on an Ohm is a swing that takes two Life, and on the opponent's turn Holly and every Ohm sit at 6000 base power.",
+    "From six DON!! cast OP15-118 Enel: 10000 power while you have 6 or fewer DON!! on the field, and it cannot be removed by your opponent's effects under the same line. It has no [Rush]; its [On Play] pays DON!! −1 to look at 5 and take one, then trashes a card from your hand.",
+    "Once the DON!! deck is empty the ramp is done: cycle the 0-cost Events, hold Counters for the turn an Enel or Holly must survive, and keep attacking with the bodies that have swung since turn 2. OP10-067 Senor Pink returns a spent purple Event from the trash and sets a DON!! active.",
+    "Count the clock. This is not a grind deck; a turn that develops without attacking spends a turn of a short clock, and a Double Attack that connects is two Life for one attack.",
+  ],
+  mulligan: [
+    "Keep a Character the first two turns can pay for -- Ohm, Shura, Pudding or Holly -- with Events behind it. Ohm in the opening hand is the best keep, because it is the body Holly makes worth the gift.",
+    "Redraw a hand of only Events: with no Character on the field the Leader's activation gives its DON!! to no one.",
+    "OP15-118 Enel, Senor Pink and Franky are not keeps on their own: none can be the turn-2 gift target, and a hand of them and Events is slow.",
+  ],
+  priorities: [
+    "Attack every turn, and attack the Leader unless a Character is the better target. The deck wins on Life, and a Double Attack body kept home trades two Life you would have taken for at most one you might save.",
+    "The Leader attacks too. It is 5000 power and the attacker wins ties, so it connects into any 5000-power Leader with no DON!! spent on it.",
+    "Activate the Leader on turn 2 rather than saving it. The DON!! deck is six cards, so every turn of delay shortens the window in which the extra DON!! matter.",
+    "Give the 4 rested DON!! to a Character that can still attack this turn, and prefer an Ohm while Holly is on the field: the same power takes two Life instead of one. A newly played Enel cannot attack and should receive the gift only when nothing else can swing.",
+    "Keep the field at 6 or fewer DON!! cards. OP15-118 Enel's protection and +2000, Shura's [Rush], Ohm's [When Attacking] −1000 and Mamaragan's Counter draw all read that line.",
+    "Pay DON!! −N costs from the cost area, not from DON!! buying an attack this turn: attack with the armed body first, then cast the Events.",
+    "Charlotte Pudding looks at 4 for a [Sanji] or an Event, and this list runs no Sanji: it always takes an Event. Take a Counter Event when the hand is short of them, otherwise the removal.",
+    "Removal: OP05-077 Gamma Knife gives −5000 for DON!! −1, El Thor K.O.s a Character with 3000 power or less, Kiten and Ohm give −1000, Mamaragan rests a 5000-or-less body, and Lightning Dragon keeps a rested 6000-or-less body down through the opponent's Refresh. Spend them on a Blocker or a body that out-powers your attacker.",
+    "OP13-076 Divine Departure gives a Character −8000 for the turn by resting 5 DON!!, but only while you have DON!! given, so cast it after the gift and last in the Main Phase. Its Counter half trashes a card for +3000.",
+    "Hold Varie, El Thor and Kiten for the opponent's turn when the hand is short of Counters: each is +2000 on an [Enel] card -- your Leader or OP15-118 -- for 0 cost. Mamaragan is +1000 on anything and draws a card under the DON!! line.",
+    "Do not Counter with a Blocker. Franky and Reiju block every turn they stay on the field; Counter with the Events, then with the vassals. Reiju is 7000 power once 4 Events are in your trash.",
+    "Franky's [On Play] costs DON!! −2 and a card from hand to draw 2. Pay it on a turn the DON!! were not going to attack; Senor Pink's DON!! −1 is cheaper and buys back the Event you need most.",
+  ],
+  commonVariants: [
+    '"(Purple) Enel - 1st Place Store Battle 2026-04-11" plays four OP07-064 Sanji, three OP15-060 Enel and four OP15-066 Satori where this list plays Gamma Knife, Franky and Senor Pink, with fewer Pudding. Expect more Blockers and 6-cost bodies from it and less removal.',
+    "The EU Championship 26-27 S1 winning list runs ST10-010 Trafalgar Law and OP09-077 Gum-Gum Lightning, with fewer Holly and OP15-118, and no Vinsmoke Reiju.",
+    '"(Purple) Enel - Official Feature Deck", Bandai\'s build, runs Franky and Reiju as Blockers and no Holly. Against it, expect a finisher on turn 3 and a Blocker wall rather than Double Attack pressure.',
+  ],
+  commonCombos: [
+    "Holly plus an Ohm that receives the Leader's four rested DON!!: a [Double Attack] swing on turn 2 or 3 that takes two Life through a 5000-power Leader, with Ohm's [When Attacking] −1000 on the way in.",
+    "Holly on the opponent's turn: Holly and every Ohm sit at 6000 base power, so a 5000-power attack into them bounces.",
+    "Gamma Knife's −5000 then a gifted attacker: the Blocker or the big body in the way is out of the way for the turn.",
+    "OP15-118 Enel under the DON!! line: a removal-proof 10000-power body. It does not attack the turn it lands; on later turns it can take the gift and swing for more.",
+    "Divine Departure after the gift: with DON!! given to a Character, resting 5 DON!! gives an opposing Character −8000 for the turn.",
+    "Varie gives one of your Characters +2 cost until the end of the opponent's next End Phase, lifting Holly or an Ohm out of 'cost 3 or less' removal.",
+  ],
+  keyCardNumbers: [
+    "OP15-058",
+    "OP15-071",
+    "OP15-061",
+    "OP15-067",
+    "OP15-118",
+    "OP12-071",
+    "OP05-077",
+    "OP09-072",
+    "OP12-063",
+    "OP15-075",
+    "OP15-078",
+    "OP13-076",
+  ],
+  counterplay: [
+    "While Enel holds 6 or fewer DON!! cards, OP15-118 cannot be removed by effects. Answer it by racing, by blocking, or by forcing the DON!! count above six.",
+    "Holly is the card to remove. Without it every Ohm is a 2000-power body that takes one Life per swing; with it the gift takes two Life. Holly is a 4000-power Character on Enel's turn, in range of most removal.",
+    "The DON!! deck is six cards and gone early; pressure that survives the first turns meets a deck with no more ramp.",
+    "Their largest removal is Gamma Knife's −5000 and Divine Departure's −8000; a Character above 8000 power survives both.",
+    "Rested DON!! buy no Counter, so a turn where Enel gave 4 rested DON!! away is a turn with little active DON!! behind the Leader.",
+    "Enel's Life is 5; count the extra Life before committing to a race.",
+  ],
+  sources: [
+    {
+      url: "https://onepiecetopdecks.com/deck-list/english-op17-deck-list-the-worlds-strongest-warriors/",
+      retrievedAt: "2026-11-07",
+      note: 'The deck\'s own 50: entry "P Enel", the list pilot "Wortaxx" took to 2nd, 5-1, at a 64-player ChinoizeCup on 25 Aug 2026; the same fifty is listed for the pilot\'s top 8 at a 128-player ChinoizeCup on 18 Aug 2026.',
+    },
+    {
+      url: "https://onepiecetopdecks.com/deck-list/english-op15-eb04-deck-list-adventure-on-kamis-island/",
+      retrievedAt: "2026-10-17",
+      note: 'The 1st-place Store Battle list for OP15-058 (entry "Purple Enel", "Bloodya", 11 Apr 2026), the source of the first variants line.',
+    },
+    {
+      url: "https://en.onepiece-cardgame.com/feature/deck/deck_099.php",
+      retrievedAt: "2026-09-19",
+      note: "Bandai's feature deck for OP15-058: vassals on turn 1, six DON!! on the field by turn 3, the 6-cost Enel as a removal-proof 10000-power attacker, and 0-cost Events spent because the Leader refunds the DON!!.",
+    },
+  ],
+};

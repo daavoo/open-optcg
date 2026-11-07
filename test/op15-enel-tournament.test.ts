@@ -11,7 +11,7 @@ import {
 } from "./support/index.js";
 
 /**
- * The (Purple) Enel Community list, the 2026-04-11 Store Battle build.
+ * The (Purple) Enel Community list, the 2026-08-25 ChinoizeCup build.
  *
  * The feature deck already drives every card the two lists share; this file
  * covers OP15-071 Holly, which the feature deck does not run, whose two clauses are both continuous: a [Double
@@ -27,7 +27,7 @@ import {
  * change that reverses one shows up here rather than only in the benchmark.
  */
 
-const LIST = "(Purple) Enel - 1st Place Store Battle 2026-04-11";
+const LIST = "(Purple) Enel - 2nd Place ChinoizeCup 2026-08-25";
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 
 const board = (active: "p1" | "p2") =>
