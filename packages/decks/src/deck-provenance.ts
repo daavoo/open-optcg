@@ -7,7 +7,6 @@ import {
 } from "@one-piece-sim/cards";
 import { formatDeckManifests } from "./generated.js";
 import { op16EnelManifest } from "./op16-enel-manifest.js";
-import { op13LuffyManifest } from "./op13-luffy-manifest.js";
 import { op16NamiManifest } from "./op16-nami-manifest.js";
 import { op16SengokuManifest } from "./op16-sengoku-manifest.js";
 import { op16TeachManifest } from "./op16-teach-manifest.js";
@@ -66,7 +65,9 @@ import { op05EnelTcgmmManifest } from "./op05-enel-tcgmm-manifest.js";
 import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js";
 import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
+import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
+import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -210,11 +211,6 @@ export type CommunityDeckId =
    */
   | "(Red/Green) Luffy & Ace - Open OPTCG"
   /**
-   * The Red/Green Luffy list behind OP13-001, supplied to the project rather
-   * than read off one event's record -- so validated identity by identity here.
-   */
-  | "(Red/Green) Monkey.D.Luffy - Open OPTCG"
-  /**
    * A supplied list under the OP17-079 Leader, a second one beside the
    * feature deck, validated one identity at a time like the lists above.
    */
@@ -303,7 +299,14 @@ export type CommunityDeckId =
   | "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25"
   | "(Green) Jinbe - 1st Place Shop Event 2026-09-16"
   | "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13"
+  | "(Red) Monkey.D.Luffy - Open OPTCG"
   | "(Yellow) Charlotte Linlin - ChinoizeCup #121"
+  /**
+   * The OP13-001 Leader's Community list: OPTCG Web Sim's Miracle Luffy EB05
+   * guide's fifty, a deck guide rather than an event placing. Validated one
+   * identity at a time like the lists above.
+   */
+  | "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05"
   /**
    * Bandai's ST-18 precon, whose Leader is the OP05-060 reprint. Same standing
    * as ST-26 below: off a Bandai page rather than out of the ST31-36 loop, so
@@ -385,7 +388,6 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinManifest,
     "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
     "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceManifest,
-    "(Red/Green) Monkey.D.Luffy - Open OPTCG": op13LuffyManifest,
     "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentManifest,
     "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
     "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,
@@ -446,8 +448,10 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op11JinbeTournamentManifest,
     "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
       op09LuffyTournamentManifest,
+    "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenManifest,
     "(Yellow) Charlotte Linlin - ChinoizeCup #121":
       op17LinlinTournamentManifest,
+    "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,

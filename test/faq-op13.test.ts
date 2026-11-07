@@ -33,7 +33,7 @@ export const NOT_ENGINE_QUESTIONS: Readonly<Record<string, string>> = {};
 
 const ST31 = "(Red) Monkey.D.Luffy - Starter Deck 31";
 const ZORO = "(Green) Roronoa Zoro - Starter Deck 32";
-const LUFFY = "(Red/Green) Monkey.D.Luffy - Open OPTCG";
+const LUFFY = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
 const ACE = "(Red/Blue) Portgas.D.Ace - Official Feature Deck";
 const ROGER = "(Red/Purple) Gol.D.Roger - Official Feature Deck";
 const IMU = "(Black) Imu - Official Feature Deck";

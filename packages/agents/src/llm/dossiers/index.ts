@@ -18,7 +18,6 @@ import { op08PuddingDossier } from "./op08-pudding.js";
 import { op12ZoroPostBanDossier } from "./op12-zoro-post-ban.js";
 import { op15KriegDossier } from "./op15-krieg.js";
 import { op17LinlinDossier } from "./op17-linlin.js";
-import { op13LuffyDossier } from "./op13-luffy.js";
 import { op15LucyDossier } from "./op15-lucy.js";
 import { op15BrookDossier } from "./op15-brook.js";
 import { op15RebeccaDossier } from "./op15-rebecca.js";
@@ -101,7 +100,9 @@ import { op05EnelTcgmmDossier } from "./op05-enel-tcgmm.js";
 import { eb02LuffyTournamentDossier } from "./eb02-luffy-tournament.js";
 import { op11JinbeTournamentDossier } from "./op11-jinbe-tournament.js";
 import { op09LuffyTournamentDossier } from "./op09-luffy-tournament.js";
+import { st21LuffyOpenDossier } from "./st21-luffy-open.js";
 import { op17LinlinTournamentDossier } from "./op17-linlin-tournament.js";
+import { op13LuffyMiracleDossier } from "./op13-luffy-miracle.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 export type { DeckStrategyDossier } from "./types.js";
@@ -119,7 +120,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Purple) Sengoku - Official Feature Deck": op16SengokuDossier,
   "(Red/Green) Krieg - Official Feature Deck": op15KriegDossier,
   "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinDossier,
-  "(Red/Green) Monkey.D.Luffy - Open OPTCG": op13LuffyDossier,
   "(Red/Blue) Lucy - Official Feature Deck": op15LucyDossier,
   "(Blue) Rebecca - Official Feature Deck": op15RebeccaDossier,
   "(Black) Imu - Official Feature Deck": op13ImuDossier,
@@ -221,7 +221,9 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16": op11JinbeTournamentDossier,
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
     op09LuffyTournamentDossier,
+  "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenDossier,
   "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentDossier,
+  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleDossier,
 };
 
 /**

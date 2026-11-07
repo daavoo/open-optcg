@@ -107,6 +107,10 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
     "(Purple/Black) Monkey.D.Luffy - Starter Deck 26",
   ],
+  [
+    "(Red) Monkey.D.Luffy - Open OPTCG",
+    "(Red) Monkey.D.Luffy - Starter Deck 31",
+  ],
   ["(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27", null],
   [
     "(Yellow) Charlotte Linlin - ChinoizeCup #121",
@@ -116,6 +120,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
     "(Red/Black) Sabo - Starter Deck 35",
   ],
+  ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", null],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {
@@ -155,6 +160,7 @@ describe("the Community lists the new builds replace", () => {
     ["(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle", "OP06-042"],
     ["(Purple) Enel - 1st Place Store Battle 2026-04-11", "OP15-058"],
     ["(Red/Black) Sabo - OP17 Elbaph List", "OP13-004"],
+    ["(Red/Green) Monkey.D.Luffy - Open OPTCG", "OP13-001"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();

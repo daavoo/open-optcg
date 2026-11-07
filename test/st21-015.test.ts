@@ -10,7 +10,12 @@ import {
 import { cardFacts, requireKnownCard } from "@one-piece-sim/cards";
 
 import { resolveDeck } from "@one-piece-sim/decks";
-import { setTurnPlayer } from "./support/index.js";
+import {
+  covers,
+  instance,
+  scenario as position,
+  setTurnPlayer,
+} from "./support/index.js";
 
 const input = {
   gameId: "st21-015-test",
@@ -261,5 +266,54 @@ describe("ST21-015 Roronoa Zoro", () => {
     expect(state.players.p1.hand).toContainEqual(
       card("other-zoro", "OP01-025"),
     );
+  });
+});
+
+describe("ST21-015 Roronoa Zoro gains [Rush] from the Leader's gift", () => {
+  covers("ST21-015", "static");
+
+  // The Red Luffy Community list's Rush line: Zoro lands, the Leader takes 1
+  // DON!! for its [DON!! x1], and its [Activate: Main] gives Zoro 2 of the
+  // DON!! rested paying for it -- [DON!! x2], so Zoro attacks the turn it
+  // was played.
+  function zoroPlayed() {
+    const game = position()
+      .decks(
+        "(Red) Monkey.D.Luffy - Open OPTCG",
+        "(Green) Roronoa Zoro - Starter Deck 32",
+      )
+      .seed("st21-015-rush")
+      .atTurn(3, { active: "p1" })
+      .bareTable()
+      .withHand("p1", [instance("zoro", "ST21-015")])
+      .build();
+    game.play({ type: "play-card", cardNumber: "ST21-015" });
+    return game;
+  }
+  const zoroAttacks = (summary: string) =>
+    summary.includes("with Roronoa Zoro [ST21-015]");
+
+  it("cannot attack the turn it is played without two given DON!!", () => {
+    const game = zoroPlayed();
+    expect(game.summaries().some(zoroAttacks)).toBe(false);
+  });
+
+  it("attacks the turn it is played once the Leader gives it two", () => {
+    const game = zoroPlayed();
+    game.play(
+      (action) =>
+        action.type === "attach-don" && action.summary.includes("ST21-001"),
+    );
+    game.play({ type: "activate-main" });
+    game.play({ type: "resolve-effect", optionId: "zoro" });
+
+    const zoro = game.state.players.p1.board.find(
+      (entry) => entry.instanceId === "zoro",
+    );
+    expect(zoro?.attachedDon).toHaveLength(2);
+    game.play(
+      (action) => action.type === "attack" && zoroAttacks(action.summary),
+    );
+    expect(game.state.activeAttack?.attackerInstanceId).toBe("zoro");
   });
 });
