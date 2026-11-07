@@ -111,6 +111,12 @@ export interface CompactAdapter {
   version: number;
   /** The list it was trained piloting: its Leader picks the seats it plays (`adapterFor`). */
   deck: { id: string; leader: string; cards: Record<string, number> };
+  /**
+   * `"list"` plays only a seat with exactly `deck`'s cards; absent, any seat
+   * with its Leader. A list-scoped adapter is for a build whose Leader also
+   * fronts other lists the adapter was never measured piloting.
+   */
+  scope?: "list";
   /** The base pack's `source`: the adapter is meaningless over any other. */
   base: string;
   source: string;
@@ -133,12 +139,20 @@ function sharedCards(
   return shared;
 }
 
+/** Cards in a list, counting copies. */
+function listSize(cards: Record<string, number>): number {
+  let size = 0;
+  for (const count of Object.values(cards)) size += count;
+  return size;
+}
+
 /**
  * The adapter for a seat's deck: any adapter trained under the same Leader.
  * An adapter learns how to play a Leader's engine more than one exact list,
  * and a player's own build of that Leader can differ in many slots, so the
- * Leader alone decides. Where two adapters share it, the one whose list has
- * the most cards in common with the seat's wins.
+ * Leader alone decides -- unless the adapter is scoped to its own list, when
+ * the seat must play exactly that list. Where two adapters qualify, the one
+ * whose list has the most cards in common with the seat's wins.
  */
 export function adapterFor(
   adapters: readonly CompactAdapter[],
@@ -149,6 +163,12 @@ export function adapterFor(
   for (const adapter of adapters) {
     if (adapter.deck.leader !== deck.leader) continue;
     const shared = sharedCards(adapter.deck.cards, deck.cards);
+    if (
+      adapter.scope === "list" &&
+      (shared !== listSize(adapter.deck.cards) ||
+        shared !== listSize(deck.cards))
+    )
+      continue;
     if (shared > bestShared) [best, bestShared] = [adapter, shared];
   }
   return best;
