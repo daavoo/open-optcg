@@ -40,6 +40,8 @@ def main() -> None:
     parser.add_argument("checkpoint")
     parser.add_argument("out")
     parser.add_argument("--deck", required=True, help="the training deck id it pilots (bridge/decks.ts)")
+    parser.add_argument("--scope", choices=["list"],
+                        help="'list': the app plays it only for a seat with exactly this deck's cards, not every list of its Leader")
     parser.add_argument("--base", required=True, help="the base pack (export_compact) the adapter goes over")
     parser.add_argument("--samples", help="a compact corpus directory to draw parity samples from")
     parser.add_argument("--parity", help="where to write the parity samples")
@@ -84,6 +86,7 @@ def main() -> None:
         "kind": "compact-adapter",
         "version": 1,
         "deck": manifest,
+        **({"scope": args.scope} if args.scope else {}),
         "base": over,
         "source": str(checkpoint),
         "trainedOnPrintedText": printed,
