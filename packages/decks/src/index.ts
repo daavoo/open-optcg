@@ -62,6 +62,7 @@ import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js
 import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
+import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -366,6 +367,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16",
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
   "(Yellow) Charlotte Linlin - ChinoizeCup #121",
+  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -562,6 +564,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
     op09LuffyTournamentManifest,
   "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentManifest,
+  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {
