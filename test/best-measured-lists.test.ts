@@ -107,6 +107,10 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
     "(Purple/Black) Monkey.D.Luffy - Starter Deck 26",
   ],
+  [
+    "(Red) Monkey.D.Luffy - Open OPTCG",
+    "(Red) Monkey.D.Luffy - Starter Deck 31",
+  ],
   ["(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27", null],
   [
     "(Yellow) Charlotte Linlin - ChinoizeCup #121",

@@ -66,6 +66,7 @@ import { op05EnelTcgmmManifest } from "./op05-enel-tcgmm-manifest.js";
 import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js";
 import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
+import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
 import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
@@ -304,6 +305,7 @@ export type CommunityDeckId =
   | "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25"
   | "(Green) Jinbe - 1st Place Shop Event 2026-09-16"
   | "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13"
+  | "(Red) Monkey.D.Luffy - Open OPTCG"
   | "(Yellow) Charlotte Linlin - ChinoizeCup #121"
   /**
    * A second Community list under the OP13-001 Leader, beside its Open OPTCG
@@ -453,6 +455,7 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op11JinbeTournamentManifest,
     "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
       op09LuffyTournamentManifest,
+    "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenManifest,
     "(Yellow) Charlotte Linlin - ChinoizeCup #121":
       op17LinlinTournamentManifest,
     "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleManifest,

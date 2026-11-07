@@ -149,8 +149,8 @@ describe("deck provenance rows", () => {
     // Reiju list adds 15 and takes the Store Battle list's 18 away, and the
     // best-measured Yellow Linlin list adds 15. The Miracle Luffy EB05 list,
     // a second under OP13-001, adds 15: fourteen distinct deck cards and its
-    // Leader.
-    expect(communityDeckCardRows).toHaveLength(1345);
+    // Leader. The maintainer's Red Luffy list adds 16.
+    expect(communityDeckCardRows).toHaveLength(1361);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -220,7 +220,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(93);
+    expect(reports).toHaveLength(94);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
