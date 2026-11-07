@@ -9,16 +9,16 @@ import {
 } from "./support/index.js";
 
 /**
- * The clauses the (Red/Green) Monkey.D.Luffy list behind OP13-001 is
- * responsible for.
+ * The OP13-001 Leader, and the clauses that arrived with the first
+ * (Red/Green) Monkey.D.Luffy list behind it.
  *
- * A card only enters the clause-coverage gate once a deck ships it, and this
- * list is the first to run the OP13-001 Leader, OP13-027 Sanji, OP13-118
- * Monkey.D.Luffy and OP15-035 Laboon -- so these are the clauses that arrived
- * with it.
+ * A card only enters the clause-coverage gate once a deck ships it, and that
+ * list was the first to run the OP13-001 Leader, OP13-027 Sanji, OP13-118
+ * Monkey.D.Luffy and OP15-035 Laboon. The scenarios sit behind the Leader's
+ * Community list; each places the cards it needs.
  */
 
-const LUFFY = "(Red/Green) Monkey.D.Luffy - Open OPTCG";
+const LUFFY = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
 const ZORO = "(Green) Roronoa Zoro - Starter Deck 32";
 
 /** p1, behind OP13-001, in its own Main Phase with ten DON!! active. */

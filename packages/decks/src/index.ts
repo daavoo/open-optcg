@@ -10,7 +10,6 @@ import { op17ShanksManifest } from "./op17-shanks-manifest.js";
 import { op17XebecManifest } from "./op17-xebec-manifest.js";
 import { op17KaidoManifest } from "./op17-kaido-manifest.js";
 import { op17KaidoFieldManifest } from "./op17-kaido-field-manifest.js";
-import { op13LuffyManifest } from "./op13-luffy-manifest.js";
 import { op17LuffyManifest } from "./op17-luffy-manifest.js";
 import { op17LuffyTournamentManifest } from "./op17-luffy-tournament-manifest.js";
 import { st33KuzanTournamentManifest } from "./st33-kuzan-tournament-manifest.js";
@@ -330,7 +329,6 @@ export const TOURNAMENT_DECK_IDS = [
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
   "(Purple) Kaido - Open OPTCG",
   "(Red/Green) Luffy & Ace - Open OPTCG",
-  "(Red/Green) Monkey.D.Luffy - Open OPTCG",
   "(Black) Monkey.D.Luffy - Open OPTCG",
   "(Red) Portgas.D.Ace - Open OPTCG",
   "(Blue) Rocks.D.Xebec - Open OPTCG",
@@ -506,7 +504,6 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op09RobinManifest,
   "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
   "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceManifest,
-  "(Red/Green) Monkey.D.Luffy - Open OPTCG": op13LuffyManifest,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentManifest,
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
   "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,
