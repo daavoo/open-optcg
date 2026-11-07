@@ -6,21 +6,23 @@ import {
   isRecommendedDeck,
   loadDeck,
   recommendedDeckFor,
+  SELECTABLE_DECK_IDS,
   validateDeck,
 } from "@one-piece-sim/decks";
+import { trainingManifest } from "../ml/bridge/decks.js";
 
 /**
- * The Miracle Luffy EB05 list, a second Community list under OP13-001.
+ * The Miracle Luffy EB05 list, the Community list under OP13-001.
  *
  * Every card it plays is driven in its set's card tests already; what this
  * file holds is that the list sits where the shelf and the picker expect: a
- * Standard-legal fifty on the Community shelf beside the Leader's Open OPTCG
- * list, which stays the one the app offers, with the two told apart by the
- * counter the display name gives a second list on one shelf.
+ * Standard-legal fifty on the Community shelf, the one list the app offers for
+ * the Leader, named without the counter a second list on one shelf would get.
+ * The Open OPTCG list it replaced is a training list under its old id.
  */
 
 const LIST = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
-const RECOMMENDED = "(Red/Green) Monkey.D.Luffy - Open OPTCG";
+const REPLACED = "(Red/Green) Monkey.D.Luffy - Open OPTCG";
 const LEADER = "OP13-001";
 
 describe("the Miracle Luffy EB05 list", () => {
@@ -36,16 +38,20 @@ describe("the Miracle Luffy EB05 list", () => {
     expect(deckShelf(LIST)).toBe("tournament");
   });
 
-  it("leaves the Open OPTCG list as the one the app offers for the Leader", () => {
-    expect(deckManifests[RECOMMENDED]?.leader).toBe(LEADER);
-    expect(deckShelf(RECOMMENDED)).toBe("tournament");
-    expect(isRecommendedDeck(LIST)).toBe(false);
-    expect(isRecommendedDeck(RECOMMENDED)).toBe(true);
-    expect(recommendedDeckFor(LEADER)).toBe(RECOMMENDED);
+  it("is the one list the app offers for the Leader", () => {
+    expect(isRecommendedDeck(LIST)).toBe(true);
+    expect(recommendedDeckFor(LEADER)).toBe(LIST);
+    expect(
+      SELECTABLE_DECK_IDS.filter((id) => deckManifests[id]?.leader === LEADER),
+    ).toEqual([LIST]);
   });
 
-  it("is named as the Leader's second list on the shelf", () => {
-    expect(deckDisplayName(RECOMMENDED)).toBe("Monkey.D.Luffy (Red/Green)");
-    expect(deckDisplayName(LIST)).toBe("Monkey.D.Luffy (Red/Green) (2)");
+  it("is named by its Leader alone on the shelf", () => {
+    expect(deckDisplayName(LIST)).toBe("Monkey.D.Luffy (Red/Green)");
+  });
+
+  it("leaves the Open OPTCG list a training list under its id", () => {
+    expect(deckManifests[REPLACED]).toBeUndefined();
+    expect(trainingManifest(REPLACED)?.leader).toBe(LEADER);
   });
 });

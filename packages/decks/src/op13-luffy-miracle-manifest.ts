@@ -14,9 +14,10 @@ import type { DeckManifest } from "./index.js";
  * stamped from Bandai's cardlist pages already, so the audit needs no entry
  * for it.
  *
- * A second Community list for the Leader, beside "(Red/Green)
- * Monkey.D.Luffy - Open OPTCG", which stays the Leader's `recommended` list;
- * this one carries no mark. Same Leader, so the same rules policy pilots both.
+ * It is the Leader's `recommended` list. It replaces "(Red/Green)
+ * Monkey.D.Luffy - Open OPTCG" as the Leader's Community list -- a shelf
+ * carries one list per Leader -- and that list stays a training list in
+ * `ml/bridge/decks.ts` under its id. The same rules policy pilots both.
  *
  * Against that list it adds 4 EB01-013 Kouzuki Hiyori, 4 EB05-001 Jewelry
  * Bonney, 3 OP01-055 You Can Be My Samurai!!, 4 OP06-033 Vander Decken IX, 4
@@ -46,6 +47,7 @@ export const op13LuffyMiracleManifest: DeckManifest = {
   id: "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05",
   format: "standard",
   leader: "OP13-001",
+  recommended: true,
   cards: {
     "EB01-013": 4,
     "EB05-001": 4,

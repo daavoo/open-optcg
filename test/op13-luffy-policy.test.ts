@@ -14,7 +14,7 @@ import { character, copies, instance, scenario } from "./support/index.js";
  * does.
  */
 
-const LUFFY = "(Red/Green) Monkey.D.Luffy - Open OPTCG";
+const LUFFY = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP13-001";

@@ -215,6 +215,35 @@ const LISTS: Record<string, DeckManifest> = {
       "OP06-079": 4,
     },
   },
+  // Red/Green OP13-001 Monkey.D.Luffy, the Straw Hat DON!!-refresh list that
+  // won the Malmo Regional (1st, 13-1, 22 Aug 2026), read off the `deckgen`
+  // link on onepiecetopdecks.com's English OP-16 page. It was the Leader's
+  // Community list until the maintainer chose the Miracle Luffy EB05 build for
+  // the shelf; it stays here under its old id because the meta field
+  // (`meta-decks.txt`), checkpoints and its variants name it.
+  "(Red/Green) Monkey.D.Luffy - Open OPTCG": {
+    id: "(Red/Green) Monkey.D.Luffy - Open OPTCG",
+    format: "standard",
+    leader: "OP13-001",
+    cards: {
+      "EB02-017": 4,
+      "EB04-002": 4,
+      "EB04-007": 4,
+      "OP01-016": 4,
+      "OP04-016": 1,
+      "OP05-038": 1,
+      "OP08-036": 4,
+      "OP13-027": 4,
+      "OP13-040": 1,
+      "OP13-118": 2,
+      "OP14-022": 4,
+      "OP14-031": 4,
+      "OP15-032": 2,
+      "ST21-003": 3,
+      "ST31-004": 4,
+      "ST31-005": 4,
+    },
+  },
 };
 
 /**

@@ -7,7 +7,6 @@ import {
 } from "@one-piece-sim/cards";
 import { formatDeckManifests } from "./generated.js";
 import { op16EnelManifest } from "./op16-enel-manifest.js";
-import { op13LuffyManifest } from "./op13-luffy-manifest.js";
 import { op16NamiManifest } from "./op16-nami-manifest.js";
 import { op16SengokuManifest } from "./op16-sengoku-manifest.js";
 import { op16TeachManifest } from "./op16-teach-manifest.js";
@@ -212,11 +211,6 @@ export type CommunityDeckId =
    */
   | "(Red/Green) Luffy & Ace - Open OPTCG"
   /**
-   * The Red/Green Luffy list behind OP13-001, supplied to the project rather
-   * than read off one event's record -- so validated identity by identity here.
-   */
-  | "(Red/Green) Monkey.D.Luffy - Open OPTCG"
-  /**
    * A supplied list under the OP17-079 Leader, a second one beside the
    * feature deck, validated one identity at a time like the lists above.
    */
@@ -308,10 +302,9 @@ export type CommunityDeckId =
   | "(Red) Monkey.D.Luffy - Open OPTCG"
   | "(Yellow) Charlotte Linlin - ChinoizeCup #121"
   /**
-   * A second Community list under the OP13-001 Leader, beside its Open OPTCG
-   * list, which stays the `recommended` one: OPTCG Web Sim's Miracle Luffy
-   * EB05 guide's fifty, a deck guide rather than an event placing. Validated
-   * one identity at a time like the lists above.
+   * The OP13-001 Leader's Community list: OPTCG Web Sim's Miracle Luffy EB05
+   * guide's fifty, a deck guide rather than an event placing. Validated one
+   * identity at a time like the lists above.
    */
   | "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05"
   /**
@@ -394,7 +387,6 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinManifest,
     "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
     "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceManifest,
-    "(Red/Green) Monkey.D.Luffy - Open OPTCG": op13LuffyManifest,
     "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentManifest,
     "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
     "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,

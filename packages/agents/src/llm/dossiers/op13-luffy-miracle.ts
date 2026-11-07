@@ -29,7 +29,7 @@ export const op13LuffyMiracleDossier: DeckStrategyDossier = {
     "OP13-031 Law gains [Blocker] at 1 or fewer Life cards.",
   ],
   commonVariants: [
-    "The Open OPTCG list behind this Leader is the Straw Hat DON!!-refresh deck: OP13-027 Sanji, OP14-022 Usopp, OP13-118 Monkey.D.Luffy and EB04-007 Roronoa Zoro set DON!! active for the Leader's clause, with EB02-017, OP01-016 and ST31-005 searching. This list keeps OP14-031 Nami and OP08-036 Electrical Luna and plays the Land of Wano chain instead.",
+    "The other common build behind this Leader is the Straw Hat DON!!-refresh deck, as in the list that won the Malmo Regional in August 2026: OP13-027 Sanji, OP14-022 Usopp, OP13-118 Monkey.D.Luffy and EB04-007 Roronoa Zoro set DON!! active for the Leader's clause, with EB02-017, OP01-016 and ST31-005 searching. This list keeps OP14-031 Nami and OP08-036 Electrical Luna and plays the Land of Wano chain instead.",
   ],
   commonCombos: [
     "Bonney plays Hiyori and a second small Character; Hiyori trashes herself to play Oden and draws; Oden draws and stops one of their Characters from resting: one 5-cost, three bodies and four cards drawn.",
@@ -56,6 +56,11 @@ export const op13LuffyMiracleDossier: DeckStrategyDossier = {
       url: "https://optcgwebsim.com/learn/miracle-luffy-eb05-guide/",
       retrievedAt: "2026-11-07",
       note: "OPTCG Web Sim's Miracle Luffy EB05 Guide, updated 2026-11-05: the deck's own fifty, the Bonney-Hiyori-Oden and Law-Bonney lines, Shanks as the finisher, the Garp-and-Bonney mulligan and the preference for going second.",
+    },
+    {
+      url: "https://onepiecetopdecks.com/deck-list/english-op16-deck-list-the-time-of-battle/",
+      retrievedAt: "2026-10-12",
+      note: "The Malmo Regional winning list for OP13-001 (1st, 13-1, 22 Aug 2026), the source of the variants line's Straw Hat DON!!-refresh build.",
     },
   ],
 };
