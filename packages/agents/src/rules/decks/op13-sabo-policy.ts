@@ -25,8 +25,8 @@ const CONDITIONAL_TWO_DROPS = [
 ];
 
 /**
- * Identities only the Elbaph list plays, for telling the two OP13-004 decks
- * apart.
+ * Identities only the Elbaph lists play, for telling them apart from ST-35
+ * under the shared OP13-004 Leader.
  *
  * Both Sabo decks share a Leader, and `registerPolicy` keys on the Leader card
  * number, so the ST-35 Revolutionary Army policy would otherwise pilot this deck
@@ -55,6 +55,12 @@ const ELBAPH_IDENTITIES: ReadonlySet<string> = new Set([
   "OP17-082",
   "OP17-091",
   "OP04-016",
+  "OP17-083",
+  "OP17-096",
+  "EB04-007",
+  "OP13-007",
+  "OP14-096",
+  "ST01-011",
 ]);
 
 /** Whether the seat holding this observation is piloting the Elbaph list. */
@@ -153,7 +159,7 @@ const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
  *
  * Source for the plan: the top-placing OP17 RB Sabo list on gumgum.gg and
  * onepiece.gg's OP13-004 Leader guide, both restated in
- * `packages/agents/src/llm/dossiers/op13-sabo.ts`.
+ * `packages/agents/src/llm/dossiers/op13-sabo-tournament.ts`.
  *
  * ## Why this file exists
  *
@@ -175,7 +181,7 @@ const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
  *
  * Price the pair with:
  *
- *     pnpm deck:ab --deck "(Red/Black) Sabo - OP17 Elbaph List" \
+ *     pnpm deck:ab --deck "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20" \
  *       --disable op13-sabo,op13-sabo-decide
  *
  * ST32 is the matchup to watch rather than dismiss: it is where this deck is

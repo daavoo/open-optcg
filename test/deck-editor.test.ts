@@ -196,7 +196,7 @@ describe("deck overview analytics", () => {
     expect(tribal.sharedType).toBe(50);
 
     const pile = deckAnalytics(
-      editableDeck("(Red/Black) Sabo - OP17 Elbaph List"),
+      editableDeck("(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20"),
     );
     expect(pile.sharedType).toBe(0);
   });

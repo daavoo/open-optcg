@@ -267,8 +267,8 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
     // "Only OP17-089 and OP17-119 do the job here" -- under Sabo the other OP17
     // giants gate their +12 cost on an {Elbaph} Leader, and Sabo is not one. Saul
     // stays first because it *is* the cheap enabler: 4 in hand, 16 on the board.
-    // OP17-093 drops to last -- an 8-drop that only gains [Rush] once a giant is
-    // already down is the one card here a search should not find.
+    // OP17-093 sits below every other body -- an 8-drop that only gains [Rush]
+    // once a giant is already down is the one body a search should not find.
     // Registered for OP13-004, which ST35 shares; ST35 resolves no searches at
     // all and none of its cards are named here, so it is a no-op there.
     slug: "op13-sabo",
@@ -276,15 +276,16 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
     order: [
       "OP17-089", // Jaguar.D.Saul -- costs 4, sits at 16, satisfies both clauses
       "OP17-119", // Loki -- the other real giant under this Leader
-      "OP17-098", // Gum-Gum Kong Gun -- a Counter now, the finisher later
       "OP17-095", // Roronoa Zoro -- replacement covering any Character
       "OP17-082", // Sanji -- draws 2
       "OP17-087", // Nico Robin
-      "OP17-091", // Brook
       "OP17-080", // Usopp
       "OP17-084", // Tony Tony.Chopper
       "OP17-086", // Nami
+      "OP17-083", // Jinbe -- a 5000 [Blocker] once a giant is down
       "OP17-093", // Monkey.D.Luffy -- 8 cost, and only Rush once a giant is down
+      // Last because a search is looking for a body, and the Event lands none.
+      "OP17-096", // I'm Luffy!! -- a 4000 [Counter] with a giant down
     ],
   },
   {
@@ -347,14 +348,11 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP15-118", // Enel -- the finisher, and uncastable before six DON!!
       "OP10-067", // Senor Pink -- late recovery only, never a plan
       // The Community list under the same Leader, whose searchers find the
-      // same Events plus the bodies below. Holly sits with the vassals: 3
-      // cost, and the [Double Attack] it grants every Ohm is what the
-      // Leader's gift is for in that list. Sanji and OP15-060 Enel are its
-      // Blockers, after Franky and Reiju; Divine Departure is the removal
-      // after Gamma Knife, with no Counter half.
+      // same cards plus the two below. Holly sits with the vassals: 3 cost,
+      // and the [Double Attack] it grants every Ohm is what the Leader's gift
+      // is for in that list. Divine Departure is the removal after Gamma
+      // Knife, with no Counter half.
       "OP15-071", // Holly -- 3 cost, [Double Attack] for every Ohm and itself
-      "OP07-064", // Sanji -- Blocker, 3 cost once two DON!! behind
-      "OP15-060", // Enel -- Blocker, re-armed for DON!! −1 and a card
       "OP13-076", // Divine Departure -- −8000 off five rested DON!!
     ],
   },

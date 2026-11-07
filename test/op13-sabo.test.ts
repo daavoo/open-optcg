@@ -16,17 +16,20 @@ import {
 } from "./support/index.js";
 
 /**
- * The OP-17 Red/Black Sabo list in `packages/decks/src/op13-sabo-manifest.ts`.
+ * The Red/Black Sabo Community list, the PlayTCG EGB 2026-09-20 build in front
+ * of the OP-17 Elbaph shell.
  *
- * Two of its identities were in the card pool but in no shipped deck, so
- * nothing drove their clauses: OP15-088 Pirates Docking Six and OP15-094
- * Roronoa Zoro. Those are what the per-card blocks below cover. The Leader and
+ * Two identities of the OP17 Elbaph List it replaced were in the card pool but
+ * in no shipped deck, so nothing drove their clauses: OP15-088 Pirates Docking
+ * Six, which this list keeps, and OP15-094 Roronoa Zoro, which that list (now
+ * a training list in `ml/bridge/decks.ts`) still plays. Those are what the
+ * per-card blocks below cover. The Leader and
  * the OP17 half are covered in `test/st35.test.ts` and `test/op17.test.ts`;
  * what is deck-scoped, and tested last, is that the two different cost
  * thresholds this list runs on are answered by the same card, and that every
  * slot is one a Red/Black Leader may legally play.
  */
-const DECK = "(Red/Black) Sabo - OP17 Elbaph List";
+const DECK = "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20";
 
 /**
  * A neutral table with the Sabo list on p1, built the way `test/op16.test.ts`

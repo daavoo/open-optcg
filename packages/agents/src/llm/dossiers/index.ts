@@ -9,7 +9,7 @@ import {
   type DeckManifest,
 } from "@one-piece-sim/decks";
 import { genericDossier } from "./generic.js";
-import { op13SaboDossier } from "./op13-sabo.js";
+import { op13SaboTournamentDossier } from "./op13-sabo-tournament.js";
 import { op16EnelDossier } from "./op16-enel.js";
 import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
 import { op16AceOpenDossier } from "./op16-ace-open.js";
@@ -92,7 +92,7 @@ import { op14DoflamingoTournamentDossier } from "./op14-doflamingo-tournament.js
 import { op12KoalaTournamentDossier } from "./op12-koala-tournament.js";
 import { op14MoriaTournamentDossier } from "./op14-moria-tournament.js";
 import { op17ShanksTournamentDossier } from "./op17-shanks-tournament.js";
-import { op15EnelTournamentDossier } from "./op15-enel-tournament.js";
+import { op15EnelChinoizeDossier } from "./op15-enel-chinoize.js";
 import { op12RayleighTournamentDossier } from "./op12-rayleigh-tournament.js";
 import { eb04BonneyTournamentDossier } from "./eb04-bonney-tournament.js";
 import { op14JinbeTournamentDossier } from "./op14-jinbe-tournament.js";
@@ -148,7 +148,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op14DoflamingoDossier,
   "(Red/Purple) Gol.D.Roger - Official Feature Deck": op13RogerDossier,
   "(Green/Blue) Monkey.D.Luffy - Official Feature Deck": op16LuffyDossier,
-  "(Red/Black) Sabo - OP17 Elbaph List": op13SaboDossier,
+  "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20":
+    op13SaboTournamentDossier,
   "(Green) Shanks - Official Feature Deck": op17ShanksDossier,
   "(Red) Portgas.D.Ace - Official Feature Deck": op16AceDossier,
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenDossier,
@@ -206,8 +207,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Black/Yellow) Gecko Moria - 5th Place ChinoizeCup #120":
     op14MoriaTournamentDossier,
   "(Green) Shanks - 16th Place Rumble League #9": op17ShanksTournamentDossier,
-  "(Purple) Enel - 1st Place Store Battle 2026-04-11":
-    op15EnelTournamentDossier,
+  "(Purple) Enel - 2nd Place ChinoizeCup 2026-08-25": op15EnelChinoizeDossier,
   "(Red) Silvers Rayleigh - 4th Place ChinoizeCup #124":
     op12RayleighTournamentDossier,
   "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104":

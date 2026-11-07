@@ -18,7 +18,7 @@ import { character, instance, scenario } from "./support/index.js";
 type EffectAction = Extract<LegalAction, { type: "resolve-effect" }>;
 
 const DECK = "(Red/Green) Luffy & Ace - Starter Deck 30";
-const SABO = "(Red/Black) Sabo - OP17 Elbaph List";
+const SABO = "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20";
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const BONNEY = "(Red/Yellow) Jewelry Bonney - Official Feature Deck";
 const LUCY = "(Red/Blue) Lucy - Official Feature Deck";

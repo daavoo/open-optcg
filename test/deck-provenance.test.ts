@@ -147,8 +147,10 @@ describe("deck provenance rows", () => {
     // Open OPTCG list one of them replaces takes 15 away. The best-measured
     // lists for Green Jinbe and Purple/Black Luffy add 32. The best-measured
     // Reiju list adds 15 and takes the Store Battle list's 18 away, and the
-    // best-measured Yellow Linlin list adds 15.
-    expect(communityDeckCardRows).toHaveLength(1330);
+    // best-measured Yellow Linlin list adds 15. The best-measured Sabo list
+    // adds 18 and takes the OP17 Elbaph list's 15 away, and the best-measured
+    // Purple Enel list adds 16 and takes the Store Battle list's 16 away.
+    expect(communityDeckCardRows).toHaveLength(1333);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
