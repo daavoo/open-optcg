@@ -37,7 +37,7 @@ import { op13RogerManifest } from "./op13-roger-manifest.js";
 import { op15LuffyManifest } from "./op15-luffy-manifest.js";
 import { eb03ViviManifest } from "./eb03-vivi-manifest.js";
 import { st33KuzanTournamentManifest } from "./st33-kuzan-tournament-manifest.js";
-import { op06ReijuTournamentManifest } from "./op06-reiju-tournament-manifest.js";
+import { op06ReijuRegionalManifest } from "./op06-reiju-regional-manifest.js";
 import { op11KobyTournamentManifest } from "./op11-koby-tournament-manifest.js";
 import { op14LawManifest } from "./op14-law-manifest.js";
 import { op14HancockManifest } from "./op14-hancock-manifest.js";
@@ -67,6 +67,8 @@ import { eb02LuffyTournamentManifest } from "./eb02-luffy-tournament-manifest.js
 import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js";
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
 import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
+import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
+import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinManifest } from "./eb05-robin-manifest.js";
@@ -251,7 +253,7 @@ export type CommunityDeckId =
    * for the identities they bring into the catalog. Same standing as the
    * Kuzan list above.
    */
-  | "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle"
+  | "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27"
   | "(Red/Black) Koby - 2nd Place Indonesia Regional Final"
   /**
    * A second list under the OP14-041 Leader beside Bandai's feature deck: the
@@ -304,6 +306,14 @@ export type CommunityDeckId =
   | "(Green) Jinbe - 1st Place Shop Event 2026-09-16"
   | "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13"
   | "(Red) Monkey.D.Luffy - Open OPTCG"
+  | "(Yellow) Charlotte Linlin - ChinoizeCup #121"
+  /**
+   * A second Community list under the OP13-001 Leader, beside its Open OPTCG
+   * list, which stays the `recommended` one: OPTCG Web Sim's Miracle Luffy
+   * EB05 guide's fifty, a deck guide rather than an event placing. Validated
+   * one identity at a time like the lists above.
+   */
+  | "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05"
   /**
    * Bandai's ST-18 precon, whose Leader is the OP05-060 reprint. Same standing
    * as ST-26 below: off a Bandai page rather than out of the ST31-36 loop, so
@@ -391,8 +401,8 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingManifest,
     "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroManifest,
     "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentManifest,
-    "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle":
-      op06ReijuTournamentManifest,
+    "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27":
+      op06ReijuRegionalManifest,
     "(Red/Black) Koby - 2nd Place Indonesia Regional Final":
       op11KobyTournamentManifest,
     "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
@@ -446,6 +456,9 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
       op09LuffyTournamentManifest,
     "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenManifest,
+    "(Yellow) Charlotte Linlin - ChinoizeCup #121":
+      op17LinlinTournamentManifest,
+    "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,

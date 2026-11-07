@@ -145,8 +145,12 @@ describe("deck provenance rows", () => {
     // OP-14 Green Mihawk list (16) went with its Leader's ban. The
     // best-measured lists for six more Leaders add 96, and the Yellow Enel
     // Open OPTCG list one of them replaces takes 15 away. The best-measured
-    // lists for Green Jinbe and Purple/Black Luffy add 32, and Red Luffy's 16.
-    expect(communityDeckCardRows).toHaveLength(1334);
+    // lists for Green Jinbe and Purple/Black Luffy add 32. The best-measured
+    // Reiju list adds 15 and takes the Store Battle list's 18 away, and the
+    // best-measured Yellow Linlin list adds 15. The Miracle Luffy EB05 list,
+    // a second under OP13-001, adds 15: fourteen distinct deck cards and its
+    // Leader. The maintainer's Red Luffy list adds 16.
+    expect(communityDeckCardRows).toHaveLength(1361);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -216,7 +220,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(92);
+    expect(reports).toHaveLength(94);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);

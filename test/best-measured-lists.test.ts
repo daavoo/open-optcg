@@ -111,6 +111,11 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Red) Monkey.D.Luffy - Open OPTCG",
     "(Red) Monkey.D.Luffy - Starter Deck 31",
   ],
+  ["(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27", null],
+  [
+    "(Yellow) Charlotte Linlin - ChinoizeCup #121",
+    "(Yellow) Charlotte Linlin - Official Feature Deck",
+  ],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {
@@ -139,7 +144,7 @@ describe.each(LISTS)("%s", (list, other) => {
 });
 
 describe("the Community lists the new builds replace", () => {
-  // Three Leaders already had a Community list, and a shelf with two lists of
+  // Four Leaders already had a Community list, and a shelf with two lists of
   // one Leader would be two identical tiles. The old lists leave the catalog
   // and stay training lists under their ids, which the meta field,
   // checkpoints and their variants name.
@@ -147,6 +152,7 @@ describe("the Community lists the new builds replace", () => {
     ["(Purple) Enel - 1st Place EU Championship 26-27 S1", "OP15-058"],
     ["(Yellow) Vegapunk - 1st Place Store Battle", "OP07-097"],
     ["(Yellow) Enel - Open OPTCG", "OP05-098"],
+    ["(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle", "OP06-042"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();

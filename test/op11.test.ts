@@ -357,6 +357,21 @@ describe("OP11-043 Vinsmoke Ichiji", () => {
     // nothing is never pushed at the defender.
     expect(effectOptions(game.state)).not.toContain("apply");
   });
+
+  covers("OP11-043", "[Blocker]");
+
+  it("blocks an attack on the Leader once its buff is declined", () => {
+    const game = attacked("op11-043-block", [character("ichiji", "OP11-043")]);
+    game.play({ type: "resolve-effect", optionId: "skip" });
+
+    game.play({ type: "block", blockerInstanceId: "ichiji" });
+
+    expect(game.state.activeAttack?.targetInstanceId).toBe("ichiji");
+    expect(
+      game.state.players.p1.board.find((card) => card.instanceId === "ichiji")
+        ?.rested,
+    ).toBe(true);
+  });
 });
 
 describe("OP11-088 Shu", () => {

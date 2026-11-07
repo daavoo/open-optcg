@@ -37,6 +37,11 @@ import type { DeckManifest } from "./index.js";
  * Three look-at-fives (OP01-016, EB02-017, ST31-005) and EB04-002's look-at-4
  * dig for Straw Hats, which is every Character here.
  *
+ * It is the Leader's `recommended` list. The Leader has a second Community
+ * list, "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05"
+ * (`op13-luffy-miracle-manifest.ts`), and with two lists behind one Leader the
+ * picker needs the mark to know which to offer.
+ *
  * Lives in its own module so `deck-provenance.ts` can read the list without
  * importing `index.ts`.
  */
@@ -44,6 +49,7 @@ export const op13LuffyManifest: DeckManifest = {
   id: "(Red/Green) Monkey.D.Luffy - Open OPTCG",
   format: "standard",
   leader: "OP13-001",
+  recommended: true,
   cards: {
     "EB02-017": 4,
     "EB04-002": 4,

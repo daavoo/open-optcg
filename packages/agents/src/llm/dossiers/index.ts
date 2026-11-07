@@ -34,7 +34,7 @@ import { op14MoriaDossier } from "./op14-moria.js";
 import { op12KoalaDossier } from "./op12-koala.js";
 import { eb02LuffyDossier } from "./eb02-luffy.js";
 import { op11ShirahoshiDossier } from "./op11-shirahoshi.js";
-import { op06ReijuDossier } from "./op06-reiju.js";
+import { op06ReijuRegionalDossier } from "./op06-reiju-regional.js";
 import { op11KobyDossier } from "./op11-koby.js";
 import { op13AceDossier } from "./op13-ace.js";
 import { op12SanjiDossier } from "./op12-sanji.js";
@@ -102,6 +102,8 @@ import { eb02LuffyTournamentDossier } from "./eb02-luffy-tournament.js";
 import { op11JinbeTournamentDossier } from "./op11-jinbe-tournament.js";
 import { op09LuffyTournamentDossier } from "./op09-luffy-tournament.js";
 import { st21LuffyOpenDossier } from "./st21-luffy-open.js";
+import { op17LinlinTournamentDossier } from "./op17-linlin-tournament.js";
+import { op13LuffyMiracleDossier } from "./op13-luffy-miracle.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 export type { DeckStrategyDossier } from "./types.js";
@@ -135,7 +137,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Black/Yellow) Koala - Official Feature Deck": op12KoalaDossier,
   "(Green/Purple) Monkey.D.Luffy - Official Feature Deck": eb02LuffyDossier,
   "(Green/Yellow) Shirahoshi - Official Feature Deck": op11ShirahoshiDossier,
-  "(Blue/Purple) Vinsmoke Reiju - 1st Place Store Battle": op06ReijuDossier,
+  "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27":
+    op06ReijuRegionalDossier,
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final": op11KobyDossier,
   "(Red/Blue) Portgas.D.Ace - Official Feature Deck": op13AceDossier,
   "(Blue/Purple) Sanji - Official Feature Deck": op12SanjiDossier,
@@ -221,6 +224,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
     op09LuffyTournamentDossier,
   "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenDossier,
+  "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentDossier,
+  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleDossier,
 };
 
 /**
