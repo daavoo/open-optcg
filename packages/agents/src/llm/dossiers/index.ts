@@ -102,6 +102,7 @@ import { eb02LuffyTournamentDossier } from "./eb02-luffy-tournament.js";
 import { op11JinbeTournamentDossier } from "./op11-jinbe-tournament.js";
 import { op09LuffyTournamentDossier } from "./op09-luffy-tournament.js";
 import { op17LinlinTournamentDossier } from "./op17-linlin-tournament.js";
+import { op13LuffyMiracleDossier } from "./op13-luffy-miracle.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 export type { DeckStrategyDossier } from "./types.js";
@@ -222,6 +223,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13":
     op09LuffyTournamentDossier,
   "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentDossier,
+  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleDossier,
 };
 
 /**
