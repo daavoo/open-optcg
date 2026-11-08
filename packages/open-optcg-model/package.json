@@ -1,0 +1,37 @@
+{
+  "name": "open-optcg-model",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daavoo/open-optcg.git"
+  },
+  "homepage": "https://github.com/daavoo/open-optcg",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "description": "The learned One Piece Card Game opponent for the open-optcg engine.",
+  "keywords": [
+    "one-piece",
+    "card-game",
+    "tcg",
+    "ai"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "peerDependencies": {
+    "open-optcg": "~0.1.0"
+  },
+  "devDependencies": {
+    "open-optcg": "workspace:*"
+  }
+}

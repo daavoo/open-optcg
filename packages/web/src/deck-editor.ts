@@ -14,6 +14,8 @@ import {
 // see `legality.ts` there for why they had to be.
 export {
   copyLimit,
+  exportDeckList,
+  parseDeckList,
   validateDeck,
   type DeckValidation,
   type EditableDeck,
@@ -52,38 +54,6 @@ export function deckFromBase(deckId: FormatDeckId): EditableDeck {
     cards: { ...manifest.cards },
     format: deckFormat(manifest),
   };
-}
-
-export function parseDeckList(value: string): EditableDeck {
-  const parsed: EditableDeck = { leader: "", cards: {}, format: "standard" };
-  for (const [index, rawLine] of value.split(/\r?\n/).entries()) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#") || line.startsWith("//")) continue;
-    const match =
-      line.match(/^(\d+)\s*x?\s+?([A-Z0-9]+-[A-Z0-9]+)(?:\s+.*)?$/i) ??
-      line.match(/^(\d+)x([A-Z0-9]+-[A-Z0-9]+)(?:\s+.*)?$/i);
-    if (!match)
-      throw new Error(`Line ${index + 1} is not a quantity and card number.`);
-    const quantity = Number(match[1]);
-    const cardNumber = match[2]!.toUpperCase();
-    const card = cardRegistry.get(cardNumber);
-    if (card?.category === "leader") {
-      if (quantity !== 1 || parsed.leader)
-        throw new Error("A list must contain exactly one Leader.");
-      parsed.leader = cardNumber;
-    } else {
-      parsed.cards[cardNumber] = (parsed.cards[cardNumber] ?? 0) + quantity;
-    }
-  }
-  return parsed;
-}
-
-export function exportDeckList(deck: EditableDeck): string {
-  const lines = [`1x ${deck.leader}`];
-  for (const [cardNumber, quantity] of Object.entries(deck.cards).sort()) {
-    lines.push(`${quantity}x ${cardNumber}`);
-  }
-  return `${lines.join("\n")}\n`;
 }
 
 export function toManifest(deck: EditableDeck, id: string): DeckManifest {
