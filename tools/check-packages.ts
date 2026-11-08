@@ -5,10 +5,10 @@
  *   pnpm packages:check --offline   # skip the model README, which downloads
  *                                   # the newest model-* release (~12 MB)
  *
- * Builds both packages, packs them with `npm pack` (so `files` and `exports`
- * are what npm would publish), installs the tarballs into an empty project
- * outside the workspace, and takes the first `ts` code block of each README as
- * that project's source. A README example that does not typecheck against the
+ * Builds both packages and packs them with `pnpm pack`, which resolves the
+ * `workspace:` ranges -- these are the tarballs the publish workflow uploads.
+ * Installs them into an empty project outside the workspace, and takes the
+ * first `ts` code block of each README as that project's source. A README example that does not typecheck against the
  * published declarations, or does not finish a game, fails the check -- the
  * same thing that would happen to someone copying it.
  */
@@ -27,8 +27,8 @@ run("pnpm", ["packages:build"], root);
 const project = await mkdtemp(join(tmpdir(), "open-optcg-check-"));
 for (const pkg of ["open-optcg", "open-optcg-model"]) {
   run(
-    "npm",
-    ["pack", "--silent", "--pack-destination", project],
+    "pnpm",
+    ["pack", "--pack-destination", project],
     join(root, "packages", pkg),
   );
 }

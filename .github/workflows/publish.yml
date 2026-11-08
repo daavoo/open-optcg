@@ -1,0 +1,96 @@
+name: Publish packages
+
+# Publishes `open-optcg` and `open-optcg-model` to npm. See docs/releasing.md.
+#
+# - A `v*` tag publishes a release under the `latest` dist-tag, after a
+#   maintainer approves the `npm` environment.
+# - A push to main publishes a `-next.N` prerelease under the `next` dist-tag,
+#   once the CI workflow has passed on that commit.
+#
+# Both channels live in this one file because npm trusts exactly one workflow
+# per package. There is no npm token: the job proves which repository and
+# workflow it is with a GitHub OIDC token (trusted publishing), and npm signs a
+# provenance statement linking each version to this run.
+on:
+  push:
+    tags: ["v*"]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+# One publish at a time per channel; a queued release waits rather than racing.
+concurrency:
+  group: publish-${{ github.event_name == 'push' && 'release' || 'next' }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # A `workflow_run` also fires for a failed or cancelled CI run, and for CI
+    # on a pull request whose head branch happens to be named main; only a
+    # green CI on a push to main publishes.
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'push' && 'npm' || 'npm-next' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # Pinned to commits: this job can publish, so a moved tag upstream must
+      # not change what runs here.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+      # No dependency cache: a cache can be written by any workflow on the
+      # repository, and nothing it holds should reach a published tarball.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npx --yes semver@7 --range '>=11.5.1' "$(npm --version)"
+      - run: pnpm install --frozen-lockfile
+
+      - name: Version
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+          RUN: ${{ github.run_number }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            echo "version=$(pnpm exec tsx tools/release-version.ts release "$TAG")" >> "$GITHUB_OUTPUT"
+            echo "dist-tag=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(pnpm exec tsx tools/release-version.ts next "$RUN")" >> "$GITHUB_OUTPUT"
+            echo "dist-tag=next" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The same build, pack and install the check runs on every pull request,
+      # now at the version being published.
+      - run: pnpm packages:check --offline
+
+      - name: Pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/packs"
+          for pkg in open-optcg open-optcg-model; do
+            (cd "packages/$pkg" && pnpm pack --pack-destination "$RUNNER_TEMP/packs")
+          done
+          ls -l "$RUNNER_TEMP/packs"
+
+      # The engine first: the model's peer range names it, so it must exist.
+      - name: Publish
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DIST_TAG: ${{ steps.version.outputs.dist-tag }}
+        run: |
+          for pkg in open-optcg open-optcg-model; do
+            npm publish "$RUNNER_TEMP/packs/$pkg-$VERSION.tgz" --access public --tag "$DIST_TAG"
+          done
