@@ -1042,4 +1042,42 @@ describe("compact scorer deck adapter", () => {
     });
     expect(adapterFor([narrower, wide], list(50))).toBe(wide);
   });
+
+  it("scoped to its list, is chosen only for a seat playing exactly that list", () => {
+    const mon = adapter().deck;
+    const own = { "OP09-069": 4, "OP09-072": 46 };
+    const scoped: CompactAdapter = adapter({
+      deck: { id: "mon", leader: mon.leader, cards: own },
+      scope: "list",
+    });
+    expect(adapterFor([scoped], { leader: mon.leader, cards: own })).toBe(
+      scoped,
+    );
+    // One slot changed, or the same Leader's other list, is not that list.
+    expect(
+      adapterFor([scoped], {
+        leader: mon.leader,
+        cards: { "OP09-069": 4, "OP09-072": 45, "ST26-003": 1 },
+      }),
+    ).toBeUndefined();
+    expect(
+      adapterFor([scoped], {
+        leader: mon.leader,
+        cards: { ...own, "ST26-003": 1 },
+      }),
+    ).toBeUndefined();
+    // A Leader-wide adapter still plays the seats the scoped one passes on.
+    const wide = adapter({
+      deck: { id: "mon-wide", leader: mon.leader, cards: { "OP09-069": 4 } },
+    });
+    expect(
+      adapterFor([scoped, wide], {
+        leader: mon.leader,
+        cards: { "OP09-069": 4, "ST26-003": 46 },
+      }),
+    ).toBe(wide);
+    expect(adapterFor([scoped, wide], { leader: mon.leader, cards: own })).toBe(
+      scoped,
+    );
+  });
 });
