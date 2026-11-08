@@ -57,6 +57,41 @@ export async function loadModel(
   };
 }
 
+/**
+ * The newest published model: the most recent `model-*` release of the
+ * project's GitHub repository, its base pack and every deck adapter on it.
+ *
+ * Reads the public GitHub API, which allows 60 anonymous requests an hour and
+ * serves release assets without CORS headers -- so this is for Node and other
+ * servers. A browser app downloads the pack once, hosts it itself, and passes
+ * its URL to `loadModel`.
+ */
+export async function fetchLatestModel(
+  repository = "daavoo/open-optcg",
+): Promise<LearnedModel & { readonly release: string }> {
+  const releases = await read<
+    {
+      tag_name: string;
+      draft: boolean;
+      assets: { name: string; browser_download_url: string }[];
+    }[]
+  >(`https://api.github.com/repos/${repository}/releases?per_page=100`);
+  // Newest first, which is the order the API lists them in.
+  const release = releases.find(
+    (candidate) => !candidate.draft && candidate.tag_name.startsWith("model-"),
+  );
+  if (!release) throw new Error(`MODEL_NOT_FOUND: no model-* release`);
+  const pack = release.assets.find(
+    (asset) => asset.name === "scorer-model.json",
+  );
+  if (!pack) throw new Error(`MODEL_NOT_FOUND: ${release.tag_name}`);
+  const adapters = release.assets
+    .filter((asset) => /^scorer-adapter-.+\.json$/.test(asset.name))
+    .map((asset) => asset.browser_download_url);
+  const model = await loadModel(pack.browser_download_url, { adapters });
+  return { ...model, release: release.tag_name };
+}
+
 async function read<T>(source: Source<T>): Promise<T> {
   if (typeof source !== "string" && !(source instanceof URL)) return source;
   const response = await fetch(source);

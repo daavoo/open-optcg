@@ -76,7 +76,8 @@
     "otari:status": "tsx tools/otari-local.ts status",
     "otari:key": "tsx tools/otari-local.ts key",
     "otari:env": "tsx tools/otari-local.ts env",
-    "packages:build": "tsx tools/build-packages.ts"
+    "packages:build": "tsx tools/build-packages.ts",
+    "packages:check": "tsx tools/check-packages.ts"
   },
   "dependencies": {
     "zod": "^4.6.7"
