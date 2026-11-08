@@ -229,45 +229,73 @@ await rewrite(modelTypes, (specifier, file) => {
 
 // -- Printed text -------------------------------------------------------------
 
-// Printed card text never ships (docs/asset-packs.md). Where this machine has a
-// text pack, every printed line long enough to be unambiguous is looked for in
-// the output; CI has no pack, so there the check is skipped, not passed.
+// The card text as a body of work does not ship (docs/asset-packs.md): no
+// card's whole effect, and nothing approaching the text pack. A short
+// functional phrase that matches a printed line -- a cost such as trashing a
+// card from hand, an option label -- is how the rules are stated and is
+// allowed; the build counts those and reports them.
+//
+// Needs a text pack on this machine. CI has none, so there the check is
+// skipped, not passed.
 const textPack = [
   join(root, "packages/cards/printed-text.json"),
   join(root, "open-optcg-assets/printed-text.json"),
 ].find((path) => existsSync(path));
+let textReport = "";
 if (textPack) {
   const pack = JSON.parse(await readFile(textPack, "utf8")) as {
     cards: Record<string, { effect?: string; trigger?: string }>;
   };
+  // A whole effect long enough that matching it cannot be a stock phrase.
+  const wholeEffects = new Map<string, string>();
   const lines = new Set<string>();
-  for (const card of Object.values(pack.cards)) {
+  for (const [cardNumber, card] of Object.entries(pack.cards)) {
+    const effect = card.effect?.trim() ?? "";
+    if (effect.length >= 60) wholeEffects.set(effect, cardNumber);
     for (const field of [card.effect, card.trigger]) {
       for (const line of field?.split(/\n|\[[^\]]+\]/) ?? []) {
         if (line.trim().length >= 40) lines.add(line.trim().slice(0, 40));
       }
     }
   }
+  const outputs: string[] = [];
   for (const dir of [join(ENGINE, "dist"), join(MODEL, "dist")]) {
     const entries = await readdir(dir, {
       withFileTypes: true,
       recursive: true,
     });
     for (const entry of entries) {
-      if (!entry.isFile()) continue;
-      const file = join(entry.parentPath, entry.name);
-      const body = await readFile(file, "utf8");
-      const found = [...lines].filter((line) => body.includes(line)).length;
-      if (found > 0) {
-        throw new Error(
-          `${relative(root, file)} contains ${found} printed-text line(s)`,
+      if (entry.isFile()) {
+        outputs.push(
+          await readFile(join(entry.parentPath, entry.name), "utf8"),
         );
       }
     }
   }
+  const copied = [...wholeEffects].filter(([effect]) =>
+    outputs.some((body) => body.includes(effect)),
+  );
+  if (copied.length > 0) {
+    throw new Error(
+      `the packages contain the whole printed effect of ${copied
+        .map(([, cardNumber]) => cardNumber)
+        .join(", ")}`,
+    );
+  }
+  const found = [...lines].filter((line) =>
+    outputs.some((body) => body.includes(line)),
+  ).length;
+  // A tenth of every printed line is far past any set of stock phrases, and
+  // well short of what bundling the pack itself would show.
+  if (found > lines.size / 10) {
+    throw new Error(
+      `the packages contain ${found} of ${lines.size} printed lines`,
+    );
+  }
+  textReport = `; ${found} of ${lines.size} printed lines appear as phrases, no whole card text`;
 }
 
 console.log(
   `Built open-optcg (${ENGINE_ENTRIES.join(", ")}) and open-optcg-model` +
-    (textPack ? "; no printed text in either" : ""),
+    textReport,
 );

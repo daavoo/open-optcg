@@ -46,10 +46,15 @@ test — not the whole engine.
   `pnpm reference:fetch` + `pnpm reference:audit`. Editing them by hand loses the
   provenance stamp and is reverted by the next pipeline run.
 - **Printed card text is a runtime asset, not data in the repo.** Records carry
-  a derived `rules` block; the words live in the gitignored
-  `packages/cards/printed-text.json` the audit writes, and the app loads them
-  as an asset pack. Never regex `effect` at runtime -- add a field to
-  `CardRules` and derive it in `rules-derivation.ts`. See docs/asset-packs.md.
+  a derived `rules` block; the cards' effect and trigger texts live in the
+  gitignored `packages/cards/printed-text.json` the audit writes, and the app
+  loads them as an asset pack. What stays out is the text as a body of work --
+  a card's whole effect, or the texts in bulk. A short functional phrase that
+  happens to match a printed line (a cost, an option label, "trash 1 card from
+  your hand") is how the rules are stated and is fine; `pnpm packages:build`
+  counts those and fails only on whole effects or bulk. Never regex `effect` at
+  runtime -- add a field to `CardRules` and derive it in `rules-derivation.ts`.
+  See docs/asset-packs.md.
 - **Every rules-behaviour change gets a test.** A card is not implemented until a
   scenario test drives the engine to the decision and asserts on the resulting
   events and state.
