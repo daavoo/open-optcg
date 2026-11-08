@@ -385,7 +385,7 @@ export const op06BattleMechanics: SetMechanics = {
                   branches: [
                     {
                       id: "life-top",
-                      label: "Add it to the top of your Life cards",
+                      label: "Put it on top of Life",
                       effect: {
                         kind: "move",
                         binding: "op06-kawamatsu",

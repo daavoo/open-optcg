@@ -723,7 +723,7 @@ export const op07MainMechanics: SetMechanics = {
                     },
                     {
                       id: "life",
-                      label: "Add it to the top of your Life cards face-up",
+                      label: "Put it on top of Life, face-up",
                       effect: {
                         kind: "move",
                         binding: "op07-vegapunk-pick",

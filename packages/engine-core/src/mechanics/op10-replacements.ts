@@ -40,7 +40,7 @@ export const op10ReplacementMechanics: SetMechanics = {
       {
         opponentEffectOnly: true,
         oncePerTurn: true,
-        label: "Rest 2 of your DON!! cards",
+        label: "Rest 2 DON!!",
         cost: { kind: "rest-don", count: 2 },
       },
     ],

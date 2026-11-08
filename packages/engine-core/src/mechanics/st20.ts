@@ -175,7 +175,7 @@ export const st20Mechanics: SetMechanics = {
                 branches: [
                   {
                     id: "hand",
-                    label: "Trash 2 cards from your hand",
+                    label: "Trash 2 from hand",
                     effect: {
                       kind: "choose",
                       selector: { player: "opponent", zone: "hand" },

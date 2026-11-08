@@ -214,7 +214,7 @@ export const op05TriggerMechanics: SetMechanics = {
               },
               {
                 id: "bounce",
-                label: "Return it to the owner's hand",
+                label: "Bounce it to hand",
                 effect: {
                   kind: "move",
                   binding: "op05-bid-trigger",

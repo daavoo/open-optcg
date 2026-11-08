@@ -310,7 +310,7 @@ describe("OP12-102 Shirahoshi", () => {
     game.play({ type: "play-card", cardNumber: "OP12-075" });
     game.play({ type: "resolve-effect", optionId: "brook" });
     expect(game.player).toBe("p1");
-    game.play({ type: "resolve-effect", summary: "Turn 1 card" });
+    game.play({ type: "resolve-effect", summary: "Flip the top Life card" });
     let guard = 0;
     while (game.state.pendingEffect) {
       if (guard++ > 40) throw new Error("pending effect never settled");

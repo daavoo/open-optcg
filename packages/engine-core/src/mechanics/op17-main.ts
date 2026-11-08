@@ -442,7 +442,7 @@ export const op17MainMechanics: SetMechanics = {
               branches: [
                 {
                   id: "hand",
-                  label: "Trash 1 card from your hand",
+                  label: "Trash 1 from hand",
                   effect: {
                     kind: "if",
                     condition: {
@@ -491,7 +491,7 @@ export const op17MainMechanics: SetMechanics = {
                 },
                 {
                   id: "don",
-                  label: "Rest 1 of your DON!! cards",
+                  label: "Rest 1 DON!!",
                   effect: {
                     kind: "if",
                     condition: {

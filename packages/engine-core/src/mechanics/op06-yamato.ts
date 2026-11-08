@@ -305,7 +305,7 @@ export const op06YamatoMechanics: SetMechanics = {
             branches: [
               {
                 id: "top",
-                label: "Add it to the top of your Life cards face-up",
+                label: "Put it on top of Life, face-up",
                 effect: {
                   kind: "move",
                   binding: "momo-to-life",

@@ -30,7 +30,7 @@ export const op07ReplacementMechanics: SetMechanics = {
         opponentEffectOnly: true,
         removal: "off-field",
         oncePerTurn: true,
-        label: "Rest 1 of your opponent's Characters",
+        label: "Rest an opposing Character",
         cost: { kind: "rest-opponent-characters", count: 1 },
       },
     ],

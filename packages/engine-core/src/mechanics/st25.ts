@@ -161,7 +161,7 @@ export const st25Mechanics: SetMechanics = {
         oncePerTurn: true,
         removal: "off-field",
         protects: { category: "character", type: "Cross Guild" },
-        label: "Trash 1 card from your hand",
+        label: "Trash 1 from hand",
         cost: { kind: "trash-from-hand", count: 1 },
       },
     ],

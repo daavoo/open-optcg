@@ -2348,7 +2348,7 @@ describe("OP15 Lucy feature deck", () => {
 
     game.play({ type: "play-card", cardNumber: "OP17-014" });
     game.play({ type: "resolve-effect", optionId: "threatened" });
-    game.play({ summary: "Place 1 of your Characters" });
+    game.play({ summary: "Bottom-deck one of yours" });
     // "1 of your Characters": Leo may hand over itself rather than the card
     // the opponent aimed at.
     game.play({ type: "resolve-effect", optionId: "leo" });
@@ -2382,7 +2382,7 @@ describe("OP15 Lucy feature deck", () => {
 
     game.play({ type: "play-card", cardNumber: "OP17-014" });
     game.play({ type: "resolve-effect", optionId: "threatened" });
-    game.play({ summary: "Place 1 of your Characters" });
+    game.play({ summary: "Bottom-deck one of yours" });
     game.play({ type: "resolve-effect", optionId: "paid" });
 
     expect(

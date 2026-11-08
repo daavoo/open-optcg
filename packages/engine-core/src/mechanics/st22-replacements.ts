@@ -23,7 +23,7 @@ export const st22ReplacementMechanics: SetMechanics = {
         opponentEffectOnly: true,
         oncePerTurn: false,
         removal: "off-field",
-        label: "Trash 2 cards from your hand",
+        label: "Trash 2 from hand",
         cost: { kind: "trash-from-hand", count: 2 },
       },
     ],
@@ -34,7 +34,7 @@ export const st22ReplacementMechanics: SetMechanics = {
       {
         opponentEffectOnly: true,
         oncePerTurn: true,
-        label: "Trash 1 card from your hand",
+        label: "Trash 1 from hand",
         cost: { kind: "trash-from-hand", count: 1 },
       },
     ],

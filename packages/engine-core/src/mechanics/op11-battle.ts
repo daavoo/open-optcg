@@ -192,7 +192,7 @@ export const op11BattleMechanics: SetMechanics = {
                   branches: [
                     {
                       id: "hand",
-                      label: "Return it to the owner's hand",
+                      label: "Bounce it to hand",
                       effect: {
                         kind: "move",
                         binding: "op11-gotti-target",
