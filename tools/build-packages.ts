@@ -53,6 +53,9 @@ const shared = {
   // traces; only whitespace and comments go.
   minifyWhitespace: true,
   legalComments: "none",
+  // Raw UTF-8 rather than `\u2019` escapes, so the printed-text check below
+  // compares the same characters the text pack holds.
+  charset: "utf8",
 } as const;
 
 await rm(join(ENGINE, "dist"), { recursive: true, force: true });

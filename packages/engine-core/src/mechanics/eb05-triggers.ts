@@ -234,8 +234,7 @@ export const eb05TriggerMechanics: SetMechanics = {
             branches: [
               {
                 id: "ko",
-                label:
-                  "K.O. up to 1 of your opponent's Characters with a cost of 6 or less",
+                label: "K.O. an opposing cost-6-or-less Character",
                 effect: {
                   kind: "choose",
                   selector: {
@@ -252,8 +251,7 @@ export const eb05TriggerMechanics: SetMechanics = {
               },
               {
                 id: "rest",
-                label:
-                  "Rest up to 1 of your opponent's Characters with a cost of 6 or less",
+                label: "Rest an opposing cost-6-or-less Character",
                 effect: {
                   kind: "choose",
                   selector: {

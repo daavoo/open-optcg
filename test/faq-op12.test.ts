@@ -602,7 +602,7 @@ describe("FAQ OP-12 blue", () => {
    */
   const boeufBounce = (game: Game, target: string) => {
     game.play({ type: "activate-main", sourceCardNumber: "OP12-060" });
-    game.play({ type: "resolve-effect", summary: "Return" });
+    game.play({ type: "resolve-effect", summary: "Bounce" });
     game.play({ type: "resolve-effect", optionId: target });
   };
 
@@ -746,7 +746,7 @@ describe("FAQ OP-12 blue", () => {
       expect(game.player).toBe("p1");
       game.play({
         type: "resolve-effect",
-        summary: "Rest Donquixote Rosinante",
+        summary: "Rest Rosinante, trash 1",
       });
       settle(game, "fodder");
 

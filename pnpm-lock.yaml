@@ -164,7 +164,7 @@ importers:
     devDependencies:
       open-optcg:
         specifier: workspace:*
-        version: link:../..
+        version: link:../open-optcg
 
   packages/protocol:
     dependencies:

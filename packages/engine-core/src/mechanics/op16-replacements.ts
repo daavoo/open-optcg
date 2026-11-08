@@ -44,7 +44,7 @@ export const replacementMechanics: SetMechanics = {
       {
         opponentEffectOnly: false,
         oncePerTurn: false,
-        label: "Trash a Character with 6000 power or less from your hand",
+        label: "Trash a 6000-or-less Character from hand",
         cost: {
           kind: "trash-from-hand",
           count: 1,

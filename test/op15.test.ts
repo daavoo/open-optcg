@@ -1999,7 +1999,7 @@ describe("OP15 Krieg feature deck", () => {
     });
     game.play({ type: "pass", summary: "Do not block" });
     game.play({ summary: "Resolve battle without more counters" });
-    game.play({ summary: "Trash a Character with 6000 power or less" });
+    game.play({ summary: "Trash a 6000-or-less Character" });
     game.play({ type: "resolve-effect", optionId: "fodder" });
 
     expect(game.state.players.p1.board.map((card) => card.instanceId)).toEqual([
