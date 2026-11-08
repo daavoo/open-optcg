@@ -5,7 +5,6 @@ const browserEntries = [
   "@one-piece-sim/cards",
   "@one-piece-sim/decks",
   "@one-piece-sim/engine-core",
-  "@one-piece-sim/agents",
   "@one-piece-sim/agents/local",
   "@one-piece-sim/agents/llm-dossiers",
 ] as const;

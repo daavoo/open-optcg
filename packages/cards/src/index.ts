@@ -97,7 +97,6 @@ export {
   cardBlockIcons,
   cardFormatLegality,
   isStandardLegal,
-  DECK_FORMATS,
   DEFAULT_FORMAT_REGION,
   STANDARD_FLOORS,
   UNSTAMPED_BLOCK_PRINTINGS,
@@ -516,9 +515,6 @@ export function clauseText(
   const text = printedText(cardNumber);
   return text ? clauseTextOf(text.effect, marker) : undefined;
 }
-
-/** The [Counter] split, under the name the Counter step's callers use. */
-export type CounterClauseParts = ClauseParts;
 
 export function counterClauseParts(
   cardNumber: string,
