@@ -730,8 +730,7 @@ export const op17BattleMechanics: SetMechanics = {
                   branches: [
                     {
                       id: "mill-then-life",
-                      label:
-                        "Trash 1 card from your hand, then add a card from the top of your deck to the top of your Life cards",
+                      label: "Trash 1 from hand, top deck card to Life",
                       effect: {
                         kind: "sequence",
                         effects: [

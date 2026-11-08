@@ -114,7 +114,7 @@ export const offFieldReplacementMechanics: SetMechanics = {
         opponentTurnOnly: true,
         removal: "off-field",
         protects: { category: "character", color: "Blue", type: "Navy" },
-        label: "Rest Donquixote Rosinante and trash 1 card from your hand",
+        label: "Rest Rosinante, trash 1 from hand",
         cost: { kind: "trash-from-hand", count: 1, restsSelf: true },
       },
     ],

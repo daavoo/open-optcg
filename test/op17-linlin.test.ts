@@ -56,7 +56,7 @@ describe("OP17-099 Charlotte Linlin, the Leader", () => {
     expect(game.state.pendingEffect?.playerId).toBe("p2");
     game.play({
       type: "resolve-effect",
-      summary: "Trash 1 card from your hand, then add a card",
+      summary: "Trash 1 from hand, top deck card to Life",
     });
     game.play({ type: "resolve-effect", optionId: "milled" });
     game.play({ type: "resolve-effect", optionId: "banked" });

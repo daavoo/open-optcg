@@ -201,7 +201,7 @@ export const op11BattleMechanics: SetMechanics = {
                     },
                     {
                       id: "deck",
-                      label: "Place it at the bottom of the owner's deck",
+                      label: "Bottom-deck it",
                       effect: {
                         kind: "move",
                         binding: "op11-gotti-target",

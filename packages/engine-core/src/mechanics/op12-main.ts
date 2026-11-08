@@ -939,8 +939,7 @@ export const op12MainMechanics: SetMechanics = {
               branches: [
                 {
                   id: "bounce",
-                  label:
-                    "Return up to 1 of your opponent's Characters with a cost of 4 or less",
+                  label: "Bounce an opposing cost-4-or-less Character",
                   effect: {
                     kind: "choose",
                     selector: {
