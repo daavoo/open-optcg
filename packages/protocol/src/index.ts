@@ -1853,6 +1853,19 @@ export interface DormantAbilityObservation {
   reason: string;
 }
 
+/**
+ * Anything that plays a seat: given what that seat can see, pick one of the
+ * actions the engine offered. A person behind a UI, a hand-written policy and a
+ * learned model all meet the engine here, which is why the contract lives in
+ * the protocol rather than with any one of them.
+ */
+export interface Agent {
+  chooseAction(
+    observation: GameObservation,
+    signal?: AbortSignal,
+  ): Promise<LegalAction>;
+}
+
 export interface GameObservation {
   gameId: string;
   revision: number;

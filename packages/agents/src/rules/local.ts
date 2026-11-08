@@ -1,4 +1,8 @@
-import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
+import type {
+  Agent,
+  GameObservation,
+  LegalAction,
+} from "@one-piece-sim/protocol";
 import {
   nextInt,
   seedRng,
@@ -16,12 +20,7 @@ import { withoutAsideCounters } from "../aside-counters.js";
 
 export { isAsideCounter } from "../aside-counters.js";
 
-export interface Agent {
-  chooseAction(
-    observation: GameObservation,
-    signal?: AbortSignal,
-  ): Promise<LegalAction>;
-}
+export type { Agent } from "@one-piece-sim/protocol";
 
 /**
  * Runners call this before each decision when they can offer lookahead. Agents
