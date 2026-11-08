@@ -28,7 +28,7 @@ export const eb03ReplacementMechanics: SetMechanics = {
         opponentEffectOnly: false,
         oncePerTurn: true,
         protects: { category: "character", minBaseCost: 4 },
-        label: "Trash 1 card from your hand",
+        label: "Trash 1 from hand",
         cost: { kind: "trash-from-hand", count: 1 },
       },
     ],

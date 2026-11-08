@@ -476,7 +476,7 @@ export const op17TriggerMechanics: SetMechanics = {
             branches: [
               {
                 id: "trash",
-                label: "Trash 3 cards from your hand",
+                label: "Trash 3 from hand",
                 effect: {
                   kind: "choose",
                   selector: { player: "opponent", zone: "hand" },

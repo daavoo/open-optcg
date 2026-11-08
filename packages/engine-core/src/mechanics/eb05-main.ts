@@ -668,12 +668,12 @@ export const eb05MainMechanics: SetMechanics = {
             branches: [
               {
                 id: "plus-3000",
-                label: "Give up to 1 Character +3000 power during this turn",
+                label: "+3000 to a Character this turn",
                 effect: anyCharacterPower("eb05-006-plus", 3000),
               },
               {
                 id: "minus-4000",
-                label: "Give up to 1 Character −4000 power during this turn",
+                label: "−4000 to a Character this turn",
                 effect: anyCharacterPower("eb05-006-minus", -4000),
               },
             ],

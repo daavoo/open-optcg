@@ -336,7 +336,7 @@ describe("OP17-043 Ganzui", () => {
 
     attackUndefended(game, "attacker", "ganzui");
     expect(game.state.pendingEffect?.kind).toBe("battle-ko-replacement");
-    game.play({ type: "resolve-effect", summary: "Trash 2 cards" });
+    game.play({ type: "resolve-effect", summary: "Trash 2 from hand" });
     while (game.state.pendingEffect && game.state.activePlayer === "p1") {
       game.play({ type: "resolve-effect" });
     }

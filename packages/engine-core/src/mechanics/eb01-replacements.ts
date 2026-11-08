@@ -25,7 +25,7 @@ export const eb01ReplacementMechanics: SetMechanics = {
         opponentEffectOnly: false,
         effectOnly: true,
         oncePerTurn: true,
-        label: "Trash 1 Event or Stage card from your hand",
+        label: "Trash an Event or Stage from hand",
         cost: {
           kind: "trash-from-hand",
           count: 1,

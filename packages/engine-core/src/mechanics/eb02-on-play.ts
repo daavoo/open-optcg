@@ -718,7 +718,7 @@ export const eb02OnPlayMechanics: SetMechanics = {
                     },
                     {
                       id: "discard",
-                      label: "Your opponent trashes 1 card from their hand",
+                      label: "Opponent trashes 1 from hand",
                       effect: {
                         kind: "if",
                         condition: {

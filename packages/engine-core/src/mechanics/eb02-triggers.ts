@@ -182,7 +182,7 @@ export const eb02TriggerMechanics: SetMechanics = {
       // is the hand.
       "EB02-030",
       {
-        label: "Trash 1 card from your hand",
+        label: "Trash 1 from hand",
         opponentEffectOnly: false,
         battleOnly: true,
         oncePerTurn: false,

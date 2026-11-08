@@ -27,7 +27,7 @@ export const eb05ReplacementMechanics: SetMechanics = {
         oncePerTurn: true,
         removal: "off-field",
         protects: { category: "character", maxPower: 6000 },
-        label: "Add 1 card from the top of your Life cards to your hand",
+        label: "Take the top Life card",
         cost: { kind: "life-to-hand", count: 1 },
       },
     ],

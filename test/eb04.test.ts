@@ -3028,7 +3028,7 @@ describe("EB04-044 Koby", () => {
       game.pass();
     }
     expect(game.state.pendingEffect?.kind).toBe("battle-ko-replacement");
-    game.play({ type: "resolve-effect", summary: "Trash 1 card" });
+    game.play({ type: "resolve-effect", summary: "Trash 1 from hand" });
     settle(game);
 
     expect(boardIds(game.state, "p1")).toEqual(["koby"]);

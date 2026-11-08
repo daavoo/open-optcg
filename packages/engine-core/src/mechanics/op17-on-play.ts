@@ -225,7 +225,7 @@ export const op17OnPlayMechanics: SetMechanics = {
             },
             {
               id: "opponent-discards",
-              label: "Your opponent trashes 2 cards from their hand",
+              label: "Opponent trashes 2 from hand",
               effect: {
                 kind: "choose",
                 selector: { player: "opponent", zone: "hand" },

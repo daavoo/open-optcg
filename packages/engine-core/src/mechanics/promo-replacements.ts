@@ -34,7 +34,7 @@ export const promoReplacementMechanics: SetMechanics = {
         oncePerTurn: true,
         removal: "off-field",
         protects: { category: "character", type: "Straw Hat Crew" },
-        label: "Rest 1 of your DON!! cards",
+        label: "Rest 1 DON!!",
         cost: { kind: "rest-don", count: 1 },
       },
     ],

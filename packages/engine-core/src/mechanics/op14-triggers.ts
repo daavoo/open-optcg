@@ -161,7 +161,7 @@ export const op14TriggerMechanics: SetMechanics = {
             },
             {
               id: "own",
-              label: "Return 1 of your Characters",
+              label: "Bounce one of yours",
               effect: {
                 kind: "choose",
                 selector: {

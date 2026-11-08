@@ -622,7 +622,7 @@ describe("FAQ OP-12 blue", () => {
 
     boeufBounce(game, "borsalino");
     expect(game.player).toBe("p1");
-    game.play({ type: "resolve-effect", summary: "Trash 1 card" });
+    game.play({ type: "resolve-effect", summary: "Trash 1 from hand" });
     settle(game, "fodder");
 
     expect(ids(game.state.players.p1.board)).toEqual(["borsalino"]);
@@ -1171,7 +1171,7 @@ describe("FAQ OP-12 black and yellow", () => {
     game.play({ type: "play-card", cardNumber: "OP12-075" });
     game.play({ type: "resolve-effect", optionId: "shirahoshi" });
     expect(game.player).toBe("p1");
-    game.play({ type: "resolve-effect", summary: "Turn 1 card" });
+    game.play({ type: "resolve-effect", summary: "Flip the top Life card" });
     settle(game, "skip");
 
     expect(ids(game.state.players.p1.board)).toEqual(["shirahoshi"]);

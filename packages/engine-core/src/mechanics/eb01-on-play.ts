@@ -375,7 +375,7 @@ export const eb01OnPlayMechanics: SetMechanics = {
             },
             {
               id: "hide",
-              label: "Turn all of your Life cards face-down",
+              label: "Hide every Life card",
               effect: {
                 kind: "select",
                 selector: { player: "self", zone: "life", faceUp: true },

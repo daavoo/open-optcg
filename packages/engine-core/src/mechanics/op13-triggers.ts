@@ -158,7 +158,7 @@ export const op13TriggerMechanics: SetMechanics = {
           branches: [
             {
               id: "self",
-              label: "Set this Character as active",
+              label: "Make this Character active",
               effect: {
                 kind: "update",
                 binding: SOURCE_BINDING,
