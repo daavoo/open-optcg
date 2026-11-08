@@ -1,0 +1,47 @@
+{
+  "name": "open-optcg",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daavoo/open-optcg.git"
+  },
+  "homepage": "https://github.com/daavoo/open-optcg",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "description": "A deterministic rules engine for the One Piece Card Game: legal actions, transitions, hidden information and replay.",
+  "keywords": [
+    "one-piece",
+    "card-game",
+    "tcg",
+    "rules-engine"
+  ],
+  "exports": {
+    "./engine": {
+      "types": "./dist/types/engine.d.ts",
+      "default": "./dist/engine.js"
+    },
+    "./protocol": {
+      "types": "./dist/types/protocol.d.ts",
+      "default": "./dist/protocol.js"
+    },
+    "./cards": {
+      "types": "./dist/types/cards.d.ts",
+      "default": "./dist/cards.js"
+    },
+    "./decks": {
+      "types": "./dist/types/decks.d.ts",
+      "default": "./dist/decks.js"
+    }
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "zod": "^4.6.7"
+  }
+}

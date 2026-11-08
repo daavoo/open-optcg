@@ -99,6 +99,7 @@ export {
   type DeckValidation,
   type EditableDeck,
 } from "./legality.js";
+export { exportDeckList, parseDeckList } from "./decklist.js";
 
 export {
   deckCardRows,

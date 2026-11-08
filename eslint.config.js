@@ -25,6 +25,7 @@ export default tseslint.config(
     ignores: [
       "dist/**",
       "dist-tsc/**",
+      "packages/*/dist/**",
       "node_modules/**",
       "ml/.venv/**",
       "ml/checkpoints/**",

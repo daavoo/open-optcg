@@ -7,7 +7,7 @@
  * probability. Decisions with one legal action never reach the model.
  */
 import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
-import type { Agent } from "../rules/local.js";
+import type { Agent } from "@one-piece-sim/protocol";
 import {
   compactDecision,
   type CompactContext,

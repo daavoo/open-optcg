@@ -5,7 +5,7 @@ import type {
   LegalAction,
 } from "@one-piece-sim/protocol";
 import type { Plan } from "@one-piece-sim/engine-core";
-import type { Agent } from "../rules/local.js";
+import type { Agent } from "@one-piece-sim/protocol";
 import { leaderHitDamage } from "../rules/combat.js";
 import type {
   LlmChatClient,
