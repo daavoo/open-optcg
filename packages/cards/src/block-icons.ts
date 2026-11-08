@@ -36,8 +36,6 @@ export { blockPrintingSnapshot };
  * not that one of them is rejected.
  */
 export type DeckFormat = "standard" | "extra";
-export const DECK_FORMATS: readonly DeckFormat[] = ["standard", "extra"];
-
 /**
  * Regions run rotation on their own clock, so the floor is per region.
  *

@@ -14,7 +14,7 @@ import { decideModule, type PolicyModule } from "./policy-module.js";
 import { LEADERS, policiesForDeck } from "./registry.js";
 import { withoutAsideCounters } from "../aside-counters.js";
 
-export { isAsideCounter, withoutAsideCounters } from "../aside-counters.js";
+export { isAsideCounter } from "../aside-counters.js";
 
 export interface Agent {
   chooseAction(
@@ -223,33 +223,10 @@ export class St36RulesAgent extends RegistryRulesAgent {
   }
 }
 
-export class Op16LuffyRulesAgent extends RegistryRulesAgent {
-  constructor(options?: RegistryAgentOptions) {
-    super(LEADERS.OP16_LUFFY, options);
-  }
-}
-
-export class NamiRulesAgent extends RegistryRulesAgent {
-  constructor(options?: RegistryAgentOptions) {
-    super(LEADERS.NAMI, options);
-  }
-}
-
-export class EnelRulesAgent extends RegistryRulesAgent {
-  constructor(options?: RegistryAgentOptions) {
-    super(LEADERS.ENEL, options);
-  }
-}
-
 export {
-  chooseGenericBlock,
-  chooseGenericCounter,
   chooseGenericRules,
-  chooseGenericTrigger,
   chooseKeywordGrantTarget,
   isSearchResult,
-  nonSkipEffects,
-  type CounterPolicyOptions,
 } from "./generic-policy.js";
 export {
   chooseWithModules,
@@ -258,35 +235,22 @@ export {
 } from "./policy-chain.js";
 export {
   avoid,
-  avoidAmong,
   heuristics,
-  never,
   prefer,
   preferAmong,
   type Heuristic,
   mustAct,
-  WEIGHT,
 } from "./heuristics.js";
-export {
-  anyEarlyPlay,
-  createMulliganModule,
-  DECKS_ON_THE_GENERIC_MULLIGAN,
-  type MulliganRule,
-} from "./mulligan.js";
-export { DEFAULT_ABANDON_MARGIN, race, type Race, type Role } from "./race.js";
+export { DECKS_ON_THE_GENERIC_MULLIGAN } from "./mulligan.js";
+export { race } from "./race.js";
 export { BUILT_IN_STRATEGY_PROFILES } from "./strategy/archetypes.js";
 export {
-  clearStrategyProfiles,
   compileProfile,
   DEFAULT_STRATEGY_PARAMS,
-  registeredStrategyProfiles,
   registerStrategyProfile,
   resolveProfile,
-  strategyModuleId,
   strategyProfile,
-  type ResolvedProfile,
   type StrategyParams,
-  type StrategyProfile,
 } from "./strategy/profile.js";
 export { leadersWithPattern, patternOf } from "./strategy/patterns.js";
 export {
@@ -294,26 +258,19 @@ export {
   REJECTED_SEARCH_TABLES,
   SEARCH_TABLES,
   tabledCards,
-  type SearchTable,
-  type SearchTier,
-  type SearchValues,
 } from "./search-values.js";
 export {
   createAreaReplacementChoiceModule,
   createSearchBlockerModule,
   createAttackOrderModule,
-  createClauseSwingModule,
   createAuraAttachmentModule,
   createBoardReplacementModule,
   createReplacementBlockerModule,
   createCounterOverDyingBlockModule,
   createCounterBudgetModule,
-  donThresholdRule,
-  createCounterEventReserveModule,
   createDeadAttachmentModule,
   createPreCombatAttachmentModule,
   createDeadOpeningPlayModule,
-  createRestedDonGiftModule,
   createPressThroughBlockersModule,
   createDeadBuffTriggerModule,
   createDeadTriggerModule,
@@ -324,71 +281,33 @@ export {
   createInertTriggerModule,
   createDeadRampTriggerModule,
   createDonReservationModule,
-  createDonThresholdModule,
   createKoReachAttachmentModule,
   createLethalCloseModule,
-  createNoHopelessAttackModule,
   createKoPayoffTargetModule,
   createThreatRemovalModule,
   createTriggerDebuffTargetModule,
   createMainDebuffTargetModule,
   createStageReplacementModule,
 } from "./format-heuristics.js";
-export {
-  tactics,
-  tacticsFor,
-  type ActivateMainAction,
-  type AttachDonAction,
-  type BlockAction,
-  type CounterAction,
-  type HandCard,
-  type PlayAction,
-  type Tactics,
-  type TriggerAction,
-} from "./tactics.js";
+export { tactics, tacticsFor } from "./tactics.js";
 export {
   archetypeOf,
   decideModule,
-  forArchetype,
-  forMatchup,
   policyContext,
   resolveWithModules,
-  type Archetype,
-  type PolicyContext,
   type PolicyModule,
-  type ScoreContribution,
 } from "./policy-module.js";
 export {
   attacksAreLethal,
-  counterCardsNeeded,
-  counterDemand,
-  incomingLeaderAttacks,
-  incomingLeaderDamage,
   incomingLeaderDamages,
-  leaderHitDamage,
-  nextTurnLeaderDamage,
   nextTurnLeaderThreats,
-  opponentCanStillAttack,
-  ownAttackerLeaderDamage,
 } from "./combat.js";
 export {
-  EVERY_DECK,
   LEADERS,
   moduleScopes,
   policiesForDeck,
-  registerPolicy,
   registeredDecks,
   type ModuleScope,
-  type Registration,
 } from "./registry.js";
-export { createDonLookaheadModule } from "./modules/lookahead-module.js";
-export { createDonSequenceModule } from "./modules/don-sequence-module.js";
+
 export { chooseSt31Rules } from "./decks/st31-policy.js";
-export { createSt32RulesPolicy } from "./decks/st32-policy.js";
-export { createSt33RulesPolicy } from "./decks/st33-policy.js";
-export { createSt34RulesPolicy } from "./decks/st34-policy.js";
-export { createSt35DefensePolicy, ST35_RULES } from "./decks/st35-policy.js";
-export { createSt36RulesPolicy } from "./decks/st36-policy.js";
-export { createOp16LuffyRulesPolicy } from "./decks/op16-luffy-policy.js";
-export { OP16_NAMI_RULES } from "./decks/op16-nami-policy.js";
-export { createOp16EnelRulesPolicy } from "./decks/op16-enel-policy.js";

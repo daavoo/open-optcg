@@ -105,8 +105,6 @@ import { op17LinlinTournamentDossier } from "./op17-linlin-tournament.js";
 import { op13LuffyMiracleDossier } from "./op13-luffy-miracle.js";
 import type { DeckStrategyDossier } from "./types.js";
 
-export type { DeckStrategyDossier } from "./types.js";
-
 const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Red) Monkey.D.Luffy - Starter Deck 31": st31Dossier,
   "(Green) Roronoa Zoro - Starter Deck 32": st32Dossier,

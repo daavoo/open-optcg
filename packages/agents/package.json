@@ -4,10 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "browser": "./src/rules/local.ts",
-      "default": "./src/index.ts"
-    },
     "./local": "./src/rules/local.ts",
     "./llm": {
       "browser": null,

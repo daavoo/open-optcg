@@ -11,31 +11,9 @@ export {
 export { CompactScorerAgent } from "./compact-agent.js";
 export { CompactBatcher } from "./compact-batch.js";
 export { CompactGpu } from "./compact-gpu.js";
-export {
-  CompactModel,
-  type CompactConfig,
-  type CompactScore,
-} from "./compact-model.js";
-export {
-  COMPACT_VERSION,
-  compactDecision,
-  type CompactDecision,
-} from "./compact.js";
-export {
-  CpuMatmul,
-  ScorerModel,
-  type MatmulBackend,
-  type PackedDecision,
-  type ScorerConfig,
-} from "./model.js";
-export {
-  RENDER_VERSION,
-  SUPPORTED_RENDER_VERSIONS,
-  renderDecision,
-  renderState,
-  type RenderedDecision,
-} from "./render.js";
-export { Tokenizer } from "./tokenizer.js";
+export { CompactModel } from "./compact-model.js";
+export { compactDecision, type CompactDecision } from "./compact.js";
+
 export { GpuEncoder, requestGpuDevice } from "./gpu.js";
 export {
   isDebuffForADecidedBattle,

@@ -159,10 +159,6 @@ export function strategyProfile(id: string): StrategyProfile | undefined {
   return profiles.get(id);
 }
 
-export function registeredStrategyProfiles(): readonly StrategyProfile[] {
-  return [...profiles.values()];
-}
-
 export interface ResolvedProfile {
   /** Root first, so a reader sees the plan before its refinements. */
   readonly chain: readonly StrategyProfile[];
@@ -225,9 +221,4 @@ export function compileProfile(id: string): PolicyModule[] {
     if (rules.length === 0) return [];
     return heuristicModules(strategyModuleId(profile.id), rules);
   });
-}
-
-/** Reset hook for tests that register throwaway profiles. */
-export function clearStrategyProfiles(): void {
-  profiles.clear();
 }
