@@ -109,6 +109,7 @@ import { op17MetaMechanics } from "./op17-meta.js";
 import { op17OnPlayMechanics } from "./op17-on-play.js";
 import { op17TriggerMechanics } from "./op17-triggers.js";
 import { op17ReplacementMechanics } from "./op17-replacements.js";
+import { op18BlackMechanics } from "./op18-black.js";
 import {
   registerEventMainPrograms,
   registerReplacementPrograms,
@@ -144,6 +145,8 @@ import { op14StaticAbilities } from "./op14-static.js";
 import { op10RemovalImmunities, op10StaticAbilities } from "./op10-static.js";
 import { op11RemovalImmunities, op11StaticAbilities } from "./op11-static.js";
 import { op17StaticAbilities } from "./op17-static.js";
+import { op18BlackStaticAbilities } from "./op18-black-static.js";
+import { op18BlackReactionRules } from "./op18-black-reactions.js";
 import {
   promoRemovalImmunities,
   promoStaticAbilities,
@@ -363,6 +366,7 @@ const registries = mergeSetMechanics([
   { name: "op17-meta", mechanics: op17MetaMechanics },
   { name: "op17-kaido", mechanics: op17KaidoMechanics },
   { name: "op17-luffy-ace", mechanics: op17LuffyAceMechanics },
+  { name: "op18-black", mechanics: op18BlackMechanics },
   { name: "op05-on-play", mechanics: op05OnPlayMechanics },
   { name: "op05-main", mechanics: op05MainMechanics },
   { name: "op05-battle", mechanics: op05BattleMechanics },
@@ -439,6 +443,7 @@ registerStaticAbilities([
   ...op10StaticAbilities,
   ...op11StaticAbilities,
   ...op17StaticAbilities,
+  ...op18BlackStaticAbilities,
   ...promoStaticAbilities,
   ...op15StaticAbilities,
   ...op13StaticAbilities,
@@ -495,6 +500,7 @@ registerReactionRules([
   ...eb01ReactionRules,
   ...promoReactionRules,
   ...st10ReactionRules,
+  ...op18BlackReactionRules,
 ]);
 registerRemovalImmunities([
   ...op06RemovalImmunities,
