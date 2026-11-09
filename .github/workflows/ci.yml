@@ -69,6 +69,22 @@ jobs:
       # parity test later.
       - run: pnpm fixtures:check
 
+  packages:
+    name: npm packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Packs both packages, installs the tarballs into an empty project and
+      # typechecks and runs their README examples. `--offline` leaves out the
+      # model example, which downloads the newest release from GitHub.
+      - run: pnpm packages:check --offline
+
   e2e:
     name: playwright
     runs-on: ubuntu-latest
