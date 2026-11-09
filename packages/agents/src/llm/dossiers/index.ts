@@ -9,7 +9,7 @@ import {
   type DeckManifest,
 } from "@one-piece-sim/decks";
 import { genericDossier } from "./generic.js";
-import { op13SaboTournamentDossier } from "./op13-sabo-tournament.js";
+import { op13SaboTcgmmDossier } from "./op13-sabo-tcgmm.js";
 import { op16EnelDossier } from "./op16-enel.js";
 import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
 import { op16AceOpenDossier } from "./op16-ace-open.js";
@@ -64,7 +64,7 @@ import { st22Dossier } from "./st22.js";
 import { st23Dossier } from "./st23.js";
 import { st29Dossier } from "./st29.js";
 import { st30Dossier } from "./st30.js";
-import { op17LuffyAceDossier } from "./op17-luffy-ace.js";
+import { st30LuffyAceCdmxDossier } from "./st30-luffy-ace-cdmx.js";
 import { st31Dossier } from "./st31.js";
 import { st32Dossier } from "./st32.js";
 import { st33Dossier } from "./st33.js";
@@ -72,13 +72,13 @@ import { st33KuzanTournamentDossier } from "./st33-kuzan-tournament.js";
 import { op14HancockTournamentDossier } from "./op14-hancock-tournament.js";
 import { op09BuggyTournamentDossier } from "./op09-buggy-tournament.js";
 import { op14LawTournamentDossier } from "./op14-law-tournament.js";
-import { eb05RobinDossier } from "./eb05-robin.js";
+import { eb05RobinTcgmmDossier } from "./eb05-robin-tcgmm.js";
 import { st34Dossier } from "./st34.js";
 import { st35Dossier } from "./st35.js";
 import { st36Dossier } from "./st36.js";
 import { st29LuffyTournamentDossier } from "./st29-luffy-tournament.js";
 import { op11KatakuriTournamentDossier } from "./op11-katakuri-tournament.js";
-import { op05LuffyTournamentDossier } from "./op05-luffy-tournament.js";
+import { op05LuffyStoreBattle2026Dossier } from "./op05-luffy-store-battle-2026.js";
 import { op10KidTournamentDossier } from "./op10-kid-tournament.js";
 import { op11ShirahoshiTournamentDossier } from "./op11-shirahoshi-tournament.js";
 import { op12SanjiTournamentDossier } from "./op12-sanji-tournament.js";
@@ -146,8 +146,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op14DoflamingoDossier,
   "(Red/Purple) Gol.D.Roger - Official Feature Deck": op13RogerDossier,
   "(Green/Blue) Monkey.D.Luffy - Official Feature Deck": op16LuffyDossier,
-  "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20":
-    op13SaboTournamentDossier,
+  "(Red/Black) Sabo - TCG Match Making EB05": op13SaboTcgmmDossier,
   "(Green) Shanks - Official Feature Deck": op17ShanksDossier,
   "(Red) Portgas.D.Ace - Official Feature Deck": op16AceDossier,
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenDossier,
@@ -159,7 +158,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op14HancockTournamentDossier,
   "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentDossier,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentDossier,
-  "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinDossier,
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05": eb05RobinTcgmmDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,
@@ -177,13 +176,14 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Black) Marshall.D.Teach - Starter Deck 27": st27Dossier,
   "(Yellow) Monkey.D.Luffy - Starter Deck 29": st29Dossier,
   "(Red/Green) Luffy & Ace - Starter Deck 30": st30Dossier,
-  "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceDossier,
+  "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19":
+    st30LuffyAceCdmxDossier,
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
     st29LuffyTournamentDossier,
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":
     op11KatakuriTournamentDossier,
-  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01":
-    op05LuffyTournamentDossier,
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10":
+    op05LuffyStoreBattle2026Dossier,
   "(Yellow) Eustass Kid - ChinoizeCup #104": op10KidTournamentDossier,
   "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125":
     op11ShirahoshiTournamentDossier,

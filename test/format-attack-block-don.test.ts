@@ -55,7 +55,7 @@ describe("attack-order: lead with the smallest connecting attack", () => {
   function twoAttackers() {
     return scenario()
       .decks(
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("attack-order")
@@ -107,7 +107,7 @@ describe("attack-order: lead with the smallest connecting attack", () => {
     // including the ones `threat-removal` exists to promote.
     const game = scenario()
       .decks(
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("attack-order-character")
@@ -157,7 +157,7 @@ describe("counter-over-dying-block: keep a Blocker the hand can replace", () => 
   }) {
     const built = scenario()
       .decks(
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("dying-block")
@@ -269,7 +269,7 @@ describe("aura-attachment: switch the board-wide aura on before the body", () =>
   function auraTurn(options: { activeDon: number; boardAura: boolean }) {
     return scenario()
       .decks(
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("aura-attachment")
@@ -307,7 +307,7 @@ describe("aura-attachment: switch the board-wide aura on before the body", () =>
   it("says nothing once the DON!! is on the Leader", () => {
     const game = scenario()
       .decks(
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("aura-attached")
@@ -328,7 +328,7 @@ describe("aura-attachment: switch the board-wide aura on before the body", () =>
     // never switched on at all.
     const game = scenario()
       .decks(
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
         "(Red) Monkey.D.Luffy - Starter Deck 31",
       )
       .seed("aura-vs-activation")
@@ -357,7 +357,7 @@ describe("aura-attachment: switch the board-wide aura on before the body", () =>
     const game = scenario()
       .decks(
         "(Red) Monkey.D.Luffy - Starter Deck 31",
-        "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+        "(Red/Black) Sabo - TCG Match Making EB05",
       )
       .seed("aura-st31")
       .atTurn(6, { active: "p1" })

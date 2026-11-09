@@ -1437,7 +1437,7 @@ const midrangeRobinEb05: StrategyProfile = {
   id: "midrange-robin-eb05",
   extends: "midrange",
   summary:
-    "EB05 Green/Yellow Nico Robin: a board of 6000-power <Wisdom> bodies the Leader stands back up for a second attack, refilling its Life when one is K.O.'d.",
+    "EB05 Green/Yellow Nico Robin: <Wisdom> bodies the Leader stands back up for a second attack, refilling its Life when one is K.O.'d, beside Big Mom [Trigger] bodies that play themselves off Life.",
   pattern: "midrange",
   leaders: ["EB05-010"],
 };

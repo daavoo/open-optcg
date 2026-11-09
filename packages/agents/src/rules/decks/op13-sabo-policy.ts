@@ -7,8 +7,8 @@ import { avoid, heuristics, prefer } from "../heuristics.js";
 import { createMulliganModule } from "../mulligan.js";
 import type { PolicyModule } from "../policy-module.js";
 
-/** The two bodies that print "+12 cost", i.e. what switches the deck on. */
-const GIANTS = ["OP17-089", "OP17-119"];
+/** The bodies that print "+12 cost", i.e. what switches the deck on. */
+const GIANTS = ["OP17-089", "OP17-119", "EB05-047"];
 /** OP15-088 Pirates Docking Six: printed 5, on the board at 11. */
 const DOCKING_SIX = "OP15-088";
 /** OP17-098 Gum-Gum Kong Gun, whose [Main] rests six DON!! for a double K.O. */
@@ -61,6 +61,8 @@ const ELBAPH_IDENTITIES: ReadonlySet<string> = new Set([
   "OP13-007",
   "OP14-096",
   "ST01-011",
+  "EB05-046",
+  "EB05-047",
 ]);
 
 /** Whether the seat holding this observation is piloting the Elbaph list. */
@@ -99,7 +101,7 @@ const anyEnabler = (observation: GameObservation): boolean =>
  * once, and the 2-drops go back to being 2000s with no other way to grow. That
  * is the number a Counter card is traded against here, and it is why the field's
  * one-card ceiling -- right for a body that can simply be played again -- prices
- * this deck's two enablers wrong.
+ * this deck's enablers wrong.
  *
  * Floored at the ordinary price so an empty board never buys less than the
  * default would.
@@ -137,6 +139,7 @@ const kongGunTargets = (observation: GameObservation): number =>
 const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
   "OP17-089",
   "OP17-119",
+  "EB05-047",
   "OP15-088",
   "OP17-093",
 ]);
@@ -150,16 +153,16 @@ const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
  * `[DON!! x1] If you have a Character with a cost of 8 or more, your Leader and
  * all of your Characters gain +1000 power`, and six of the OP17 bodies print
  * `if there is a Character with a cost of 12 or more, ...`. OP17-089
- * Jaguar.D.Saul costs 4 in hand and sits on the field at 16; OP17-119 Loki
- * costs 6 and sits at 18. So one cheap giant simultaneously grows every 2-drop
- * by 3000, hands OP17-093 [Rush], and -- with a single DON!! on the Leader --
- * adds another +1000 to everything. The Leader's other clause runs backwards:
+ * Jaguar.D.Saul and EB05-047 Ripley cost 4 in hand and sit on the field at 16;
+ * OP17-119 Loki costs 6 and sits at 18. So one cheap giant simultaneously
+ * grows every 2-drop by 3000, hands OP17-093 [Rush], and -- with a single
+ * DON!! on the Leader -- adds another +1000 to everything. The Leader's other clause runs backwards:
  * `If you have 4 or more Life cards, give this Leader −1000 power`, so the
  * Leader is a 4000 body until Life is spent.
  *
  * Source for the plan: the top-placing OP17 RB Sabo list on gumgum.gg and
  * onepiece.gg's OP13-004 Leader guide, both restated in
- * `packages/agents/src/llm/dossiers/op13-sabo-tournament.ts`.
+ * `packages/agents/src/llm/dossiers/op13-sabo-tcgmm.ts`.
  *
  * ## Why this file exists
  *
@@ -181,7 +184,7 @@ const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
  *
  * Price the pair with:
  *
- *     pnpm deck:ab --deck "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20" \
+ *     pnpm deck:ab --deck "(Red/Black) Sabo - TCG Match Making EB05" \
  *       --disable op13-sabo,op13-sabo-decide
  *
  * ST32 is the matchup to watch rather than dismiss: it is where this deck is
@@ -327,7 +330,7 @@ export function createOp13SaboDecideModule(): PolicyModule {
       if (observation.phase === "counter") {
         return chooseGenericCounter(observation, actions, {
           protectedCards: ELBAPH_PROTECTED_CARDS,
-          // Only the two enablers are repriced. OP15-088 and OP17-093 are worth
+          // Only the enablers are repriced. OP15-088 and OP17-093 are worth
           // a Counter card for their own sake -- a 5-cost body and an 8-cost
           // [Rush] one -- but nothing else on the board shrinks when they go,
           // so the ordinary price is the right one for them.

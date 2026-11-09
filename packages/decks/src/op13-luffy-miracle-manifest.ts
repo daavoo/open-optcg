@@ -9,8 +9,9 @@ import type { DeckManifest } from "./index.js";
  * https://optcgwebsim.com/learn/miracle-luffy-eb05-guide/ (updated
  * 2026-11-05; the page footer read 6 Nov 2026 when retrieved 2026-11-07),
  * whose decklist is this fifty. A community deck guide rather than an event
- * placing, so like the EB05 Wisdom Robin list (`eb05-robin-manifest.ts`) the
- * id names the archetype and the set rather than a placing. Every identity is
+ * placing, so like the EB05 Wisdom Robin list (now a training list in
+ * `ml/bridge/decks.ts`) the id names the archetype and the set rather than a
+ * placing. Every identity is
  * stamped from Bandai's cardlist pages already, so the audit needs no entry
  * for it.
  *
