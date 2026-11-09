@@ -752,7 +752,16 @@ export interface ReplacementProgram {
      * nothing else -- and note that paying it is itself the trigger OP17-062
      * Kaido watches, so on that board the protection can refund itself.
      */
-    | { kind: "return-don"; count: number }
+    | {
+        kind: "return-don";
+        count: number;
+        /**
+         * Whether the protector rests as well -- "DON!! −1 *and* rest this
+         * Character instead" (OP18-069 Sodomu & Gomora), the DON!! sibling of
+         * `trash-from-hand`'s `restsSelf`. A rested protector cannot pay it.
+         */
+        restsSelf?: boolean;
+      }
     /**
      * "…you may trash this Character instead" -- OP15-094 Roronoa Zoro.
      *

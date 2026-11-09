@@ -50,9 +50,12 @@ const KEYWORD_MARKERS: ReadonlyArray<[string, CardKeyword]> = [
  * DON!! −1 and the card from hand its text charges, OP16-048 Buggy blocked in
  * place of the [Prisoner of Impel Down] it is supposed to give [Blocker] to,
  * and OP15-047 Sanji attacked as [Unblockable] while granting that to someone
- * else. The chain is matched because "gains [Rush] and [Blocker]" grants both.
+ * else. The chain is matched because "gains [Rush] and [Blocker]" grants both,
+ * and a power change may lead it -- "gains +2000 power and [Blocker]", the
+ * wording OP18-071 Trebol's provisional text puts behind its Sugar gate.
  */
-const GRANTED_KEYWORD = /gains?\s+(?:\[[^\]]+\]\s*(?:and|or|,)\s*)*$/;
+const GRANTED_KEYWORD =
+  /gains?\s+(?:(?:\[[^\]]+\]|[+\-\u2212]\d+\s+power)\s*(?:and|or|,)\s*)*$/;
 
 /**
  * Text that *denies* the keyword the marker names, rather than printing it.

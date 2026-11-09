@@ -36,14 +36,19 @@ export interface ReactionRule {
          * card leaving a *hand* rather than the field. Pair it with
          * `sourceType`: a hand trash is nearly always a cost, so without that
          * filter the rule would pay out on every discard in the game.
+         *
+         * `"trash"` with `to: "board"` is a Character played out of the trash
+         * -- the OP-18 Saint Gunko Leader. `playOntoBoard` raises the move
+         * alongside `card-played`, and the move is the half that says where
+         * the card came from.
          */
-        from: "life" | "board" | "hand";
+        from: "life" | "board" | "hand" | "trash";
         /**
          * Where it went, for a clause that means a K.O. rather than any exit --
          * or, with `"hand"`, one that means a Life card *kept*: "when a card is
          * added to your hand from your Life" (OP05-107 Lieutenant Spacey).
          */
-        to?: "trash" | "hand";
+        to?: "trash" | "hand" | "board";
         /**
          * Only a K.O.: "when a Character is K.O.'d" (EB01-047, EB04-044,
          * OP13-002, OP14-041). `to: "trash"` alone also matches a Character
