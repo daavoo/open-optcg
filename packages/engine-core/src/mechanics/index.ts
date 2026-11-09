@@ -110,9 +110,11 @@ import { op17OnPlayMechanics } from "./op17-on-play.js";
 import { op17TriggerMechanics } from "./op17-triggers.js";
 import { op17ReplacementMechanics } from "./op17-replacements.js";
 import { op18RedMechanics } from "./op18-red.js";
+import { op18YellowMechanics } from "./op18-yellow.js";
 import {
   registerEventMainPrograms,
   registerReplacementPrograms,
+  registerTriggerPrograms,
   registerWhenRestedCards,
 } from "../mechanics.js";
 import { registerDamageReplacements } from "../damage-replacement.js";
@@ -367,6 +369,7 @@ const registries = mergeSetMechanics([
   { name: "op17-kaido", mechanics: op17KaidoMechanics },
   { name: "op17-luffy-ace", mechanics: op17LuffyAceMechanics },
   { name: "op18-red", mechanics: op18RedMechanics },
+  { name: "op18-yellow", mechanics: op18YellowMechanics },
   { name: "op05-on-play", mechanics: op05OnPlayMechanics },
   { name: "op05-main", mechanics: op05MainMechanics },
   { name: "op05-battle", mechanics: op05BattleMechanics },
@@ -433,6 +436,8 @@ registerReplacementPrograms(replacementPrograms);
 registerDamageReplacements(damageReplacementPrograms);
 // Same seam, for the two Characters whose text activates an Event out of hand.
 registerEventMainPrograms(eventMainPrograms);
+// Same seam, for OP18-105's activation of another card's [Trigger].
+registerTriggerPrograms(triggerPrograms);
 // Same seam again, for the one fact the inertness walk needs about a card it is
 // only ever handed the *program* of: whether resting it is a price or a payoff.
 registerWhenRestedCards(new Set(whenRestedPrograms.keys()));
