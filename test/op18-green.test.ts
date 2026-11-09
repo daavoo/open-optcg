@@ -411,7 +411,7 @@ describe("OP18-026 Sanji", () => {
 });
 
 describe("OP18-027 Zoro & Sogeking", () => {
-  covers("OP18-027", "static");
+  covers("OP18-027", "[Opponent's Turn]");
 
   const leaderPower = (game: Game) =>
     currentPower(game.state, "p1", "p1-leader", false);

@@ -50,18 +50,14 @@ const KEYWORD_MARKERS: ReadonlyArray<[string, CardKeyword]> = [
  * DON!! −1 and the card from hand its text charges, OP16-048 Buggy blocked in
  * place of the [Prisoner of Impel Down] it is supposed to give [Blocker] to,
  * and OP15-047 Sanji attacked as [Unblockable] while granting that to someone
- * else. The chain is matched because "gains [Rush] and [Blocker]" grants both,
- * and a power change may lead it -- "gains +2000 power and [Blocker]", the
- * wording OP18-071 Trebol's provisional text puts behind its Sugar gate.
+ * else. The chain is matched because "gains [Rush] and [Blocker]" grants both;
+ * a power change may lead it -- "gains +2000 power and [Blocker]", the wording
+ * OP18-071 Trebol's provisional text puts behind its Sugar gate -- and a
+ * separator may be a comma followed by "or", as in OP18-085 Cerberus's list of
+ * three keywords it grants one of and prints none of.
  */
 const GRANTED_KEYWORD =
-  /gains?\s+(?:(?:\[[^\]]+\]|[+\-\u2212]\d+\s+power)\s*(?:and|or|,)\s*)*$/;
- * and a separator may be a comma followed by "or" -- OP18-085 Cerberus grants
- * one of three keywords in a list, "[Rush], [Banish], or [Unblockable]", and
- * prints none of them itself.
- */
-const GRANTED_KEYWORD =
-  /gains?\s+(?:\[[^\]]+\]\s*(?:,\s*(?:and|or)?|and|or)\s*)*$/;
+  /gains?\s+(?:(?:\[[^\]]+\]|[+\-\u2212]\d+\s+power)\s*(?:,\s*(?:and|or)?|and|or)\s*)*$/;
 
 /**
  * Text that *denies* the keyword the marker names, rather than printing it.

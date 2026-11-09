@@ -800,7 +800,7 @@ describe("OP18-071 Trebol removal replacement", () => {
 });
 
 describe("OP18-071 Trebol behind a Sugar Leader", () => {
-  covers("OP18-071", "[Opponent's Turn]", "[Blocker]");
+  covers("OP18-071", "[Opponent's Turn]");
 
   it("gains +2000 and blocks on the opponent's turn behind [Sugar]", () => {
     const game = defending("op18-071-sugar")
@@ -830,6 +830,21 @@ describe("OP18-071 Trebol behind a Sugar Leader", () => {
       .withBoard("p1", [character("trebol", "OP18-071")])
       .build();
     expect(currentPower(other.state, "p1", "trebol", false)).toBe(6000);
+  });
+
+  it("cannot block behind another Leader", () => {
+    const game = defending("op18-071-no-block")
+      .withBoard("p1", [character("trebol", "OP18-071")])
+      .withBoard("p2", [character("attacker", "OP11-003", { playedTurn: 1 })])
+      .build();
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "p1-leader",
+    });
+    expect(game.legalActions().some((action) => action.type === "block")).toBe(
+      false,
+    );
   });
 });
 

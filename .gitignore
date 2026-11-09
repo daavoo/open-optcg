@@ -22,6 +22,7 @@ local-art/
 fixtures/reference/*/bandai/*
 fixtures/reference/*/egman/*.json
 fixtures/reference/*/logbook/*
+fixtures/reference/*/tierone/*
 !fixtures/reference/**/manifest.json
 
 # `tsc`'s emit. Separate from `dist`, which holds the browser artifact.

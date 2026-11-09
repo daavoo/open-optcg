@@ -10,6 +10,7 @@ import {
 } from "./block-icons.js";
 import { parseOfficialCards, type OfficialCard } from "./parse-cardlist.js";
 import { parseLogbookCard } from "./parse-logbook.js";
+import { applyProvisionalCorrection } from "./provisional-corrections.js";
 import {
   textPackEntry,
   textPackFile,
@@ -1200,8 +1201,8 @@ for (const series of provisionalSeries) {
   const records = [];
   for (let index = 1; index <= series.expected; index += 1) {
     const page = `${series.prefix}-${String(index).padStart(3, "0")}.html`;
-    const card = parseLogbookCard(
-      await readFile(join(root, "logbook", page), "utf8"),
+    const card = applyProvisionalCorrection(
+      parseLogbookCard(await readFile(join(root, "logbook", page), "utf8")),
     );
     if (!CARD_RARITIES.has(card.rarity))
       throw new Error(

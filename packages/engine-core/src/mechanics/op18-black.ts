@@ -203,10 +203,23 @@ export const op18BlackMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-091 Brogy: an [On Play] in the Japanese text (登場時); the
-      // provisional English rendering marks it [When Attacking]. A card from
-      // hand buys back a Character of cost 2 or less from the trash -- the card
-      // just paid may be that Character.
+      // OP18-097 Abyss (Stage): draw first, then mill 2 -- both mandatory.
+      "OP18-097",
+      {
+        effect: {
+          kind: "sequence",
+          effects: [
+            { kind: "draw", player: "self", count: 1 },
+            { kind: "trash-top", player: "self", count: 2 },
+          ],
+        },
+      },
+    ],
+  ],
+  whenAttacking: [
+    [
+      // OP18-091 Brogy: a card from hand buys back a Character of cost 2 or
+      // less from the trash -- the card just paid may be that Character.
       "OP18-091",
       {
         effect: {
@@ -246,21 +259,6 @@ export const op18BlackMechanics: SetMechanics = {
         },
       },
     ],
-    [
-      // OP18-097 Abyss (Stage): draw first, then mill 2 -- both mandatory.
-      "OP18-097",
-      {
-        effect: {
-          kind: "sequence",
-          effects: [
-            { kind: "draw", player: "self", count: 1 },
-            { kind: "trash-top", player: "self", count: 2 },
-          ],
-        },
-      },
-    ],
-  ],
-  whenAttacking: [
     [
       // OP18-082 Catarina Devon: EB04-052 Sanji's clause -- the Japanese text
       // is the same sentence. The copy is taken once, as the attack is

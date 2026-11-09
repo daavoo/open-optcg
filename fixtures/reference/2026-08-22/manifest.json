@@ -2024,6 +2024,17 @@
       "authority": "secondary",
       "contentType": "text/html",
       "bytes": 23528
+    },
+    {
+      "id": "tierone-op18",
+      "url": "https://tier-one-onepiece.jp/blog/op18-card-list/",
+      "resolvedUrl": "https://tier-one-onepiece.jp/blog/op18-card-list/",
+      "path": "tierone/op18-card-list.html",
+      "fetchedAt": "2026-11-09T11:27:28.256Z",
+      "sha256": "e1b67fb208144be6105a150d3c31828ab3bdf27f4903772f096c2bbf1fd26941",
+      "authority": "secondary",
+      "contentType": "text/html",
+      "bytes": 535489
     }
   ]
 }

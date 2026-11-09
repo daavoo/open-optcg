@@ -611,25 +611,54 @@ describe("OP18-091 Brogy", () => {
     expect(costOn(game, "brogy")).toBe(16);
   });
 
-  // The Japanese text prints this clause as [On Play] (登場時); the
-  // provisional English text the clause list is derived from marks it
-  // [When Attacking], so it cannot be claimed with `covers` until the record's
-  // text is corrected.
-  it("buys back a cost-2-or-less Character from the trash when played", () => {
-    const game = table("op18-091-play")
-      .withHand("p1", [instance("brogy", "OP18-091"), ...filler("hand", 1)])
+  covers("OP18-091", "[When Attacking]");
+
+  it("buys back a cost-2-or-less Character from the trash as it attacks", () => {
+    const game = table("op18-091-attack")
+      .withBoard("p1", [character("brogy", "OP18-091")])
+      .withHand("p1", filler("hand", 1))
       .withTrash("p1", [
         instance("gunko", "OP18-084"),
         instance("brook", "OP18-090"),
       ])
       .build();
 
-    game.play({ type: "play-card", cardNumber: "OP18-091" });
+    game.play({
+      type: "attack",
+      attackerInstanceId: "brogy",
+      targetInstanceId: "p2-leader",
+    });
     pick(game, "apply");
     pick(game, "hand-1");
     expect(offers(game)).toEqual(["gunko", "done"]);
     pick(game, "gunko");
     expect(ids(game.state.players.p1.hand)).toEqual(["gunko"]);
+  });
+
+  it("asks nothing with an empty hand", () => {
+    const game = table("op18-091-empty")
+      .withBoard("p1", [character("brogy", "OP18-091")])
+      .withTrash("p1", [instance("gunko", "OP18-084")])
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "brogy",
+      targetInstanceId: "p2-leader",
+    });
+    expect(ids(game.state.players.p1.hand)).toEqual([]);
+    expect(ids(game.state.players.p1.trash)).toEqual(["gunko"]);
+  });
+
+  it("does nothing when played", () => {
+    const game = table("op18-091-play")
+      .withHand("p1", [instance("brogy", "OP18-091"), ...filler("hand", 1)])
+      .withTrash("p1", [instance("gunko", "OP18-084")])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "OP18-091" });
+    expect(game.state.pendingEffect).toBeFalsy();
+    expect(ids(game.state.players.p1.trash)).toEqual(["gunko"]);
   });
 });
 
