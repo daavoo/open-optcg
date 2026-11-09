@@ -109,6 +109,9 @@ import { op17MetaMechanics } from "./op17-meta.js";
 import { op17OnPlayMechanics } from "./op17-on-play.js";
 import { op17TriggerMechanics } from "./op17-triggers.js";
 import { op17ReplacementMechanics } from "./op17-replacements.js";
+import { op18PurpleMechanics } from "./op18-purple.js";
+import { op18PurpleStaticAbilities } from "./op18-purple-static.js";
+import { op18PurpleReactionRules } from "./op18-purple-reactions.js";
 import {
   registerEventMainPrograms,
   registerReplacementPrograms,
@@ -363,6 +366,7 @@ const registries = mergeSetMechanics([
   { name: "op17-meta", mechanics: op17MetaMechanics },
   { name: "op17-kaido", mechanics: op17KaidoMechanics },
   { name: "op17-luffy-ace", mechanics: op17LuffyAceMechanics },
+  { name: "op18-purple", mechanics: op18PurpleMechanics },
   { name: "op05-on-play", mechanics: op05OnPlayMechanics },
   { name: "op05-main", mechanics: op05MainMechanics },
   { name: "op05-battle", mechanics: op05BattleMechanics },
@@ -439,6 +443,7 @@ registerStaticAbilities([
   ...op10StaticAbilities,
   ...op11StaticAbilities,
   ...op17StaticAbilities,
+  ...op18PurpleStaticAbilities,
   ...promoStaticAbilities,
   ...op15StaticAbilities,
   ...op13StaticAbilities,
@@ -482,6 +487,7 @@ registerReactionRules([
   ...op11ReactionRules,
   ...op13ReactionRules,
   ...op16ReactionRules,
+  ...op18PurpleReactionRules,
   ...op14ReactionRules,
   ...eb05ReactionRules,
   ...eb04ReactionRules,
