@@ -347,6 +347,7 @@ function collectPayoff(effect: MechanicEffect, kinds: Set<PayoffKind>): void {
     case "redirect-attack":
     case "extra-turn":
     case "activate-event":
+    case "activate-trigger":
     case "install-replacement":
       kinds.add("other");
       return;

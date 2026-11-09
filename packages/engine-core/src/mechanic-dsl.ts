@@ -2320,7 +2320,20 @@ export type MechanicEffect =
        * activations sees it.
        */
       mainOnly?: true;
-    };
+    }
+  /**
+   * Runs the `[Trigger]` program of the bound card where it stands, as its
+   * own Trigger -- OP18-105 Spandam reveals a hand card and activates its
+   * `[Trigger]`. The card does not move: it was only revealed, and a Trigger
+   * that moves its own card ("play this card") does so itself. The program
+   * runs with that card as its source, so its own conditions and
+   * `SOURCE_BINDING` read the revealed card, not the one whose text asked.
+   *
+   * A card whose Trigger is still resolved imperatively has no program to run
+   * and resolves to nothing, so selectors feeding this node should ask for a
+   * card with a registered Trigger (`hasTrigger`).
+   */
+  | { kind: "activate-trigger"; binding: string };
 
 export interface MechanicProgram {
   effect: MechanicEffect;
