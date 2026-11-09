@@ -52,7 +52,7 @@ export type {
 // --- Session façade ----------------------------------------------------------
 // `GameService` owns game ids, revisions and callbacks. Prefer it over calling
 // `applyAction` directly unless you are writing a simulation.
-export { GameService } from "./service.js";
+export { GameService, type SavedGame } from "./service.js";
 
 // --- Derived rules queries ---------------------------------------------------
 // Continuous rules -- what a card costs and how strong it is right now, after

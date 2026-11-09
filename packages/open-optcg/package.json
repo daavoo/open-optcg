@@ -1,6 +1,6 @@
 {
   "name": "open-optcg",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -13,7 +13,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "INTEGRATING.md"
   ],
   "description": "A deterministic rules engine for the One Piece Card Game: legal actions, transitions, hidden information and replay.",
   "keywords": [

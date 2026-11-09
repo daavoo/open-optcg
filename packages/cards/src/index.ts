@@ -439,7 +439,13 @@ export function createCardDatabase(
     for (const card of set)
       registry.set(card.cardNumber, resolveCardRecord(card));
   }
+  return databaseOver(registry);
+}
 
+/** A database that reads `registry` live, so a card added later is seen. */
+function databaseOver(
+  registry: ReadonlyMap<string, CardDefinition>,
+): CardDatabase {
   const factsOf = new Map<string, CardFacts>();
   // Facts carry the card's printed text, which arrives as a runtime asset and
   // can arrive after something has already asked. Without this a card looked
@@ -472,10 +478,40 @@ export function createCardDatabase(
   };
 }
 
-/** The shipped pool, as every caller uses it today. */
-export const cards: CardDatabase = createCardDatabase([
-  [...cardRegistry.values()],
-]);
+/**
+ * The shipped pool, as every caller uses it today -- plus whatever a host has
+ * added with `registerCards`, since it reads `cardRegistry` itself.
+ */
+export const cards: CardDatabase = databaseOver(cardRegistry);
+
+/**
+ * Adds cards the engine does not ship to the pool every game is played with.
+ *
+ * For an app built on the engine that serves cards this package has not
+ * imported yet -- its own test cards, or a set before the engine adds it. Call
+ * it once at startup, before the first game: the engine reads one pool, so a
+ * card registered mid-game would change what an ongoing game sees.
+ *
+ * Each record is the card's number, stats and printed `effect`/`trigger`, from
+ * which its rules are derived the way the audit derives a shipped card's: a
+ * keyword such as `[Blocker]` or `[Rush]` works. A clause with an effect does
+ * not, because card behaviour is code that ships with the engine; such a card
+ * plays as its stats until the engine adds it. A card number the engine
+ * already ships is refused rather than replaced, because that card's
+ * behaviour is written against its own printed text.
+ */
+export function registerCards(records: readonly CardRecord[]): void {
+  const shipped = records.filter((card) => cardRegistry.has(card.cardNumber));
+  if (shipped.length > 0) {
+    throw new Error(
+      `CARD_ALREADY_SHIPPED: ${shipped.map((card) => card.cardNumber).join(", ")}`,
+    );
+  }
+  // Resolve every record before adding any, so a malformed one leaves the pool
+  // as it was.
+  const resolved = records.map(setRecord);
+  for (const [cardNumber, card] of resolved) cardRegistry.set(cardNumber, card);
+}
 
 /**
  * The printed text of a card, from whoever holds it.
