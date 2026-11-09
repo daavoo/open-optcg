@@ -2,10 +2,11 @@ import type { DeckManifest } from "./index.js";
 
 /**
  * Green/Yellow Nico Robin (EB05-010) as the EB-05 field builds it: the Robin
- * list in TCG Match Making's EB05 Weekly Power Rankings of 5 Nov 2026, drawn
- * from high-rank online play (stats at https://stats.tcgmatchmaking.com/). The
- * post is a power ranking rather than an event's results and names no pilot,
- * so the id carries the source and the format rather than a placing.
+ * list ranked 6th in TCG Match Making's EB05 Weekly Power Rankings of 5 Nov
+ * 2026, drawn from high-rank online play (stats at
+ * https://stats.tcgmatchmaking.com/). The post is a power ranking rather than
+ * an event's results and names no pilot, so the id carries the ranking rather
+ * than a placing.
  *
  * Source: TCG Match Making's "EB05 Weekly Power Rankings - November 5th" post
  * of 5 Nov 2026 on its Patreon, https://www.patreon.com/tcgmatchmaking,
@@ -37,7 +38,7 @@ import type { DeckManifest } from "./index.js";
  * `deck-provenance.ts` can read the list without importing `index.ts`.
  */
 export const eb05RobinTcgmmManifest: DeckManifest = {
-  id: "(Green/Yellow) Nico Robin - TCG Match Making EB05",
+  id: "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
   format: "standard",
   leader: "EB05-010",
   recommended: true,

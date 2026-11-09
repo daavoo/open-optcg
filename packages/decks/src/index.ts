@@ -292,7 +292,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue/Yellow) Nami - Official Feature Deck",
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck",
   "(Purple) Enel - Official Feature Deck",
-  "(Red/Black) Sabo - TCG Match Making EB05",
+  "(Red/Black) Sabo - TCG Match Making EB05 #8",
   "(Green) Shanks - Official Feature Deck",
   "(Blue) Rocks.D.Xebec - Official Feature Deck",
   "(Black) Monkey.D.Luffy - Official Feature Deck",
@@ -341,7 +341,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
   "(Blue) Buggy - 12th Place ChinoizeCup #124",
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
-  "(Green/Yellow) Nico Robin - TCG Match Making EB05",
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15",
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02",
   "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10",
@@ -465,7 +465,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Blue/Yellow) Nami - Official Feature Deck": op16NamiManifest,
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck": op16TeachManifest,
   "(Purple) Enel - Official Feature Deck": op16EnelManifest,
-  "(Red/Black) Sabo - TCG Match Making EB05": op13SaboTcgmmManifest,
+  "(Red/Black) Sabo - TCG Match Making EB05 #8": op13SaboTcgmmManifest,
   "(Green) Shanks - Official Feature Deck": op17ShanksManifest,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecManifest,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyManifest,
@@ -520,7 +520,8 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op14HancockTournamentManifest,
   "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
-  "(Green/Yellow) Nico Robin - TCG Match Making EB05": eb05RobinTcgmmManifest,
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6":
+    eb05RobinTcgmmManifest,
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
     st29LuffyTournamentManifest,
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":

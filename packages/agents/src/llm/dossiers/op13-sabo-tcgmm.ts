@@ -2,7 +2,7 @@ import type { DeckStrategyDossier } from "./types.js";
 
 export const op13SaboTcgmmDossier: DeckStrategyDossier = {
   version: 1,
-  deckId: "(Red/Black) Sabo - TCG Match Making EB05",
+  deckId: "(Red/Black) Sabo - TCG Match Making EB05 #8",
   archetype:
     "Red/Black Sabo in front of the OP-17 Elbaph shell with the EB-05 cards: three cost-12 giants -- Saul, Ripley and Loki -- grow every cheap {Straw Hat Crew} body by +3000 and switch on the Leader's aura, ST01-011 Brook hands the Leader its DON!!, and EB05-046 Yamato is the defence against big bodies.",
   gamePlan: [
@@ -65,7 +65,7 @@ export const op13SaboTcgmmDossier: DeckStrategyDossier = {
     {
       url: "https://www.patreon.com/tcgmatchmaking",
       retrievedAt: "2026-11-09",
-      note: "The deck's own 50: the Red/Black Sabo list in TCG Match Making's \"EB05 Weekly Power Rankings - November 5th\" post (5 Nov 2026), from high-rank online play. A Patreon post with no pilot or event.",
+      note: "The deck's own 50: the Red/Black Sabo list in TCG Match Making's \"EB05 Weekly Power Rankings - November 5th\" post (5 Nov 2026), ranked 8th, from high-rank online play. A Patreon post with no pilot or event.",
     },
     {
       url: "https://stats.tcgmatchmaking.com/",

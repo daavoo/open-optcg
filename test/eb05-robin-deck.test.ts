@@ -22,7 +22,7 @@ import { instance, scenario } from "./support/index.js";
  * List's cheap Nico Olvia and Nojiko.
  */
 
-const LIST = "(Green/Yellow) Nico Robin - TCG Match Making EB05";
+const LIST = "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "EB05-010";

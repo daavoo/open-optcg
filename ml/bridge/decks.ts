@@ -301,7 +301,7 @@ const LISTS: Record<string, DeckManifest> = {
   // Green/Yellow EB05-010 Nico Robin, the <Wisdom> midrange build from Car D.
   // Kaizoku's "EB05 Robin Swings A LOT" (12 Oct 2026), also hosted as
   // OPDeckGuide's Nico Robin EB05 guide. It was the Leader's Community list
-  // until the TCG Match Making EB05 build replaced it there; it stays here
+  // until the TCG Match Making EB05 #6 build replaced it there; it stays here
   // under its old id because checkpoints and its variants name it.
   "(Green/Yellow) Nico Robin - EB05 Wisdom List": {
     id: "(Green/Yellow) Nico Robin - EB05 Wisdom List",
@@ -325,7 +325,7 @@ const LISTS: Record<string, DeckManifest> = {
   },
   // Red/Black OP13-004 Sabo, 1st for "Manny Walia" at PlayTCG's EGB event in
   // North America on 20 Sep 2026, off onepiecetopdecks.com's OP-17 page. It
-  // was the Leader's Community list until the TCG Match Making EB05 build
+  // was the Leader's Community list until the TCG Match Making EB05 #8 build
   // replaced it there; it stays here under its old id because checkpoints
   // name it.
   "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20": {

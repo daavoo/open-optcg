@@ -117,11 +117,11 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Yellow) Charlotte Linlin - Official Feature Deck",
   ],
   [
-    "(Red/Black) Sabo - TCG Match Making EB05",
+    "(Red/Black) Sabo - TCG Match Making EB05 #8",
     "(Red/Black) Sabo - Starter Deck 35",
   ],
   ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", null],
-  ["(Green/Yellow) Nico Robin - TCG Match Making EB05", null],
+  ["(Green/Yellow) Nico Robin - TCG Match Making EB05 #6", null],
   [
     "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19",
     "(Red/Green) Luffy & Ace - Starter Deck 30",

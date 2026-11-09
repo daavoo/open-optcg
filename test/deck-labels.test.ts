@@ -54,7 +54,7 @@ describe("deck labels", () => {
     // player reads that rather than assuming it. A saved deck built for Extra
     // says so in the same place.
     expect(
-      deckLeaderLine("(Red/Black) Sabo - TCG Match Making EB05", {}),
+      deckLeaderLine("(Red/Black) Sabo - TCG Match Making EB05 #8", {}),
     ).toContain("Standard");
     expect(
       deckLeaderLine("CUSTOM-extra", {

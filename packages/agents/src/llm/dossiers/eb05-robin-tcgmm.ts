@@ -2,7 +2,7 @@ import type { DeckStrategyDossier } from "./types.js";
 
 export const eb05RobinTcgmmDossier: DeckStrategyDossier = {
   version: 1,
-  deckId: "(Green/Yellow) Nico Robin - TCG Match Making EB05",
+  deckId: "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
   archetype:
     "Green/Yellow Nico Robin behind EB05-010: a <Wisdom> core the Leader stands back up for a second attack, wrapped in the OP-17 yellow Big Mom Pirates [Trigger] package -- bodies that play themselves off a Life card, cards that put cards back on Life, and Charlotte Linlin turning every 4000 [Trigger] body into an 8000 on your turn.",
   gamePlan: [
@@ -60,7 +60,7 @@ export const eb05RobinTcgmmDossier: DeckStrategyDossier = {
     {
       url: "https://www.patreon.com/tcgmatchmaking",
       retrievedAt: "2026-11-09",
-      note: "The deck's own 50: the Green/Yellow Robin list in TCG Match Making's \"EB05 Weekly Power Rankings - November 5th\" post (5 Nov 2026), from high-rank online play. A Patreon post with no pilot or event.",
+      note: "The deck's own 50: the Green/Yellow Robin list in TCG Match Making's \"EB05 Weekly Power Rankings - November 5th\" post (5 Nov 2026), ranked 6th, from high-rank online play. A Patreon post with no pilot or event.",
     },
     {
       url: "https://stats.tcgmatchmaking.com/",

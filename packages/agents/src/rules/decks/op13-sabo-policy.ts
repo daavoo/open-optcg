@@ -184,7 +184,7 @@ const ELBAPH_PROTECTED_CARDS: ReadonlySet<string> = new Set([
  *
  * Price the pair with:
  *
- *     pnpm deck:ab --deck "(Red/Black) Sabo - TCG Match Making EB05" \
+ *     pnpm deck:ab --deck "(Red/Black) Sabo - TCG Match Making EB05 #8" \
  *       --disable op13-sabo,op13-sabo-decide
  *
  * ST32 is the matchup to watch rather than dismiss: it is where this deck is

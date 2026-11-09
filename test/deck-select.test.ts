@@ -243,7 +243,7 @@ describe("the shelves the picker groups decks into", () => {
     // A list transcribed from a tournament aggregator without a placing in
     // its id sits on the same shelf: it was read from an event too, and there
     // is no other shelf for a list that is neither a product nor Bandai's.
-    const elbaph = "(Red/Black) Sabo - TCG Match Making EB05";
+    const elbaph = "(Red/Black) Sabo - TCG Match Making EB05 #8";
     expect(deckShelf(elbaph)).toBe("tournament");
     expect(shelfOf(html, elbaph)).toBe("Community");
     expect(html.indexOf("Community Decks")).toBe(-1);
