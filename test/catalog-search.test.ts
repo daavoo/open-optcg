@@ -20,8 +20,7 @@ function filter(overrides: Partial<CatalogFilter> = {}): CatalogFilter {
 /** How many of that pool survive a filter. */
 function hits(overrides: Partial<CatalogFilter>): number {
   const applied = filter(overrides);
-  return pool.filter((card) => matchesCatalogFilter(card, applied, ["Red"]))
-    .length;
+  return pool.filter((card) => matchesCatalogFilter(card, applied)).length;
 }
 
 describe("catalog filters", () => {
@@ -73,10 +72,11 @@ describe("catalog filters", () => {
   it("offers the pool's colours, in printed order", () => {
     // A mono-colour Leader has nothing to choose between; a two-colour one
     // builds from both halves, which is what the chips are for.
-    expect(catalogPoolColors(pool, ["Red"])).toEqual(["Red"]);
-    expect(
-      catalogPoolColors(cardsForLeader("EB01-001"), ["Red", "Green"]),
-    ).toEqual(["Red", "Green"]);
+    expect(catalogPoolColors(pool)).toEqual(["Red"]);
+    expect(catalogPoolColors(cardsForLeader("EB01-001"))).toEqual([
+      "Red",
+      "Green",
+    ]);
   });
 
   it("hides a colour only once every colour a card has is hidden", () => {
@@ -87,7 +87,8 @@ describe("catalog filters", () => {
     expect(matchesCatalogFilter(red, filter({ hiddenColors: ["Red"] }))).toBe(
       false,
     );
-    // Half of a two-colour card hidden is still buildable with.
+    // No printing is two colours today, and the rule that decides one has to
+    // be settled before one arrives: half of it hidden is still buildable with.
     const dual = { ...red, colors: ["Red", "Green"] };
     expect(
       matchesCatalogFilter(dual, filter({ hiddenColors: ["Green"] })),
@@ -96,21 +97,6 @@ describe("catalog filters", () => {
       matchesCatalogFilter(dual, filter({ hiddenColors: ["Red", "Green"] })),
     ).toBe(false);
     expect(hits({ hiddenColors: ["Red"] })).toBe(0);
-  });
-
-  it("reads a two-colour card by the half its Leader shares", () => {
-    // OP18-095 is Red/Black. A Red deck holds it as a Red card, so it offers
-    // no Black chip and hiding Red hides it.
-    const redBlack = pool.find((card) => card.cardNumber === "OP18-095")!;
-    expect(redBlack.colors).toEqual(["Red", "Black"]);
-    expect(catalogPoolColors([redBlack], ["Red"])).toEqual(["Red"]);
-    expect(
-      matchesCatalogFilter(redBlack, filter({ hiddenColors: ["Red"] }), [
-        "Red",
-      ]),
-    ).toBe(false);
-    // Without a Leader to read it against, both halves count.
-    expect(catalogPoolColors([redBlack])).toEqual(["Red", "Black"]);
   });
 
   it("hides a card type the same way, and offers the three a pool has", () => {

@@ -134,7 +134,7 @@ export function render(state: EditorState, ctx: EditorContext): string {
   const poolCards = supportedCards.filter(
     (card) =>
       !state.deck!.cards[card.cardNumber] &&
-      matchesCatalogFilter(card, state.filter, leader?.colors),
+      matchesCatalogFilter(card, state.filter),
   );
   const leaderCard = leader ? renderCatalogCard(leader, 0, false) : "";
   return `<main class="deck-editor-shell">
@@ -156,7 +156,7 @@ export function render(state: EditorState, ctx: EditorContext): string {
           })
           .join("")}</div>
       </section>
-      <section class="pool-card-section"><div class="catalog-heading">${renderCatalogFilters("card", state.filter, state.sort, pool, leader?.colors)}${renderCatalogCount(poolCards.length, pool.length - deckCards.length, state.filter)}</div>
+      <section class="pool-card-section"><div class="catalog-heading">${renderCatalogFilters("card", state.filter, state.sort, pool)}${renderCatalogCount(poolCards.length, pool.length - deckCards.length, state.filter)}</div>
         ${renderTextSearchNote(state)}
         <div class="catalog-list pool-card-list">${poolCards.map((card) => renderCatalogCard(card, 0)).join("") || `<p class="catalog-empty">${catalogFilterIsEmpty(state.filter) ? "Every card in this pool is already in the deck." : "No available cards match these filters."}</p>`}</div>
       </section>

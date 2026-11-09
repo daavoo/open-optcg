@@ -64,37 +64,16 @@ export const EMPTY_CATALOG_FILTER: CatalogFilter = {
   maxCost: null,
 };
 
-/**
- * The colours a card is built with under a Leader.
- *
- * A two-colour card goes into a deck through the half its Leader shares: a
- * Red/Black Event in a Red deck is a Red card there, and a Black chip for it
- * would offer to filter a colour the deck cannot hold. With no Leader (the
- * sealed pool) every printed colour counts.
- */
-function buildableColors(
-  card: CardDefinition,
-  leaderColors: readonly string[] | undefined,
-): readonly string[] {
-  const colors = card.colors ?? [];
-  return leaderColors
-    ? colors.filter((color) => leaderColors.includes(color))
-    : colors;
-}
-
 /** Printed colour order, so the chips read the same whatever the pool is. */
 const COLOR_ORDER = ["Red", "Green", "Blue", "Purple", "Black", "Yellow"];
 
 /** Which colours a pool actually contains, in printed order. A mono-colour
     Leader still reaches dual-colour cards, so this is a fact about the pool
     and not about the Leader. */
-export function catalogPoolColors(
-  cards: readonly CardDefinition[],
-  leaderColors?: readonly string[],
-): string[] {
+export function catalogPoolColors(cards: readonly CardDefinition[]): string[] {
   const present = new Set<string>();
   for (const card of cards)
-    for (const color of buildableColors(card, leaderColors)) present.add(color);
+    for (const color of card.colors ?? []) present.add(color);
   return [
     ...COLOR_ORDER.filter((color) => present.has(color)),
     ...[...present].filter((color) => !COLOR_ORDER.includes(color)).sort(),
@@ -159,13 +138,12 @@ function contains(haystack: string, query: string): boolean {
 export function matchesCatalogFilter(
   card: CardDefinition,
   filter: CatalogFilter,
-  leaderColors?: readonly string[],
 ): boolean {
   if (!contains(identityHaystack(card), filter.identity)) return false;
   if (!contains(textHaystack(card), filter.text)) return false;
   // A dual-colour card is hidden only once both of its colours are, which is
   // the reading that keeps it available while either half is being built with.
-  const colors = buildableColors(card, leaderColors);
+  const colors = card.colors ?? [];
   if (
     colors.length &&
     colors.every((color) => filter.hiddenColors.includes(color))
@@ -207,9 +185,8 @@ export function renderCatalogFilters(
   filter: CatalogFilter,
   sort: CatalogSortKey,
   pool: readonly CardDefinition[],
-  leaderColors?: readonly string[],
 ): string {
-  const colors = catalogPoolColors(pool, leaderColors);
+  const colors = catalogPoolColors(pool);
   const categories = catalogPoolCategories(pool);
   const maxCost = catalogMaxCost(pool);
   const costInput = (
