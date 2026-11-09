@@ -78,6 +78,73 @@ card data.
 > > > > > > > | `types.ts` | the registry entry types |
 > > > > > > > | `registry.ts` | `SetMechanics` and the merge |
 > > > > > > > | `index.ts` | the twelve merged registries |
+> > > > > > > | File | Cards from |
+> > > > > > > | ---------------------- | ------------------------------------------------------------------- |
+> > > > > > > | `format.ts` | the generated ST31–ST36 pool |
+> > > > > > > | `st21.ts` | `cards/src/st21-cards.ts` |
+> > > > > > > | `st22-*.ts` | `cards/src/st22.ts` |
+> > > > > > > | `op03.ts` | the OP-03 reprints a shipped list plays, until the set comes in |
+> > > > > > > | `op03-static.ts` | the continuous text those OP-03 reprints print |
+> > > > > > > | `op02.ts` | OP02-013 Ace, OP-02's one card in the pool (a Super Parallel `X`) |
+> > > > > > > | `st02.ts` | ST02-007 Bonney, ST-02's one card in the pool (a block-4 reprint) |
+> > > > > > > | `st06.ts` | ST06-008 Hina, ST-06's one card in the pool (a block-4 reprint) |
+> > > > > > > | `st26.ts` | the five ST-26 exclusives the starter deck ships |
+> > > > > > > | `st23.ts` | the ST-23 exclusives (static rows in `st23-static.ts`) |
+> > > > > > > | `st01.ts` | ST01-011 Brook, ST-01's one card in the pool (a block-4 reprint) |
+> > > > > > > | `st27.ts` | ST-27's exclusives, plus the PRB-02/EB-01 singles it plays |
+> > > > > > > | `op07-*.ts` | `cards/src/op07.ts` |
+> > > > > > > | `op08-*.ts` | `cards/src/op08.ts` |
+> > > > > > > | `op09-*.ts` | `cards/src/op09.ts` |
+> > > > > > > | `op10-*.ts` | `cards/src/op10.ts` |
+> > > > > > > | `op11-*.ts` | `cards/src/op11.ts` |
+> > > > > > > | `op12-*.ts` | `cards/src/op12.ts` |
+> > > > > > > | `op13-*.ts` | `cards/src/op13.ts` |
+> > > > > > > | `op12-rosinante.ts` | `cards/src/op12-rosinante.ts` |
+> > > > > > > | `op14-*.ts` | `cards/src/op14.ts` |
+> > > > > > > | `op15-*.ts` | `cards/src/op15.ts` |
+> > > > > > > | `op16-enel.ts` | `cards/src/op16-enel.ts` |
+> > > > > > > | `op16-luffy.ts` | `cards/src/op16-luffy.ts` |
+> > > > > > > | `op16-nami.ts` | `cards/src/op16-nami.ts` |
+> > > > > > > | `op16-teach.ts` | `cards/src/op16-teach.ts` |
+> > > > > > > | `op16-*.ts` | `cards/src/op16.ts` |
+> > > > > > > | `op17-*.ts` | `cards/src/op17.ts` |
+> > > > > > > | `op17-luffy-ace.ts` | `cards/src/op17-luffy-ace.ts`, plus ST21-017 |
+> > > > > > > | `op18-green*.ts` | the Green cards of `cards/src/op18.ts`, OP18-021–040 and OP18-118 |
+> > > > > > > | `op05-*.ts` | `cards/src/op05.ts` |
+> > > > > > > | `op05-replacements.ts` | the four replacements OP05 prints |
+> > > > > > > | `op05-shared.ts` | OP05 fragments more than one of its cards prints |
+> > > > > > > | `op06-*.ts` | `cards/src/op06.ts` |
+> > > > > > > | `op06-yamato.ts` | `cards/src/op06-yamato.ts` |
+> > > > > > > | `eb05-*.ts` | `cards/src/eb05.ts` |
+> > > > > > > | `eb04-bonney.ts` | `cards/src/eb04-bonney.ts` |
+> > > > > > > | `eb04-*.ts` | `cards/src/eb04.ts` |
+> > > > > > > | `eb04-replacements.ts` | the two removal replacements EB-04 prints |
+> > > > > > > | `op07-replacements.ts` | the two "removed from the field" replacements OP07 prints |
+> > > > > > > | `op08-replacements.ts` | the one K.O. replacement OP08 prints |
+> > > > > > > | `op09-replacements.ts` | the one K.O. replacement OP09 prints |
+> > > > > > > | `op14-replacements.ts` | the K.O. replacements OP14 prints |
+> > > > > > > | `op16-replacements.ts` | the K.O. replacements OP15 and OP16 print |
+> > > > > > > | `op10-replacements.ts` | the K.O. replacements OP10 prints |
+> > > > > > > | `op11-replacements.ts` | OP11-110's, whose cost rests a Stage or the Leader |
+> > > > > > > | `op13-replacements.ts` | every "removed from the field" replacement, OP10–OP13 |
+> > > > > > > | `op06-shared.ts` | OP06 fragments more than one of its cards prints |
+> > > > > > > | `op07-shared.ts` | OP07 fragments more than one of its cards prints |
+> > > > > > > | `op08-shared.ts` | OP08 fragments more than one of its cards prints |
+> > > > > > > | `op09-shared.ts` | the ODYSSEY rested-board gate eleven OP09 cards print |
+> > > > > > > | `op14-shared.ts` | OP14 fragments more than one of its cards prints |
+> > > > > > > | `op15-shared.ts` | OP15 fragments printed on two clauses of one card |
+> > > > > > > | `op16-shared.ts` | the OP16 Whitebeard "reveal an 8000" template |
+> > > > > > > | `eb02-*.ts` | `cards/src/eb02.ts` |
+> > > > > > > | `eb05-shared.ts` | EB05 fragments more than one of its cards prints |
+> > > > > > > | `eb02-shared.ts` | EB02 fragments more than one of its cards prints |
+> > > > > > > | `shared.ts` | program fragments more than one set prints |
+> > > > > > > | `*-static.ts` | each set's continuous text, the rows `../static-abilities.ts` folds |
+> > > > > > > | `static-shared.ts` | the predicates those rows read |
+> > > > > > > | `*-reactions.ts` | each set's signal-driven "when X happens" clauses (`ReactionRule`s) |
+> > > > > > > | `reaction-shared.ts` | program fragments more than one of those reactions resolves |
+> > > > > > > | `types.ts` | the registry entry types |
+> > > > > > > | `registry.ts` | `SetMechanics` and the merge |
+> > > > > > > | `index.ts` | the twelve merged registries |
 
 Sixteen sets are in the pool as whole series -- OP05 through OP17, 119 cards
 each except OP14 and OP13 at 120, plus EB-05's 61, EB-04's 61, EB-03's 62 and EB-02's 61 --
