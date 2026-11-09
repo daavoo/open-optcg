@@ -109,6 +109,7 @@ import { op17MetaMechanics } from "./op17-meta.js";
 import { op17OnPlayMechanics } from "./op17-on-play.js";
 import { op17TriggerMechanics } from "./op17-triggers.js";
 import { op17ReplacementMechanics } from "./op17-replacements.js";
+import { op18RedMechanics } from "./op18-red.js";
 import {
   registerEventMainPrograms,
   registerReplacementPrograms,
@@ -127,6 +128,7 @@ import { op10ReactionRules } from "./op10-reactions.js";
 import { op11ReactionRules } from "./op11-reactions.js";
 import { op13ReactionRules } from "./op13-reactions.js";
 import { op16ReactionRules } from "./op16-reactions.js";
+import { op18RedReactionRules } from "./op18-red-reactions.js";
 import { op14ReactionRules } from "./op14-reactions.js";
 import { eb05ReactionRules } from "./eb05-reactions.js";
 import { eb04ReactionRules } from "./eb04-reactions.js";
@@ -144,6 +146,7 @@ import { op14StaticAbilities } from "./op14-static.js";
 import { op10RemovalImmunities, op10StaticAbilities } from "./op10-static.js";
 import { op11RemovalImmunities, op11StaticAbilities } from "./op11-static.js";
 import { op17StaticAbilities } from "./op17-static.js";
+import { op18RedStaticAbilities } from "./op18-red-static.js";
 import {
   promoRemovalImmunities,
   promoStaticAbilities,
@@ -363,6 +366,7 @@ const registries = mergeSetMechanics([
   { name: "op17-meta", mechanics: op17MetaMechanics },
   { name: "op17-kaido", mechanics: op17KaidoMechanics },
   { name: "op17-luffy-ace", mechanics: op17LuffyAceMechanics },
+  { name: "op18-red", mechanics: op18RedMechanics },
   { name: "op05-on-play", mechanics: op05OnPlayMechanics },
   { name: "op05-main", mechanics: op05MainMechanics },
   { name: "op05-battle", mechanics: op05BattleMechanics },
@@ -439,6 +443,7 @@ registerStaticAbilities([
   ...op10StaticAbilities,
   ...op11StaticAbilities,
   ...op17StaticAbilities,
+  ...op18RedStaticAbilities,
   ...promoStaticAbilities,
   ...op15StaticAbilities,
   ...op13StaticAbilities,
@@ -482,6 +487,7 @@ registerReactionRules([
   ...op11ReactionRules,
   ...op13ReactionRules,
   ...op16ReactionRules,
+  ...op18RedReactionRules,
   ...op14ReactionRules,
   ...eb05ReactionRules,
   ...eb04ReactionRules,
