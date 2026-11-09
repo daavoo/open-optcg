@@ -38,6 +38,9 @@ console.log(`${view.winner} wins on turn ${view.turn} (${view.resultReason})`);
 To play against the learned opponent, see
 [`open-optcg-model`](https://www.npmjs.com/package/open-optcg-model).
 
+To put the engine behind an app that already has its own board UI and game
+server, see [INTEGRATING.md](./INTEGRATING.md).
+
 ## Entry points
 
 | Import                | What it is                                                                                                                                                                               |

@@ -15,8 +15,14 @@ import {
   type GameTransitionEvent,
 } from "./engine.js";
 import { EngineError } from "./errors.js";
+import { assertGameStateInvariants } from "./invariants.js";
 import { findOfferedAction } from "./offered-action.js";
 import type { GameState } from "./model.js";
+import {
+  describeStampMismatch,
+  rulesStamp,
+  type RulesStamp,
+} from "./provenance.js";
 import {
   simulateAction,
   simulateLine,
@@ -24,6 +30,12 @@ import {
   type Plan,
   type Simulate,
 } from "./simulate.js";
+
+/** What `GameService.save` returns and `restore` takes. */
+export interface SavedGame {
+  rules: RulesStamp;
+  state: GameState;
+}
 
 export class GameService {
   readonly #games = new Map<string, GameState>();
@@ -124,6 +136,44 @@ export class GameService {
       cloneTransitionEvent,
     );
     return this.observeActive(gameId, result.state);
+  }
+
+  /**
+   * A game as a value to store, for a host that checkpoints games -- to resume
+   * one after a restart, a reconnect or on another server. The state is plain
+   * JSON; the stamp records the rules and card data it was played under.
+   */
+  save(gameId: string): SavedGame {
+    return { rules: rulesStamp(), state: this.requireGame(gameId) };
+  }
+
+  /**
+   * Resumes a game `save` produced, and shows the seat to act what it may do.
+   *
+   * A save from different rules or card data is refused by name: its next
+   * actions were offered by an engine that may no longer offer them, the same
+   * reason `replayActions` refuses a stale recording.
+   */
+  // Typed as storage hands it back: a save written by hand, or by a tool that
+  // dropped the stamp, is refused rather than resumed on trust.
+  restore(saved: { rules?: RulesStamp; state: GameState }) {
+    const mismatch = saved.rules
+      ? describeStampMismatch(saved.rules)
+      : "The save carries no rules stamp.";
+    if (mismatch) throw new EngineError("INCOMPATIBLE_SAVE", mismatch);
+    const { state } = saved;
+    assertGameStateInvariants(state);
+    if (this.#games.has(state.gameId)) {
+      throw new EngineError(
+        "ILLEGAL_ACTION",
+        `Game ${state.gameId} is already running here.`,
+      );
+    }
+    this.#games.set(state.gameId, state);
+    // A restored `g-N` id must never be handed out again by `create`.
+    const sequence = /^g-(\d+)$/.exec(state.gameId)?.[1];
+    if (sequence) this.#sequence = Math.max(this.#sequence, Number(sequence));
+    return this.observeActive(state.gameId, state);
   }
 
   private observeActive(gameId: string, state: GameState) {

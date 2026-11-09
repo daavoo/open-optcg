@@ -86,6 +86,21 @@ for (const [pkg, runs] of [
   examples.push({ file, runs });
 }
 
+// The integration guide's blocks are fragments of someone else's app -- a
+// server, a client, a worker -- so they are typechecked, not run. Each is its
+// own module, the way a reader would paste it.
+const guide = await readFile(
+  join(root, "packages/open-optcg/INTEGRATING.md"),
+  "utf8",
+);
+const guideBlocks = [...guide.matchAll(/```ts\n([\s\S]*?)```/g)];
+if (guideBlocks.length === 0) {
+  throw new Error("open-optcg/INTEGRATING.md has no ts code block");
+}
+for (const [index, block] of guideBlocks.entries()) {
+  await writeFile(join(project, `integrating-${index + 1}.ts`), block[1]!);
+}
+
 run(join(root, "node_modules/.bin/tsc"), ["-p", "tsconfig.json"], project);
 for (const { file, runs } of examples) {
   if (runs) run(process.execPath, [file], project);

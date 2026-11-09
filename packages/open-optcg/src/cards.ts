@@ -6,12 +6,13 @@
 export {
   cardFormatLegality,
   cardRegistry,
-  createCardDatabase,
   isStandardLegal,
   loadPrintedText,
   parsePrintedTextPack,
   printedText,
+  registerCards,
   requireKnownCard,
   type CardDatabase,
   type CardDefinition,
+  type CardRecord,
 } from "@one-piece-sim/cards";

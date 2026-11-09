@@ -8,7 +8,8 @@
 
 export class EngineError extends Error {
   constructor(
-    public readonly code: "STALE_ACTION" | "ILLEGAL_ACTION" | "GAME_FINISHED",
+    public readonly code:
+      "STALE_ACTION" | "ILLEGAL_ACTION" | "GAME_FINISHED" | "INCOMPATIBLE_SAVE",
     message: string,
   ) {
     super(message);

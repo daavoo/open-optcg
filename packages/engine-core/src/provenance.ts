@@ -42,11 +42,15 @@ export interface RulesStamp {
   programHash: string;
 }
 
-let cached: RulesStamp | undefined;
+let cached: { stamp: RulesStamp; cardCount: number } | undefined;
 
-/** The stamp for the rules this build implements. Computed once. */
+/**
+ * The stamp for the rules this build implements. Computed once, and again only
+ * if a host has added cards with `registerCards` since -- the pool only ever
+ * grows, so its size says whether the cached hash still covers it.
+ */
 export function rulesStamp(): RulesStamp {
-  if (cached) return cached;
+  if (cached?.cardCount === cardRegistry.size) return cached.stamp;
   const cards = [...cardRegistry.values()]
     .map((card) => ({
       cardNumber: card.cardNumber,
@@ -68,12 +72,13 @@ export function rulesStamp(): RulesStamp {
     .sort((left, right) => left[0].localeCompare(right[0]));
   const statics = STATIC_ABILITIES.map((ability) => ability.cardNumber).sort();
 
-  cached = {
+  const stamp = {
     rulesVersion: RULES_VERSION,
     cardDataHash: sha256Hex(canonicalJson(cards)),
     programHash: sha256Hex(canonicalJson({ programs, statics })),
   };
-  return cached;
+  cached = { stamp, cardCount: cardRegistry.size };
+  return stamp;
 }
 
 export { RULES_VERSION } from "./rules-version.js";

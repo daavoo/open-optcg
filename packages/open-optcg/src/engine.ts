@@ -27,4 +27,5 @@ export {
   type ReplayCheckpoint,
   type ReplayFixture,
   type RulesStamp,
+  type SavedGame,
 } from "@one-piece-sim/engine-core";
