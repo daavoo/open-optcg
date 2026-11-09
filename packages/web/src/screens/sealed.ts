@@ -93,6 +93,11 @@ export interface SealedContext {
   /** Re-renders whichever sealed view (lobby or builder) is on screen. */
   rerender(): void;
   goHome(): void;
+  /**
+   * The pre-release page's set (`prerelease.ts`): the lobby opens that set's
+   * packs and offers no other.
+   */
+  lockedExpansion?: string | null;
 }
 
 export function emptyState(): SealedState {
@@ -116,9 +121,13 @@ export function emptyState(): SealedState {
  * hosted build does (`artBesidePage` in `tools/build-web.ts`), so there is no
  * page-weight reason left to show a reader less than the app has.
  */
-function currentExpansion(state: SealedState): SealedExpansion {
+function currentExpansion(
+  state: SealedState,
+  locked?: string | null,
+): SealedExpansion {
+  const code = locked ?? state.expansion;
   return (
-    SEALED_EXPANSIONS.find((expansion) => expansion.code === state.expansion) ??
+    SEALED_EXPANSIONS.find((expansion) => expansion.code === code) ??
     SEALED_EXPANSIONS.at(-1)!
   );
 }
@@ -167,7 +176,17 @@ function tags(expansion: SealedExpansion, latest: boolean): string {
  * it: the screen chooses one opaque thing before a single primary action, so
  * the choice and the control that changes it are the same surface.
  */
-function boosterChoice(expansion: SealedExpansion): string {
+function boosterChoice(expansion: SealedExpansion, locked: boolean): string {
+  if (locked)
+    return `<div class="booster-choice">
+    <span class="booster-choice-head">
+      <strong>${escapeHtml(expansion.title)} pre-release</strong>
+    </span>
+    <span class="booster-choice-body">
+      ${packImage(expansion)}
+      <span class="booster-choice-swap">${SEALED_PACK_COUNT} packs, a ${SEALED_DECK_SIZE}-card deck, the rainbow Luffy leads it</span>
+    </span>
+  </div>`;
   return `<button class="booster-choice" type="button" data-open-booster-picker aria-haspopup="dialog">
     <span class="booster-choice-head">
       <strong>${escapeHtml(expansion.title)}</strong>
@@ -207,7 +226,8 @@ function boosterPickerDialog(state: SealedState): string {
 }
 
 export function renderLobby(state: SealedState, ctx: SealedContext): string {
-  const expansion = currentExpansion(state);
+  const locked = Boolean(ctx.lockedExpansion);
+  const expansion = currentExpansion(state, ctx.lockedExpansion);
   state.expansion = expansion.code;
   return `<main class="setup-shell sealed-shell">
     <header class="setup-topbar">
@@ -218,12 +238,12 @@ export function renderLobby(state: SealedState, ctx: SealedContext): string {
       </button>
     </header>
     <form class="menu-card setup-form" id="sealed-form">
-      ${boosterChoice(expansion)}
+      ${boosterChoice(expansion, locked)}
       <button class="primary wide" type="submit">${icon("sparkles", "Open packs")}Open ${SEALED_PACK_COUNT} packs</button>
       <button class="text-button wide" type="button" id="sealed-import">${icon("file-up", "Import a deck")}Import a ${SEALED_DECK_SIZE}-card list instead</button>
     </form>
     ${footer.render()}
-    ${boosterPickerDialog(state)}
+    ${locked ? "" : boosterPickerDialog(state)}
     ${ctx.renderImportDialog()}
   </main>`;
 }
@@ -321,7 +341,7 @@ export function beginRun(
 function startRun(state: SealedState, ctx: SealedContext): void {
   const { pool, packsOpened } = openSealedPool(
     ctx.randomSeed(),
-    currentExpansion(state).code,
+    currentExpansion(state, ctx.lockedExpansion).code,
   );
   beginRun(state, ctx, pool, packsOpened, {});
 }

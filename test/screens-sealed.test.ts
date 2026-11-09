@@ -54,6 +54,21 @@ function runningState(
   return state;
 }
 
+describe("the pre-release page's lobby", () => {
+  it("opens the locked set's packs and offers no other", () => {
+    const state = emptyState();
+    state.expansion = "OP15";
+    const html = renderLobby(state, stubContext({ lockedExpansion: "OP18" }));
+    expect(state.expansion).toBe("OP18");
+    expect(html).toContain(
+      escapeHtml(`${requireSealedExpansion("OP18").title} pre-release`),
+    );
+    expect(html).not.toContain("data-pick-expansion");
+    expect(html).not.toContain("data-open-booster-picker");
+    expect(html).toContain('id="sealed-form"');
+  });
+});
+
 describe("sealed screen render", () => {
   it("renders the pack-opening lobby on the newest expansion", () => {
     const state = emptyState();

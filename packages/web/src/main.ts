@@ -48,6 +48,7 @@ import type { AnalyticsContext, AnalyticsState } from "./screens/analytics.js";
 import * as editorScreen from "./screens/editor.js";
 import type { EditorContext, EditorState } from "./screens/editor.js";
 import * as sealedScreen from "./screens/sealed.js";
+import { prereleaseExpansion } from "./prerelease.js";
 import type { SealedContext, SealedState } from "./screens/sealed.js";
 import * as assetGateScreen from "./screens/asset-gate.js";
 import type { AssetGateContext } from "./screens/asset-gate.js";
@@ -597,6 +598,10 @@ function leaveMatch(): void {
  * tests that drive them; nothing on the page leads there.
  */
 function showHome(): void {
+  if (prereleaseExpansion()) {
+    showSealedLobby();
+    return;
+  }
   if (window.location.hash !== "#modes") {
     showSetup();
     return;
@@ -762,6 +767,7 @@ const sealedDeps: SealedContext = {
     else showSealedLobby();
   },
   goHome,
+  lockedExpansion: prereleaseExpansion(),
 };
 
 function showSealedLobby(): void {

@@ -58,6 +58,22 @@ jobs:
           cp dist/open-optcg.html site/index.html
           cp dist/get-cards.js site/get-cards.js
           if [ -f dist/learned-model.json ]; then cp dist/learned-model.json site/; fi
+      # The OP-18 pre-release page (packages/web/src/prerelease.ts), at
+      # /prerelease/. It plays the model trained on OP-18 sealed decks when a
+      # `prerelease-op18-model` release carries one, the main model otherwise.
+      - run: |
+          gh release download prerelease-op18-model -p scorer-model.json -D prerelease-model || true
+          if [ -f prerelease-model/scorer-model.json ]; then
+            pnpm web:build --prerelease=OP18 --external-model --model=prerelease-model/scorer-model.json
+          else
+            pnpm web:build --prerelease=OP18 --external-model
+          fi
+          mkdir -p site/prerelease
+          cp dist/prerelease/open-optcg.html site/prerelease/index.html
+          cp dist/get-cards.js site/prerelease/get-cards.js
+          if [ -f dist/prerelease/learned-model.json ]; then cp dist/prerelease/learned-model.json site/prerelease/; fi
+        env:
+          GH_TOKEN: ${{ github.token }}
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

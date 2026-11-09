@@ -57,8 +57,31 @@ const textFlag = process.argv.find(
 const textPackPath = textFlag?.includes("=")
   ? textFlag.slice(textFlag.indexOf("=") + 1)
   : undefined;
+/**
+ * `--prerelease[=<set>]` builds the pre-release page (`packages/web/src/prerelease.ts`):
+ * the app locked to one set's sealed lobby, written to `dist/prerelease/` so
+ * it publishes beside the main page rather than over it. The set defaults to
+ * the newest sealed expansion.
+ */
+const prereleaseFlag = process.argv.find(
+  (argument) =>
+    argument === "--prerelease" || argument.startsWith("--prerelease="),
+);
+const prerelease = prereleaseFlag
+  ? prereleaseFlag.includes("=")
+    ? prereleaseFlag.slice(prereleaseFlag.indexOf("=") + 1)
+    : "OP18"
+  : null;
+/**
+ * `--model=<file>` reads the scorer pack from a file other than the default
+ * `packages/web/src/scorer-model.json`: a pre-release page plays the model
+ * trained for its set, which is not the one the main page ships.
+ */
+const modelFlag = process.argv.find((argument) =>
+  argument.startsWith("--model="),
+);
 const root = process.cwd();
-const outputDir = join(root, "dist");
+const outputDir = join(root, "dist", ...(prerelease ? ["prerelease"] : []));
 const webRoot = join(root, "packages/web/src");
 const assetRoot = join(webRoot, "assets");
 /**
@@ -341,9 +364,14 @@ async function buildWorker(
  */
 const externalModel = process.argv.includes("--external-model");
 const scorerPack = await readFile(
-  join(webRoot, "scorer-model.json"),
+  modelFlag
+    ? resolve(root, modelFlag.slice(modelFlag.indexOf("=") + 1))
+    : join(webRoot, "scorer-model.json"),
   "utf8",
-).catch(() => null);
+).catch((error: unknown) => {
+  if (modelFlag) throw error;
+  return null;
+});
 if (scorerPack) {
   const header = JSON.parse(scorerPack) as { source?: string };
   console.log(
@@ -460,6 +488,7 @@ const appBuild = await build({
     __SCORER_AVAILABLE__: scorerPack ? "true" : "false",
     __LEARNED_MODEL__: JSON.stringify(learnedModel),
     __DECK_STANDINGS__: JSON.stringify(deckStandings),
+    __PRERELEASE__: JSON.stringify(prerelease),
   },
   logLevel: "silent",
 });
@@ -578,7 +607,12 @@ const favicon = `data:image/svg+xml,${encodeURIComponent(
 const html = template
   .replace("__APP_ICON__", () => favicon)
   .replace("__APP_CSS__", () => css)
-  .replace("__APP_JS__", () => appSource.replaceAll("</script", "<\\/script"));
+  .replace("__APP_JS__", () => appSource.replaceAll("</script", "<\\/script"))
+  .replace(
+    "<title>Open OPTCG</title>",
+    () =>
+      `<title>Open OPTCG${prerelease ? ` · ${prerelease} pre-release` : ""}</title>`,
+  );
 
 if (/(?:src|href)=["'](?!data:|#)/i.test(html)) {
   throw new Error("WEB_ARTIFACT_HAS_EXTERNAL_RUNTIME_FILE");
