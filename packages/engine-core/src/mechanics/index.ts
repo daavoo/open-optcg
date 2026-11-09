@@ -114,6 +114,7 @@ import { op18YellowMechanics } from "./op18-yellow.js";
 import { op18PurpleMechanics } from "./op18-purple.js";
 import { op18PurpleStaticAbilities } from "./op18-purple-static.js";
 import { op18PurpleReactionRules } from "./op18-purple-reactions.js";
+import { op18BlackMechanics } from "./op18-black.js";
 import {
   registerEventMainPrograms,
   registerReplacementPrograms,
@@ -152,6 +153,8 @@ import { op10RemovalImmunities, op10StaticAbilities } from "./op10-static.js";
 import { op11RemovalImmunities, op11StaticAbilities } from "./op11-static.js";
 import { op17StaticAbilities } from "./op17-static.js";
 import { op18RedStaticAbilities } from "./op18-red-static.js";
+import { op18BlackStaticAbilities } from "./op18-black-static.js";
+import { op18BlackReactionRules } from "./op18-black-reactions.js";
 import {
   promoRemovalImmunities,
   promoStaticAbilities,
@@ -374,6 +377,7 @@ const registries = mergeSetMechanics([
   { name: "op18-red", mechanics: op18RedMechanics },
   { name: "op18-yellow", mechanics: op18YellowMechanics },
   { name: "op18-purple", mechanics: op18PurpleMechanics },
+  { name: "op18-black", mechanics: op18BlackMechanics },
   { name: "op05-on-play", mechanics: op05OnPlayMechanics },
   { name: "op05-main", mechanics: op05MainMechanics },
   { name: "op05-battle", mechanics: op05BattleMechanics },
@@ -454,6 +458,7 @@ registerStaticAbilities([
   ...op17StaticAbilities,
   ...op18RedStaticAbilities,
   ...op18PurpleStaticAbilities,
+  ...op18BlackStaticAbilities,
   ...promoStaticAbilities,
   ...op15StaticAbilities,
   ...op13StaticAbilities,
@@ -512,6 +517,7 @@ registerReactionRules([
   ...eb01ReactionRules,
   ...promoReactionRules,
   ...st10ReactionRules,
+  ...op18BlackReactionRules,
 ]);
 registerRemovalImmunities([
   ...op06RemovalImmunities,

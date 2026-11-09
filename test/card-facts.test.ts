@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { itWithText } from "./support/printed-text.js";
-import { cardFacts, clauseText } from "@one-piece-sim/cards";
+import { cardFacts, clauseText, deriveRules } from "@one-piece-sim/cards";
 import { createGame, observe } from "@one-piece-sim/engine-core";
 
 import { resolveDeck } from "@one-piece-sim/decks";
@@ -35,6 +35,19 @@ describe("card facts", () => {
     // ...but the same card's printed [Blocker] survives the grant clause that
     // shares its text.
     expect(cardFacts("OP15-047").keywords).toContain("Blocker");
+  });
+
+  it("reads a comma-and-or keyword list as one grant", () => {
+    // OP18-085 Cerberus hands one of three keywords to another card; the last
+    // of the list follows ", or", which must not read as printed.
+    const rules = deriveRules({
+      name: "Grant list",
+      category: "character",
+      effect:
+        "[Activate: Main] Up to 1 of your Characters gains [Rush], [Banish], or [Unblockable] during this turn.",
+      trigger: "",
+    });
+    expect(rules.keywords).toEqual([]);
   });
 
   it("does not read a keyword that picks out a target as a printed one", () => {

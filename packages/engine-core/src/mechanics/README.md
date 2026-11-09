@@ -37,6 +37,7 @@ card data.
 | `op18-red*.ts`         | OP-18's red cards, OP18-001 to OP18-020 (`cards/src/op18.ts`)       |
 | `op18-yellow.ts`       | `cards/src/op18.ts`: OP18-098 to OP18-117 and the OP18-079 Leader   |
 | `op18-purple*.ts`      | OP-18's Purple cards, OP18-060 to OP18-078 (provisional)            |
+| `op18-black*.ts`       | OP-18's Black cards and OP18-095, from `cards/src/op18.ts`          |
 | `op05-*.ts`            | `cards/src/op05.ts`                                                 |
 | `op05-replacements.ts` | the four replacements OP05 prints                                   |
 | `op05-shared.ts`       | OP05 fragments more than one of its cards prints                    |

@@ -56,6 +56,12 @@ const KEYWORD_MARKERS: ReadonlyArray<[string, CardKeyword]> = [
  */
 const GRANTED_KEYWORD =
   /gains?\s+(?:(?:\[[^\]]+\]|[+\-\u2212]\d+\s+power)\s*(?:and|or|,)\s*)*$/;
+ * and a separator may be a comma followed by "or" -- OP18-085 Cerberus grants
+ * one of three keywords in a list, "[Rush], [Banish], or [Unblockable]", and
+ * prints none of them itself.
+ */
+const GRANTED_KEYWORD =
+  /gains?\s+(?:\[[^\]]+\]\s*(?:,\s*(?:and|or)?|and|or)\s*)*$/;
 
 /**
  * Text that *denies* the keyword the marker names, rather than printing it.

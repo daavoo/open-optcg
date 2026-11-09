@@ -62,6 +62,14 @@ export interface ReactionRule {
          * it for that reason.
          */
         sourceType?: string;
+        /**
+         * The moving effect must be the reacting player's own *Leader*, and
+         * that Leader must carry this name -- "when your hand is trashed by
+         * the effect of your [Marshall.D.Teach] Leader" (OP18-080 Van Augur).
+         * `sourceType` cannot say it: a Character with the same name runs the
+         * same identity's effects from the board, and only the Leader counts.
+         */
+        sourceLeaderName?: string;
         /** A type the moved card must carry, for a clause that names one. */
         movedType?: string;
         /**
