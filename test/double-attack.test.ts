@@ -381,6 +381,31 @@ const SOURCES: readonly Source[] = [
         .withLife("p2", life(opponentLife, "p2"))
         .build(),
   },
+  {
+    cardNumber: "OP18-106",
+    shape: "printed on the Character, unconditional, 7000",
+    holder: "doberman",
+    reach: (seed, opponentLife) =>
+      table(seed)
+        .withBoard("p1", [character("doberman", "OP18-106")])
+        .withLife("p2", life(opponentLife, "p2"))
+        .build(),
+  },
+  {
+    // The keyword behind another card on the board rather than a DON!! count:
+    // Oars holds it only while a [Gecko Moria] Character is in play beside it.
+    cardNumber: "OP18-081",
+    shape: "granted while a named Character is on the board",
+    holder: "oars",
+    reach: (seed, opponentLife) =>
+      table(seed)
+        .withBoard("p1", [
+          character("oars", "OP18-081"),
+          character("moria", "OP09-085"),
+        ])
+        .withLife("p2", life(opponentLife, "p2"))
+        .build(),
+  },
 ];
 
 /**

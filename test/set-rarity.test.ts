@@ -158,6 +158,7 @@ const SET_SIZES: Record<
   OP15: { total: 119, leaders: 6, secrets: 2 },
   OP16: { total: 119, leaders: 6, secrets: 2 },
   OP17: { total: 119, leaders: 6, secrets: 2 },
+  OP18: { total: 119, leaders: 6, secrets: 2 },
   // The extra boosters are a third to a half the size of a main set and are
   // shaped differently: one Leader rather than six, and EB-04 one SEC rather
   // than two. EB-04 is also the only set the audit reads from two pages, where
@@ -322,6 +323,7 @@ const IMPORTED_SETS = [
   "OP15",
   "OP16",
   "OP17",
+  "OP18",
   "EB05",
   "EB04",
   "EB03",
