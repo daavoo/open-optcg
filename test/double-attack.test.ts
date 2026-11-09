@@ -760,6 +760,19 @@ describe("a keyword an aura hands over is reported, whatever the keyword", () =>
       holder: "giant",
       keyword: "Blocker",
     },
+    // OP18-001 Karoo (Leader): [Rush] onto Characters both {Animal} and
+    // {Alabasta}.
+    "OP18-001": {
+      build: () =>
+        table("aura-op18-001")
+          .withLeader("p1", "OP18-001")
+          .withBoard("p1", [
+            character("seacat", "OP18-003", { playedTurn: 11 }),
+          ])
+          .build().state,
+      holder: "seacat",
+      keyword: "Rush",
+    },
   };
 
   it("has a position for every aura in the table", () => {

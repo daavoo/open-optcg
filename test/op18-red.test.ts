@@ -662,9 +662,7 @@ describe("OP18-011 Nefeltari Vivi's [Opponent's Turn]", () => {
 // --- OP18-012 Pincers -------------------------------------------------------
 
 describe("OP18-012 Pincers' [When Attacking]", () => {
-  // The fan translation prints the marker as "[When attacking]", which the
-  // clause reader does not recognise, so the clause it derives is `static`.
-  covers("OP18-012", "static");
+  covers("OP18-012", "[When Attacking]");
 
   it("gives one {Animal} {Alabasta} Character +1000 this turn", () => {
     const game = table("op18-012-attack")
@@ -758,8 +756,7 @@ describe("OP18-013 Pell's [On Play]", () => {
 // --- OP18-014 Portgas.D.Ace -------------------------------------------------
 
 describe("OP18-014 Portgas.D.Ace's [When Attacking]", () => {
-  // "[When attacking]" in the fan translation: see OP18-012.
-  covers("OP18-014", "static");
+  covers("OP18-014", "[When Attacking]");
 
   it("gives an {Alabasta} Character played this turn [Rush]", () => {
     const game = table("op18-014-attack")

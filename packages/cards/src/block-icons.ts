@@ -132,6 +132,14 @@ export const UNSTAMPED_BLOCK_PRINTINGS: readonly string[] = [
   // rather than assumed into block 4: guessing an icon is exactly the move the
   // per-printing data exists to stop.
   "OP15-096",
+  // OP-18, imported from a fan source before Bandai listed it. The icon is
+  // read off Bandai's card list page and nowhere else, so until that page
+  // exists the set has none; it leaves this list when the set moves to the
+  // audit's `setSeries`.
+  ...Array.from(
+    { length: 119 },
+    (_, index) => `OP18-${String(index + 1).padStart(3, "0")}`,
+  ),
 ];
 
 /** Every block icon `cardNumber` has been printed with, across the snapshot. */

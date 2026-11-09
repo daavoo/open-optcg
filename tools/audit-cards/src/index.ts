@@ -1200,7 +1200,7 @@ for (const series of provisionalSeries) {
   const records = [];
   for (let index = 1; index <= series.expected; index += 1) {
     const page = `${series.prefix}-${String(index).padStart(3, "0")}.html`;
-    const { life: _life, ...card } = parseLogbookCard(
+    const card = parseLogbookCard(
       await readFile(join(root, "logbook", page), "utf8"),
     );
     if (!CARD_RARITIES.has(card.rarity))

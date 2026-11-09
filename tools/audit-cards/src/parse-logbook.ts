@@ -1,4 +1,5 @@
 import { load } from "cheerio";
+import { CLAUSE_MARKERS } from "@one-piece-sim/cards";
 import { normalize } from "./block-icons.js";
 import type { OfficialCard } from "./parse-cardlist.js";
 
@@ -15,21 +16,31 @@ import type { OfficialCard } from "./parse-cardlist.js";
  * prints the keyword in square brackets. Rewritten here so the rules
  * derivation reads the same clause markers off either source. The attribute
  * names keep their angle brackets, as Bandai's own text does.
+ *
+ * Logbook also writes a timing marker in sentence case now and then
+ * ("[When attacking]"). Clause markers are matched literally, so the marker is
+ * put back in the casing Bandai prints; a card name in brackets is left alone.
  */
 const ATTRIBUTES = new Set(["Slash", "Strike", "Ranged", "Wisdom", "Special"]);
+
+const MARKER_BY_LOWER_CASE = new Map<string, string>(
+  CLAUSE_MARKERS.map((marker) => [marker.toLowerCase(), marker]),
+);
 
 const printed = (text: string) =>
   normalize(text)
     .replace(/<([A-Za-z.' ]+)>/g, (whole, name: string) =>
       ATTRIBUTES.has(name) ? whole : `[${name}]`,
     )
+    .replace(
+      /\[[^\]]+\]/g,
+      (marker) => MARKER_BY_LOWER_CASE.get(marker.toLowerCase()) ?? marker,
+    )
     .replace(/-(?=\d)/g, "−");
 
 const CATEGORIES = new Set(["Leader", "Character", "Event", "Stage"]);
 
-export function parseLogbookCard(
-  html: string,
-): OfficialCard & { life: number | null } {
+export function parseLogbookCard(html: string): OfficialCard {
   const $ = load(html);
   const stats = new Map(
     $("dl.sp-stats > div")
@@ -51,7 +62,6 @@ export function parseLogbookCard(
   effectBlock.find("h2").remove();
   const triggerBlock = effectBlock.find("p.sp-trigger").remove();
   effectBlock.find("br").replaceWith(" ");
-  const life = numeric("Life");
   return {
     cardNumber,
     rarity: stat("Rarity"),
@@ -59,7 +69,7 @@ export function parseLogbookCard(
     name: normalize($("h1").clone().children(".code").remove().end().text()),
     // Bandai's list prints a Leader's Life in the Cost column; the audit
     // records it there for every other set, so this one does too.
-    cost: category === "Leader" ? life : (numeric("Cost") ?? 0),
+    cost: category === "Leader" ? numeric("Life") : (numeric("Cost") ?? 0),
     power:
       category === "Leader" || category === "Character"
         ? (numeric("Power") ?? 0)
@@ -73,6 +83,5 @@ export function parseLogbookCard(
     attribute: stat("Attribute").replace(/ \/ /g, "/") || null,
     effect: printed(effectBlock.text()),
     trigger: printed(triggerBlock.text()),
-    life,
   };
 }

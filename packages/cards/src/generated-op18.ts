@@ -563,8 +563,8 @@ export const op18CardRecords = [
       hasTrigger: false,
       hasCounterEvent: false,
       hasPrintedEffect: true,
-      clauses: ["static"],
-      tokens: ["[When attacking]"],
+      clauses: ["[When Attacking]"],
+      tokens: ["[When Attacking]"],
       nameAliases: [],
       identityWildcard: false,
       cannotAttack: false,
@@ -576,7 +576,11 @@ export const op18CardRecords = [
       deckCostLimit: null,
       openingStageType: "",
       searchRevealPublic: false,
-      clauseSummaries: {},
+      clauseSummaries: {
+        "[When Attacking]": {
+          hasOtherEffect: true,
+        },
+      },
       copyLimit: 4,
       eventRestricted: false,
       triggerIsDeadWeightDebuff: false,
@@ -589,7 +593,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "b21ef45e00b7b65d285e56d5cf4cc5ecd299b840ecba482772c5b76c8689a745",
+      "6c2826c6f9fc22234c77c760ba6ba626d32a00775555cebfb49c9718d40fdd5f",
   },
   {
     cardNumber: "OP18-013",
@@ -662,8 +666,8 @@ export const op18CardRecords = [
       hasTrigger: false,
       hasCounterEvent: false,
       hasPrintedEffect: true,
-      clauses: ["static"],
-      tokens: ["[When attacking]", "[Rush]"],
+      clauses: ["[When Attacking]"],
+      tokens: ["[When Attacking]", "[Rush]"],
       nameAliases: [],
       identityWildcard: false,
       cannotAttack: false,
@@ -675,7 +679,11 @@ export const op18CardRecords = [
       deckCostLimit: null,
       openingStageType: "",
       searchRevealPublic: false,
-      clauseSummaries: {},
+      clauseSummaries: {
+        "[When Attacking]": {
+          hasOtherEffect: true,
+        },
+      },
       copyLimit: 4,
       eventRestricted: false,
       triggerIsDeadWeightDebuff: false,
@@ -688,7 +696,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "4a9907e8ffbb9de7c87269afbe74130118d6a837fbf26c71a2ff8695f8ce0a80",
+      "cacc4c311dab637e6b2b62798c0bcd076c1e8f2b768986e31766dcc6647d605a",
   },
   {
     cardNumber: "OP18-015",
@@ -1325,8 +1333,8 @@ export const op18CardRecords = [
       hasTrigger: false,
       hasCounterEvent: false,
       hasPrintedEffect: true,
-      clauses: ["[On Play]", "static"],
-      tokens: ["[Opponent's turn]", "[Monkey.D.Luffy]", "[On Play]"],
+      clauses: ["[Opponent's Turn]", "[On Play]"],
+      tokens: ["[Opponent's Turn]", "[Monkey.D.Luffy]", "[On Play]"],
       nameAliases: [],
       identityWildcard: false,
       cannotAttack: false,
@@ -1342,6 +1350,9 @@ export const op18CardRecords = [
         "[On Play]": {
           hasOtherEffect: true,
         },
+        "[Opponent's Turn]": {
+          hasOtherEffect: true,
+        },
       },
       copyLimit: 4,
       eventRestricted: false,
@@ -1355,7 +1366,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "5cb10127f419aaa907d51e0f34e66934afa3e2dbcd9e523ae1793c95495988da",
+      "a48297157db8cd823b1335264da269ec1950530769077d9f9c85500109b6151c",
   },
   {
     cardNumber: "OP18-028",
