@@ -34,6 +34,7 @@ card data.
 | `op16-*.ts`            | `cards/src/op16.ts`                                                 |
 | `op17-*.ts`            | `cards/src/op17.ts`                                                 |
 | `op17-luffy-ace.ts`    | `cards/src/op17-luffy-ace.ts`, plus ST21-017                        |
+| `op18-yellow.ts`       | `cards/src/op18.ts`: OP18-098 to OP18-117 and the OP18-079 Leader   |
 | `op05-*.ts`            | `cards/src/op05.ts`                                                 |
 | `op05-replacements.ts` | the four replacements OP05 prints                                   |
 | `op05-shared.ts`       | OP05 fragments more than one of its cards prints                    |
