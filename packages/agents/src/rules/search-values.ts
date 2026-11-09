@@ -184,7 +184,7 @@ export interface SearchTable {
 export const SEARCH_TABLES: readonly SearchTable[] = [
   {
     // Both lists under the ST-30 Leader. Neither plays the other's search
-    // targets but ST30-012, so the precon's order and the Open OPTCG list's
+    // targets but ST30-012, so the precon's order and the Community list's
     // interleave without either changing the other's.
     //
     // The ST-30 precon. Its searches (ST30-002 and ST30-017) both ask for a
@@ -211,18 +211,17 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       // Tied: both are vanilla 6000s whose only job is to be a 6000, and
       // forcing an order between them would concentrate the hand on one.
       ["ST30-005", "ST30-013"], // Jozu, Mr.2.Bon.Kurei(Bentham)
-      // The Open OPTCG list, whose searches look for a {Straw Hat Crew} card.
+      // The Community list, whose searches look for a {Straw Hat Crew} card.
       // ST30-012 heads it too. Then the bodies in the order a search on turns
       // 2-5 can cast them into an attack: ST21-014 has [Rush] printed, OP12-015
       // turns a searcher in hand into a second body, and ST31-001 is two bodies
-      // for 5. The Events follow -- the removal, then the Counters -- and the
-      // searchers themselves sit last: a search that finds another search has
-      // spent its look on a card that only looks again.
+      // for 5. The Counter Events follow, and the searchers themselves sit
+      // last: a search that finds another search has spent its look on a card
+      // that only looks again. OP12-018 and OP14-019 are not {Straw Hat Crew}
+      // cards, so no search offers them.
       "ST21-014", // Monkey.D.Luffy -- [Rush], and a rested DON!! on attack
       "OP12-015", // Monkey.D.Luffy -- plays a searcher out of hand for free
       "ST31-001", // Sanji -- draws and plays a second Straw Hat body
-      "ST21-003", // Sanji -- takes [Blocker] out of a 6000's attack
-      "ST21-017", // Gum-Gum Mole Pistol -- the one removal
       "OP17-017", // Ga Ha Ha Ha!! -- +2000 and -2000 for 1
       "OP04-016", // Bad Manners Kick Course -- +3000 for a card from hand
       "OP13-040", // rest-lock, or +3000 on the Leader
@@ -264,9 +263,13 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
     ],
   },
   {
-    // "Only OP17-089 and OP17-119 do the job here" -- under Sabo the other OP17
-    // giants gate their +12 cost on an {Elbaph} Leader, and Sabo is not one. Saul
-    // stays first because it *is* the cheap enabler: 4 in hand, 16 on the board.
+    // "Only the three giants do that" -- under Sabo the other OP17 giants gate
+    // their +12 cost on an {Elbaph} Leader, and Sabo is not one, while
+    // EB05-047 Ripley's +12 is unconditional. Saul and Ripley lead because they
+    // *are* the cheap enablers: 4 in hand, 16 on the board. Saul first, since it
+    // also digs for the next {Elbaph} card, where Ripley's replay wants a body
+    // already in the trash. EB05-046 Yamato is not here: it is {Land of Wano},
+    // and every search in the list asks for {Elbaph}.
     // OP17-093 sits below every other body -- an 8-drop that only gains [Rush]
     // once a giant is already down is the one body a search should not find.
     // Registered for OP13-004, which ST35 shares; ST35 resolves no searches at
@@ -275,6 +278,7 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
     leader: "OP13-004",
     order: [
       "OP17-089", // Jaguar.D.Saul -- costs 4, sits at 16, satisfies both clauses
+      "EB05-047", // Ripley -- the same 4-cost giant, and replays a 2-cost
       "OP17-119", // Loki -- the other real giant under this Leader
       "OP17-095", // Roronoa Zoro -- replacement covering any Character
       "OP17-082", // Sanji -- draws 2

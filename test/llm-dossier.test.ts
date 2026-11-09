@@ -179,8 +179,7 @@ describe("LLM deck dossiers", () => {
     // Every shipped list is Standard, so the Extra half is exercised with a
     // deck built the way a player would build one -- which is the only way an
     // Extra list reaches a seat now.
-    const standardDeckId =
-      "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20";
+    const standardDeckId = "(Red/Black) Sabo - TCG Match Making EB05 #8";
     const standard = deckDossierPrompt(
       standardDeckId,
       deckManifests[standardDeckId]!,

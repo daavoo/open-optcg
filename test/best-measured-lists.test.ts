@@ -29,7 +29,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Purple) Charlotte Katakuri - Starter Deck 34",
   ],
   [
-    "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01",
+    "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10",
     "(Purple) Monkey.D.Luffy - Starter Deck 18",
   ],
   [
@@ -117,10 +117,15 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Yellow) Charlotte Linlin - Official Feature Deck",
   ],
   [
-    "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+    "(Red/Black) Sabo - TCG Match Making EB05 #8",
     "(Red/Black) Sabo - Starter Deck 35",
   ],
   ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", null],
+  ["(Green/Yellow) Nico Robin - TCG Match Making EB05 #6", null],
+  [
+    "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19",
+    "(Red/Green) Luffy & Ace - Starter Deck 30",
+  ],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {
@@ -161,6 +166,10 @@ describe("the Community lists the new builds replace", () => {
     ["(Purple) Enel - 1st Place Store Battle 2026-04-11", "OP15-058"],
     ["(Red/Black) Sabo - OP17 Elbaph List", "OP13-004"],
     ["(Red/Green) Monkey.D.Luffy - Open OPTCG", "OP13-001"],
+    ["(Green/Yellow) Nico Robin - EB05 Wisdom List", "EB05-010"],
+    ["(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20", "OP13-004"],
+    ["(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01", "OP05-060"],
+    ["(Red/Green) Luffy & Ace - Open OPTCG", "ST30-001"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();

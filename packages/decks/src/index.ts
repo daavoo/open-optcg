@@ -5,7 +5,7 @@ import { op16EnelManifest } from "./op16-enel-manifest.js";
 import { op16SengokuManifest } from "./op16-sengoku-manifest.js";
 import { op16NamiManifest } from "./op16-nami-manifest.js";
 import { op16TeachManifest } from "./op16-teach-manifest.js";
-import { op13SaboTournamentManifest } from "./op13-sabo-tournament-manifest.js";
+import { op13SaboTcgmmManifest } from "./op13-sabo-tcgmm-manifest.js";
 import { op17ShanksManifest } from "./op17-shanks-manifest.js";
 import { op17XebecManifest } from "./op17-xebec-manifest.js";
 import { op17KaidoManifest } from "./op17-kaido-manifest.js";
@@ -38,7 +38,7 @@ import { op14HancockManifest } from "./op14-hancock-manifest.js";
 import { op14HancockTournamentManifest } from "./op14-hancock-tournament-manifest.js";
 import { st29LuffyTournamentManifest } from "./st29-luffy-tournament-manifest.js";
 import { op11KatakuriTournamentManifest } from "./op11-katakuri-tournament-manifest.js";
-import { op05LuffyTournamentManifest } from "./op05-luffy-tournament-manifest.js";
+import { op05LuffyStoreBattle2026Manifest } from "./op05-luffy-store-battle-2026-manifest.js";
 import { op10KidTournamentManifest } from "./op10-kid-tournament-manifest.js";
 import { op11ShirahoshiTournamentManifest } from "./op11-shirahoshi-tournament-manifest.js";
 import { op12SanjiTournamentManifest } from "./op12-sanji-tournament-manifest.js";
@@ -65,7 +65,7 @@ import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.
 import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
-import { eb05RobinManifest } from "./eb05-robin-manifest.js";
+import { eb05RobinTcgmmManifest } from "./eb05-robin-tcgmm-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -87,7 +87,7 @@ import { st22AceNewgateManifest } from "./st22-ace-newgate-manifest.js";
 import { st23ShanksManifest } from "./st23-shanks-manifest.js";
 import { st29LuffyManifest } from "./st29-luffy-manifest.js";
 import { st30LuffyAceManifest } from "./st30-luffy-ace-manifest.js";
-import { op17LuffyAceManifest } from "./op17-luffy-ace-manifest.js";
+import { st30LuffyAceCdmxManifest } from "./st30-luffy-ace-cdmx-manifest.js";
 
 export type { DeckFormat } from "@one-piece-sim/cards";
 // Whether a deck may be played at all. Shared by the deck editor, sealed play
@@ -292,7 +292,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue/Yellow) Nami - Official Feature Deck",
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck",
   "(Purple) Enel - Official Feature Deck",
-  "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+  "(Red/Black) Sabo - TCG Match Making EB05 #8",
   "(Green) Shanks - Official Feature Deck",
   "(Blue) Rocks.D.Xebec - Official Feature Deck",
   "(Black) Monkey.D.Luffy - Official Feature Deck",
@@ -329,7 +329,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Yellow) Charlotte Linlin - Official Feature Deck",
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
   "(Purple) Kaido - Open OPTCG",
-  "(Red/Green) Luffy & Ace - Open OPTCG",
+  "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19",
   "(Black) Monkey.D.Luffy - Open OPTCG",
   "(Red) Portgas.D.Ace - Open OPTCG",
   "(Blue) Rocks.D.Xebec - Open OPTCG",
@@ -341,10 +341,10 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
   "(Blue) Buggy - 12th Place ChinoizeCup #124",
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
-  "(Green/Yellow) Nico Robin - EB05 Wisdom List",
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15",
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02",
-  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01",
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10",
   "(Yellow) Eustass Kid - ChinoizeCup #104",
   "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125",
   "(Blue/Purple) Sanji - ChinoizeCup #116",
@@ -465,8 +465,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Blue/Yellow) Nami - Official Feature Deck": op16NamiManifest,
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck": op16TeachManifest,
   "(Purple) Enel - Official Feature Deck": op16EnelManifest,
-  "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20":
-    op13SaboTournamentManifest,
+  "(Red/Black) Sabo - TCG Match Making EB05 #8": op13SaboTcgmmManifest,
   "(Green) Shanks - Official Feature Deck": op17ShanksManifest,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecManifest,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyManifest,
@@ -505,7 +504,8 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1":
     op09RobinManifest,
   "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
-  "(Red/Green) Luffy & Ace - Open OPTCG": op17LuffyAceManifest,
+  "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19":
+    st30LuffyAceCdmxManifest,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentManifest,
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
   "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,
@@ -520,13 +520,14 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op14HancockTournamentManifest,
   "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
-  "(Green/Yellow) Nico Robin - EB05 Wisdom List": eb05RobinManifest,
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6":
+    eb05RobinTcgmmManifest,
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
     st29LuffyTournamentManifest,
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":
     op11KatakuriTournamentManifest,
-  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01":
-    op05LuffyTournamentManifest,
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10":
+    op05LuffyStoreBattle2026Manifest,
   "(Yellow) Eustass Kid - ChinoizeCup #104": op10KidTournamentManifest,
   "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125":
     op11ShirahoshiTournamentManifest,

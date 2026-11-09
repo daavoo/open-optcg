@@ -298,6 +298,116 @@ const LISTS: Record<string, DeckManifest> = {
       "ST31-005": 4,
     },
   },
+  // Green/Yellow EB05-010 Nico Robin, the <Wisdom> midrange build from Car D.
+  // Kaizoku's "EB05 Robin Swings A LOT" (12 Oct 2026), also hosted as
+  // OPDeckGuide's Nico Robin EB05 guide. It was the Leader's Community list
+  // until the TCG Match Making EB05 #6 build replaced it there; it stays here
+  // under its old id because checkpoints and its variants name it.
+  "(Green/Yellow) Nico Robin - EB05 Wisdom List": {
+    id: "(Green/Yellow) Nico Robin - EB05 Wisdom List",
+    format: "standard",
+    leader: "EB05-010",
+    cards: {
+      "EB04-018": 4,
+      "EB04-058": 4,
+      "EB05-016": 4,
+      "EB05-050": 4,
+      "EB05-052": 4,
+      "EB05-055": 4,
+      "EB05-056": 4,
+      "EB05-057": 4,
+      "OP13-031": 4,
+      "OP13-113": 4,
+      "OP14-108": 3,
+      "OP17-022": 3,
+      "OP17-109": 4,
+    },
+  },
+  // Red/Black OP13-004 Sabo, 1st for "Manny Walia" at PlayTCG's EGB event in
+  // North America on 20 Sep 2026, off onepiecetopdecks.com's OP-17 page. It
+  // was the Leader's Community list until the TCG Match Making EB05 #8 build
+  // replaced it there; it stays here under its old id because checkpoints
+  // name it.
+  "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20": {
+    id: "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20",
+    format: "standard",
+    leader: "OP13-004",
+    cards: {
+      "EB04-007": 2,
+      "OP04-016": 2,
+      "OP13-007": 2,
+      "OP14-096": 2,
+      "OP15-088": 4,
+      "OP17-080": 4,
+      "OP17-082": 4,
+      "OP17-083": 2,
+      "OP17-084": 3,
+      "OP17-086": 2,
+      "OP17-087": 3,
+      "OP17-089": 4,
+      "OP17-093": 3,
+      "OP17-095": 4,
+      "OP17-096": 2,
+      "OP17-119": 4,
+      "ST01-011": 3,
+    },
+  },
+  // Purple OP05-060 Monkey.D.Luffy, 1st (5-0) for "Desaparecido" at a Store
+  // Battle in Italy on 1 Jul 2025, off onepiecetopdecks.com's EB-02 page. It
+  // was the Leader's Community list until the 2026-09-10 Store Battle build
+  // replaced it there; it stays here under its old id because checkpoints
+  // name it.
+  "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01": {
+    id: "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01",
+    format: "standard",
+    leader: "OP05-060",
+    cards: {
+      "EB01-061": 4,
+      "OP03-072": 1,
+      "OP05-077": 1,
+      "OP06-076": 4,
+      "OP07-064": 4,
+      "OP09-065": 4,
+      "OP09-069": 4,
+      "OP09-078": 4,
+      "OP09-119": 3,
+      "OP11-067": 4,
+      "ST18-001": 4,
+      "ST18-002": 2,
+      "ST18-003": 3,
+      "ST18-004": 4,
+      "ST18-005": 3,
+      "ST26-002": 1,
+    },
+  },
+  // Red/Green ST30-001 Luffy & Ace, the Straw Hat rush build supplied as a
+  // card list by the maintainer on 26 Sep 2026 without an event or pilot. It
+  // was the Leader's one Community list until the 2026-09-19 CDMX Regional
+  // build took the shelf; it stays here under its old id because the meta
+  // field (`meta-decks.txt`), checkpoints and its variants name it.
+  "(Red/Green) Luffy & Ace - Open OPTCG": {
+    id: "(Red/Green) Luffy & Ace - Open OPTCG",
+    format: "standard",
+    leader: "ST30-001",
+    cards: {
+      "EB04-002": 4,
+      "OP01-016": 4,
+      "EB02-017": 4,
+      "ST31-005": 4,
+      "ST21-003": 1,
+      "OP12-015": 4,
+      "ST30-012": 4,
+      "ST21-014": 4,
+      "ST31-001": 4,
+      "OP04-016": 4,
+      "OP14-019": 2,
+      "OP17-017": 4,
+      "OP06-017": 1,
+      "OP12-037": 3,
+      "OP13-040": 2,
+      "ST21-017": 1,
+    },
+  },
 };
 
 /**

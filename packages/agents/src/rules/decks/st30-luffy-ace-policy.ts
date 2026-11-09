@@ -88,7 +88,7 @@ export function createSt30LuffyAceRulesPolicy(): PolicyModule {
  * The cheap cards that look at the top of the deck for the next body, in
  * either list under this Leader. The starter's two look five deep for a
  * 6000-power Character: ST30-002 Inazuma on play, and ST30-017 as a [Main]
- * Event with the same clause as its [Trigger]. The Open OPTCG list's four are
+ * Event with the same clause as its [Trigger]. The Community list's four are
  * 1-cost looks at four or five for a {Straw Hat Crew} card: OP01-016 and
  * EB02-017 Nami, EB04-002 Jewelry Bonney and the ST31-005 Stage. Neither list
  * plays the other's, so one set serves both.
@@ -111,7 +111,7 @@ const ST30_SEARCHERS: ReadonlySet<string> = new Set([
  * without a searcher is not short of bodies; what it is short of is the card
  * that turns the *next* body into the one the hand can pay for. ST30-004,
  * ST30-006 and ST30-008 each pay a 6000-power card out of hand, and the
- * searcher is what keeps that currency coming. The Open OPTCG list's dossier
+ * searcher is what keeps that currency coming. The Community list's dossier
  * opens the same way -- keep any hand with a 1-cost searcher -- because that
  * list has no ramp and is top-heavy in 4- and 5-cost threats. The rule only
  * ever tightens the generic keep: every card it keeps for costs 2 or less, so

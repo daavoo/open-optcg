@@ -26,8 +26,9 @@ import { character, covers, instance, scenario } from "./support/index.js";
  */
 const DECK = "(Red/Green) Luffy & Ace - Starter Deck 30";
 const OPPONENT = "(Red) Monkey.D.Luffy - Starter Deck 31";
-/** The Straw Hat rush list under the same Leader, which plays ST21-003. */
-const OPEN_LIST = "(Red/Green) Luffy & Ace - Open OPTCG";
+/** The Straw Hat rush list under the same Leader, its Community list. */
+const COMMUNITY_LIST =
+  "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19";
 
 /** p1 on the play with a clear board and all ten DON!! active. */
 const table = (seed: string) =>
@@ -80,11 +81,11 @@ describe("OP-17 Red/Green Luffy & Ace deck list", () => {
   });
 });
 
-describe("(Red/Green) Luffy & Ace - Open OPTCG", () => {
+describe("(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19", () => {
   it("loads a 50-card list behind ST30-001", () => {
-    const manifest = requireSupportedDeck(OPEN_LIST);
+    const manifest = requireSupportedDeck(COMMUNITY_LIST);
     expect(manifest.leader).toBe("ST30-001");
-    expect(loadDeck(OPEN_LIST)).toHaveLength(50);
+    expect(loadDeck(COMMUNITY_LIST)).toHaveLength(50);
   });
 });
 
@@ -282,7 +283,7 @@ describe("ST21-003 Sanji", () => {
 
   const sanjiTable = (seed: string) =>
     scenario()
-      .decks(OPEN_LIST, OPPONENT)
+      .decks(COMMUNITY_LIST, OPPONENT)
       .seed(seed)
       .atTurn(11, { active: "p1" })
       .bareTable();

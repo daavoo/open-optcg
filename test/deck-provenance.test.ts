@@ -152,8 +152,13 @@ describe("deck provenance rows", () => {
     // Red Luffy list adds 16. The (Red/Green) Monkey.D.Luffy Open OPTCG list
     // the Miracle list replaces takes 17 away. The best-measured Sabo list
     // adds 18 and takes the OP17 Elbaph list's 15 away, and the best-measured
-    // Purple Enel list adds 16 and takes the Store Battle list's 16 away.
-    expect(communityDeckCardRows).toHaveLength(1347);
+    // Purple Enel list adds 16 and takes the Store Battle list's 16 away. The
+    // TCG Match Making EB05 Robin list adds 15 and takes the EB05 Wisdom
+    // List's 14 away; the TCG Match Making EB05 Sabo list adds 17 and takes the
+    // PlayTCG list's 18 away; the 2026-09-10 Purple Luffy list adds 15 and
+    // takes the 2025-07-01 list's 17 away; and the CDMX Luffy & Ace list adds
+    // 16 and takes the Open OPTCG list's 17 away.
+    expect(communityDeckCardRows).toHaveLength(1344);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );

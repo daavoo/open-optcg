@@ -16,20 +16,20 @@ import {
 } from "./support/index.js";
 
 /**
- * The Red/Black Sabo Community list, the PlayTCG EGB 2026-09-20 build in front
+ * The Red/Black Sabo Community list, the TCG Match Making EB05 build in front
  * of the OP-17 Elbaph shell.
  *
- * Two identities of the OP17 Elbaph List it replaced were in the card pool but
- * in no shipped deck, so nothing drove their clauses: OP15-088 Pirates Docking
- * Six, which this list keeps, and OP15-094 Roronoa Zoro, which that list (now
- * a training list in `ml/bridge/decks.ts`) still plays. Those are what the
- * per-card blocks below cover. The Leader and
+ * Two identities of the OP17 Elbaph List, the Leader's first Community list,
+ * were in the card pool but in no shipped deck, so nothing drove their
+ * clauses: OP15-088 Pirates Docking Six, which this list keeps, and OP15-094
+ * Roronoa Zoro, which that list (now a training list in `ml/bridge/decks.ts`)
+ * still plays. Those are what the per-card blocks below cover. The Leader and
  * the OP17 half are covered in `test/st35.test.ts` and `test/op17.test.ts`;
  * what is deck-scoped, and tested last, is that the two different cost
  * thresholds this list runs on are answered by the same card, and that every
  * slot is one a Red/Black Leader may legally play.
  */
-const DECK = "(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20";
+const DECK = "(Red/Black) Sabo - TCG Match Making EB05 #8";
 
 /**
  * A neutral table with the Sabo list on p1, built the way `test/op16.test.ts`
