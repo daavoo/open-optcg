@@ -29,6 +29,7 @@ function stubContext(overrides: Partial<SealedContext> = {}): SealedContext {
     scorerAvailable: () => false,
     rerender: () => {},
     goHome: () => {},
+    playTables: (tables) => Promise.resolve(tables.map(() => "first" as const)),
     ...overrides,
   };
 }
