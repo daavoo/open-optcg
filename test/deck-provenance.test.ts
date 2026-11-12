@@ -157,8 +157,9 @@ describe("deck provenance rows", () => {
     // List's 14 away; the TCG Match Making EB05 Sabo list adds 17 and takes the
     // PlayTCG list's 18 away; the 2026-09-10 Purple Luffy list adds 15 and
     // takes the 2025-07-01 list's 17 away; and the CDMX Luffy & Ace list adds
-    // 16 and takes the Open OPTCG list's 17 away.
-    expect(communityDeckCardRows).toHaveLength(1344);
+    // 16 and takes the Open OPTCG list's 17 away. The ChinoizeCup #125
+    // Rosinante list adds 17: sixteen distinct deck cards and its Leader.
+    expect(communityDeckCardRows).toHaveLength(1361);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -228,7 +229,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(93);
+    expect(reports).toHaveLength(94);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);

@@ -233,6 +233,7 @@ import {
   OP06_REIJU_RULES,
 } from "./decks/op06-reiju-policy.js";
 import { createEb05RobinMulliganModule } from "./decks/eb05-robin-policy.js";
+import { createOp12RosinanteMulliganModule } from "./decks/op12-rosinante-policy.js";
 import {
   createOp11KobyCounterPolicy,
   createOp11KobyMulliganModule,
@@ -436,6 +437,7 @@ export const LEADERS = {
   OP13_LUFFY: "OP13-001",
   ELBAPH_LUFFY: "OP17-079",
   GREEN_YELLOW_ROBIN: "EB05-010",
+  PURPLE_YELLOW_ROSINANTE: "OP12-061",
 } as const;
 
 /**
@@ -1840,6 +1842,13 @@ registerPolicy({
   deck: LEADERS.GREEN_YELLOW_ROBIN,
   priority: MULLIGAN_PRIORITY,
   create: createEb05RobinMulliganModule,
+});
+// (Purple/Yellow) Donquixote Rosinante's opening hand. See
+// `op12-rosinante-policy.ts`.
+registerPolicy({
+  deck: LEADERS.PURPLE_YELLOW_ROSINANTE,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp12RosinanteMulliganModule,
 });
 // (Red/Black) Koby's opening hand. See `op11-koby-policy.ts`.
 registerPolicy({

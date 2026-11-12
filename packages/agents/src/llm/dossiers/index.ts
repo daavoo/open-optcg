@@ -73,6 +73,7 @@ import { op14HancockTournamentDossier } from "./op14-hancock-tournament.js";
 import { op09BuggyTournamentDossier } from "./op09-buggy-tournament.js";
 import { op14LawTournamentDossier } from "./op14-law-tournament.js";
 import { eb05RobinTcgmmDossier } from "./eb05-robin-tcgmm.js";
+import { op12RosinanteTournamentDossier } from "./op12-rosinante-tournament.js";
 import { st34Dossier } from "./st34.js";
 import { st35Dossier } from "./st35.js";
 import { st36Dossier } from "./st36.js";
@@ -159,6 +160,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentDossier,
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentDossier,
   "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6": eb05RobinTcgmmDossier,
+  "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125":
+    op12RosinanteTournamentDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,

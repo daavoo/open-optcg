@@ -381,6 +381,13 @@ const ARCHETYPE_BY_LEADER: ReadonlyMap<string, Archetype> = new Map([
   // removal is Megalo, Shanks and Sweet 3 Generals' −3000. It wins by trading
   // bodies and cards, not by racing Life.
   ["EB05-010", "midrange"],
+  // OP12 (Purple/Yellow) Donquixote Rosinante, a ChinoizeCup #125 2nd-place list.
+  //
+  // Midrange. Its 4-cost Trafalgar Law bodies ramp a DON!! while it holds no
+  // more than the opponent, its removal spends DON!! (Sakazuki's −6000, Sugar's
+  // −4000, Gum-Gum Lightning's K.O.), and the Leader keeps a Law on the field
+  // for a Life card -- a deck that trades on the board, not a race.
+  ["OP12-061", "midrange"],
   // OP11 (Red/Black) Koby, a Regional Final 2nd-place list.
   //
   // Midrange. Its {SWORD} bodies attack Characters the turn they land, after

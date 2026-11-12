@@ -66,6 +66,7 @@ import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
 import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
 import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
 import { eb05RobinTcgmmManifest } from "./eb05-robin-tcgmm-manifest.js";
+import { op12RosinanteTournamentManifest } from "./op12-rosinante-tournament-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -342,6 +343,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue) Buggy - 12th Place ChinoizeCup #124",
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
   "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
+  "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125",
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15",
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02",
   "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10",
@@ -522,6 +524,8 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
   "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6":
     eb05RobinTcgmmManifest,
+  "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125":
+    op12RosinanteTournamentManifest,
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
     st29LuffyTournamentManifest,
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":

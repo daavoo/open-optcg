@@ -122,6 +122,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
   ],
   ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", null],
   ["(Green/Yellow) Nico Robin - TCG Match Making EB05 #6", null],
+  ["(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125", null],
   [
     "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19",
     "(Red/Green) Luffy & Ace - Starter Deck 30",
