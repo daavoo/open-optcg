@@ -1,7 +1,7 @@
 import type { CardDefinition } from "@one-piece-sim/cards";
 import { requireKnownCard } from "@one-piece-sim/cards";
 import {
-  autoBuildSealedDeckGrape,
+  autoBuildSealedDeckBest,
   playablePoolCards,
   poolCounts,
   requireSealedExpansion,
@@ -539,7 +539,7 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
     .querySelector("#sealed-auto-build")
     ?.addEventListener("click", () => {
       if (!state.run) return;
-      state.run.deck = { ...autoBuildSealedDeckGrape(state.run.pool).cards };
+      state.run.deck = { ...autoBuildSealedDeckBest(state.run.pool).cards };
       ctx.rerender();
     });
   bindCatalogFilters("sealed", state.filter, () => {
@@ -583,7 +583,7 @@ export function startMatch(state: SealedState, ctx: SealedContext): void {
   const run = state.run;
   if (validateSealedDeck({ cards: run.deck }, run.pool).errors.length) return;
   const p1 = sealedDeckManifest({ cards: run.deck }, run.pool);
-  const opponentDeck = autoBuildSealedDeckGrape(run.opponentPool);
+  const opponentDeck = autoBuildSealedDeckBest(run.opponentPool);
   launchMatch(
     state,
     ctx,

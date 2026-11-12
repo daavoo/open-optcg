@@ -152,6 +152,13 @@ export {
   type SealedValidation,
 } from "./sealed.js";
 
+export {
+  autoBuildSealedDeckBest,
+  hasSealedCardValues,
+  rankSealedPoolCandidatesValue,
+  SEALED_CARD_VALUES,
+} from "./sealed-values.js";
+
 export const FORMAT_DECK_IDS = [
   "(Red) Monkey.D.Luffy - Starter Deck 31",
   "(Green) Roronoa Zoro - Starter Deck 32",

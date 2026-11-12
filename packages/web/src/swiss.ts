@@ -13,7 +13,7 @@
  * Everything here is DOM-free and deterministic in the event's seed.
  */
 import {
-  autoBuildSealedDeckGrape,
+  autoBuildSealedDeckBest,
   sealedDeckManifest,
   type DeckManifest,
   type SealedPool,
@@ -72,7 +72,7 @@ export function createSwissEvent(
     );
     return {
       name: `AI player ${index + 1}`,
-      deck: sealedDeckManifest(autoBuildSealedDeckGrape(aiPool), aiPool),
+      deck: sealedDeckManifest(autoBuildSealedDeckBest(aiPool), aiPool),
     };
   });
   const event: SwissEvent = {
