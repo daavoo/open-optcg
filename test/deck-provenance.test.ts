@@ -157,8 +157,12 @@ describe("deck provenance rows", () => {
     // List's 14 away; the TCG Match Making EB05 Sabo list adds 17 and takes the
     // PlayTCG list's 18 away; the 2026-09-10 Purple Luffy list adds 15 and
     // takes the 2025-07-01 list's 17 away; and the CDMX Luffy & Ace list adds
-    // 16 and takes the Open OPTCG list's 17 away.
-    expect(communityDeckCardRows).toHaveLength(1344);
+    // 16 and takes the Open OPTCG list's 17 away. TCG Match Making's EB05
+    // lists of 12 Nov 2026 replace eight Community lists -- Xebec 16 for 15,
+    // Red/Green Luffy 15 for 15, Buggy 15 for 16, Robin 16 for 15, Kaido 16
+    // for 18, Enel 15 for 14, Law 20 for 16 and Sabo 17 for 17 -- and the
+    // Rosinante list, the first behind its Leader, adds 15.
+    expect(communityDeckCardRows).toHaveLength(1363);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -228,7 +232,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(93);
+    expect(reports).toHaveLength(94);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
@@ -316,9 +320,6 @@ describe("recommended lists", () => {
   it("falls back to a Leader's only list, and to none when unmarked lists share one", () => {
     // OP12-040 fronts ST-33 and the Hiroshima list, and neither is marked.
     expect(recommendedDeckFor("OP12-040")).toBeUndefined();
-    // OP14-001 fronts Bandai's feature deck and the ChinoizeCup #125 list,
-    // and neither is marked either.
-    expect(recommendedDeckFor("OP14-001")).toBeUndefined();
     expect(recommendedDeckFor("OP15-039")).toBe(
       "(Blue) Rebecca - Official Feature Deck",
     );

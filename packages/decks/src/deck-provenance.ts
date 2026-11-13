@@ -14,11 +14,11 @@ import { op13SaboTcgmmManifest } from "./op13-sabo-tcgmm-manifest.js";
 import { op17ShanksManifest } from "./op17-shanks-manifest.js";
 import { op17XebecManifest } from "./op17-xebec-manifest.js";
 import { op17KaidoManifest } from "./op17-kaido-manifest.js";
-import { op17KaidoFieldManifest } from "./op17-kaido-field-manifest.js";
+import { op17KaidoTcgmmManifest } from "./op17-kaido-tcgmm-manifest.js";
 import { op17LuffyManifest } from "./op17-luffy-manifest.js";
 import { op17LuffyTournamentManifest } from "./op17-luffy-tournament-manifest.js";
 import { op16AceOpenManifest } from "./op16-ace-open-manifest.js";
-import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
+import { op17XebecTcgmmManifest } from "./op17-xebec-tcgmm-manifest.js";
 import { op08PuddingManifest } from "./op08-pudding-manifest.js";
 import { op12ZoroManifest } from "./op12-zoro-manifest.js";
 import { op16AceManifest } from "./op16-ace-manifest.js";
@@ -67,9 +67,10 @@ import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
 import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
-import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
-import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
-import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
+import { op13LuffyTcgmmManifest } from "./op13-luffy-tcgmm-manifest.js";
+import { op09BuggyTcgmmManifest } from "./op09-buggy-tcgmm-manifest.js";
+import { op12RosinanteTcgmmManifest } from "./op12-rosinante-tcgmm-manifest.js";
+import { op14LawTcgmmManifest } from "./op14-law-tcgmm-manifest.js";
 import { eb05RobinTcgmmManifest } from "./eb05-robin-tcgmm-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
@@ -163,7 +164,6 @@ export type CommunityDeckId =
   | "(Blue/Yellow) Nami - Official Feature Deck"
   | "(Black/Yellow) Marshall.D.Teach - Official Feature Deck"
   | "(Purple) Enel - Official Feature Deck"
-  | "(Red/Black) Sabo - TCG Match Making EB05 #8"
   | "(Green) Shanks - Official Feature Deck"
   | "(Blue) Rocks.D.Xebec - Official Feature Deck"
   | "(Black) Monkey.D.Luffy - Official Feature Deck"
@@ -200,11 +200,6 @@ export type CommunityDeckId =
   | "(Purple) Donquixote Doflamingo - Official Feature Deck"
   | "(Yellow) Charlotte Linlin - Official Feature Deck"
   /**
-   * The OP-17 field's Kaido list, a second under the feature deck's Leader,
-   * off a tournament record -- so validated identity by identity here.
-   */
-  | "(Purple) Kaido - Open OPTCG"
-  /**
    * The OP-17 field's Straw Hat rush list under the ST-30 starter's Leader.
    * Off a supplied card list rather than a Bandai page, so its identities are
    * validated one by one here.
@@ -220,11 +215,6 @@ export type CommunityDeckId =
    * feature deck, validated one identity at a time like the lists above.
    */
   | "(Red) Portgas.D.Ace - Open OPTCG"
-  /**
-   * A supplied list under the OP17-039 Leader, a second one beside the
-   * feature deck, validated one identity at a time like the lists above.
-   */
-  | "(Blue) Rocks.D.Xebec - Open OPTCG"
   /**
    * A supplied list under the OP08-058 Leader, which no other shipped deck
    * fronts, validated one identity at a time like the lists above.
@@ -257,17 +247,6 @@ export type CommunityDeckId =
    */
   | "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105"
   /**
-   * The first EB-05 lists, from the online events that allowed the set ahead
-   * of its 30 Oct 2026 English release: second lists under the OP09-042 and
-   * OP14-001 Leaders beside Bandai's feature decks, read off Limitless TCG's
-   * results like the list above, and the deck guide's list for the new
-   * EB05-010 Leader, which has no placed list of its own kind yet. Each
-   * manifest says why that list.
-   */
-  | "(Blue) Buggy - 12th Place ChinoizeCup #124"
-  | "(Red) Trafalgar Law - 9th Place ChinoizeCup #125"
-  | "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6"
-  /**
    * Each Leader's best-measured build: the list the learned model wins most
    * with against the meta field, among every build of that Leader in its
    * training pool. Each is its Leader's `recommended` list, beside the
@@ -295,18 +274,27 @@ export type CommunityDeckId =
   | "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104"
   | "(Blue) Jinbe - 11th Place ChinoizeCup #120"
   | "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01"
-  | "(Yellow) Enel - TCG Match Making OP17.5 #3"
   | "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25"
   | "(Green) Jinbe - 1st Place Shop Event 2026-09-16"
   | "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13"
   | "(Red) Monkey.D.Luffy - Open OPTCG"
   | "(Yellow) Charlotte Linlin - ChinoizeCup #121"
   /**
-   * The OP13-001 Leader's Community list: OPTCG Web Sim's Miracle Luffy EB05
-   * guide's fifty, a deck guide rather than an event placing. Validated one
-   * identity at a time like the lists above.
+   * TCG Match Making's EB05 Weekly Power Rankings of 12 Nov 2026: the top
+   * ten's lists but the Blue/Yellow Boa Hancock one, each its Leader's
+   * `recommended` Community list. A power ranking rather than an event, so
+   * the ids carry the ranking's date and place. Validated one identity at a
+   * time like the lists above.
    */
-  | "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05"
+  | "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1"
+  | "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2"
+  | "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3"
+  | "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4"
+  | "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5"
+  | "(Yellow) Enel - TCG Match Making EB05 2026-11-12 #6"
+  | "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8"
+  | "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9"
+  | "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10"
   /**
    * Bandai's ST-18 precon, whose Leader is the OP05-060 reprint. Same standing
    * as ST-26 below: off a Bandai page rather than out of the ST31-36 loop, so
@@ -347,7 +335,8 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Black/Yellow) Marshall.D.Teach - Official Feature Deck":
       op16TeachManifest,
     "(Purple) Enel - Official Feature Deck": op16EnelManifest,
-    "(Red/Black) Sabo - TCG Match Making EB05 #8": op13SaboTcgmmManifest,
+    "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10":
+      op13SaboTcgmmManifest,
     "(Green) Shanks - Official Feature Deck": op17ShanksManifest,
     "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecManifest,
     "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyManifest,
@@ -385,12 +374,14 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Purple) Donquixote Doflamingo - Official Feature Deck":
       op14DoflamingoManifest,
     "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinManifest,
-    "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
+    "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5":
+      op17KaidoTcgmmManifest,
     "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19":
       st30LuffyAceCdmxManifest,
     "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentManifest,
     "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
-    "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,
+    "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1":
+      op17XebecTcgmmManifest,
     "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingManifest,
     "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroManifest,
     "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentManifest,
@@ -400,10 +391,11 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
       op11KobyTournamentManifest,
     "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
       op14HancockTournamentManifest,
-    "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
-    "(Red) Trafalgar Law - 9th Place ChinoizeCup #125":
-      op14LawTournamentManifest,
-    "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6":
+    "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3":
+      op09BuggyTcgmmManifest,
+    "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8":
+      op14LawTcgmmManifest,
+    "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4":
       eb05RobinTcgmmManifest,
     "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
       st29LuffyTournamentManifest,
@@ -442,7 +434,8 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Blue) Jinbe - 11th Place ChinoizeCup #120": op14JinbeTournamentManifest,
     "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01":
       op13AceTournamentManifest,
-    "(Yellow) Enel - TCG Match Making OP17.5 #3": op05EnelTcgmmManifest,
+    "(Yellow) Enel - TCG Match Making EB05 2026-11-12 #6":
+      op05EnelTcgmmManifest,
     "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25":
       eb02LuffyTournamentManifest,
     "(Green) Jinbe - 1st Place Shop Event 2026-09-16":
@@ -452,7 +445,10 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenManifest,
     "(Yellow) Charlotte Linlin - ChinoizeCup #121":
       op17LinlinTournamentManifest,
-    "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleManifest,
+    "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2":
+      op13LuffyTcgmmManifest,
+    "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9":
+      op12RosinanteTcgmmManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,

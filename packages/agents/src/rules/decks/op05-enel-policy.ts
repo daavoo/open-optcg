@@ -13,10 +13,10 @@ import type { PolicyModule } from "../policy-module.js";
 /**
  * The most a Character can cost and still land by the seat's second turn.
  *
- * In this list it selects EB01-056 Flampe, OP11-106 Zeus, OP17-107 Daifuku
- * and OP17-109 Pudding -- fourteen cards. The generic keep's "any card costing
- * 2 or less" would also keep a hand whose only cheap cards are OP06-115 and
- * OP06-117 The Ark Maxim, neither of which puts a body on the board.
+ * In the Community list it selects OP11-106 Zeus, OP15-103 Genbo, OP17-107
+ * Daifuku, OP17-109 Pudding and OP17-113 Streusen -- twenty cards. The generic
+ * keep's "any card costing 2 or less" would also keep a hand whose only cheap
+ * cards are OP06-115 and EB05-060, neither of which puts a body on the board.
  */
 const EARLY_BODY_COST = 3;
 

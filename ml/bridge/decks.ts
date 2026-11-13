@@ -71,33 +71,6 @@ const LISTS: Record<string, DeckManifest> = {
       "ST26-005": 4,
     },
   },
-  // Purple OP12-061 Rosinante, 2nd of 120 (6-1) for FlyestRaven at [EB05]
-  // ChinoizeCup #125 on 20 Oct 2026, an online event that allowed EB-05 ahead
-  // of its release (https://play.limitlesstcg.com/tournament/6ad092328a8383117e3ec30c/standings).
-  // No selectable deck fronts this Leader, so it trains as a list of its own;
-  // it plays four P-093 Trafalgar Law and four EB05-040.
-  "op12-061-eb05": {
-    id: "op12-061-eb05",
-    leader: "OP12-061",
-    cards: {
-      "EB03-062": 1,
-      "EB04-038": 4,
-      "EB04-058": 4,
-      "EB05-034": 2,
-      "EB05-040": 4,
-      "OP07-076": 1,
-      "OP10-065": 4,
-      "OP12-115": 4,
-      "OP13-076": 1,
-      "OP15-078": 4,
-      "OP16-064": 2,
-      "OP16-065": 4,
-      "OP16-078": 4,
-      "P-088": 4,
-      "P-093": 4,
-      "ST10-010": 3,
-    },
-  },
   // Purple OP15-058 Enel, the Europe Championship 26-27 S1 winner ("Frle",
   // Utrecht, 6 Sep 2026, read off onepiecetopdecks.com's OP-17 `deckgen`
   // record and checked against Bandai's decklist graphic). It was the
@@ -406,6 +379,250 @@ const LISTS: Record<string, DeckManifest> = {
       "OP12-037": 3,
       "OP13-040": 2,
       "ST21-017": 1,
+    },
+  },
+  // Blue OP17-039 Rocks.D.Xebec, supplied as a card list by the maintainer on
+  // 28 Sep 2026 without an event or pilot. It was the Leader's Community list
+  // until the TCG Match Making EB05 2026-11-12 #1 build replaced it there; it
+  // stays here under its old id because the meta field (`meta-decks.txt`),
+  // checkpoints and its variants name it.
+  "(Blue) Rocks.D.Xebec - Open OPTCG": {
+    id: "(Blue) Rocks.D.Xebec - Open OPTCG",
+    format: "standard",
+    leader: "OP17-039",
+    cards: {
+      "OP08-051": 3,
+      "OP17-050": 4,
+      "OP17-045": 4,
+      "OP17-052": 3,
+      "OP17-054": 4,
+      "OP17-042": 2,
+      "OP17-044": 2,
+      "OP17-046": 4,
+      "OP17-049": 4,
+      "OP17-040": 4,
+      "OP17-048": 4,
+      "OP17-118": 4,
+      "OP17-055": 4,
+      "OP17-056": 4,
+    },
+  },
+  // Red/Green OP13-001 Monkey.D.Luffy, the "Miracle Luffy" Land of Wano build
+  // from OPTCG Web Sim's Miracle Luffy EB05 Guide
+  // (https://optcgwebsim.com/learn/miracle-luffy-eb05-guide/, retrieved 7 Nov
+  // 2026). It was the Leader's Community list until the TCG Match Making EB05
+  // 2026-11-12 #2 build replaced it there; it stays here under its old id
+  // because checkpoints name it.
+  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": {
+    id: "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05",
+    format: "standard",
+    leader: "OP13-001",
+    cards: {
+      "EB01-013": 4,
+      "EB05-001": 4,
+      "OP01-055": 3,
+      "OP06-033": 4,
+      "OP07-022": 4,
+      "OP08-036": 2,
+      "OP12-023": 4,
+      "OP13-016": 4,
+      "OP13-031": 4,
+      "OP14-031": 4,
+      "OP17-022": 1,
+      "PRB02-003": 4,
+      "ST30-004": 4,
+      "ST32-002": 4,
+    },
+  },
+  // Blue OP09-042 Buggy, 12th of 128 (5-2) for "Tsaams" at ChinoizeCup #124 on
+  // 19 Oct 2026, off Limitless TCG's standings for the event. It was the
+  // Leader's Community list until the TCG Match Making EB05 2026-11-12 #3 build
+  // replaced it there; it stays here under its old id because checkpoints and
+  // its variants name it.
+  "(Blue) Buggy - 12th Place ChinoizeCup #124": {
+    id: "(Blue) Buggy - 12th Place ChinoizeCup #124",
+    format: "standard",
+    leader: "OP09-042",
+    cards: {
+      "OP09-056": 4,
+      "ST25-001": 4,
+      "ST25-002": 4,
+      "ST25-005": 4,
+      "OP16-056": 4,
+      "EB03-021": 2,
+      "EB05-028": 2,
+      "OP09-048": 4,
+      "ST33-004": 2,
+      "P-084": 2,
+      "ST25-003": 4,
+      "EB05-021": 4,
+      "OP09-051": 4,
+      "OP09-057": 4,
+      "OP06-058": 2,
+    },
+  },
+  // Green/Yellow EB05-010 Nico Robin, ranked 6th in TCG Match Making's EB05
+  // Weekly Power Rankings of 5 Nov 2026. It was the Leader's Community list
+  // until the 2026-11-12 ranking's #4 build replaced it there; it stays here
+  // under its old id because checkpoints name it.
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6": {
+    id: "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
+    format: "standard",
+    leader: "EB05-010",
+    cards: {
+      "EB04-018": 4,
+      "EB04-058": 2,
+      "EB05-016": 4,
+      "EB05-050": 4,
+      "EB05-052": 4,
+      "EB05-055": 4,
+      "OP06-115": 2,
+      "OP12-112": 4,
+      "OP17-022": 2,
+      "OP17-102": 4,
+      "OP17-107": 4,
+      "OP17-109": 4,
+      "OP17-112": 4,
+      "OP17-114": 4,
+    },
+  },
+  // Purple OP17-058 Kaido, the 4-0 Standard Battle win for "Angelito_1023" at
+  // Sci-Fi Factory (USA, 20 Sep 2026), off onepiecetopdecks.com's OP-17 page,
+  // chosen as the list nearest the field's average count for every identity. It
+  // was the Leader's Community list until the TCG Match Making EB05 2026-11-12
+  // #5 build replaced it there; it stays here under its old id because the meta
+  // field (`meta-decks.txt`), checkpoints and its variants name it.
+  "(Purple) Kaido - Open OPTCG": {
+    id: "(Purple) Kaido - Open OPTCG",
+    format: "standard",
+    leader: "OP17-058",
+    cards: {
+      "EB04-032": 4,
+      "OP17-075": 2,
+      "OP17-073": 4,
+      "OP17-074": 4,
+      "OP08-074": 2,
+      "EB04-031": 4,
+      "EB04-030": 2,
+      "OP17-061": 3,
+      "OP17-065": 2,
+      "OP17-062": 4,
+      "OP17-063": 3,
+      "ST34-004": 3,
+      "OP07-077": 4,
+      "OP07-076": 3,
+      "OP15-078": 3,
+      "OP08-077": 2,
+      "OP17-076": 1,
+    },
+  },
+  // Yellow OP05-098 Enel, ranked 3rd in TCG Match Making's OP17.5 Weekly Power
+  // Rankings of 22 Oct 2026. It was the Leader's Community list until the TCG
+  // Match Making EB05 2026-11-12 #6 build replaced it there; it stays here
+  // under its old id because checkpoints name it.
+  "(Yellow) Enel - TCG Match Making OP17.5 #3": {
+    id: "(Yellow) Enel - TCG Match Making OP17.5 #3",
+    format: "standard",
+    leader: "OP05-098",
+    cards: {
+      "EB02-052": 2,
+      "EB04-058": 4,
+      "OP06-115": 4,
+      "OP11-106": 4,
+      "OP13-113": 4,
+      "OP15-103": 4,
+      "OP16-119": 4,
+      "OP17-102": 4,
+      "OP17-107": 4,
+      "OP17-109": 4,
+      "OP17-112": 4,
+      "OP17-113": 4,
+      "OP17-114": 4,
+    },
+  },
+  // Red OP14-001 Trafalgar Law, 9th of 120 for "FenoHS" at ChinoizeCup #125 on
+  // 20 Oct 2026, off Limitless TCG's standings for the event. It was the
+  // Leader's Community list until the TCG Match Making EB05 2026-11-12 #8 build
+  // replaced it there; it stays here under its old id because checkpoints and
+  // its variants name it.
+  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": {
+    id: "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
+    format: "standard",
+    leader: "OP14-001",
+    cards: {
+      "OP14-010": 4,
+      "OP14-013": 4,
+      "OP13-007": 2,
+      "OP14-004": 4,
+      "OP14-011": 4,
+      "EB05-006": 4,
+      "OP14-006": 2,
+      "OP14-002": 4,
+      "PRB02-003": 4,
+      "OP14-014": 2,
+      "EB05-001": 4,
+      "OP09-009": 2,
+      "OP14-009": 3,
+      "OP17-005": 3,
+      "OP14-019": 4,
+    },
+  },
+  // Red/Black OP13-004 Sabo, ranked 8th in TCG Match Making's EB05 Weekly Power
+  // Rankings of 5 Nov 2026. It was the Leader's Community list until the
+  // 2026-11-12 ranking's #10 build replaced it there; it stays here under its
+  // old id because checkpoints name it.
+  "(Red/Black) Sabo - TCG Match Making EB05 #8": {
+    id: "(Red/Black) Sabo - TCG Match Making EB05 #8",
+    format: "standard",
+    leader: "OP13-004",
+    cards: {
+      "EB05-046": 4,
+      "EB05-047": 4,
+      "OP04-016": 1,
+      "OP15-088": 3,
+      "OP17-080": 4,
+      "OP17-082": 4,
+      "OP17-083": 2,
+      "OP17-084": 2,
+      "OP17-086": 2,
+      "OP17-087": 4,
+      "OP17-089": 4,
+      "OP17-093": 4,
+      "OP17-095": 4,
+      "OP17-096": 2,
+      "OP17-119": 3,
+      "ST01-011": 3,
+    },
+  },
+  // Purple/Yellow OP12-061 Donquixote Rosinante, 2nd of 120 (6-1) for
+  // FlyestRaven at [EB05] ChinoizeCup #125 on 20 Oct 2026, an online event that
+  // allowed EB-05 ahead of its release, off Limitless TCG's standings
+  // (https://play.limitlesstcg.com/tournament/6ad092328a8383117e3ec30c/standings).
+  // It is the Leader's best-measured build of the pool it was measured in,
+  // but the TCG Match Making EB05 2026-11-12 #9 list holds the Leader's
+  // Community slot; this one stays here under its ChinoizeCup id because its
+  // variants name it.
+  "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125": {
+    id: "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125",
+    format: "standard",
+    leader: "OP12-061",
+    cards: {
+      "EB03-062": 1,
+      "EB04-038": 4,
+      "EB04-058": 4,
+      "EB05-034": 2,
+      "EB05-040": 4,
+      "OP07-076": 1,
+      "OP10-065": 4,
+      "OP12-115": 4,
+      "OP13-076": 1,
+      "OP15-078": 4,
+      "OP16-064": 2,
+      "OP16-065": 4,
+      "OP16-078": 4,
+      "P-088": 4,
+      "P-093": 4,
+      "ST10-010": 3,
     },
   },
 };

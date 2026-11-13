@@ -94,7 +94,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01",
     "(Red/Blue) Portgas.D.Ace - Official Feature Deck",
   ],
-  ["(Yellow) Enel - TCG Match Making OP17.5 #3", null],
+  ["(Yellow) Enel - TCG Match Making EB05 2026-11-12 #6", null],
   [
     "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
     "(Green/Purple) Monkey.D.Luffy - Official Feature Deck",
@@ -117,14 +117,34 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Yellow) Charlotte Linlin - Official Feature Deck",
   ],
   [
-    "(Red/Black) Sabo - TCG Match Making EB05 #8",
+    "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10",
     "(Red/Black) Sabo - Starter Deck 35",
   ],
-  ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", null],
-  ["(Green/Yellow) Nico Robin - TCG Match Making EB05 #6", null],
+  ["(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2", null],
+  ["(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4", null],
   [
     "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19",
     "(Red/Green) Luffy & Ace - Starter Deck 30",
+  ],
+  [
+    "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1",
+    "(Blue) Rocks.D.Xebec - Official Feature Deck",
+  ],
+  [
+    "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3",
+    "(Blue) Buggy - Official Feature Deck",
+  ],
+  [
+    "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5",
+    "(Purple) Kaido - Official Feature Deck",
+  ],
+  [
+    "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8",
+    "(Red) Trafalgar Law - Official Feature Deck",
+  ],
+  [
+    "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9",
+    null,
   ],
 ];
 
@@ -170,6 +190,18 @@ describe("the Community lists the new builds replace", () => {
     ["(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20", "OP13-004"],
     ["(Purple) Monkey.D.Luffy - 1st Place Store Battle 2025-07-01", "OP05-060"],
     ["(Red/Green) Luffy & Ace - Open OPTCG", "ST30-001"],
+    ["(Blue) Rocks.D.Xebec - Open OPTCG", "OP17-039"],
+    ["(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05", "OP13-001"],
+    ["(Blue) Buggy - 12th Place ChinoizeCup #124", "OP09-042"],
+    ["(Green/Yellow) Nico Robin - TCG Match Making EB05 #6", "EB05-010"],
+    ["(Purple) Kaido - Open OPTCG", "OP17-058"],
+    ["(Yellow) Enel - TCG Match Making OP17.5 #3", "OP05-098"],
+    ["(Red) Trafalgar Law - 9th Place ChinoizeCup #125", "OP14-001"],
+    ["(Red/Black) Sabo - TCG Match Making EB05 #8", "OP13-004"],
+    [
+      "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125",
+      "OP12-061",
+    ],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();

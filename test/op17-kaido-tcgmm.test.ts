@@ -6,11 +6,13 @@ import { RegistryRulesAgent } from "@one-piece-sim/agents/local";
 import { character, copies, instance, scenario } from "./support/index.js";
 
 /**
- * The OP-17 tournament field's Kaido list, and the rules the Kaido policy
- * gained for the cards it runs that Bandai's feature deck does not.
+ * The TCG Match Making EB05 Kaido list, the Community list behind OP17-058,
+ * and the rules the Kaido policy gained for the field lists' cards that
+ * Bandai's feature deck does not run. OP08-074 Black Maria is the OP-17
+ * tournament list's (a training list now); the board below places it.
  */
 const LEADER = "OP17-058";
-const DECK = "(Purple) Kaido - Open OPTCG";
+const DECK = "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5";
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 
 const agent = () => new RegistryRulesAgent(LEADER);
@@ -25,7 +27,7 @@ function kaidoTurn() {
     .withLife("p2", copies(3, "ST34-002", "p2-life"));
 }
 
-describe("the Open OPTCG Kaido list", () => {
+describe("the TCG Match Making EB05 Kaido list", () => {
   it("is a fifty under the feature deck's Leader, on the Tournaments shelf", () => {
     expect(loadDeck(DECK)).toHaveLength(50);
     expect(deckManifests[DECK]?.leader).toBe(LEADER);

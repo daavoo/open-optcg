@@ -11,22 +11,23 @@ import type { LegalAction } from "@one-piece-sim/protocol";
 import { instance, scenario } from "./support/index.js";
 
 /**
- * The ChinoizeCup #124 Blue Buggy list, the first EB-05 Buggy build shipped.
+ * The TCG Match Making EB05 Red Trafalgar Law list, the Community list behind
+ * OP14-001.
  *
  * Every card it plays is driven in the per-set card tests already; what this
  * file holds is that the list is the one the shelf and the policy expect: a
- * Standard-legal fifty under OP09-042, on the Tournaments shelf, and kept by
- * `op09-buggy-policy.ts` on an ST-25 4-cost body, which this list plays as the
+ * Standard-legal fifty under OP14-001, on the Tournaments shelf, and kept by
+ * `op14-law-policy.ts` on a cheap swap partner, which this list plays as the
  * feature deck does.
  */
 
-const LIST = "(Blue) Buggy - 12th Place ChinoizeCup #124";
+const LIST = "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
-const LEADER = "OP09-042";
+const LEADER = "OP14-001";
 
-describe("the ChinoizeCup #124 Buggy list", () => {
-  it("is a Standard-legal 50 under OP09-042, shelved under Tournaments", () => {
+describe("the TCG Match Making EB05 Law list", () => {
+  it("is a Standard-legal 50 under OP14-001, shelved under Tournaments", () => {
     const manifest = deckManifests[LIST]!;
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(manifest.leader).toBe(LEADER);
@@ -43,7 +44,7 @@ describe("the opening hand", () => {
   async function decision(hand: readonly string[]): Promise<string> {
     const game = scenario()
       .decks(LIST, OPPONENT)
-      .seed("buggy-tournament-mulligan")
+      .seed("law-tournament-mulligan")
       .withHand(
         "p1",
         hand.map((cardNumber, index) => instance(`card-${index}`, cardNumber)),
@@ -56,23 +57,23 @@ describe("the opening hand", () => {
     return action.type === "mulligan-decision" ? action.decision : action.type;
   }
 
-  it("keeps an ST-25 4-cost body and ships a hand of searchers and big Characters", async () => {
+  it("keeps a cheap Supernovas body and ships a hand without one", async () => {
     expect(
       await decision([
-        "ST25-001",
-        "OP09-057",
-        "EB05-021",
-        "OP09-051",
-        "OP06-058",
+        "OP14-010",
+        "EB05-001",
+        "OP14-019",
+        "OP17-005",
+        "OP14-009",
       ]),
     ).toBe("keep");
     expect(
       await decision([
-        "OP09-056",
-        "OP09-057",
-        "EB05-021",
-        "OP09-051",
-        "OP06-058",
+        "PRB02-003",
+        "EB05-001",
+        "OP14-019",
+        "OP17-005",
+        "OP14-009",
       ]),
     ).toBe("mulligan");
   });

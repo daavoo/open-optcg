@@ -361,18 +361,21 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
     ],
   },
   {
-    // OP-17 Purple Kaido. Bandai's list runs no searcher; the tournament list's
-    // is four OP07-077, which looks at five for an {Animal Kingdom Pirates} or
-    // {Big Mom Pirates} card -- every body in the 50 but OP17-074 Yamato, plus
-    // two of its Events.
+    // OP-17 Purple Kaido. Bandai's list runs no searcher; the Community list's
+    // are four OP07-077, which looks at five for an {Animal Kingdom Pirates} or
+    // {Big Mom Pirates} card, and four EB05-037 Black Maria, which looks at
+    // three for an {Animal Kingdom Pirates} one -- every body in the 50 but
+    // OP17-074 Yamato and OP15-069 Nola, plus two of its Events.
     //
     // The archetype's weakness is "highly dependent on playing 6c King exactly
     // on curve", and King is in the pool, so King heads it. Then what a search
     // on turns 2-5 can cast or ramp with: Basil Hawkins and Queen, then the
-    // 7-cost EB04-030, which buys its own [Rush]. The cost-10 bodies follow in
-    // the order the deck casts them -- OP17-062, whose refund pays for every
-    // `DON!! −N` after it, first -- and the cards the deck holds rather than
-    // plays sit last.
+    // 7-cost EB04-030, which buys its own [Rush], and the 6-cost Ulti & Page
+    // One, a DON!! and a small K.O. The big bodies follow in the order the deck
+    // casts them -- OP17-062, whose refund pays for every `DON!! −N` after it,
+    // first -- and the cards the deck holds rather than plays sit last, with
+    // Black Maria at the bottom: a search that finds another search has spent
+    // its look on a card that only looks again.
     slug: "op17-kaido",
     leader: "OP17-058",
     order: [
@@ -380,15 +383,15 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP17-073", // Basil Hawkins -- 3 cost, a DON!! on the way in
       "EB04-032", // Queen -- 1 cost; converts spare DON!! into next turn's
       "EB04-030", // Kaido -- 7 cost, [Rush] and a rest for DON!! −2
+      "OP17-060", // Ulti & Page One -- 6 cost, a DON!! and a small K.O.
       "OP17-062", // Kaido -- the finisher, and refunds every DON!! −N
-      "ST34-004", // Charlotte Linlin -- cost 10, a Life card and a zeroed body
       "OP17-063", // Kaido -- cost 10, K.O.s a cost-6-or-less on the way in
       "OP17-061", // Lead Performers -- cost 9, a Life card
-      "OP08-077", // Conquest of the Sea -- DON!! −2, K.O. two cost-6-or-less
-      "OP08-074", // Black Maria -- lends DON!! for one turn's DON!! −N costs
       "OP17-065", // Queen -- cost 9, draws and holds two attackers
       "OP17-075", // X.Drake -- a 2000 Counter body
       "OP17-076", // Wo Ro Ro Ro Ro... -- a +3000 Counter
+      "EB04-040", // Flame Dragon Torch -- a +4000 Counter on the Leader
+      "EB05-037", // Black Maria -- looks at three for the cards above
     ],
   },
   {

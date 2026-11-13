@@ -163,18 +163,26 @@ export function createOp13LuffyLeaderPolicy(): RulesPolicy {
 }
 
 /**
- * The cards a (Red/Green) Monkey.D.Luffy opening can act on before turn three.
+ * The cards a (Red/Green) Monkey.D.Luffy opening can act on before turn three,
+ * in either build behind the Leader.
  *
- * Sixteen 1-cost look-at-fours and look-at-fives -- OP01-016 and EB02-017
- * Nami, EB04-002 Jewelry Bonney and the ST31-005 Thousand Sunny -- each find
- * a {Straw Hat Crew} card, which is every Character in the fifty.
- * OP14-022 Usopp and OP14-031 Nami are the 4-costs that set DON!! active
- * again, the engine the Leader's defence runs on.
+ * The Straw Hat DON!!-refresh build: sixteen 1-cost look-at-fours and
+ * look-at-fives -- OP01-016 and EB02-017 Nami, EB04-002 Jewelry Bonney and the
+ * ST31-005 Thousand Sunny -- each find a {Straw Hat Crew} card, which is every
+ * Character in that fifty. OP14-022 Usopp and OP14-031 Nami are the 4-costs
+ * that set DON!! active again, the engine the Leader's defence runs on.
  *
- * What is left of the cheap slot does not open a game: OP04-016, OP05-038 and
- * OP13-040 are [Counter] cards, and ST21-003 Sanji is a 3000 body whose clause
- * needs a 6000 attacker. A hand of those is a hand the generic "anything
- * costing 2 or less" keeps and this deck cannot use.
+ * The Land of Wano build, the Community list: OP13-016 Monkey.D.Garp, which
+ * looks at four for a card of cost 3 or more under this Leader, and EB05-001
+ * Jewelry Bonney, the 5-cost the deck's turns are built around -- its guide
+ * keeps a hand with either and ships one with neither. OP14-031 Nami is in
+ * this build too. Neither build plays the other's openers but Nami, so the
+ * one set serves both.
+ *
+ * What is left of the cheap slot does not open a game: [Counter] cards, and
+ * 1-costs whose [On Play] digs towards the openers rather than being one. A
+ * hand of those is a hand the generic "anything costing 2 or less" keeps and
+ * this deck cannot use.
  */
 const OPENERS: ReadonlySet<string> = new Set([
   "OP01-016",
@@ -183,6 +191,8 @@ const OPENERS: ReadonlySet<string> = new Set([
   "ST31-005",
   "OP14-022",
   "OP14-031",
+  "OP13-016",
+  "EB05-001",
 ]);
 
 export function createOp13LuffyMulliganModule(): PolicyModule {
@@ -191,9 +201,9 @@ export function createOp13LuffyMulliganModule(): PolicyModule {
     keep: (observation) =>
       observation.self.hand.some((card) => OPENERS.has(card.cardNumber)),
     keepBecause:
-      "Keep a hand with a 1-cost Straw Hat search or a 4-cost DON!! refresher: either one is a turn this deck can take on curve.",
+      "Keep a hand with a search, a DON!! refresher or Bonney: each is a turn this deck can take on curve.",
     mulliganBecause:
-      "Mulligan a hand with no search and no refresher: the Counter Events and a lone Sanji do nothing on the first turns.",
+      "Mulligan a hand with no search, no refresher and no Bonney: Counter cards and stray 1-costs do nothing on the first turns.",
   });
 }
 

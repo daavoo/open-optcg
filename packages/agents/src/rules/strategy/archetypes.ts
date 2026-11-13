@@ -1443,6 +1443,21 @@ const midrangeRobinEb05: StrategyProfile = {
 };
 
 /**
+ * OP12 Purple/Yellow Donquixote Rosinante, OP12-061.
+ *
+ * Enrolled under the `midrange` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op12-rosinante-policy.ts`.
+ */
+const midrangeRosinanteOp12: StrategyProfile = {
+  id: "midrange-rosinante-op12",
+  extends: "midrange",
+  summary:
+    "OP12 Purple/Yellow Donquixote Rosinante: 4-cost Trafalgar Law bodies that ramp a DON!! at parity, a Leader that discounts the big Laws and keeps one from a K.O. for a Life card, and DON!! −N removal off {Navy} and {Donquixote Pirates} searchers.",
+  pattern: "midrange",
+  leaders: ["OP12-061"],
+};
+
+/**
  * OP11 Red/Black Koby, OP11-001.
  *
  * Enrolled under the `midrange` root with nothing but a mulligan of its own,
@@ -1981,6 +1996,7 @@ export const BUILT_IN_STRATEGY_PROFILES: readonly StrategyProfile[] = [
   midrangeShirahoshiOp11,
   midrangeReijuOp06,
   midrangeRobinEb05,
+  midrangeRosinanteOp12,
   midrangeKobyOp11,
   midrangeAceOp13,
   midrangeSanjiOp12,

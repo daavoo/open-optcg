@@ -205,12 +205,15 @@ const OPENING_ENGINE = [QUEEN_RAMP, DISCARD_BODY, ATTACK_RAMP, ...RAMP_BODIES];
  *    the field or a card out of hand, and `createOp17KaidoEconomyPolicy`
  *    below is what prices them. It is the largest single rule for this deck.
  *
- * The tournament field plays a different 50 around the same ramp core, and
- * this file pilots it too: "(Purple) Kaido - Open OPTCG" runs OP07-077, ST34-004, OP07-076, OP15-078, OP08-077, OP08-074 and
- * EB04-030 where Bandai's runs OP17-060, OP17-068, OP17-069 and OP17-078.
- * What those cards need from the policy is `KAIDO_FIELD_LIST_RULES` and
- * `search:op17-kaido`; every rule written against Bandai's cards is silent on
- * the ones it does not name.
+ * The field plays different 50s around the same ramp core, and this file
+ * pilots them too. The Community list, "(Purple) Kaido - TCG Match Making EB05
+ * 2026-11-12 #5", runs OP07-077, EB05-037, OP15-069, OP15-078 and EB04-030;
+ * the OP-17 tournament list it replaced, "(Purple) Kaido - Open OPTCG" (a
+ * training list now), runs OP07-077, ST34-004, OP07-076, OP15-078, OP08-077,
+ * OP08-074 and EB04-030 -- where Bandai's runs OP17-060, OP17-068, OP17-069
+ * and OP17-078. What those cards need from the policy is
+ * `KAIDO_FIELD_LIST_RULES` and `search:op17-kaido`; every rule written against
+ * Bandai's cards is silent on the ones it does not name.
  *
  * What is left after that is structural: a deck whose plan is to reach turn 10
  * alive is behind a field of starter-deck aggro, and the three matchups this
@@ -751,13 +754,14 @@ export const KAIDO_EFFECT_RULES: readonly Heuristic[] = [
 ];
 
 /**
- * The tournament list's DON!! economy: the two cards in it that turn DON!! on
- * the field into something else, and that the generic ladder takes whenever it
- * is offered them. Neither is in Bandai's list, so both rules are silent for
- * it by construction.
+ * The field lists' DON!! economy: the two cards in them that turn DON!! on the
+ * field into something else, and that the generic ladder takes whenever it is
+ * offered them -- OP08-074 Black Maria, in the tournament list, and OP15-078
+ * Mamaragan, in both it and the Community list. Neither is in Bandai's list,
+ * so both rules are silent for it by construction.
  *
  * One module per rule (`op17-kaido-field#<name>`), so `pnpm deck:ab --deck
- * "(Purple) Kaido - Open OPTCG" --disable
+ * "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5" --disable
  * op17-kaido-field#<name>` prices each alone.
  */
 export const KAIDO_FIELD_LIST_RULES: readonly Heuristic[] = [

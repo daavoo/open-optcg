@@ -13,7 +13,7 @@ import { op13SaboTcgmmDossier } from "./op13-sabo-tcgmm.js";
 import { op16EnelDossier } from "./op16-enel.js";
 import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
 import { op16AceOpenDossier } from "./op16-ace-open.js";
-import { op17XebecOpenDossier } from "./op17-xebec-open.js";
+import { op17XebecTcgmmDossier } from "./op17-xebec-tcgmm.js";
 import { op08PuddingDossier } from "./op08-pudding.js";
 import { op12ZoroPostBanDossier } from "./op12-zoro-post-ban.js";
 import { op15KriegDossier } from "./op15-krieg.js";
@@ -55,7 +55,7 @@ import { op17NewgateDossier } from "./op17-newgate.js";
 import { op16AceDossier } from "./op16-ace.js";
 import { op17ShanksDossier } from "./op17-shanks.js";
 import { op17KaidoDossier } from "./op17-kaido.js";
-import { op17KaidoFieldDossier } from "./op17-kaido-field.js";
+import { op17KaidoTcgmmDossier } from "./op17-kaido-tcgmm.js";
 import { op17XebecDossier } from "./op17-xebec.js";
 import { st18Dossier } from "./st18.js";
 import { st26Dossier } from "./st26.js";
@@ -70,9 +70,10 @@ import { st32Dossier } from "./st32.js";
 import { st33Dossier } from "./st33.js";
 import { st33KuzanTournamentDossier } from "./st33-kuzan-tournament.js";
 import { op14HancockTournamentDossier } from "./op14-hancock-tournament.js";
-import { op09BuggyTournamentDossier } from "./op09-buggy-tournament.js";
-import { op14LawTournamentDossier } from "./op14-law-tournament.js";
+import { op09BuggyTcgmmDossier } from "./op09-buggy-tcgmm.js";
+import { op14LawTcgmmDossier } from "./op14-law-tcgmm.js";
 import { eb05RobinTcgmmDossier } from "./eb05-robin-tcgmm.js";
+import { op12RosinanteTcgmmDossier } from "./op12-rosinante-tcgmm.js";
 import { st34Dossier } from "./st34.js";
 import { st35Dossier } from "./st35.js";
 import { st36Dossier } from "./st36.js";
@@ -102,7 +103,7 @@ import { op11JinbeTournamentDossier } from "./op11-jinbe-tournament.js";
 import { op09LuffyTournamentDossier } from "./op09-luffy-tournament.js";
 import { st21LuffyOpenDossier } from "./st21-luffy-open.js";
 import { op17LinlinTournamentDossier } from "./op17-linlin-tournament.js";
-import { op13LuffyMiracleDossier } from "./op13-luffy-miracle.js";
+import { op13LuffyTcgmmDossier } from "./op13-luffy-tcgmm.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
@@ -146,24 +147,30 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op14DoflamingoDossier,
   "(Red/Purple) Gol.D.Roger - Official Feature Deck": op13RogerDossier,
   "(Green/Blue) Monkey.D.Luffy - Official Feature Deck": op16LuffyDossier,
-  "(Red/Black) Sabo - TCG Match Making EB05 #8": op13SaboTcgmmDossier,
+  "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10":
+    op13SaboTcgmmDossier,
   "(Green) Shanks - Official Feature Deck": op17ShanksDossier,
   "(Red) Portgas.D.Ace - Official Feature Deck": op16AceDossier,
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenDossier,
-  "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenDossier,
+  "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1":
+    op17XebecTcgmmDossier,
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingDossier,
   "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroPostBanDossier,
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentDossier,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentDossier,
-  "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentDossier,
-  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentDossier,
-  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6": eb05RobinTcgmmDossier,
+  "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3": op09BuggyTcgmmDossier,
+  "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8":
+    op14LawTcgmmDossier,
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4":
+    eb05RobinTcgmmDossier,
+  "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9":
+    op12RosinanteTcgmmDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,
   "(Purple) Kaido - Official Feature Deck": op17KaidoDossier,
-  "(Purple) Kaido - Open OPTCG": op17KaidoFieldDossier,
+  "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5": op17KaidoTcgmmDossier,
   "(Green/Yellow) Yamato - Official Feature Deck": op06YamatoDossier,
   "(Red/Yellow) Jewelry Bonney - Official Feature Deck": eb04BonneyDossier,
   "(Red) Edward.Newgate - Official Feature Deck": op17NewgateDossier,
@@ -213,7 +220,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue) Jinbe - 11th Place ChinoizeCup #120": op14JinbeTournamentDossier,
   "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01":
     op13AceTournamentDossier,
-  "(Yellow) Enel - TCG Match Making OP17.5 #3": op05EnelTcgmmDossier,
+  "(Yellow) Enel - TCG Match Making EB05 2026-11-12 #6": op05EnelTcgmmDossier,
   "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25":
     eb02LuffyTournamentDossier,
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16": op11JinbeTournamentDossier,
@@ -221,7 +228,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op09LuffyTournamentDossier,
   "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenDossier,
   "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentDossier,
-  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleDossier,
+  "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2":
+    op13LuffyTcgmmDossier,
 };
 
 /**
