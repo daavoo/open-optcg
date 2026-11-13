@@ -62,9 +62,8 @@ describe("the pre-release page's lobby", () => {
     state.expansion = "OP15";
     const html = renderLobby(state, stubContext({ lockedExpansion: "OP18" }));
     expect(state.expansion).toBe("OP18");
-    expect(html).toContain(
-      escapeHtml(`${requireSealedExpansion("OP18").title} pre-release`),
-    );
+    expect(html).toContain("<h1>OP-18 pre-release</h1>");
+    expect(html).not.toContain(requireSealedExpansion("OP18").title);
     expect(html).not.toContain("data-pick-expansion");
     expect(html).not.toContain("data-open-booster-picker");
   });

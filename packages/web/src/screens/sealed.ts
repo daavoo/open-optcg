@@ -234,7 +234,7 @@ function boosterChoice(expansion: SealedExpansion, locked: boolean): string {
   if (locked)
     return `<div class="booster-choice">
     <span class="booster-choice-head">
-      <strong>${escapeHtml(expansion.title)} pre-release</strong>
+      <strong>${escapeHtml(expansion.productCode)} pre-release</strong>
     </span>
     <span class="booster-choice-body">
       ${packImage(expansion)}
@@ -323,7 +323,7 @@ function renderPrereleaseLobby(
     </header>
     <section class="prerelease-stage">
       ${packImage(expansion)}
-      <h1>${escapeHtml(expansion.title)} pre-release</h1>
+      <h1>${escapeHtml(expansion.productCode)} pre-release</h1>
       <p>Open ${SEALED_PACK_COUNT} packs and build ${SEALED_DECK_SIZE} cards. Swiss runs until one player is unbeaten, so more rounds means a bigger field.</p>
       ${getCards}
       <div class="prerelease-round-buttons" role="group" aria-label="Swiss rounds">${buttons}</div>
