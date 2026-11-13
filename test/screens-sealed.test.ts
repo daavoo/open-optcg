@@ -98,16 +98,15 @@ describe("the pre-release lobby before the cards are in", () => {
     expect(html).toMatch(/data-swiss-bots="4" disabled/);
   });
 
-  it("enables them, without the steps, once the cards are in", () => {
+  it("enables them once the cards are in", () => {
     const html = renderLobby(
       emptyState(),
       stubContext({
         lockedExpansion: "OP18",
         cardsReady: () => true,
-        renderGetCards: () => '<section id="get-cards-steps"></section>',
+        renderGetCards: () => "",
       }),
     );
-    expect(html).not.toContain('id="get-cards-steps"');
     expect(html).not.toContain("disabled");
   });
 });

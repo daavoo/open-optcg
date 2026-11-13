@@ -18,21 +18,12 @@ import {
   sealedSetPrefix,
   SEALED_EXPANSIONS,
   SEALED_LEADER,
+  SEALED_LEADER_IMAGE_URL,
+  SEALED_LEADER_SOURCE_PAGE,
   type SealedExpansion,
 } from "@one-piece-sim/decks";
 
 const BANDAI_CARD_LIST = "https://en.onepiece-cardgame.com/cardlist/";
-/**
- * `SEALED_LEADER` ("Rainbow Luffy") is a single Japanese promo with no Bandai
- * listing at all -- see `packages/cards/src/sealed-promo.ts` for the same
- * provenance gap OP17 has. This is the product photo from one of the two
- * retailer listings cited there; a single fixed URL because there is no
- * per-card gallery pattern for a promo that isn't part of a numbered set.
- */
-const SEALED_LEADER_IMAGE_URL =
-  "https://cdn11.bigcommerce.com/s-ua4dd/images/stencil/1280x1280/products/257018/341684/518691__35034.1732611797.jpg?c=2";
-const SEALED_LEADER_SOURCE_PAGE =
-  "https://www.gamenerdz.com/monkey-d-luffy-leader-pack-sealed-battle-2023-vol-1-one-piece-promotion-cards";
 const SEALED_LEADER_PSEUDO_DECK = "SEALED";
 /**
  * The `BOOSTERS` pseudo-deck: one official pack photo per sealed expansion,

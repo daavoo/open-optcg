@@ -10,6 +10,11 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { build } from "esbuild";
+import {
+  SEALED_EXPANSIONS,
+  SEALED_LEADER,
+  SEALED_LEADER_IMAGE_URL,
+} from "@one-piece-sim/decks";
 import { wantedCards } from "./download-assets.js";
 import { bookmarklet } from "../packages/web/src/get-cards-bookmarklet.js";
 
@@ -26,6 +31,17 @@ const result = await build({
   outfile: out,
   define: {
     __WANTED_CARDS__: JSON.stringify(wantedCards()),
+    // Art no card list page carries: each sealed set's pack photo and the
+    // sealed Leader's, by the key the app files them under.
+    __EXTRA_ART__: JSON.stringify({
+      ...Object.fromEntries(
+        SEALED_EXPANSIONS.map((expansion) => [
+          `${expansion.code}-PACK`,
+          expansion.packImageUrl,
+        ]),
+      ),
+      [SEALED_LEADER]: SEALED_LEADER_IMAGE_URL,
+    }),
     __MAX_IN_FLIGHT__: process.env.GET_CARDS_MAX_IN_FLIGHT ?? "16",
   },
   metafile: true,

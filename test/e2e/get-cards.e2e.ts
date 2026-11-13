@@ -13,6 +13,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { unzipSync } from "fflate";
 import type { BrowserContext, Page } from "@playwright/test";
+import { SEALED_EXPANSIONS } from "@one-piece-sim/decks";
 import { expect, test } from "./fixtures.js";
 import {
   bookmarklet,
@@ -31,7 +32,12 @@ function wantedCards(script: string): string[] {
   return [...new Set(numbers.map((n) => n.slice(1, -1)))];
 }
 
-/** Serves the script and a stand-in Bandai; counts the images fetched. */
+/** What a whole run fetches beside the cards: each sealed set's pack photo
+    and the sealed Leader's art. */
+const EXTRA_ART = SEALED_EXPANSIONS.length + 1;
+
+/** Serves the script, a stand-in Bandai and the Leader art's image host;
+    counts the images fetched. */
 async function standInBandai(context: BrowserContext, script: string) {
   const imageRequests = { count: 0 };
   const listPage =
@@ -45,11 +51,22 @@ async function standInBandai(context: BrowserContext, script: string) {
   );
   await context.route(`${BANDAI}/**`, (route) => {
     const url = new URL(route.request().url());
-    if (url.pathname.startsWith("/images/cardlist/card/")) {
+    if (
+      url.pathname.startsWith("/images/cardlist/card/") ||
+      /\.(?:png|webp|jpg)$/.test(url.pathname)
+    ) {
       imageRequests.count += 1;
       return route.fulfill({ body: PIXEL_PNG, contentType: "image/png" });
     }
     return route.fulfill({ body: listPage, contentType: "text/html" });
+  });
+  await context.route("https://cdn11.bigcommerce.com/**", (route) => {
+    imageRequests.count += 1;
+    return route.fulfill({
+      body: PIXEL_PNG,
+      contentType: "image/png",
+      headers: { "access-control-allow-origin": "*" },
+    });
   });
   return imageRequests;
 }
@@ -81,7 +98,7 @@ test("a closed run carries on from the images it saved, and a finished one fetch
 }) => {
   test.setTimeout(240_000);
   const script = await readFile(resolve("dist/get-cards.js"), "utf8");
-  const total = wantedCards(script).length;
+  const total = wantedCards(script).length + EXTRA_ART;
   const context = await browser.newContext({ acceptDownloads: true });
   const images = await standInBandai(context, script);
 
@@ -135,7 +152,7 @@ test("the cards the app asks for come as a small update zip", async ({
 }) => {
   test.setTimeout(120_000);
   const script = await readFile(resolve("dist/get-cards.js"), "utf8");
-  const total = wantedCards(script).length;
+  const total = wantedCards(script).length + EXTRA_ART;
   const asked = wantedCards(script).slice(-2);
   const context = await browser.newContext({ acceptDownloads: true });
   const images = await standInBandai(context, script);
@@ -150,10 +167,10 @@ test("the cards the app asks for come as a small update zip", async ({
 
   await clickBookmark(page, `#open-optcg-missing=${asked.join(",")}`);
   await expect(page.locator("#open-optcg-get-cards")).toContainText(
-    "Open OPTCG is missing 2 cards",
+    "Open OPTCG is missing 2 images",
   );
   await expect(page.locator("[data-run-all]")).toBeVisible();
-  await page.getByRole("button", { name: "Download 2 cards" }).click();
+  await page.getByRole("button", { name: "Download 2 images" }).click();
   const zip = await savedZip(page);
   expect(zip.name).toBe("open-optcg-assets-update.zip");
   expect(zip.art).toEqual(asked.map((card) => `art/${card}.png`));

@@ -140,7 +140,8 @@ export interface SealedContext {
    * app's gate.
    */
   cardsReady?(): boolean;
-  /** The steps that get the cards; see `renderPanel` in ./asset-gate.ts. */
+  /** The steps that get what is missing, or nothing; see `renderPanel` in
+      ./asset-gate.ts. */
   renderGetCards?(): string;
   bindGetCards?(): void;
   playTables(
@@ -321,7 +322,7 @@ function renderPrereleaseLobby(
       <h1>${escapeHtml(expansion.productCode)} pre-release</h1>
       <p>Open ${SEALED_PACK_COUNT} packs and build ${SEALED_DECK_SIZE} cards. Play Swiss format against AI opponents.</p>
       <div class="prerelease-round-buttons" role="group" aria-label="AI opponents">${buttons}</div>
-      ${ready ? "" : (ctx.renderGetCards?.() ?? "")}
+      ${ctx.renderGetCards?.() ?? ""}
     </section>
     ${footer.render()}
   </main>`;

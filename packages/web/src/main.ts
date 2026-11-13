@@ -519,12 +519,18 @@ async function receiveAssetPack(file: File): Promise<boolean> {
  * Whether the pre-release lobby may start: a pack is in, and it holds the
  * set's own cards. A pack loaded before the set came out is ready for the rest
  * of the app, but would deal the whole sealed pool as blank faces, so the
- * lobby asks for the cards it lacks (the dialog's `missingArt` link).
+ * lobby asks for the cards it lacks. The pack photo is asked for beside them
+ * but not waited on: the lobby draws a pack without it.
  */
 function prereleaseCardsReady(): boolean {
   const code = prereleaseExpansion();
   if (!assetsReady()) return false;
-  return !code || !missingCardArt().some((card) => card.startsWith(`${code}-`));
+  return (
+    !code ||
+    !missingCardArt().some(
+      (card) => card.startsWith(`${code}-`) && card !== `${code}-PACK`,
+    )
+  );
 }
 
 /** Shows the gate, or the lobby again when a load came from its dialog. */

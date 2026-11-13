@@ -37,7 +37,11 @@ export function bookmarklet(scriptUrl = GET_CARDS_SCRIPT_URL): string {
  * rather than replacing them, so a pack plus that zip is the whole set.
  */
 const MISSING_KEY = "open-optcg-missing";
-const CARD_NUMBER = /^(?:[A-Z]{1,5}\d{0,2}|P)-\d{3}$/;
+/** A card number, a sealed set's pack photo (`OP18-PACK`), or the sealed
+    Leader's art (`SEALED-LUFFY`, spelled out rather than imported so the
+    downloader's bundle stays free of the deck data). */
+const CARD_NUMBER =
+  /^(?:(?:[A-Z]{1,5}\d{0,2}|P)-\d{3}|[A-Z]{2}\d{1,2}-PACK|SEALED-LUFFY)$/;
 
 export function missingCardsUrl(
   cardlistUrl: string,

@@ -45,6 +45,10 @@ import {
 
 /** Every card number the engine knows, sorted; injected by the build. */
 declare const __WANTED_CARDS__: string[];
+/** Art no list page carries, by the key the app files it under; see the build. */
+declare const __EXTRA_ART__: Record<string, string>;
+/** Every image a whole run fetches: the cards' and the extras. */
+const ALL_ART = [...__WANTED_CARDS__, ...Object.keys(__EXTRA_ART__)];
 
 type PrintedCard = { name: string; effect: string; trigger: string };
 
@@ -339,7 +343,7 @@ async function run(
 ): Promise<{ summary: string; zip: Blob }> {
   const zip = zipWriter();
   const wantedSet = new Set(__WANTED_CARDS__);
-  const wanted = only ?? __WANTED_CARDS__;
+  const wanted = only ?? ALL_ART;
   const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
   const onlySet = only ? new Set(only) : null;
   const pages = new Map<string, string>();
@@ -378,9 +382,14 @@ async function run(
       }
     }
   };
-  await readPages(only ? seriesOf(only) : CARDLIST_SERIES);
+  // The extras' pages carry neither their images nor any text.
+  await readPages(
+    only
+      ? seriesOf(only.filter((card) => wantedSet.has(card)))
+      : CARDLIST_SERIES,
+  );
   readCards();
-  if (only?.some((card) => !(card in text))) {
+  if (only?.some((card) => wantedSet.has(card) && !(card in text))) {
     await readPages(CARDLIST_SERIES.filter(([slug]) => !pages.has(slug)));
     readCards();
   }
@@ -411,17 +420,22 @@ async function run(
       const listed = images.get(card)?.url;
       // A card no list page carries is found through Bandai's search, a
       // request of its own; a saved copy of it is taken without asking.
+      const extra = __EXTRA_ART__[card];
       const kept = await cache?.get(
         card,
-        listed ? new URL(listed).pathname : null,
+        extra
+          ? new URL(extra).pathname
+          : listed
+            ? new URL(listed).pathname
+            : null,
       );
       if (kept) {
         saved += 1;
-        zip.write(`art/${card}.png`, kept);
+        zip.write(artName(card, kept), kept);
       } else {
-        const url = listed ?? (await searchImageUrl(fetcher, card));
+        const url = extra ?? listed ?? (await searchImageUrl(fetcher, card));
         const bytes = await fetcher.get(url, "image/");
-        zip.write(`art/${card}.png`, bytes);
+        zip.write(artName(card, bytes), bytes);
         await cache?.put(card, new URL(url).pathname, bytes);
       }
     } catch {
@@ -445,6 +459,22 @@ async function run(
       : "") +
     ".";
   return { summary, zip: blob };
+}
+
+/**
+ * The image's name in the zip, its extension read off its bytes: the app types
+ * an image by extension, and the extras are WebP and JPEG where the cards are
+ * PNG.
+ */
+function artName(card: string, bytes: Uint8Array): string {
+  const tag = String.fromCharCode(...bytes.subarray(8, 12));
+  const extension =
+    tag === "WEBP"
+      ? "webp"
+      : bytes[0] === 0xff && bytes[1] === 0xd8
+        ? "jpg"
+        : "png";
+  return `art/${card}.${extension}`;
 }
 
 /** The art URL of a promo or reprint no list page carries, from Bandai's search. */
@@ -491,21 +521,22 @@ async function start(): Promise<void> {
   // Otherwise, after an earlier run, the cards that run did not save: the
   // new set since then, offered as an update beside the whole pack.
   const saved = kept && !asked ? await cache!.cards() : new Set<string>();
-  const unsaved = __WANTED_CARDS__.filter((card) => !saved.has(card));
+  const unsaved = ALL_ART.filter((card) => !saved.has(card));
   const offerUnsaved =
-    kept > 0 && unsaved.length > 0 && unsaved.length < __WANTED_CARDS__.length;
+    kept > 0 && unsaved.length > 0 && unsaved.length < ALL_ART.length;
   const small = "margin:8px 0 0;font-size:12px;opacity:.75";
   const linkButton = (attribute: string, label: string) =>
     `<button type="button" ${attribute} style="${small};display:block;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit;text-align:left">${label}</button>`;
   const cards = (count: number) => `${count} card${count === 1 ? "" : "s"}`;
+  const images = (count: number) => `${count} image${count === 1 ? "" : "s"}`;
   const then = app
     ? `<p style="${small}">They load straight into Open OPTCG.</p>`
     : `<p style="${small}">Then load the zip in Open OPTCG.</p>`;
   const keepGoing = `<p style="${small}">If this tab closes, run the bookmark again to carry on.</p>`;
   ui.show(
     asked
-      ? `<p style="margin:0">Open OPTCG is missing ${cards(asked.length)}.</p>` +
-          ui.button(`Download ${cards(asked.length)}`) +
+      ? `<p style="margin:0">Open OPTCG is missing ${images(asked.length)}.</p>` +
+          ui.button(`Download ${images(asked.length)}`) +
           then +
           keepGoing +
           linkButton("data-run-all", "Download every card instead")

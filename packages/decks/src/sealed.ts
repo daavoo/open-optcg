@@ -43,6 +43,17 @@ export const SEALED_PACK_COUNT = 6;
 export const SEALED_LEADER = "SEALED-LUFFY";
 
 /**
+ * Where `SEALED_LEADER`'s art is fetched from, by `pnpm art:download` and by
+ * the Get cards bookmark. A single Japanese promo with no Bandai listing at
+ * all, so this is the product photo from one of the two retailer listings
+ * `sealed-promo.ts` cites; the image host allows any origin to read it.
+ */
+export const SEALED_LEADER_IMAGE_URL =
+  "https://cdn11.bigcommerce.com/s-ua4dd/images/stencil/1280x1280/products/257018/341684/518691__35034.1732611797.jpg?c=2";
+export const SEALED_LEADER_SOURCE_PAGE =
+  "https://www.gamenerdz.com/monkey-d-luffy-leader-pack-sealed-battle-2023-vol-1-one-piece-promotion-cards";
+
+/**
  * One slot in a booster pack: how many cards, and which rarities can fill it.
  *
  * Weights are out of 24 -- a booster box -- because that is the denominator the

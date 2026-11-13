@@ -3,7 +3,7 @@ import {
   loadPrintedText,
   parsePrintedTextPack,
 } from "@one-piece-sim/cards";
-import { SEALED_LEADER } from "@one-piece-sim/decks";
+import { SEALED_EXPANSIONS, SEALED_LEADER } from "@one-piece-sim/decks";
 import { unzipSync } from "fflate";
 
 /**
@@ -87,6 +87,11 @@ function isBoosterPackKey(key: string): boolean {
   return /^[A-Z]{2}\d{1,2}-PACK$/.test(key);
 }
 
+/** An image filed as card art: a card, a pack photo, or the sealed Leader. */
+function isArtKey(key: string): boolean {
+  return isCardNumber(key) || isBoosterPackKey(key) || key === SEALED_LEADER;
+}
+
 export function loadAssetFiles(files: readonly File[]): number {
   let loaded = 0;
   for (const file of files) {
@@ -94,7 +99,7 @@ export function loadAssetFiles(files: readonly File[]): number {
     const key = assetKey(file.name);
     if (!key) continue;
     const anchor = SURFACE_ANCHORS[key];
-    if (!anchor && !isCardNumber(key) && !isBoosterPackKey(key)) continue;
+    if (!anchor && !isArtKey(key)) continue;
     const store = anchor ? surfaceUrls : assetUrls;
     const storeKey = anchor ?? key;
     const previous = store.get(storeKey);
@@ -248,7 +253,7 @@ export async function cacheAssetFiles(
     const key = assetKey(file.name);
     return (
       file.type.startsWith("image/") &&
-      (key in SURFACE_ANCHORS || isCardNumber(key) || isBoosterPackKey(key))
+      (key in SURFACE_ANCHORS || isArtKey(key))
     );
   });
   const loaded = loadAssetFiles(images);
@@ -414,20 +419,18 @@ export function loadBuiltInPrintedText(): number {
 }
 
 /**
- * The cards a player can meet that have no image yet, sorted: after a new set
- * is added, the pack loaded before it lacks that set. The same predicate as
- * `wantedCards` in tools/download-assets.ts, which is what a pack carries --
- * every registered card but the fixtures and the sealed promo Leader, which
- * Bandai lists nowhere.
+ * The art a player can meet that has no image yet, sorted: after a new set is
+ * added, the pack loaded before it lacks that set. Every registered card but
+ * the fixtures -- `wantedCards` in tools/download-assets.ts -- plus what the
+ * Get cards bookmark fetches beside them: each sealed set's pack photo and
+ * the sealed Leader's art.
  */
 export function missingCardArt(): string[] {
-  return [...cardRegistry.keys()]
-    .filter(
-      (card) =>
-        !card.startsWith("FIX-") &&
-        card !== SEALED_LEADER &&
-        assetUrl(card) === null,
-    )
+  return [
+    ...[...cardRegistry.keys()].filter((card) => !card.startsWith("FIX-")),
+    ...SEALED_EXPANSIONS.map((expansion) => `${expansion.code}-PACK`),
+  ]
+    .filter((card) => assetUrl(card) === null)
     .sort((left, right) => left.localeCompare(right));
 }
 

@@ -127,6 +127,8 @@ export {
   rankSealedPoolCandidates,
   rankSealedPoolCandidatesGrape,
   requireSealedExpansion,
+  SEALED_LEADER_IMAGE_URL,
+  SEALED_LEADER_SOURCE_PAGE,
   sealedCardsByRarity,
   sealedDeckManifest,
   sealedExpansion,
