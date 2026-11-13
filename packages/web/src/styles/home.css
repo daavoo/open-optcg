@@ -382,16 +382,16 @@
 }
 /* The same ask as a dialog (the pre-release lobby's): the dark plate is the
    dialog, so it keeps the panel's look but takes the dialog's place and size. */
-.app-dialog.asset-gate-dialog {
-  width: min(36rem, calc(100% - 2rem));
+/* The same steps under the pre-release lobby's disabled buttons. */
+.asset-gate-panel.asset-gate-inline {
+  width: 100%;
   margin: 0;
-  background: rgba(12, 12, 14, 0.96);
-  color: rgba(255, 255, 255, 0.86);
+  text-align: left;
 }
-.asset-gate-dialog .app-dialog-head h2,
-.asset-gate-dialog .app-dialog-head .text-button,
-.asset-gate-dialog .home-assets-load {
+.asset-gate-inline h2 {
+  margin: 0;
   color: #fff;
+  font: 700 1.2rem var(--font-display);
 }
 .asset-gate-panel h1 {
   margin: 0;

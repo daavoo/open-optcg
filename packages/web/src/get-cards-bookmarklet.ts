@@ -54,10 +54,19 @@ export function missingCardsUrl(
 export function parseMissingCards(hash: string): string[] | null {
   const prefix = `#${MISSING_KEY}=`;
   if (!hash.startsWith(prefix)) return null;
+  return cardList(decodeURIComponent(hash.slice(prefix.length)).split(","));
+}
+
+/**
+ * The card numbers in a list from outside the downloader -- a link's fragment,
+ * or the app tab's answer to its hello -- or null for one that names none.
+ */
+export function cardList(list: unknown): string[] | null {
+  if (!Array.isArray(list)) return null;
   const cards = [
     ...new Set(
-      decodeURIComponent(hash.slice(prefix.length))
-        .split(",")
+      list
+        .filter((card): card is string => typeof card === "string")
         .map((card) => card.trim().toUpperCase())
         .filter((card) => CARD_NUMBER.test(card)),
     ),
@@ -96,10 +105,16 @@ export interface SentAssetPack {
  * Answers the downloader's hello and hands every pack it sends to `receive`,
  * which resolves whether the pack loaded. Only messages from Bandai's origin
  * are read; the reply goes back to that origin alone.
+ *
+ * The answer carries `missing()`: the cards a pack loaded before a new set
+ * lacks, so a run the player starts from the plain card list -- not only from
+ * the app's "Get only those" link -- offers just those, rather than every
+ * card again. Null when the app wants the whole pack.
  */
 export function listenForGetCards(
   receive: (file: File) => Promise<boolean>,
   target: Window = window,
+  missing: () => readonly string[] | null = () => null,
 ): void {
   target.addEventListener("message", (event: MessageEvent) => {
     if (event.origin !== BANDAI_ORIGIN) return;
@@ -107,7 +122,10 @@ export function listenForGetCards(
     const data = event.data as { type?: unknown } | null;
     if (!source || typeof data !== "object" || data === null) return;
     if (data.type === GET_CARDS_HELLO) {
-      source.postMessage({ type: GET_CARDS_APP_HERE }, BANDAI_ORIGIN);
+      source.postMessage(
+        { type: GET_CARDS_APP_HERE, missing: missing() },
+        BANDAI_ORIGIN,
+      );
       return;
     }
     const pack = data as Partial<SentAssetPack>;

@@ -13,9 +13,9 @@ import {
   standings,
   wins,
   yourTable,
-  swissPlayers,
-  SWISS_MAX_ROUNDS,
-  SWISS_ROUNDS,
+  BYE,
+  SWISS_BOTS,
+  SWISS_MAX_BOTS,
   YOU,
   type SwissEvent,
 } from "../packages/web/src/swiss.js";
@@ -40,83 +40,70 @@ function playRound(event: SwissEvent): void {
 }
 
 describe("a sealed Swiss event", () => {
-  it("seats seven AI players with legal 40-card decks from their own pools", () => {
+  it("seats four AI players with legal 40-card decks from their own pools", () => {
     const event = newEvent();
-    expect(event.players).toHaveLength(swissPlayers(SWISS_ROUNDS));
+    expect(event.players).toHaveLength(SWISS_BOTS + 1);
     expect(new Set(event.players.map((player) => player.deck.id)).size).toBe(
-      swissPlayers(SWISS_ROUNDS),
+      SWISS_BOTS + 1,
     );
     for (const player of event.players.slice(1)) {
       const total = Object.values(player.deck.cards).reduce((a, b) => a + b, 0);
       expect(total).toBe(40);
     }
+    // Five players: two tables and a bye, never the person's.
     const round = event.rounds[0]!;
-    expect(round).toHaveLength(swissPlayers(SWISS_ROUNDS) / 2);
-    expect(new Set(round.flatMap((table) => [table.a, table.b])).size).toBe(
-      swissPlayers(SWISS_ROUNDS),
-    );
-    expect(pendingAiTables(event)).toHaveLength(
-      swissPlayers(SWISS_ROUNDS) / 2 - 1,
-    );
+    expect(round.filter((table) => table.b !== BYE)).toHaveLength(2);
+    const bye = round.find((table) => table.b === BYE)!;
+    expect(bye.a).not.toBe(YOU);
+    expect(bye.winner).toBe(bye.a);
+    expect(pendingAiTables(event)).toHaveLength(1);
   });
 
-  it("pairs three rounds with no rematch and leaves exactly one player 3-0", () => {
-    const event = newEvent();
-    for (let round = 0; round < SWISS_ROUNDS; round += 1) playRound(event);
-    expect(event.rounds).toHaveLength(SWISS_ROUNDS);
-    expect(eventComplete(event)).toBe(true);
-    const meetings = event.rounds
-      .flat()
-      .map((table) => [table.a, table.b].sort().join("-"));
-    expect(new Set(meetings).size).toBe(meetings.length);
-    // Every round after the first pairs equal records.
-    for (const [index, round] of event.rounds.entries()) {
-      if (index === 0) continue;
-      const before = { ...event, rounds: event.rounds.slice(0, index) };
-      for (const table of round)
-        expect(wins(before, table.a)).toBe(wins(before, table.b));
-    }
-    const undefeated = event.players
-      .map((_, seat) => seat)
-      .filter((seat) => wins(event, seat) === SWISS_ROUNDS);
-    expect(undefeated).toHaveLength(1);
-    expect(standings(event)[0]).toBe(undefeated[0]);
-  });
-
-  it.each([1, 3, 5])(
-    "seats 2^%i players and leaves exactly one unbeaten, with no rematch",
-    (count) => {
-      const { pool } = openSealedPool("rounds:you", "OP18");
+  it.each([
+    [1, 1],
+    [4, 3],
+    [8, 4],
+  ])(
+    "against %i AI players runs %i rounds: the person plays each, no rematch, a bye at most once each",
+    (bots, rounds) => {
+      const { pool } = openSealedPool("bots:you", "OP18");
       const event = createSwissEvent(
-        "rounds",
+        "bots",
         pool,
         autoBuildSealedDeckGrape(pool).cards,
-        count,
+        bots,
       );
-      expect(event.players).toHaveLength(2 ** count);
-      for (let round = 0; round < count; round += 1) {
+      expect(event.players).toHaveLength(bots + 1);
+      expect(event.roundCount).toBe(rounds);
+      for (let round = 0; round < rounds; round += 1) {
         expect(eventComplete(event)).toBe(false);
+        expect(yourTable(event).b).not.toBe(BYE);
         playRound(event);
       }
-      expect(event.rounds).toHaveLength(count);
+      expect(event.rounds).toHaveLength(rounds);
       expect(eventComplete(event)).toBe(true);
-      const meetings = event.rounds
-        .flat()
+      const tables = event.rounds.flat();
+      const meetings = tables
+        .filter((table) => table.b !== BYE)
         .map((table) => [table.a, table.b].sort().join("-"));
       expect(new Set(meetings).size).toBe(meetings.length);
-      const unbeaten = event.players
-        .map((_, seat) => seat)
-        .filter((seat) => wins(event, seat) === count);
-      expect(unbeaten).toHaveLength(1);
+      const byes = tables
+        .filter((table) => table.b === BYE)
+        .map((table) => table.a);
+      expect(new Set(byes).size).toBe(byes.length);
+      expect(byes).toHaveLength(bots % 2 === 1 ? 0 : rounds);
+      // Seat 0 wins every match under the lower-seat rule.
+      expect(standings(event)[0]).toBe(YOU);
+      expect(wins(event, YOU)).toBe(rounds);
     },
   );
 
-  it("refuses a round count outside 1 to the most it seats", () => {
-    const { pool } = openSealedPool("rounds:you", "OP18");
+  it("refuses a field outside 1 to the most it seats", () => {
+    const { pool } = openSealedPool("bots:you", "OP18");
     const deck = autoBuildSealedDeckGrape(pool).cards;
-    expect(() => createSwissEvent("rounds", pool, deck, 0)).toThrow();
+    expect(() => createSwissEvent("bots", pool, deck, 0)).toThrow();
     expect(() =>
-      createSwissEvent("rounds", pool, deck, SWISS_MAX_ROUNDS + 1),
+      createSwissEvent("bots", pool, deck, SWISS_MAX_BOTS + 1),
     ).toThrow();
   });
 
@@ -186,11 +173,11 @@ describe("the Swiss event screen", () => {
   it("ends on the final standings after three rounds", () => {
     const state = emptyState();
     const event = newEvent("final-test");
-    for (let round = 0; round < SWISS_ROUNDS; round += 1) playRound(event);
+    for (let round = 0; round < event.roundCount; round += 1) playRound(event);
     state.event = event;
     const html = renderEvent(state);
     // The person is seat 0, so the lower-seat-wins rule makes them 3-0.
-    expect(html).toContain("You finished 1st of 8, 3&ndash;0");
+    expect(html).toContain("You finished 1st of 5, 3&ndash;0");
     expect(html).toContain('id="swiss-new"');
   });
 

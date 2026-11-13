@@ -99,7 +99,7 @@ test("a closed run carries on from the images it saved, and a finished one fetch
   page = await context.newPage();
   await clickBookmark(page);
   await expect(page.locator("#open-optcg-get-cards")).toContainText(
-    /\d+ card images are already saved in this browser/,
+    /\d+ already saved here/,
   );
   await page.getByRole("button", { name: "Download the cards" }).click();
   expect(await artInZip(page)).toBe(total);
@@ -108,7 +108,7 @@ test("a closed run carries on from the images it saved, and a finished one fetch
   expect(images.count - firstRun).toBeLessThan(total - firstRun + 32);
   expect(images.count - firstRun).toBeLessThan(total - 250);
   await expect(page.locator("#open-optcg-get-cards")).toContainText(
-    "saved from an earlier run",
+    "already saved)",
   );
 
   // And once more after a finished run: nothing to fetch.
@@ -125,7 +125,7 @@ test("a closed run carries on from the images it saved, and a finished one fetch
     page.getByRole("button", { name: "Forget the saved images" }),
   ).toHaveCount(0);
   await expect(page.locator("#open-optcg-get-cards")).not.toContainText(
-    "card images are already saved",
+    "already saved here",
   );
   await context.close();
 });
@@ -150,10 +150,10 @@ test("the cards the app asks for come as a small update zip", async ({
 
   await clickBookmark(page, `#open-optcg-missing=${asked.join(",")}`);
   await expect(page.locator("#open-optcg-get-cards")).toContainText(
-    "asked for the 2 cards it has no art for",
+    "Open OPTCG is missing 2 cards",
   );
   await expect(page.locator("[data-run-all]")).toBeVisible();
-  await page.getByRole("button", { name: "Download those 2 cards" }).click();
+  await page.getByRole("button", { name: "Download 2 cards" }).click();
   const zip = await savedZip(page);
   expect(zip.name).toBe("open-optcg-assets-update.zip");
   expect(zip.art).toEqual(asked.map((card) => `art/${card}.png`));
@@ -168,7 +168,7 @@ test("the cards the app asks for come as a small update zip", async ({
     page.getByRole("button", { name: "Download the cards" }),
   ).toBeVisible();
   await expect(page.locator("[data-run-unsaved]")).toContainText(
-    `Only the ${total - 2} cards this browser has not saved yet`,
+    `Only the ${total - 2} cards not saved here yet`,
   );
   await context.close();
 });

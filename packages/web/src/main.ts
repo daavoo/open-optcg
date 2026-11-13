@@ -810,7 +810,7 @@ const sealedDeps: SealedContext = {
   goHome,
   lockedExpansion: prereleaseExpansion(),
   cardsReady: prereleaseCardsReady,
-  renderGetCards: () => assetGateScreen.renderDialog(assetGateDeps),
+  renderGetCards: () => assetGateScreen.renderPanel(assetGateDeps),
   bindGetCards: () => {
     assetGateScreen.bindControls(assetGateDeps);
   },
@@ -1160,7 +1160,15 @@ if (learnedModelIsFetched()) {
    overrides a bundled build's text card for card. */
 loadBuiltInPrintedText();
 
-listenForGetCards(receiveAssetPack);
+listenForGetCards(receiveAssetPack, window, () => {
+  // As the Configure dialog offers them: only while the pack holds more than
+  // it lacks. A pack missing most cards wants replacing whole.
+  if (!assetsReady()) return null;
+  const missing = missingCardArt();
+  return missing.length > 0 && missing.length < assetSummary().images
+    ? missing
+    : null;
+});
 
 /* The pre-release page opens on its lobby either way, and asks for the cards
    there when the player goes to play. */

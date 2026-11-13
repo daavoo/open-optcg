@@ -68,15 +68,16 @@ describe("the pre-release page's lobby", () => {
     expect(html).not.toContain("data-open-booster-picker");
   });
 
-  it("offers a 1, 3 or 5 round Swiss and nothing else", () => {
+  it("offers a Swiss against 1, 4 or 8 AI players and nothing else", () => {
     const html = renderLobby(
       emptyState(),
       stubContext({ lockedExpansion: "OP18" }),
     );
-    const rounds = [...html.matchAll(/data-swiss-rounds="(\d+)"/g)].map(
-      (match) => Number(match[1]),
+    const bots = [...html.matchAll(/data-swiss-bots="(\d+)"/g)].map((match) =>
+      Number(match[1]),
     );
-    expect(rounds).toEqual([1, 3, 5]);
+    expect(bots).toEqual([1, 4, 8]);
+    expect(html).toContain("Play Swiss format against AI opponents.");
     expect(html).not.toContain('id="sealed-form"');
     expect(html).not.toContain('id="sealed-import"');
     expect(html).not.toContain("sealed-format");
@@ -84,41 +85,30 @@ describe("the pre-release page's lobby", () => {
 });
 
 describe("the pre-release lobby before the cards are in", () => {
-  it("leads with the way to get them, and prints their dialog", () => {
+  it("disables the play buttons and prints the steps to get the cards", () => {
     const html = renderLobby(
       emptyState(),
       stubContext({
         lockedExpansion: "OP18",
         cardsReady: () => false,
-        renderGetCards: () => '<div id="get-cards-dialog"></div>',
+        renderGetCards: () => '<section id="get-cards-steps"></section>',
       }),
     );
-    expect(html).toContain("data-open-get-cards");
-    expect(html).toContain('id="get-cards-dialog"');
-    expect(html).toContain('data-swiss-rounds="3"');
+    expect(html).toContain('id="get-cards-steps"');
+    expect(html).toMatch(/data-swiss-bots="4" disabled/);
   });
 
-  it("drops both once the cards are in", () => {
+  it("enables them, without the steps, once the cards are in", () => {
     const html = renderLobby(
       emptyState(),
       stubContext({
         lockedExpansion: "OP18",
         cardsReady: () => true,
-        renderGetCards: () => '<div id="get-cards-dialog"></div>',
+        renderGetCards: () => '<section id="get-cards-steps"></section>',
       }),
     );
-    expect(html).not.toContain("data-open-get-cards");
-    expect(html).not.toContain('id="get-cards-dialog"');
-  });
-
-  it("names the field each round count plays", () => {
-    const html = renderLobby(
-      emptyState(),
-      stubContext({ lockedExpansion: "OP18" }),
-    );
-    expect(html).toContain("2 players");
-    expect(html).toContain("8 players");
-    expect(html).toContain("32 players");
+    expect(html).not.toContain('id="get-cards-steps"');
+    expect(html).not.toContain("disabled");
   });
 });
 

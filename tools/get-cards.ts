@@ -39,6 +39,7 @@ import {
   GET_CARDS_HELLO,
   GET_CARDS_PACK,
   GET_CARDS_RECEIVED,
+  cardList,
   parseMissingCards,
 } from "../packages/web/src/get-cards-bookmarklet.js";
 
@@ -108,6 +109,8 @@ function saveZip(blob: Blob, name: string): void {
 interface AppTab {
   window: Window;
   origin: string;
+  /** The cards the app said its pack lacks, or null for the whole pack. */
+  missing: string[] | null;
 }
 
 /**
@@ -126,9 +129,13 @@ function findAppTab(): Promise<AppTab | null> {
       resolve(tab);
     };
     const onMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: unknown } | null;
+      const data = event.data as { type?: unknown; missing?: unknown } | null;
       if (event.source === opener && data?.type === GET_CARDS_APP_HERE)
-        finish({ window: opener, origin: event.origin });
+        finish({
+          window: opener,
+          origin: event.origin,
+          missing: cardList(data.missing),
+        });
     };
     const timer = setTimeout(() => {
       finish(null);
@@ -301,10 +308,29 @@ function panel() {
 }
 
 /**
- * One run: the printed text of every card, and the images of `only` -- or of
- * every card when it is null. The text is always whole because the app
- * replaces its text pack with each one it loads, while images are added to
- * the ones it has; so a zip of some images is an update, not a pack.
+ * The list pages that carry `cards`: a card number names its set, and a set's
+ * page is named for it (OP18-001 is on `op18`, EB04-001 on `op14-eb04` and
+ * `op15-eb04`, P-001 on `promo`).
+ */
+function seriesOf(
+  cards: readonly string[],
+): (typeof CARDLIST_SERIES)[number][] {
+  const sets = new Set(
+    cards.map((card) => {
+      const set = card.slice(0, card.indexOf("-")).toLowerCase();
+      return set === "p" ? "promo" : set;
+    }),
+  );
+  return CARDLIST_SERIES.filter(([slug]) =>
+    slug.split("-").some((part) => sets.has(part)),
+  );
+}
+
+/**
+ * One run: the images and printed text of `only`, or of every card when it is
+ * null. The app lays each text pack it loads over the one it has, as it adds
+ * images to the ones it has, so a run for some cards reads only their sets'
+ * pages -- and every other page only for a card none of those carried.
  */
 async function run(
   cache: ArtCache | null,
@@ -315,38 +341,48 @@ async function run(
   const wantedSet = new Set(__WANTED_CARDS__);
   const wanted = only ?? __WANTED_CARDS__;
   const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
+  const onlySet = only ? new Set(only) : null;
   const pages = new Map<string, string>();
-  let read = 0;
-  await forEachConcurrently(
-    CARDLIST_SERIES,
-    fetcher.max,
-    async ([slug, series]) => {
+  const readPages = async (series: readonly (readonly [string, string])[]) => {
+    let read = 0;
+    await forEachConcurrently(series, fetcher.max, async ([slug, id]) => {
       try {
-        pages.set(slug, await fetcher.text(cardlistUrl(series)));
+        pages.set(slug, await fetcher.text(cardlistUrl(id)));
       } catch {
         // Counted below: a missing page shows up as cards with no text.
       }
       read += 1;
-      say(`Reading the card list: page ${read} of ${CARDLIST_SERIES.length}…`);
-    },
-  );
+      say(`Reading the card list: page ${read} of ${series.length}…`);
+    });
+  };
 
   // Series order, not arrival order, as in the Node downloader: a card printed
   // in more than one series keeps the reading of the earlier page.
   const text: Record<string, PrintedCard> = {};
   const images = new Map<string, ArtUrl>();
-  for (const [slug, series] of CARDLIST_SERIES) {
-    const html = pages.get(slug);
-    if (html === undefined) continue;
-    pageImageUrls(html, cardlistUrl(series), images);
-    for (const card of parseOfficialCards(html)) {
-      if (!wantedSet.has(card.cardNumber) || card.cardNumber in text) continue;
-      text[card.cardNumber] = {
-        name: card.name,
-        effect: card.effect,
-        trigger: card.trigger,
-      };
+  const readCards = () => {
+    for (const [slug, series] of CARDLIST_SERIES) {
+      const html = pages.get(slug);
+      if (html === undefined) continue;
+      pageImageUrls(html, cardlistUrl(series), images);
+      for (const card of parseOfficialCards(html)) {
+        if (!wantedSet.has(card.cardNumber) || card.cardNumber in text) {
+          continue;
+        }
+        if (onlySet && !onlySet.has(card.cardNumber)) continue;
+        text[card.cardNumber] = {
+          name: card.name,
+          effect: card.effect,
+          trigger: card.trigger,
+        };
+      }
     }
+  };
+  await readPages(only ? seriesOf(only) : CARDLIST_SERIES);
+  readCards();
+  if (only?.some((card) => !(card in text))) {
+    await readPages(CARDLIST_SERIES.filter(([slug]) => !pages.has(slug)));
+    readCards();
   }
   const sorted = Object.fromEntries(
     Object.entries(text).sort(([a], [b]) => a.localeCompare(b)),
@@ -402,9 +438,8 @@ async function run(
   say("Finishing…");
   const blob = await zip.finish();
   const summary =
-    `Printed text for ${Object.keys(sorted).length} of ${__WANTED_CARDS__.length} cards, ` +
-    `${wanted.length - failed.length} images` +
-    (saved ? ` (${saved} of them saved from an earlier run)` : "") +
+    `${wanted.length - failed.length} cards` +
+    (saved ? ` (${saved} already saved)` : "") +
     (failed.length
       ? `, ${failed.length} not found (${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""})`
       : "") +
@@ -441,7 +476,7 @@ async function start(): Promise<void> {
   const ui = panel();
   if (location.origin !== BANDAI) {
     ui.show(
-      `<p>This runs on Bandai's card list. Open <a href="${BANDAI}/cardlist/" style="color:inherit">${BANDAI.replace("https://", "")}/cardlist</a>, then click the bookmark again.</p>` +
+      `<p>Run this on <a href="${BANDAI}/cardlist/" style="color:inherit">Bandai's card list</a>.</p>` +
         ui.button("Close"),
     );
     ui.box.querySelector("button")!.onclick = () => {
@@ -452,7 +487,7 @@ async function start(): Promise<void> {
   const [cache, app] = await Promise.all([openArtCache(), findAppTab()]);
   const kept = (await cache?.count()) ?? 0;
   // The cards the app said it has no art for, when it opened this page.
-  const asked = parseMissingCards(location.hash);
+  const asked = parseMissingCards(location.hash) ?? app?.missing ?? null;
   // Otherwise, after an earlier run, the cards that run did not save: the
   // new set since then, offered as an update beside the whole pack.
   const saved = kept && !asked ? await cache!.cards() : new Set<string>();
@@ -464,29 +499,26 @@ async function start(): Promise<void> {
     `<button type="button" ${attribute} style="${small};display:block;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit;text-align:left">${label}</button>`;
   const cards = (count: number) => `${count} card${count === 1 ? "" : "s"}`;
   const then = app
-    ? `<p style="${small}">They go straight into the Open OPTCG tab that opened this page.</p>`
-    : `<p style="${small}">Then, in Open OPTCG, load the zip.</p>`;
-  const keepGoing = `<p style="margin:8px 0 0">You can switch to other tabs while it runs. If this tab is closed or reloaded, run the bookmark again: it carries on from the images already saved.</p>`;
+    ? `<p style="${small}">They load straight into Open OPTCG.</p>`
+    : `<p style="${small}">Then load the zip in Open OPTCG.</p>`;
+  const keepGoing = `<p style="${small}">If this tab closes, run the bookmark again to carry on.</p>`;
   ui.show(
     asked
-      ? `<p style="margin:0">Open OPTCG asked for the ${cards(asked.length)} it has no art for. This downloads their images and the printed text, to add to the cards you already have.</p>` +
-          keepGoing +
-          ui.button(
-            `Download ${asked.length === 1 ? "that card" : `those ${asked.length} cards`}`,
-          ) +
+      ? `<p style="margin:0">Open OPTCG is missing ${cards(asked.length)}.</p>` +
+          ui.button(`Download ${cards(asked.length)}`) +
           then +
-          linkButton("data-run-all", "Download every card instead")
-      : `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
-          (kept
-            ? `<p style="margin:8px 0 0">${kept} card images are already saved in this browser from an earlier run; only the rest are downloaded.</p>`
-            : "") +
           keepGoing +
+          linkButton("data-run-all", "Download every card instead")
+      : `<p style="margin:0">Every card: about ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.` +
+          (kept ? ` ${kept} already saved here.` : "") +
+          `</p>` +
           ui.button("Download the cards") +
           then +
+          keepGoing +
           (offerUnsaved
             ? linkButton(
                 "data-run-unsaved",
-                `Only the ${cards(unsaved.length)} this browser has not saved yet, to add to the cards you loaded before`,
+                `Only the ${cards(unsaved.length)} not saved here yet`,
               )
             : "") +
           (kept ? linkButton("data-forget", "Forget the saved images") : ""),
@@ -523,25 +555,14 @@ async function start(): Promise<void> {
         sent = await sendToApp(app, zip, name);
       }
       if (!sent) saveZip(zip, name);
-      const remembered = cache
-        ? `<p style="${small}">The images stay saved in this browser, so after a new set the next run fetches only the new cards.</p>`
-        : "";
       ui.show(
         (sent
-          ? `<p style="margin:0">Done: the cards are in Open OPTCG. Switch back to its tab to play. ${summary}</p>`
-          : `<p style="margin:0">Done: <strong>${name}</strong> is in your downloads. ${summary}</p>` +
-            (app
-              ? `<p style="${small}">The Open OPTCG tab did not take the cards (it may have been closed), so they were saved as a zip instead. Load it there.</p>`
-              : only
-                ? `<p style="${small}">Load it in Open OPTCG on top of the cards you already have.</p>`
-                : "")) +
-          remembered +
+          ? `<p style="margin:0">Done. Switch back to Open OPTCG.</p>`
+          : `<p style="margin:0">Done. Load <strong>${name}</strong> in Open OPTCG.</p>`) +
+          `<p style="${small}">${summary}</p>` +
           ui.button("Close") +
           (sent
-            ? linkButton(
-                "data-save-zip",
-                "Also save them as a zip, for another browser or a phone",
-              )
+            ? linkButton("data-save-zip", "Save a zip too, for another device")
             : ""),
       );
       ui.box

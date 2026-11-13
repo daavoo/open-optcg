@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   BANDAI_ORIGIN,
+  cardList,
   GET_CARDS_APP_HERE,
   GET_CARDS_HELLO,
   GET_CARDS_PACK,
@@ -34,9 +35,28 @@ describe("the Get cards handoff", () => {
     listenForGetCards(() => Promise.resolve(true), target);
     const reply = deliver(BANDAI_ORIGIN, { type: GET_CARDS_HELLO });
     expect(reply).toHaveBeenCalledWith(
-      { type: GET_CARDS_APP_HERE },
+      { type: GET_CARDS_APP_HERE, missing: null },
       BANDAI_ORIGIN,
     );
+  });
+
+  it("tells the downloader which cards its pack lacks", () => {
+    const { target, deliver } = appWindow();
+    listenForGetCards(
+      () => Promise.resolve(true),
+      target,
+      () => ["OP18-001", "OP18-002"],
+    );
+    const reply = deliver(BANDAI_ORIGIN, { type: GET_CARDS_HELLO });
+    expect(reply).toHaveBeenCalledWith(
+      { type: GET_CARDS_APP_HERE, missing: ["OP18-001", "OP18-002"] },
+      BANDAI_ORIGIN,
+    );
+    // The downloader reads that list as it reads a link's: card numbers only.
+    expect(cardList(["op18-001", "OP18-001", "not a card", 7])).toEqual([
+      "OP18-001",
+    ]);
+    expect(cardList(null)).toBeNull();
   });
 
   it("ignores a hello or a pack from any other origin", async () => {

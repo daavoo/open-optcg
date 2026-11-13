@@ -400,28 +400,9 @@
     transform: none;
   }
 }
-.prerelease-rounds small {
-  font: 600 0.72rem var(--font-body);
-  font-style: normal;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  -webkit-text-stroke: 0;
-  opacity: 0.85;
-}
-/* Shown only until the cards are in: the first thing a new player needs. */
-.prerelease-get-cards {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.1rem;
-  border: 2px solid #ffffff;
-  border-radius: 999px;
-  background: rgba(10, 10, 11, 0.78);
-  color: #ffffff;
-  font: 700 0.95rem var(--font-display);
-  cursor: pointer;
-}
-.prerelease-get-cards:hover,
-.prerelease-get-cards:focus-visible {
-  background: #0a0a0b;
+/* Disabled until the cards are in; the steps to get them sit below. */
+.prerelease-rounds:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
 }

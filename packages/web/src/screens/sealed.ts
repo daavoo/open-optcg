@@ -45,7 +45,6 @@ import { icon } from "../icons.js";
 import { bindAppDialogDismissal, toggleAppDialog } from "../dialogs.js";
 import { downloadText, valueOf } from "../dom.js";
 import * as footer from "./footer.js";
-import { GET_CARDS_DIALOG } from "./asset-gate.js";
 import {
   createSwissEvent,
   eventComplete,
@@ -58,9 +57,9 @@ import {
   wins,
   yourOpponent,
   yourTable,
-  swissPlayers,
-  SWISS_ROUNDS,
-  SWISS_ROUND_OPTIONS,
+  BYE,
+  SWISS_BOTS,
+  SWISS_BOT_OPTIONS,
   YOU,
   type SwissEvent,
   type SwissTable,
@@ -99,7 +98,7 @@ export interface SealedState {
   catalogScrollTop: number;
   format: SealedFormat;
   /** How many rounds a Swiss event entered from this run will last. */
-  swissRounds: number;
+  swissBots: number;
   /** The Swiss event the run's deck is entered in, once it has started. */
   event: SwissEvent | null;
   /** The person's table whose match is on the board, until it is recorded. */
@@ -136,11 +135,12 @@ export interface SealedContext {
    */
   /**
    * Whether the card art and text are in. The pre-release lobby shows itself
-   * without them and asks for them, through {@link renderGetCards}, when the
-   * player goes to play; the other sealed screens sit behind the app's gate.
+   * without them, its play buttons disabled and the steps to get them printed
+   * through {@link renderGetCards}; the other sealed screens sit behind the
+   * app's gate.
    */
   cardsReady?(): boolean;
-  /** The dialog that asks for the cards; see `renderDialog` in ./asset-gate.ts. */
+  /** The steps that get the cards; see `renderPanel` in ./asset-gate.ts. */
   renderGetCards?(): string;
   bindGetCards?(): void;
   playTables(
@@ -159,7 +159,7 @@ export function emptyState(): SealedState {
     message: "",
     catalogScrollTop: 0,
     format: "single",
-    swissRounds: SWISS_ROUNDS,
+    swissBots: SWISS_BOTS,
     event: null,
     playingTable: null,
   };
@@ -290,29 +290,24 @@ function formatChoice(format: SealedFormat): string {
   return `<fieldset class="sealed-format">
     <legend class="sr-only">Format</legend>
     ${option("single", "One match", "Build, then play one AI")}
-    ${option("swiss", `Swiss, ${SWISS_ROUNDS} rounds`, `${swissPlayers(SWISS_ROUNDS)} players, paired by record`)}
+    ${option("swiss", "Swiss", `Against ${SWISS_BOTS} AI opponents, paired by record`)}
   </fieldset>`;
 }
 
 /**
- * The pre-release page's lobby: the pack on the table and a button per Swiss
- * length. A pre-release is a Swiss event of sealed decks, so the length of the
- * event is the one choice left before the packs are opened.
+ * The pre-release page's lobby: the pack on the table and a button per field
+ * size. Without the cards the buttons are disabled and the steps to get them
+ * are printed under them: the page is not played with blank cards.
  */
 function renderPrereleaseLobby(
   expansion: SealedExpansion,
   ctx: SealedContext,
 ): string {
   const ready = ctx.cardsReady?.() ?? true;
-  const buttons = SWISS_ROUND_OPTIONS.map(
-    (rounds) =>
-      `<button class="prerelease-rounds" type="button" data-swiss-rounds="${rounds}"><strong>${rounds}</strong><span>${rounds === 1 ? "round" : "rounds"}</span><small>${swissPlayers(rounds)} players</small></button>`,
+  const buttons = SWISS_BOT_OPTIONS.map(
+    (bots) =>
+      `<button class="prerelease-rounds" type="button" data-swiss-bots="${bots}"${ready ? "" : " disabled"}><strong>${bots}</strong><span>${bots === 1 ? "bot" : "bots"}</span></button>`,
   ).join("");
-  // Until the cards are in, the way to get them leads: a player new to the
-  // page has none, and a round button then opens the same dialog.
-  const getCards = ready
-    ? ""
-    : `<button class="prerelease-get-cards" type="button" data-open-get-cards>${icon("bookmark-plus", "")}Get the card art and text first</button>`;
   return `<main class="setup-shell sealed-shell prerelease-lobby">
     <header class="setup-topbar">
       <button class="brand-home" type="button" id="sealed-home">
@@ -324,12 +319,11 @@ function renderPrereleaseLobby(
     <section class="prerelease-stage">
       ${packImage(expansion)}
       <h1>${escapeHtml(expansion.productCode)} pre-release</h1>
-      <p>Open ${SEALED_PACK_COUNT} packs and build ${SEALED_DECK_SIZE} cards. Swiss runs until one player is unbeaten, so more rounds means a bigger field.</p>
-      ${getCards}
-      <div class="prerelease-round-buttons" role="group" aria-label="Swiss rounds">${buttons}</div>
+      <p>Open ${SEALED_PACK_COUNT} packs and build ${SEALED_DECK_SIZE} cards. Play Swiss format against AI opponents.</p>
+      <div class="prerelease-round-buttons" role="group" aria-label="AI opponents">${buttons}</div>
+      ${ready ? "" : (ctx.renderGetCards?.() ?? "")}
     </section>
     ${footer.render()}
-    ${ready ? "" : (ctx.renderGetCards?.() ?? "")}
   </main>`;
 }
 
@@ -375,22 +369,14 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
       });
     });
   document
-    .querySelectorAll<HTMLButtonElement>("[data-swiss-rounds]")
+    .querySelectorAll<HTMLButtonElement>("[data-swiss-bots]")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        if (!(ctx.cardsReady?.() ?? true)) {
-          toggleAppDialog(GET_CARDS_DIALOG, true);
-          return;
-        }
+        if (!(ctx.cardsReady?.() ?? true)) return;
         state.format = "swiss";
-        state.swissRounds = Number(button.dataset.swissRounds);
+        state.swissBots = Number(button.dataset.swissBots);
         startRun(state, ctx);
       });
-    });
-  document
-    .querySelector("[data-open-get-cards]")
-    ?.addEventListener("click", () => {
-      toggleAppDialog(GET_CARDS_DIALOG, true);
     });
   ctx.bindGetCards?.();
   document.querySelectorAll("[data-open-booster-picker]").forEach((button) => {
@@ -691,7 +677,7 @@ function enterEvent(state: SealedState, ctx: SealedContext): void {
     ctx.randomSeed(),
     run.pool,
     run.deck,
-    state.swissRounds,
+    state.swissBots,
   );
   state.playingTable = null;
   playAiTables(state, ctx);
@@ -803,6 +789,8 @@ function record(event: SwissEvent, seat: number): string {
 function tableResult(event: SwissEvent, table: SwissTable): string {
   const name = (seat: number) =>
     `<span class="${seat === YOU ? "you" : ""}">${escapeHtml(event.players[seat]!.name)}</span>`;
+  if (table.b === BYE)
+    return `<li>${name(table.a)} <span class="swiss-outcome">bye</span></li>`;
   const outcome =
     table.winner === null
       ? `<span class="swiss-pending">playing</span>`
