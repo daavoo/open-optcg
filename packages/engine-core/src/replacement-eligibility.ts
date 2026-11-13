@@ -19,6 +19,7 @@ import {
   type PlayerRef,
 } from "./mechanic-dsl.js";
 import { conditionMatches, selectCards } from "./mechanic-conditions.js";
+import { effectsNegated } from "./static-abilities.js";
 
 /**
  * The declarative replacement registry, injected at startup.
@@ -113,6 +114,11 @@ export function eligibleReplacements(
   for (const protector of protectors) {
     const entry = replacementRegistry.get(protector.cardNumber);
     if (!entry) continue;
+    // The replacement is the protector's own printed text, so a negated
+    // Leader or Character offers nothing, however many copies stand together.
+    // An Event's booking is no card on the field and cannot be negated; its
+    // pseudo-id is on no negation list.
+    if (effectsNegated(state, protector.instanceId)) continue;
     // Two different questions, and reading the first as the second is what this
     // guard exists to stop. `byOpponent` asks *whose* effect it was;
     // `cause === "battle"` says there was no effect. `resolveBattle` names the

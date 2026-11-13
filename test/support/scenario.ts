@@ -421,6 +421,22 @@ class Scenario {
   }
 
   /**
+   * A card's own printed effects negated for the current turn, as a "negate
+   * the effect of" clause leaves them. `instanceId` is a board card, a Stage,
+   * or `<player>-leader`. Named rather than reached through a negating card,
+   * because every such card also debuffs, rests or K.O.s its target, and the
+   * tests that need this one want the negation and nothing else.
+   */
+  withNegated(instanceId: string): this {
+    return this.#setup((state) => {
+      state.negatedEffects = [
+        ...(state.negatedEffects ?? []),
+        { instanceId, expiresAtTurn: state.turn },
+      ];
+    });
+  }
+
+  /**
    * Escape hatch for a position no setter covers. Prefer adding a named setter
    * here over calling this from a test: a `with*` name says what the position
    * is, an inline mutation says only that the state shape allowed it.

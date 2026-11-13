@@ -723,8 +723,9 @@ export const op17MainMechanics: SetMechanics = {
       // OP17-034 Rockstar: "[printed text omitted -- pnpm card:text OP17-034]"
       //
       // The opening condition gates both sentences. `leader-power` reads the
-      // opponent's Leader through `currentPower`, so DON!! given to it counts --
-      // which is usually how a 5000 Leader gets to 6000 in the first place.
+      // opponent's Leader on Rockstar's own turn, so DON!! given to it does not
+      // count (it adds power only on its owner's turn) and neither does any of
+      // that player's `[Your Turn]` text.
       //
       // The second sentence is gated again on your own Leader's type, and sets a
       // base power rather than adding to one: two of this set's cards printing the
