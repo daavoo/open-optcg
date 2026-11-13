@@ -109,9 +109,18 @@ import { op17MetaMechanics } from "./op17-meta.js";
 import { op17OnPlayMechanics } from "./op17-on-play.js";
 import { op17TriggerMechanics } from "./op17-triggers.js";
 import { op17ReplacementMechanics } from "./op17-replacements.js";
+import { op18RedMechanics } from "./op18-red.js";
+import { op18YellowMechanics } from "./op18-yellow.js";
+import { op18PurpleMechanics } from "./op18-purple.js";
+import { op18PurpleStaticAbilities } from "./op18-purple-static.js";
+import { op18PurpleReactionRules } from "./op18-purple-reactions.js";
+import { op18BlackMechanics } from "./op18-black.js";
+import { op18BlueMechanics } from "./op18-blue.js";
+import { op18GreenMechanics } from "./op18-green.js";
 import {
   registerEventMainPrograms,
   registerReplacementPrograms,
+  registerTriggerPrograms,
   registerWhenRestedCards,
 } from "../mechanics.js";
 import { registerDamageReplacements } from "../damage-replacement.js";
@@ -127,6 +136,7 @@ import { op10ReactionRules } from "./op10-reactions.js";
 import { op11ReactionRules } from "./op11-reactions.js";
 import { op13ReactionRules } from "./op13-reactions.js";
 import { op16ReactionRules } from "./op16-reactions.js";
+import { op18RedReactionRules } from "./op18-red-reactions.js";
 import { op14ReactionRules } from "./op14-reactions.js";
 import { eb05ReactionRules } from "./eb05-reactions.js";
 import { eb04ReactionRules } from "./eb04-reactions.js";
@@ -144,6 +154,12 @@ import { op14StaticAbilities } from "./op14-static.js";
 import { op10RemovalImmunities, op10StaticAbilities } from "./op10-static.js";
 import { op11RemovalImmunities, op11StaticAbilities } from "./op11-static.js";
 import { op17StaticAbilities } from "./op17-static.js";
+import { op18RedStaticAbilities } from "./op18-red-static.js";
+import { op18BlackStaticAbilities } from "./op18-black-static.js";
+import { op18BlackReactionRules } from "./op18-black-reactions.js";
+import { op18BlueStaticAbilities } from "./op18-blue-static.js";
+import { op18BlueReactionRules } from "./op18-blue-reactions.js";
+import { op18GreenStaticAbilities } from "./op18-green-static.js";
 import {
   promoRemovalImmunities,
   promoStaticAbilities,
@@ -363,6 +379,12 @@ const registries = mergeSetMechanics([
   { name: "op17-meta", mechanics: op17MetaMechanics },
   { name: "op17-kaido", mechanics: op17KaidoMechanics },
   { name: "op17-luffy-ace", mechanics: op17LuffyAceMechanics },
+  { name: "op18-red", mechanics: op18RedMechanics },
+  { name: "op18-yellow", mechanics: op18YellowMechanics },
+  { name: "op18-purple", mechanics: op18PurpleMechanics },
+  { name: "op18-black", mechanics: op18BlackMechanics },
+  { name: "op18-blue", mechanics: op18BlueMechanics },
+  { name: "op18-green", mechanics: op18GreenMechanics },
   { name: "op05-on-play", mechanics: op05OnPlayMechanics },
   { name: "op05-main", mechanics: op05MainMechanics },
   { name: "op05-battle", mechanics: op05BattleMechanics },
@@ -429,6 +451,8 @@ registerReplacementPrograms(replacementPrograms);
 registerDamageReplacements(damageReplacementPrograms);
 // Same seam, for the two Characters whose text activates an Event out of hand.
 registerEventMainPrograms(eventMainPrograms);
+// Same seam, for OP18-105's activation of another card's [Trigger].
+registerTriggerPrograms(triggerPrograms);
 // Same seam again, for the one fact the inertness walk needs about a card it is
 // only ever handed the *program* of: whether resting it is a price or a payoff.
 registerWhenRestedCards(new Set(whenRestedPrograms.keys()));
@@ -439,6 +463,11 @@ registerStaticAbilities([
   ...op10StaticAbilities,
   ...op11StaticAbilities,
   ...op17StaticAbilities,
+  ...op18RedStaticAbilities,
+  ...op18PurpleStaticAbilities,
+  ...op18BlackStaticAbilities,
+  ...op18BlueStaticAbilities,
+  ...op18GreenStaticAbilities,
   ...promoStaticAbilities,
   ...op15StaticAbilities,
   ...op13StaticAbilities,
@@ -482,6 +511,8 @@ registerReactionRules([
   ...op11ReactionRules,
   ...op13ReactionRules,
   ...op16ReactionRules,
+  ...op18RedReactionRules,
+  ...op18PurpleReactionRules,
   ...op14ReactionRules,
   ...eb05ReactionRules,
   ...eb04ReactionRules,
@@ -495,6 +526,8 @@ registerReactionRules([
   ...eb01ReactionRules,
   ...promoReactionRules,
   ...st10ReactionRules,
+  ...op18BlackReactionRules,
+  ...op18BlueReactionRules,
 ]);
 registerRemovalImmunities([
   ...op06RemovalImmunities,

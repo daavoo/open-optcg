@@ -178,3 +178,225 @@
 .booster-tile-name {
   font: 700 0.8rem/1.3 var(--font-display);
 }
+
+/* =========================================================================
+   SEALED FORMAT — one match, or a Swiss event
+
+   Two radio cards side by side under the pack: the format decides what Start
+   leads to, so it is chosen on the same form as the boosters.
+   ========================================================================= */
+.sealed-format {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sealed-format-option {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--menu-border);
+  border-radius: 10px;
+  background: var(--menu-field);
+  color: var(--menu-ink);
+  text-align: center;
+  cursor: pointer;
+}
+.sealed-format-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sealed-format-option strong {
+  font: 700 0.95rem var(--font-display);
+}
+.sealed-format-option span {
+  color: var(--menu-muted);
+  font-size: 0.72rem;
+}
+.sealed-format-option.picked {
+  border-color: var(--flag);
+  box-shadow: inset 0 0 0 2px var(--flag);
+}
+.sealed-format-option:focus-within {
+  outline: 2px solid var(--flag);
+  outline-offset: 2px;
+}
+
+/* The event between rounds: the next table, the standings, and every round's
+   results, newest first. */
+.swiss-card {
+  display: grid;
+  gap: 0.8rem;
+  width: min(32rem, 100%);
+  padding: 1.25rem 1.4rem 1.4rem;
+}
+.swiss-shell .setup-topbar .text-button {
+  color: var(--parchment);
+}
+.swiss-card h1 {
+  margin: 0;
+  font: 700 1.4rem var(--font-display);
+}
+.swiss-note {
+  margin: 0;
+  color: var(--menu-ink);
+}
+.swiss-note.small {
+  color: var(--menu-muted);
+  font-size: 0.75rem;
+}
+.swiss-standings {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.swiss-standings th,
+.swiss-standings td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+.swiss-standings th {
+  color: var(--menu-muted);
+  font: 600 0.68rem var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.swiss-standings tr.you td {
+  font-weight: 700;
+  color: var(--flag);
+}
+.swiss-round h3 {
+  margin: 0 0 0.3rem;
+  font: 600 0.72rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--menu-muted);
+}
+.swiss-round ul {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+}
+.swiss-round .you {
+  font-weight: 700;
+}
+.swiss-vs,
+.swiss-pending {
+  color: var(--menu-muted);
+}
+.swiss-outcome {
+  float: right;
+}
+
+/* The pre-release page's lobby: no card behind it, just the pack standing on
+   the scene and the three event lengths under it. The words are lettered
+   like the front page's YOU / AI: white display italic, outlined in ink so
+   they hold against the drawing, and each choice stands on a torn brush
+   stroke of the same ink. */
+.prerelease-stage {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1rem;
+  text-align: center;
+  color: #ffffff;
+}
+.prerelease-stage .booster-pack {
+  width: min(13rem, 46vw);
+  filter: drop-shadow(0 14px 22px rgba(10, 10, 11, 0.45));
+}
+.prerelease-stage h1,
+.prerelease-rounds {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.14em #0a0a0b;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 3px 8px rgba(10, 10, 11, 0.55));
+}
+.prerelease-stage h1 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.6rem, 4.6vw, 2.8rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.prerelease-stage p {
+  margin: 0;
+  max-width: 34ch;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
+}
+.prerelease-round-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 7.5rem));
+  gap: 1.1rem;
+  margin-top: 0.4rem;
+}
+.prerelease-rounds {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.4rem 0.65rem;
+  border: 0;
+  background: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+.prerelease-rounds::before {
+  content: "";
+  position: absolute;
+  inset: 4% -4% 2% -6%;
+  z-index: -1;
+  background: #0a0a0b;
+  transform: skewX(-14deg);
+  clip-path: polygon(
+    4% 18%,
+    22% 4%,
+    58% 10%,
+    96% 0,
+    100% 46%,
+    92% 88%,
+    64% 96%,
+    30% 100%,
+    0 84%
+  );
+}
+.prerelease-rounds strong {
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  line-height: 1;
+}
+.prerelease-rounds span {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  -webkit-text-stroke: 0;
+}
+.prerelease-rounds:hover,
+.prerelease-rounds:focus-visible {
+  transform: translateY(-2px) rotate(-1deg);
+}
+.prerelease-rounds:focus-visible {
+  outline: 2px solid var(--parchment);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .prerelease-rounds {
+    transition: none;
+  }
+  .prerelease-rounds:hover,
+  .prerelease-rounds:focus-visible {
+    transform: none;
+  }
+}

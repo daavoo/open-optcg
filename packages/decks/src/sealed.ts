@@ -211,6 +211,14 @@ export const SEALED_EXPANSIONS: readonly SealedExpansion[] = [
     packImageUrl:
       "https://en.onepiece-cardgame.com/products/boosters/op17/images/others/product_pack.webp",
   },
+  {
+    code: "OP18",
+    productCode: "OP-18",
+    title: "The Dominance of God",
+    productPage: "https://en.onepiece-cardgame.com/products/op18.html",
+    packImageUrl:
+      "https://en.onepiece-cardgame.com/onepiececg/bccard/en/products/2026/09/18/rGCJ1ZUyi5qrA7zL/img_item01.webp",
+  },
 ];
 
 /** The newest expansion: what a sealed run opens unless told otherwise. */

@@ -699,11 +699,22 @@
       "url": "https://en.onepiece-cardgame.com/cardlist/?series=569801",
       "resolvedUrl": "https://en.onepiece-cardgame.com/cardlist/?series=569801",
       "path": "bandai/cardlist-other.html",
-      "fetchedAt": "2026-10-23T14:58:45.651Z",
-      "sha256": "65b53ffc5d115b5029b9a22da2cff30e15c10f377b3a6814d76fac61eeeea36d",
+      "fetchedAt": "2026-11-13T13:15:08.953Z",
+      "sha256": "4477117359b373ed27255f679fbd5a9a51c358bd28641d2339cbc25187ea0070",
       "authority": "primary",
       "contentType": "text/html",
-      "bytes": 475194
+      "bytes": 508444
+    },
+    {
+      "id": "bandai-cardlist-op18",
+      "url": "https://en.onepiece-cardgame.com/cardlist/?series=569118",
+      "resolvedUrl": "https://en.onepiece-cardgame.com/cardlist/?series=569118",
+      "path": "bandai/cardlist-op18.html",
+      "fetchedAt": "2026-11-13T13:15:08.953Z",
+      "sha256": "32ef3f0d242e4f3aad5dbbf53c9a17c7dd73539e53cdf866d6e136808cf1cbfd",
+      "authority": "primary",
+      "contentType": "text/html",
+      "bytes": 331198
     }
   ]
 }

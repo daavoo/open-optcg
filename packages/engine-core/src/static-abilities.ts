@@ -154,6 +154,18 @@ export interface StaticAbility {
    * the field.
    */
   costZone?: "hand";
+  /**
+   * Counter power a Leader's aura gives every card of one category in its
+   * controller's hand -- OP18-021 Franky's Stages, a category that prints no
+   * Counter at all.
+   *
+   * Read by {@link handCounterPower}, which is the one number both the Counter
+   * offer and its resolution add, so a Stage becomes a Counter card wherever a
+   * Character with a printed Counter is one. Only a `controller-aura` row is
+   * read: the bonus is the Leader's effect, and a negated Leader stops giving
+   * it.
+   */
+  handCounter?: { category: string; amount: number };
   keyword?: { keyword: Keyword; when: (context: AbilityContext) => boolean };
   /**
    * The DON!! counts this row's predicate reads, for `donCountReaders`: a
@@ -1377,7 +1389,41 @@ export function handCounterPower(
   db: CardDatabase = cards,
 ): number {
   const definition = db.require(cardNumber);
-  if (definition.category !== "character") return 0;
+  const aura = leaderHandCounterBonus(state, playerId, definition.category);
+  if (definition.category !== "character") return aura;
+  return aura + characterHandCounterPower(state, playerId, cardNumber, db);
+}
+
+/**
+ * The `handCounter` rows of the asking player's Leader that reach a card of
+ * `category`, summed.
+ */
+function leaderHandCounterBonus(
+  state: GameState,
+  playerId: PlayerId,
+  category: string,
+): number {
+  const leader = state.players[playerId].leaderCardNumber;
+  let bonus = 0;
+  for (const { ability } of aurasBySource.get(leader) ?? []) {
+    if (
+      ability.scope === "controller-aura" &&
+      ability.handCounter?.category === category &&
+      !leaderEffectsNegated(state, playerId)
+    ) {
+      bonus += ability.handCounter.amount;
+    }
+  }
+  return bonus;
+}
+
+function characterHandCounterPower(
+  state: GameState,
+  playerId: PlayerId,
+  cardNumber: string,
+  db: CardDatabase,
+): number {
+  const definition = db.require(cardNumber);
   const board = state.players[playerId].board;
   if (
     (definition.power ?? 0) >= 8000 &&

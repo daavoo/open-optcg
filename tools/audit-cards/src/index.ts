@@ -654,6 +654,8 @@ for (const deck of communityDecks) {
  * rarity slots and because a card outside any manifest still has to be
  * playable.
  *
+ * Bandai listed OP18 on 2026-11-13 (series 569118), a week before release.
+ *
  * Bandai listed OP17 on 2026-08-21 (series 569117). Until then the set had no
  * primary record at all and its 119 identities were a hand-corrected import
  * from the secondary source; this pass is what replaced them. OP15 and OP16
@@ -769,6 +771,14 @@ const setSeries = [
     expected: 119,
     output: "generated-op17.ts",
     binding: "op17CardRecords",
+  },
+  {
+    id: "OP18",
+    files: ["cardlist-op18.html"],
+    prefix: "OP18-",
+    expected: 119,
+    output: "generated-op18.ts",
+    binding: "op18CardRecords",
   },
   {
     id: "EB04",

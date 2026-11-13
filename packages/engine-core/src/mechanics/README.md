@@ -34,6 +34,12 @@ card data.
 | `op16-*.ts`            | `cards/src/op16.ts`                                                 |
 | `op17-*.ts`            | `cards/src/op17.ts`                                                 |
 | `op17-luffy-ace.ts`    | `cards/src/op17-luffy-ace.ts`, plus ST21-017                        |
+| `op18-red*.ts`         | OP-18's Red cards, OP18-001 to OP18-020                             |
+| `op18-green*.ts`       | OP-18's Green cards, OP18-021 to OP18-040 and OP18-118              |
+| `op18-blue*.ts`        | OP-18's Blue cards, OP18-041 to OP18-059                            |
+| `op18-purple*.ts`      | OP-18's Purple cards, OP18-060 to OP18-078                          |
+| `op18-black*.ts`       | OP-18's Black cards, OP18-080 to OP18-097 and OP18-119              |
+| `op18-yellow.ts`       | OP-18's Yellow cards, OP18-098 to OP18-117, and the OP18-079 Leader |
 | `op05-*.ts`            | `cards/src/op05.ts`                                                 |
 | `op05-replacements.ts` | the four replacements OP05 prints                                   |
 | `op05-shared.ts`       | OP05 fragments more than one of its cards prints                    |

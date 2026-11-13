@@ -425,10 +425,16 @@ const TRAINING_ONLY_DECKS: Record<string, DeckManifest> = {
     : {}),
 };
 
-export const TRAINING_DECK_IDS: readonly string[] = [
-  ...SELECTABLE_DECK_IDS,
-  ...Object.keys(TRAINING_ONLY_DECKS),
-];
+/**
+ * `SYS1_EXTRA_DECKS_ONLY=1` makes the extra decks the whole pool: a run in a
+ * format of its own -- sealed, where both seats are 40-card decks under the
+ * sealed Leader -- must never be paired against a constructed list.
+ */
+const extraOnly = Boolean(extra) && process.env.SYS1_EXTRA_DECKS_ONLY === "1";
+
+export const TRAINING_DECK_IDS: readonly string[] = extraOnly
+  ? Object.keys(JSON.parse(readFileSync(extra!, "utf8")) as object)
+  : [...SELECTABLE_DECK_IDS, ...Object.keys(TRAINING_ONLY_DECKS)];
 
 /** Each variant (`deck-variants.ts`) as a manifest under its base's Leader, by id. */
 const VARIANTS: Record<string, { base: string; manifest: DeckManifest }> = {};

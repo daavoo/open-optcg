@@ -381,6 +381,31 @@ const SOURCES: readonly Source[] = [
         .withLife("p2", life(opponentLife, "p2"))
         .build(),
   },
+  {
+    cardNumber: "OP18-106",
+    shape: "printed on the Character, unconditional, 7000",
+    holder: "doberman",
+    reach: (seed, opponentLife) =>
+      table(seed)
+        .withBoard("p1", [character("doberman", "OP18-106")])
+        .withLife("p2", life(opponentLife, "p2"))
+        .build(),
+  },
+  {
+    // The keyword behind another card on the board rather than a DON!! count:
+    // Oars holds it only while a [Gecko Moria] Character is in play beside it.
+    cardNumber: "OP18-081",
+    shape: "granted while a named Character is on the board",
+    holder: "oars",
+    reach: (seed, opponentLife) =>
+      table(seed)
+        .withBoard("p1", [
+          character("oars", "OP18-081"),
+          character("moria", "OP09-085"),
+        ])
+        .withLife("p2", life(opponentLife, "p2"))
+        .build(),
+  },
 ];
 
 /**
@@ -734,6 +759,19 @@ describe("a keyword an aura hands over is reported, whatever the keyword", () =>
           .build().state,
       holder: "giant",
       keyword: "Blocker",
+    },
+    // OP18-001 Karoo (Leader): [Rush] onto Characters both {Animal} and
+    // {Alabasta}.
+    "OP18-001": {
+      build: () =>
+        table("aura-op18-001")
+          .withLeader("p1", "OP18-001")
+          .withBoard("p1", [
+            character("seacat", "OP18-003", { playedTurn: 11 }),
+          ])
+          .build().state,
+      holder: "seacat",
+      keyword: "Rush",
     },
   };
 

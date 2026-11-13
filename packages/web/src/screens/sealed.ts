@@ -1,7 +1,7 @@
 import type { CardDefinition } from "@one-piece-sim/cards";
 import { requireKnownCard } from "@one-piece-sim/cards";
 import {
-  autoBuildSealedDeckGrape,
+  autoBuildSealedDeckBest,
   playablePoolCards,
   poolCounts,
   requireSealedExpansion,
@@ -12,6 +12,7 @@ import {
   SEALED_EXPANSIONS,
   SEALED_LEADER,
   SEALED_PACK_COUNT,
+  type DeckManifest,
   type SealedExpansion,
   type SealedPool,
 } from "@one-piece-sim/decks";
@@ -28,7 +29,6 @@ import {
 import { exportDeckList, type EditableDeck } from "../deck-editor.js";
 import {
   bindCatalogFilters,
-  catalogFilterIsEmpty,
   closeCatalogMenus,
   EMPTY_CATALOG_FILTER,
   matchesCatalogFilter,
@@ -45,6 +45,30 @@ import { icon } from "../icons.js";
 import { bindAppDialogDismissal, toggleAppDialog } from "../dialogs.js";
 import { downloadText, valueOf } from "../dom.js";
 import * as footer from "./footer.js";
+import {
+  createSwissEvent,
+  eventComplete,
+  losses,
+  opponentWinRate,
+  pendingAiTables,
+  recordResult,
+  roundComplete,
+  standings,
+  wins,
+  yourOpponent,
+  yourTable,
+  SWISS_PLAYERS,
+  SWISS_ROUNDS,
+  SWISS_ROUND_OPTIONS,
+  YOU,
+  type SwissEvent,
+  type SwissTable,
+} from "../swiss.js";
+import type { Seat } from "../analytics.js";
+import type { HeadlessTable } from "../swiss-tables.js";
+
+/** What the lobby's Start leads to: one match, or a Swiss pod. */
+export type SealedFormat = "single" | "swiss";
 
 export interface SealedRun {
   readonly seed: string;
@@ -72,6 +96,13 @@ export interface SealedState {
   sort: CatalogSortKey;
   message: string;
   catalogScrollTop: number;
+  format: SealedFormat;
+  /** How many rounds a Swiss event entered from this run will last. */
+  swissRounds: number;
+  /** The Swiss event the run's deck is entered in, once it has started. */
+  event: SwissEvent | null;
+  /** The person's table whose match is on the board, until it is recorded. */
+  playingTable: SwissTable | null;
 }
 
 /** The pieces this screen shares with the rest of the app: the shared
@@ -93,6 +124,20 @@ export interface SealedContext {
   /** Re-renders whichever sealed view (lobby or builder) is on screen. */
   rerender(): void;
   goHome(): void;
+  /**
+   * The pre-release page's set (`prerelease.ts`): the lobby opens that set's
+   * packs and offers no other.
+   */
+  lockedExpansion?: string | null;
+  /**
+   * Plays AI-against-AI tables off the main thread, resolving each table's
+   * winning seat (null at the action ceiling); see `swiss-tables.ts`.
+   */
+  playTables(
+    tables: readonly HeadlessTable[],
+    seedPrefix: string,
+    pilot: Exclude<ControllerKind, "human">,
+  ): Promise<Array<Seat | null>>;
 }
 
 export function emptyState(): SealedState {
@@ -103,6 +148,10 @@ export function emptyState(): SealedState {
     sort: "cost",
     message: "",
     catalogScrollTop: 0,
+    format: "single",
+    swissRounds: SWISS_ROUNDS,
+    event: null,
+    playingTable: null,
   };
 }
 
@@ -116,9 +165,13 @@ export function emptyState(): SealedState {
  * hosted build does (`artBesidePage` in `tools/build-web.ts`), so there is no
  * page-weight reason left to show a reader less than the app has.
  */
-function currentExpansion(state: SealedState): SealedExpansion {
+function currentExpansion(
+  state: SealedState,
+  locked?: string | null,
+): SealedExpansion {
+  const code = locked ?? state.expansion;
   return (
-    SEALED_EXPANSIONS.find((expansion) => expansion.code === state.expansion) ??
+    SEALED_EXPANSIONS.find((expansion) => expansion.code === code) ??
     SEALED_EXPANSIONS.at(-1)!
   );
 }
@@ -167,7 +220,17 @@ function tags(expansion: SealedExpansion, latest: boolean): string {
  * it: the screen chooses one opaque thing before a single primary action, so
  * the choice and the control that changes it are the same surface.
  */
-function boosterChoice(expansion: SealedExpansion): string {
+function boosterChoice(expansion: SealedExpansion, locked: boolean): string {
+  if (locked)
+    return `<div class="booster-choice">
+    <span class="booster-choice-head">
+      <strong>${escapeHtml(expansion.title)} pre-release</strong>
+    </span>
+    <span class="booster-choice-body">
+      ${packImage(expansion)}
+      <span class="booster-choice-swap">${SEALED_PACK_COUNT} packs, a ${SEALED_DECK_SIZE}-card deck, the rainbow Luffy leads it</span>
+    </span>
+  </div>`;
   return `<button class="booster-choice" type="button" data-open-booster-picker aria-haspopup="dialog">
     <span class="booster-choice-head">
       <strong>${escapeHtml(expansion.title)}</strong>
@@ -206,9 +269,54 @@ function boosterPickerDialog(state: SealedState): string {
   </div>`;
 }
 
+/** One match against one AI, or a Swiss event: the choice the lobby makes
+    before any pack is opened, since it decides what Start leads to. */
+function formatChoice(format: SealedFormat): string {
+  const option = (value: SealedFormat, title: string, detail: string) =>
+    `<label class="sealed-format-option${format === value ? " picked" : ""}">
+      <input type="radio" name="sealed-format" value="${value}" ${format === value ? "checked" : ""} />
+      <strong>${title}</strong><span>${detail}</span>
+    </label>`;
+  return `<fieldset class="sealed-format">
+    <legend class="sr-only">Format</legend>
+    ${option("single", "One match", "Build, then play one AI")}
+    ${option("swiss", `Swiss, ${SWISS_ROUNDS} rounds`, `${SWISS_PLAYERS} players, paired by record`)}
+  </fieldset>`;
+}
+
+/**
+ * The pre-release page's lobby: the pack on the table and a button per Swiss
+ * length. A pre-release is a Swiss event of sealed decks, so the length of the
+ * event is the one choice left before the packs are opened.
+ */
+function renderPrereleaseLobby(expansion: SealedExpansion): string {
+  const buttons = SWISS_ROUND_OPTIONS.map(
+    (rounds) =>
+      `<button class="prerelease-rounds" type="button" data-swiss-rounds="${rounds}"><strong>${rounds}</strong><span>${rounds === 1 ? "round" : "rounds"}</span></button>`,
+  ).join("");
+  return `<main class="setup-shell sealed-shell prerelease-lobby">
+    <header class="setup-topbar">
+      <button class="brand-home" type="button" id="sealed-home">
+        <svg class="brand-mark small"><use href="#brand-hex" /></svg>
+        <span class="setup-wordmark">Open OPTCG</span>
+        <span class="sr-only">Home</span>
+      </button>
+    </header>
+    <section class="prerelease-stage">
+      ${packImage(expansion)}
+      <h1>${escapeHtml(expansion.title)} pre-release</h1>
+      <p>Open ${SEALED_PACK_COUNT} packs, build ${SEALED_DECK_SIZE} cards, play a Swiss event of ${SWISS_PLAYERS}.</p>
+      <div class="prerelease-round-buttons" role="group" aria-label="Swiss rounds">${buttons}</div>
+    </section>
+    ${footer.render()}
+  </main>`;
+}
+
 export function renderLobby(state: SealedState, ctx: SealedContext): string {
-  const expansion = currentExpansion(state);
+  const locked = Boolean(ctx.lockedExpansion);
+  const expansion = currentExpansion(state, ctx.lockedExpansion);
   state.expansion = expansion.code;
+  if (locked) return renderPrereleaseLobby(expansion);
   return `<main class="setup-shell sealed-shell">
     <header class="setup-topbar">
       <button class="brand-home" type="button" id="sealed-home">
@@ -218,7 +326,8 @@ export function renderLobby(state: SealedState, ctx: SealedContext): string {
       </button>
     </header>
     <form class="menu-card setup-form" id="sealed-form">
-      ${boosterChoice(expansion)}
+      ${boosterChoice(expansion, locked)}
+      ${formatChoice(state.format)}
       <button class="primary wide" type="submit">${icon("sparkles", "Open packs")}Open ${SEALED_PACK_COUNT} packs</button>
       <button class="text-button wide" type="button" id="sealed-import">${icon("file-up", "Import a deck")}Import a ${SEALED_DECK_SIZE}-card list instead</button>
     </form>
@@ -235,6 +344,23 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
     ?.addEventListener("submit", (event) => {
       event.preventDefault();
       startRun(state, ctx);
+    });
+  document
+    .querySelectorAll<HTMLInputElement>("input[name=sealed-format]")
+    .forEach((input) => {
+      input.addEventListener("change", () => {
+        state.format = input.value as SealedFormat;
+        ctx.rerender();
+      });
+    });
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-swiss-rounds]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        state.format = "swiss";
+        state.swissRounds = Number(button.dataset.swissRounds);
+        startRun(state, ctx);
+      });
     });
   document.querySelectorAll("[data-open-booster-picker]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -310,6 +436,8 @@ export function beginRun(
     deck,
     opponentController: strongestPilot(ctx),
   };
+  state.event = null;
+  state.playingTable = null;
   state.filter = { ...EMPTY_CATALOG_FILTER };
   closeCatalogMenus();
   state.message = message;
@@ -321,7 +449,7 @@ export function beginRun(
 function startRun(state: SealedState, ctx: SealedContext): void {
   const { pool, packsOpened } = openSealedPool(
     ctx.randomSeed(),
-    currentExpansion(state).code,
+    currentExpansion(state, ctx.lockedExpansion).code,
   );
   beginRun(state, ctx, pool, packsOpened, {});
 }
@@ -379,13 +507,9 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
   const deckCards = poolCards.filter(
     (card) => (run.deck[card.cardNumber] ?? 0) > 0,
   );
-  // What the filters are narrowing: everything opened that the deck has not
-  // already taken every copy of.
-  const undrafted = poolCards.filter(
-    (card) =>
-      (opened.get(card.cardNumber) ?? 0) - (run.deck[card.cardNumber] ?? 0) > 0,
-  );
-  const availableCards = undrafted.filter((card) =>
+  // The pool shows every card opened, in the deck or not, so a card stays
+  // where it was found while copies move in and out of the deck above it.
+  const availableCards = poolCards.filter((card) =>
     matchesCatalogFilter(card, state.filter),
   );
   const renderQuantity = (card: CardDefinition): string => {
@@ -415,15 +539,15 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
       <button class="secondary wide" id="sealed-export">${icon("download", "Export deck list")}Export deck list</button>
       <div class="deck-rule-status ${validation.errors.length ? "invalid" : "valid"}"><strong>${validation.errors.length ? "Deck needs attention" : "Ready to play"}</strong>${validation.errors.length ? `<ul>${validation.errors.map((error) => `<li>${escapeHtml(error)}</li>`).join("")}</ul>` : `<p>${SEALED_DECK_SIZE} cards, all from your opened pool.</p>`}</div>
       ${packNote("Opponent's pool", run.opponentPacksOpened)}
-      <button class="primary wide" id="sealed-start" ${validation.errors.length ? "disabled" : ""}>${icon("play", "Start match")}Start match</button>
+      <button class="primary wide" id="sealed-start" ${validation.errors.length ? "disabled" : ""}>${state.format === "swiss" ? `${icon("swords", "Enter the event")}Enter the event` : `${icon("play", "Start match")}Start match`}</button>
       ${state.message ? `<p class="editor-message">${escapeHtml(state.message)}</p>` : ""}
     </aside>
     <section class="card-catalog">
       <section class="deck-card-section"><div class="catalog-heading"><div><p class="eyebrow">Current deck</p><h2>${deckCards.length} unique cards</h2></div></div>
         <div class="catalog-list deck-card-list">${deckCards.map((card) => renderQuantity(card)).join("")}</div>
       </section>
-      <section class="pool-card-section"><div class="catalog-heading">${renderCatalogFilters("sealed", state.filter, state.sort, poolCards)}${renderCatalogCount(availableCards.length, undrafted.length, state.filter)}</div>
-        <div class="catalog-list pool-card-list">${availableCards.map((card) => renderQuantity(card)).join("") || `<p class="catalog-empty">${catalogFilterIsEmpty(state.filter) ? "Every card you opened is already in the deck." : "No available cards match these filters."}</p>`}</div>
+      <section class="pool-card-section"><div class="catalog-heading">${renderCatalogFilters("sealed", state.filter, state.sort, poolCards)}${renderCatalogCount(availableCards.length, poolCards.length, state.filter)}</div>
+        <div class="catalog-list pool-card-list">${availableCards.map((card) => renderQuantity(card)).join("") || `<p class="catalog-empty">No cards in your pool match these filters.</p>`}</div>
       </section>
     </section>
     ${ctx.renderCardDetailDialog()}
@@ -452,7 +576,7 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
     .querySelector("#sealed-auto-build")
     ?.addEventListener("click", () => {
       if (!state.run) return;
-      state.run.deck = { ...autoBuildSealedDeckGrape(state.run.pool).cards };
+      state.run.deck = { ...autoBuildSealedDeckBest(state.run.pool).cards };
       ctx.rerender();
     });
   bindCatalogFilters("sealed", state.filter, () => {
@@ -486,7 +610,8 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
       });
     });
   document.querySelector("#sealed-start")?.addEventListener("click", () => {
-    startMatch(state, ctx);
+    if (state.format === "swiss") enterEvent(state, ctx);
+    else startMatch(state, ctx);
   });
 }
 
@@ -495,8 +620,22 @@ export function startMatch(state: SealedState, ctx: SealedContext): void {
   const run = state.run;
   if (validateSealedDeck({ cards: run.deck }, run.pool).errors.length) return;
   const p1 = sealedDeckManifest({ cards: run.deck }, run.pool);
-  const opponentDeck = autoBuildSealedDeckGrape(run.opponentPool);
-  const p2 = sealedDeckManifest(opponentDeck, run.opponentPool);
+  const opponentDeck = autoBuildSealedDeckBest(run.opponentPool);
+  launchMatch(
+    state,
+    ctx,
+    p1,
+    sealedDeckManifest(opponentDeck, run.opponentPool),
+  );
+}
+
+function launchMatch(
+  state: SealedState,
+  ctx: SealedContext,
+  p1: DeckManifest,
+  p2: DeckManifest,
+): void {
+  const run = state.run!;
   const config = newLocalMatch({
     p1Deck: p1.id,
     p2Deck: p2.id,
@@ -508,4 +647,209 @@ export function startMatch(state: SealedState, ctx: SealedContext): void {
     startingPlayer: "random",
   });
   ctx.beginMatch(config);
+}
+
+/* --- The Swiss event ------------------------------------------------------- */
+
+/** Enters the built deck in a new event and opens its first round. */
+function enterEvent(state: SealedState, ctx: SealedContext): void {
+  if (!state.run) return;
+  const run = state.run;
+  if (validateSealedDeck({ cards: run.deck }, run.pool).errors.length) return;
+  state.event = createSwissEvent(
+    ctx.randomSeed(),
+    run.pool,
+    run.deck,
+    state.swissRounds,
+  );
+  state.playingTable = null;
+  playAiTables(state, ctx);
+  ctx.rerender();
+}
+
+/**
+ * Plays the current round's AI-against-AI tables and records them as they
+ * come in. Under the learned model when it is the opponent; the rules agents
+ * stand in when the model cannot be run in the worker, so a round is never
+ * left unplayed.
+ */
+function playAiTables(state: SealedState, ctx: SealedContext): void {
+  const event = state.event;
+  if (!event) return;
+  const tables = pendingAiTables(event);
+  if (!tables.length) return;
+  const round = event.rounds.length;
+  const pilot = state.run?.opponentController ?? "rules";
+  const headless = tables.map((table) => ({
+    first: event.players[table.a]!.deck,
+    second: event.players[table.b]!.deck,
+  }));
+  const seedPrefix = `${event.seed}:round-${round}`;
+  const record = (results: Array<Seat | null>) => {
+    if (state.event !== event) return;
+    results.forEach((winner, index) => {
+      const table = tables[index]!;
+      settle(
+        state,
+        ctx,
+        table,
+        winner === "first" ? table.a : winner === "second" ? table.b : -1,
+      );
+    });
+    // The person may be mid-match: the board is theirs until they leave it,
+    // and the event screen picks the results up then.
+    if (!state.playingTable) ctx.rerender();
+  };
+  ctx
+    .playTables(headless, seedPrefix, pilot)
+    .catch(() =>
+      pilot === "rules"
+        ? Promise.reject(new Error("The other tables could not be played."))
+        : ctx.playTables(headless, seedPrefix, "rules"),
+    )
+    .then(record, (error: unknown) => {
+      if (state.event !== event) return;
+      state.message = error instanceof Error ? error.message : String(error);
+      if (!state.playingTable) ctx.rerender();
+    });
+}
+
+/** Records one table and, when that pairs a new round, starts its AI tables. */
+function settle(
+  state: SealedState,
+  ctx: SealedContext,
+  table: SwissTable,
+  winner: number,
+): void {
+  if (!state.event || table.winner !== null) return;
+  if (recordResult(state.event, table, winner)) playAiTables(state, ctx);
+}
+
+/** Puts the person's table of the current round on the board. */
+function playRound(state: SealedState, ctx: SealedContext): void {
+  const event = state.event;
+  if (!event || eventComplete(event)) return;
+  const table = yourTable(event);
+  if (table.winner !== null) return;
+  state.playingTable = table;
+  launchMatch(
+    state,
+    ctx,
+    event.players[YOU]!.deck,
+    event.players[yourOpponent(event)]!.deck,
+  );
+}
+
+/**
+ * Whether a Swiss round's match is the one on the board, so leaving it goes
+ * back to the event rather than home.
+ */
+export function playingEventRound(state: SealedState): boolean {
+  return state.event !== null && state.playingTable !== null;
+}
+
+/**
+ * Records the person's match: a win when their seat (p1) won it, a loss
+ * otherwise -- leaving a round's match before it ends concedes it, as at a
+ * table.
+ */
+export function finishRound(
+  state: SealedState,
+  ctx: SealedContext,
+  winner: "p1" | "p2" | null,
+): void {
+  const table = state.playingTable;
+  state.playingTable = null;
+  if (!state.event || !table) return;
+  const opponent = table.a === YOU ? table.b : table.a;
+  settle(state, ctx, table, winner === "p1" ? YOU : opponent);
+}
+
+function record(event: SwissEvent, seat: number): string {
+  return `${wins(event, seat)}&ndash;${losses(event, seat)}`;
+}
+
+function tableResult(event: SwissEvent, table: SwissTable): string {
+  const name = (seat: number) =>
+    `<span class="${seat === YOU ? "you" : ""}">${escapeHtml(event.players[seat]!.name)}</span>`;
+  const outcome =
+    table.winner === null
+      ? `<span class="swiss-pending">playing</span>`
+      : table.winner === -1
+        ? `<span class="swiss-pending">no winner</span>`
+        : `${escapeHtml(event.players[table.winner]!.name)} won`;
+  return `<li>${name(table.a)} <span class="swiss-vs">vs</span> ${name(table.b)} <span class="swiss-outcome">${outcome}</span></li>`;
+}
+
+export function renderEvent(state: SealedState): string {
+  const event = state.event;
+  if (!event) return "";
+  const expansion = requireSealedExpansion(event.expansion);
+  const done = eventComplete(event);
+  const roundNumber = event.rounds.length;
+  const mine = yourTable(event);
+  const ranking = standings(event);
+  const place = ranking.indexOf(YOU) + 1;
+  const waitingOnOthers =
+    mine.winner !== null && !roundComplete(event.rounds.at(-1)!);
+  const headline = done
+    ? `You finished ${place}${ordinal(place)} of ${SWISS_PLAYERS}, ${record(event, YOU)}`
+    : `Round ${roundNumber} of ${event.roundCount}`;
+  const action = done
+    ? `<button class="primary wide" id="swiss-new">${icon("sparkles", "New event")}Open new packs</button>`
+    : waitingOnOthers
+      ? `<p class="swiss-note">Waiting for the other tables to finish round ${roundNumber}&hellip;</p>`
+      : `<p class="swiss-note">Your table: <strong>${escapeHtml(event.players[yourOpponent(event)]!.name)}</strong> (${record(event, yourOpponent(event))})</p>
+         <button class="primary wide" id="swiss-play">${icon("play", "Play round")}Play round ${roundNumber}</button>
+         <p class="swiss-note small">Leaving a match before it ends concedes it.</p>`;
+  const rows = ranking
+    .map(
+      (seat, index) =>
+        `<tr class="${seat === YOU ? "you" : ""}"><td>${index + 1}</td><td>${escapeHtml(event.players[seat]!.name)}</td><td>${record(event, seat)}</td><td>${(opponentWinRate(event, seat) * 100).toFixed(0)}%</td></tr>`,
+    )
+    .join("");
+  const rounds = event.rounds
+    .map(
+      (round, index) =>
+        `<section class="swiss-round"><h3>Round ${index + 1}</h3><ul>${round.map((table) => tableResult(event, table)).join("")}</ul></section>`,
+    )
+    .reverse()
+    .join("");
+  return `<main class="setup-shell sealed-shell swiss-shell">
+    <header class="setup-topbar">
+      <button class="text-button" type="button" id="swiss-leave">${icon("arrow-left", "Leave the event")}Leave the event</button>
+    </header>
+    <section class="menu-card swiss-card">
+      <p class="eyebrow">${escapeHtml(expansion.productCode)} sealed &middot; Swiss</p>
+      <h1>${headline}</h1>
+      ${action}
+      ${state.message ? `<p class="editor-message">${escapeHtml(state.message)}</p>` : ""}
+      <table class="swiss-standings">
+        <thead><tr><th>#</th><th>Player</th><th>Record</th><th title="Opponents' win rate">OMW</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${rounds}
+    </section>
+    ${footer.render()}
+  </main>`;
+}
+
+function ordinal(place: number): string {
+  return place === 1 ? "st" : place === 2 ? "nd" : place === 3 ? "rd" : "th";
+}
+
+export function bindEvent(state: SealedState, ctx: SealedContext): void {
+  footer.bind();
+  document.querySelector("#swiss-play")?.addEventListener("click", () => {
+    playRound(state, ctx);
+  });
+  const leave = () => {
+    state.event = null;
+    state.playingTable = null;
+    state.run = null;
+    state.message = "";
+    ctx.goHome();
+  };
+  document.querySelector("#swiss-new")?.addEventListener("click", leave);
+  document.querySelector("#swiss-leave")?.addEventListener("click", leave);
 }

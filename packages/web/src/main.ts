@@ -48,6 +48,8 @@ import type { AnalyticsContext, AnalyticsState } from "./screens/analytics.js";
 import * as editorScreen from "./screens/editor.js";
 import type { EditorContext, EditorState } from "./screens/editor.js";
 import * as sealedScreen from "./screens/sealed.js";
+import { prereleaseExpansion } from "./prerelease.js";
+import { playHeadlessTables } from "./swiss-tables.js";
 import type { SealedContext, SealedState } from "./screens/sealed.js";
 import * as assetGateScreen from "./screens/asset-gate.js";
 import type { AssetGateContext } from "./screens/asset-gate.js";
@@ -399,6 +401,17 @@ function applyTheme(): void {
 }
 
 function goHome(): void {
+  // A Swiss round's match goes back to its event, recorded, rather than home.
+  if (sealedScreen.playingEventRound(store.sealed)) {
+    const observation = store.game?.activeObservation;
+    sealedScreen.finishRound(
+      store.sealed,
+      sealedDeps,
+      observation?.phase === "finished" ? (observation.winner ?? null) : null,
+    );
+    showSealedLobby();
+    return;
+  }
   showHome();
 }
 
@@ -597,6 +610,10 @@ function leaveMatch(): void {
  * tests that drive them; nothing on the page leads there.
  */
 function showHome(): void {
+  if (prereleaseExpansion()) {
+    showSealedLobby();
+    return;
+  }
   if (window.location.hash !== "#modes") {
     showSetup();
     return;
@@ -758,15 +775,25 @@ const sealedDeps: SealedContext = {
   randomSeed,
   scorerAvailable: learnedModelAvailable,
   rerender: () => {
-    if (store.sealed.run) renderSealedBuilder();
+    if (store.sealed.event) showSealedLobby();
+    else if (store.sealed.run) renderSealedBuilder();
     else showSealedLobby();
   },
   goHome,
+  lockedExpansion: prereleaseExpansion(),
+  playTables: playHeadlessTables,
 };
 
 function showSealedLobby(): void {
   store.game = null;
   clearMainSelection();
+  // An event in progress is where sealed opens until it is left.
+  if (store.sealed.event) {
+    app.innerHTML = sealedScreen.renderEvent(store.sealed);
+    hydrateIcons();
+    sealedScreen.bindEvent(store.sealed, sealedDeps);
+    return;
+  }
   store.sealed.message = "";
   app.innerHTML = sealedScreen.renderLobby(store.sealed, sealedDeps);
   hydrateIcons();

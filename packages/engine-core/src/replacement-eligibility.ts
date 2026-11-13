@@ -290,7 +290,11 @@ export function eligibleReplacements(
     }
     // "Rest this Character and trash 1 card": an already-rested protector cannot
     // pay the first half.
-    if (entry.cost.kind === "trash-from-hand" && entry.cost.restsSelf) {
+    if (
+      (entry.cost.kind === "trash-from-hand" ||
+        entry.cost.kind === "return-don") &&
+      entry.cost.restsSelf
+    ) {
       if (protector.rested) continue;
     }
     // Nor can it pay a cost that is nothing but the rest.
@@ -651,7 +655,18 @@ export function replacementCostEffect(
     // finished resolving, which is how every other `DON!! −N` in the pool is
     // paid. A choice here would suspend on a `mechanic-choice` inside a
     // suspended battle, which is the thing this cost set exists to avoid.
-    return { kind: "return-don", player, count: cost.count };
+    const returnDon: MechanicEffect = {
+      kind: "return-don",
+      player,
+      count: cost.count,
+    };
+    // `bind` is the protector, as for `trash-from-hand`'s rest below.
+    return cost.restsSelf
+      ? {
+          kind: "sequence",
+          effects: [{ kind: "rest", binding: bind }, returnDon],
+        }
+      : returnDon;
   }
   if (cost.kind === "bury-from-trash") {
     return {

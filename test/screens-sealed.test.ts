@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_SEALED_EXPANSION,
+  playablePoolCards,
   SEALED_EXPANSIONS,
   requireSealedExpansion,
 } from "@one-piece-sim/decks";
@@ -29,6 +30,7 @@ function stubContext(overrides: Partial<SealedContext> = {}): SealedContext {
     scorerAvailable: () => false,
     rerender: () => {},
     goHome: () => {},
+    playTables: (tables) => Promise.resolve(tables.map(() => "first" as const)),
     ...overrides,
   };
 }
@@ -53,6 +55,50 @@ function runningState(
   };
   return state;
 }
+
+describe("the pre-release page's lobby", () => {
+  it("opens the locked set's packs and offers no other", () => {
+    const state = emptyState();
+    state.expansion = "OP15";
+    const html = renderLobby(state, stubContext({ lockedExpansion: "OP18" }));
+    expect(state.expansion).toBe("OP18");
+    expect(html).toContain(
+      escapeHtml(`${requireSealedExpansion("OP18").title} pre-release`),
+    );
+    expect(html).not.toContain("data-pick-expansion");
+    expect(html).not.toContain("data-open-booster-picker");
+  });
+
+  it("offers a 1, 3 or 5 round Swiss and nothing else", () => {
+    const html = renderLobby(
+      emptyState(),
+      stubContext({ lockedExpansion: "OP18" }),
+    );
+    const rounds = [...html.matchAll(/data-swiss-rounds="(\d+)"/g)].map(
+      (match) => Number(match[1]),
+    );
+    expect(rounds).toEqual([1, 3, 5]);
+    expect(html).not.toContain('id="sealed-form"');
+    expect(html).not.toContain('id="sealed-import"');
+    expect(html).not.toContain("sealed-format");
+  });
+});
+
+describe("the sealed builder's pool", () => {
+  it("keeps a card in the pool after a copy goes into the deck", () => {
+    const state = runningState("OP18");
+    const [cardNumber] = [...playablePoolCards(state.run!.pool).keys()];
+    state.run!.deck = { [cardNumber!]: 1 };
+    const html = renderBuilder(state, stubContext());
+    const pool = html.slice(html.indexOf('class="pool-card-section"'));
+    const deck = html.slice(
+      html.indexOf('class="deck-card-section"'),
+      html.indexOf('class="pool-card-section"'),
+    );
+    expect(deck).toContain(`data-sealed-increase="${cardNumber}"`);
+    expect(pool).toContain(`data-sealed-increase="${cardNumber}"`);
+  });
+});
 
 describe("sealed screen render", () => {
   it("renders the pack-opening lobby on the newest expansion", () => {

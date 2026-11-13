@@ -316,6 +316,18 @@ let eventMainRegistry: ReadonlyMap<
   }
 > = new Map();
 
+/**
+ * The `[Trigger]` registry, injected at startup through the same seam as the
+ * `[Main]` Event one, for `activate-trigger`.
+ */
+let triggerProgramRegistry: ReadonlyMap<string, MechanicProgram> = new Map();
+
+export function registerTriggerPrograms(
+  registry: ReadonlyMap<string, MechanicProgram>,
+): void {
+  triggerProgramRegistry = registry;
+}
+
 export function registerEventMainPrograms(
   registry: ReadonlyMap<
     string,
@@ -2819,6 +2831,29 @@ export function continueExecution(
         state,
         { sourcePlayerId: playerId, source: eventCard },
         entry.program,
+        db,
+      );
+      events.push(...nested.events);
+      signals.push(...nested.signals);
+      if (nested.pending) return { pending: nested.pending, events, signals };
+      continue;
+    }
+    if (effect.kind === "activate-trigger") {
+      const playerId = execution.context.sourcePlayerId;
+      const card = state.players[playerId].hand.find(
+        (candidate) => candidate.instanceId === instanceIds[0],
+      );
+      const program = card
+        ? triggerProgramRegistry.get(card.cardNumber)
+        : undefined;
+      if (!card || !program) continue;
+      // Activating a Trigger is what the "when a [Trigger] activates"
+      // watchers answer, wherever the Trigger came from.
+      signals.push({ kind: "trigger-activated", playerId });
+      const nested = executeMechanicProgram(
+        state,
+        { sourcePlayerId: playerId, source: card, viaTrigger: true },
+        program,
         db,
       );
       events.push(...nested.events);

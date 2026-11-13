@@ -10,6 +10,7 @@
 import {
   cards as defaultCardDatabase,
   hasCardAttribute,
+  hasCardName,
   hasCardType,
   hasCardTypeIncluding,
   printedClauses,
@@ -852,6 +853,16 @@ export function getMechanicSignalInvocations(
                 !hasCardType(
                   signal.sourceCardNumber,
                   rule.signal.sourceType,
+                ))) ||
+            (rule.signal.sourceLeaderName !== undefined &&
+              (signal.sourcePlayerId !== playerId ||
+                signal.sourceCardNumber === undefined ||
+                signal.sourceCardNumber !==
+                  state.players[playerId].leaderCardNumber ||
+                db.require(signal.sourceCardNumber).category !== "leader" ||
+                !hasCardName(
+                  signal.sourceCardNumber,
+                  rule.signal.sourceLeaderName,
                 ))) ||
             (rule.signal.bySource === "self" &&
               signal.sourcePlayerId !== playerId) ||
