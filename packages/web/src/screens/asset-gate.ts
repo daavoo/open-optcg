@@ -93,35 +93,15 @@ function onlyMissing(ctx: AssetGateContext): number {
 }
 
 /**
- * The same ask printed on a page that shows itself before the cards are in
- * (the pre-release lobby), whose play buttons stay disabled until they are. A
- * player whose pack predates the set is asked only for what it lacks; one who
- * lacks only the pack photo or the sealed Leader's art is asked for those
- * without being held up. Empty when nothing is missing.
+ * The same steps, printed on a page that shows itself before the cards are in
+ * (the pre-release lobby), whose play buttons stay disabled until they are.
+ * One set of steps whatever is missing: the app tells the bookmark what it
+ * lacks (`listenForGetCards`), so the same run fetches a whole pack or just a
+ * new set.
  */
 export function renderPanel(ctx: AssetGateContext): string {
-  const { images, textCards } = ctx.assets();
-  if (images > 0 && textCards > 0) {
-    if (onlyMissing(ctx) === 0) return "";
-    const cards = ctx
-      .missingArt()
-      .filter((card) => /-\d{3}$/.test(card)).length;
-    const heading =
-      cards > 0 ? "Get the new cards first" : "Get the missing art";
-    const what =
-      cards > 0
-        ? `The ${cards} new card${cards === 1 ? "" : "s"} appear here.`
-        : "The pack and Leader art appear here.";
-    return `<section class="asset-gate-panel asset-gate-inline" aria-label="Card text and art">
-      <h2>${heading}</h2>
-      <ol>
-        <li>Open <button class="home-assets-help" type="button" data-get-missing>Bandai's card list</button> and click your Get cards bookmark.</li>
-        <li>Wait a minute. ${what}</li>
-      </ol>
-    </section>`;
-  }
   return `<section class="asset-gate-panel asset-gate-inline" aria-label="Card text and art">
-      <h2>Get the cards first</h2>
+      <h2>Get the cards</h2>
       ${renderSteps(ctx)}
     </section>`;
 }

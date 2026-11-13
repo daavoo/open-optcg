@@ -533,6 +533,19 @@ function prereleaseCardsReady(): boolean {
   );
 }
 
+/**
+ * Whether the pre-release lobby still asks for something: the cards, or the
+ * art it shows beside them -- its pack photo and the sealed Leader. Art for
+ * other sets is the Configure dialog's business, not this page's.
+ */
+function prereleaseArtMissing(): boolean {
+  const code = prereleaseExpansion();
+  if (!prereleaseCardsReady()) return true;
+  return missingCardArt().some(
+    (card) => card === `${code}-PACK` || card === SEALED_LEADER,
+  );
+}
+
 /** Shows the gate, or the lobby again when a load came from its dialog. */
 function rerenderAssets(): void {
   if (afterAssetGate) showAssetGate(afterAssetGate);
@@ -816,7 +829,8 @@ const sealedDeps: SealedContext = {
   goHome,
   lockedExpansion: prereleaseExpansion(),
   cardsReady: prereleaseCardsReady,
-  renderGetCards: () => assetGateScreen.renderPanel(assetGateDeps),
+  renderGetCards: () =>
+    prereleaseArtMissing() ? assetGateScreen.renderPanel(assetGateDeps) : "",
   bindGetCards: () => {
     assetGateScreen.bindControls(assetGateDeps);
   },
