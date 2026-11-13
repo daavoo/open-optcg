@@ -76,25 +76,11 @@ export const op18RedStaticAbilities: readonly StaticAbility[] = [
       when: (context) => ownPower(context) >= 7_000,
     },
   },
-  // OP18-005 Koza: `pnpm card:text OP18-005`. "If you have" reads the whole
-  // field, the Leader included.
+  // OP18-005 Kung Fu Jugon: `pnpm card:text OP18-005`. Counts every copy on
+  // its controller's board, itself included: "every [Kung Fu Jugon]" names no
+  // "other", so a lone copy is a 1000.
   {
     cardNumber: "OP18-005",
-    scope: "self",
-    power: {
-      kind: "add",
-      value: (context) => (fieldHasName(context, "Nefeltari Vivi") ? 1_000 : 0),
-    },
-    keyword: {
-      keyword: "Rush",
-      when: (context) => fieldHasName(context, "Nefeltari Vivi"),
-    },
-  },
-  // OP18-006 Kung Fu Jugon: `pnpm card:text OP18-006`. Counts every copy on
-  // its controller's board, itself included: the Japanese text names "your
-  // [Kung Fu Jugon]" with no "other", so a lone copy is a 1000.
-  {
-    cardNumber: "OP18-006",
     scope: "self",
     power: {
       kind: "add",
@@ -105,6 +91,20 @@ export const op18RedStaticAbilities: readonly StaticAbility[] = [
               hasCardName(card.cardNumber, "Kung Fu Jugon"),
             ).length
           : 0,
+    },
+  },
+  // OP18-006 Koza: `pnpm card:text OP18-006`. "If you have" reads the whole
+  // field, the Leader included.
+  {
+    cardNumber: "OP18-006",
+    scope: "self",
+    power: {
+      kind: "add",
+      value: (context) => (fieldHasName(context, "Nefeltari Vivi") ? 1_000 : 0),
+    },
+    keyword: {
+      keyword: "Rush",
+      when: (context) => fieldHasName(context, "Nefeltari Vivi"),
     },
   },
   // OP18-007 Smoker: `pnpm card:text OP18-007`.

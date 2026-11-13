@@ -148,7 +148,7 @@ describe("OP18-057 Atomic Dicer", () => {
   });
 });
 
-describe("OP18-058 This Kingdom Is Doomed. You Can't Save It!", () => {
+describe("OP18-058 This Kingdom is Doomed. You Can't Save It!", () => {
   covers("OP18-058", "[Main]", "[Trigger]");
 
   it("returns one of its own Characters to bury a cost-4-or-less Character", () => {

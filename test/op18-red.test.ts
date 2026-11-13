@@ -327,15 +327,48 @@ describe("OP18-004 Karoo's power thresholds", () => {
   });
 });
 
-// --- OP18-005 Koza ----------------------------------------------------------
+// --- OP18-005 Kung Fu Jugon -------------------------------------------------
 
-describe("OP18-005 Koza", () => {
-  covers("OP18-005", "static");
+describe("OP18-005 Kung Fu Jugon", () => {
+  covers("OP18-005", "[Your Turn]");
+
+  it("gains +1000 per copy on its controller's board, itself included", () => {
+    const one = table("op18-005-one")
+      .withBoard("p1", [character("jugon", "OP18-005")])
+      .build();
+    expect(power(one, "p1", "jugon")).toBe(1000);
+
+    const three = table("op18-005-three")
+      .withBoard("p1", [
+        character("jugon", "OP18-005"),
+        character("jugon-2", "OP18-005"),
+        character("jugon-3", "OP18-005"),
+      ])
+      .build();
+    expect(power(three, "p1", "jugon")).toBe(3000);
+    expect(power(three, "p1", "jugon-3")).toBe(3000);
+  });
+
+  it("gains nothing on the opponent's turn", () => {
+    const game = defending("op18-005-theirs")
+      .withBoard("p1", [
+        character("jugon", "OP18-005"),
+        character("jugon-2", "OP18-005"),
+      ])
+      .build();
+    expect(power(game, "p1", "jugon")).toBe(0);
+  });
+});
+
+// --- OP18-006 Koza ----------------------------------------------------------
+
+describe("OP18-006 Koza", () => {
+  covers("OP18-006", "static");
 
   it("gains [Rush] and +1000 with a [Nefeltari Vivi] on the field", () => {
-    const game = table("op18-005-vivi")
+    const game = table("op18-006-vivi")
       .withBoard("p1", [
-        character("koza", "OP18-005", { playedTurn: 11 }),
+        character("koza", "OP18-006", { playedTurn: 11 }),
         character("vivi", "OP18-011"),
       ])
       .build();
@@ -344,52 +377,19 @@ describe("OP18-005 Koza", () => {
   });
 
   it("counts a [Nefeltari Vivi] Leader", () => {
-    const game = table("op18-005-leader")
+    const game = table("op18-006-leader")
       .withLeader("p1", "EB03-001")
-      .withBoard("p1", [character("koza", "OP18-005")])
+      .withBoard("p1", [character("koza", "OP18-006")])
       .build();
     expect(power(game, "p1", "koza")).toBe(5000);
   });
 
   it("is a plain 4000 without one", () => {
-    const game = table("op18-005-none")
-      .withBoard("p1", [character("koza", "OP18-005", { playedTurn: 11 })])
+    const game = table("op18-006-none")
+      .withBoard("p1", [character("koza", "OP18-006", { playedTurn: 11 })])
       .build();
     expect(power(game, "p1", "koza")).toBe(4000);
     expect(keyword(game, "p1", "koza", "Rush")).toBe(false);
-  });
-});
-
-// --- OP18-006 Kung Fu Jugon -------------------------------------------------
-
-describe("OP18-006 Kung Fu Jugon", () => {
-  covers("OP18-006", "[Your Turn]");
-
-  it("gains +1000 per copy on its controller's board, itself included", () => {
-    const one = table("op18-006-one")
-      .withBoard("p1", [character("jugon", "OP18-006")])
-      .build();
-    expect(power(one, "p1", "jugon")).toBe(1000);
-
-    const three = table("op18-006-three")
-      .withBoard("p1", [
-        character("jugon", "OP18-006"),
-        character("jugon-2", "OP18-006"),
-        character("jugon-3", "OP18-006"),
-      ])
-      .build();
-    expect(power(three, "p1", "jugon")).toBe(3000);
-    expect(power(three, "p1", "jugon-3")).toBe(3000);
-  });
-
-  it("gains nothing on the opponent's turn", () => {
-    const game = defending("op18-006-theirs")
-      .withBoard("p1", [
-        character("jugon", "OP18-006"),
-        character("jugon-2", "OP18-006"),
-      ])
-      .build();
-    expect(power(game, "p1", "jugon")).toBe(0);
   });
 });
 
@@ -1023,9 +1023,9 @@ describe("OP18-018 Let's Go, Karoo!!'s [Trigger]", () => {
   });
 });
 
-// --- OP18-019 Quaaack!! -----------------------------------------------------
+// --- OP18-019 Quack!!! -----------------------------------------------------
 
-describe("OP18-019 Quaaack!!'s [Main]", () => {
+describe("OP18-019 Quack!!!'s [Main]", () => {
   covers("OP18-019", "[Main]");
 
   it("gives an opposing Character −3000 with no 7000-base-power Character out", () => {
@@ -1061,7 +1061,7 @@ describe("OP18-019 Quaaack!!'s [Main]", () => {
   });
 });
 
-describe("OP18-019 Quaaack!!'s [Counter]", () => {
+describe("OP18-019 Quack!!!'s [Counter]", () => {
   covers("OP18-019", "[Counter]");
 
   it("gives the Leader +3000 for the battle", () => {

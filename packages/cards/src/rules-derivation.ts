@@ -51,8 +51,7 @@ const KEYWORD_MARKERS: ReadonlyArray<[string, CardKeyword]> = [
  * place of the [Prisoner of Impel Down] it is supposed to give [Blocker] to,
  * and OP15-047 Sanji attacked as [Unblockable] while granting that to someone
  * else. The chain is matched because "gains [Rush] and [Blocker]" grants both;
- * a power change may lead it -- "gains +2000 power and [Blocker]", the wording
- * OP18-071 Trebol's provisional text puts behind its Sugar gate -- and a
+ * a power change may lead it ("gains +2000 power and [Blocker]"), and a
  * separator may be a comma followed by "or", as in OP18-085 Cerberus's list of
  * three keywords it grants one of and prints none of.
  */

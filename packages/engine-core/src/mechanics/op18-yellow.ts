@@ -2,9 +2,7 @@
  * OP18's Yellow cards, OP18-098 to OP18-117, and the Black/Yellow OP18-079
  * Spandam Leader they are built around.
  *
- * Comments paraphrase; printed text is `pnpm card:text OP18-0NN`. The English
- * import is a fan translation, so where it and the Japanese card disagree the
- * Japanese is what is implemented, and the comment says which reading.
+ * Comments paraphrase; printed text is `pnpm card:text OP18-0NN`.
  *
  * The CP package is a face-up Life economy: bodies go from the hand into Life
  * face-up, and almost every card's [Trigger] is gated on a Leader whose type
@@ -102,9 +100,8 @@ const cpLifeEnd = (bind: string): MechanicEffect => ({
  * "Place up to 1 Character with a cost of N or less at the bottom of the
  * owner's deck."
  *
- * Either side's Character: the Japanese cards name no owner for the target
- * (OP18-099, 103, 107, 113, 114, 115), where the English import adds
- * "opponent's" to some of them.
+ * Either side's Character: the cards name no owner for the target (OP18-099,
+ * 103, 107, 113, 114, 115).
  */
 const anyCharacterToDeckBottom = (
   maxCost: number,
@@ -161,7 +158,7 @@ const opponentCharacter = (maxCost?: number): CardSelector => ({
 });
 
 /**
- * One printed "K.O. or rest" (OP18-109): a `choice` of two branches over the
+ * One printed "K.O. or rest" (OP18-101, OP18-109): a `choice` of two branches over the
  * same ceiling, asked only when there is a Character to aim it at.
  */
 const koOrRestCostAtMost = (maxCost: number, bind: string): MechanicEffect => ({
@@ -372,12 +369,7 @@ export const op18YellowMechanics: SetMechanics = {
         ],
       }),
     ],
-    [
-      // OP18-101 Kumadori: rest only. The English import prints "K.O. or
-      // rest"; the Japanese card rests.
-      "OP18-101",
-      cpTrigger(restCostAtMost(6, "op18-101-trigger")),
-    ],
+    ["OP18-101", cpTrigger(koOrRestCostAtMost(6, "op18-101-trigger"))],
     ["OP18-103", drawAndBottomEight("op18-103-trigger")],
     [
       // OP18-105 Spandam: reveal another CP card from hand and run its
@@ -446,7 +438,7 @@ export const op18YellowMechanics: SetMechanics = {
     ],
     [
       // OP18-117 Buster Call: the whole Life stack for a rebuilt board. "All
-      // Characters" is both sides' (the Japanese names no owner), and the
+      // Characters" is both sides' (the card names no owner), and the
       // Vice Admirals come out of the deck or the trash in one pick, five
       // names at most, which is why the deck is shuffled after.
       //

@@ -9,7 +9,7 @@ export const op18BlackReactionRules: readonly ReactionRule[] = [
   {
     // OP18-080 Van Augur: `pnpm card:text OP18-080`, the [Your Turn] half.
     //
-    // The Japanese text names the card trashed precisely -- a card from your
+    // The text names the card trashed precisely -- a card from your
     // *hand*, trashed by your [Marshall.D.Teach] Leader's effect -- which is
     // what both Teach Leaders charge (OP09-081's activation, OP16-080's
     // redirect). A cost is part of the effect it pays for, so the trash the

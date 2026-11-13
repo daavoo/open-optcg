@@ -336,13 +336,28 @@ describe("OP18-101 Kumadori", () => {
     expect(ids(game.state.players.p1.life)).toEqual(["life-0"]);
   });
 
-  it("[Trigger] rests an opposing Character with a cost of 6 or less", () => {
-    const game = hitLeader("op18-101-trigger", ["OP18-101", FILLER], {
+  const trigger = (seed: string) => {
+    const game = hitLeader(seed, ["OP18-101", FILLER], {
       leader: SPANDAM,
       p2Board: [character("small", "OP18-102"), character("big", "OP18-113")],
     });
     game.play({ type: "resolve-trigger", summary: "Activate Trigger" });
-    // Cost 8 is out of reach, and the Japanese card only rests.
+    return game;
+  };
+
+  it("[Trigger] K.O.s an opposing Character with a cost of 6 or less", () => {
+    const game = trigger("op18-101-trigger-ko");
+    expect(effectOptions(game)).toEqual(["ko", "rest"]);
+    game.play({ type: "resolve-effect", optionId: "ko" });
+    expect(effectOptions(game)).not.toContain("big");
+    game.play({ type: "resolve-effect", optionId: "small" });
+
+    expect(ids(game.state.players.p2.trash)).toContain("small");
+  });
+
+  it("[Trigger] or rests one instead", () => {
+    const game = trigger("op18-101-trigger-rest");
+    game.play({ type: "resolve-effect", optionId: "rest" });
     expect(effectOptions(game)).not.toContain("big");
     game.play({ type: "resolve-effect", optionId: "small" });
 

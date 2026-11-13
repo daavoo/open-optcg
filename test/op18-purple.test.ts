@@ -15,8 +15,7 @@ import {
 } from "./support/index.js";
 
 /**
- * OP-18's Purple cards, OP18-060 to OP18-078, provisional (see
- * `packages/cards/src/op18.ts`).
+ * OP-18's Purple cards, OP18-060 to OP18-078.
  *
  * No shipped list plays them, so every position seats two starter decks on a
  * bare table and puts the card under test in a zone with a `with*` setter.
@@ -553,7 +552,7 @@ describe("OP18-067 Charlotte Smoothie", () => {
   });
 });
 
-describe("OP18-068 Señor Pink On Play", () => {
+describe("OP18-068 Senor Pink On Play", () => {
   covers("OP18-068", "[On Play]");
 
   it("pays DON!! −1 so an opposing cost-7 Character cannot be rested", () => {
@@ -580,7 +579,7 @@ describe("OP18-068 Señor Pink On Play", () => {
   });
 });
 
-describe("OP18-068 Señor Pink K.O. replacement", () => {
+describe("OP18-068 Senor Pink K.O. replacement", () => {
   covers("OP18-068", "static");
 
   const attacked = (seed: string) => {
@@ -912,23 +911,29 @@ describe("OP18-074 Counter", () => {
     ).build();
   };
 
-  const counterPower = (game: Game) => {
+  const toCounterStep = (game: Game) => {
     game.play({
       type: "attack",
       attackerInstanceId: "attacker",
       targetInstanceId: "p1-leader",
     });
     game.pass();
-    game.play({ summary: "Can You Please Sail" });
-    return game.state.activeAttack?.counterPower ?? 0;
+    return game;
   };
 
   it("adds +4000 with a cost-5 Stage out", () => {
-    expect(counterPower(underAttack("op18-074-stage", true))).toBe(4000);
+    const game = toCounterStep(underAttack("op18-074-stage", true));
+    game.play({ summary: "Can You Please Sail" });
+    expect(game.state.activeAttack?.counterPower).toBe(4000);
   });
 
-  it("adds nothing without one", () => {
-    expect(counterPower(underAttack("op18-074-none", false))).toBe(0);
+  it("is not offered without one, since its only clause would add nothing", () => {
+    const game = toCounterStep(underAttack("op18-074-none", false));
+    expect(
+      game
+        .legalActions("p1")
+        .filter((action) => action.type === "activate-counter-event"),
+    ).toHaveLength(0);
   });
 });
 

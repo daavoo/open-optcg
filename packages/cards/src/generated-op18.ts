@@ -11,7 +11,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Strike",
     rarity: "L",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -58,7 +58,7 @@ export const op18CardRecords = [
     types: ["Alabasta"],
     attribute: "Ranged",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -110,7 +110,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -144,7 +144,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-004",
@@ -157,7 +157,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -195,53 +195,6 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-005",
-    name: "Koza",
-    category: "character",
-    cost: 3,
-    power: 4000,
-    counter: 2000,
-    colors: ["Red"],
-    types: ["Alabasta"],
-    attribute: "Slash",
-    rarity: "C",
-    sourceMatch: false,
-    rules: {
-      keywords: [],
-      donRequirement: 0,
-      donDeckSize: 10,
-      hasTrigger: false,
-      hasCounterEvent: false,
-      hasPrintedEffect: true,
-      clauses: ["static"],
-      tokens: ["[Nefeltari Vivi]", "[Rush]"],
-      nameAliases: [],
-      identityWildcard: false,
-      cannotAttack: false,
-      mentionsCannotAttack: false,
-      survivesEmptyDeck: false,
-      winsOnEmptyDeck: false,
-      deckTypeRestriction: "",
-      deckEventCostLimit: null,
-      deckCostLimit: null,
-      openingStageType: "",
-      searchRevealPublic: false,
-      clauseSummaries: {},
-      copyLimit: 4,
-      eventRestricted: false,
-      triggerIsDeadWeightDebuff: false,
-      buffsAllCharacters: false,
-      koClauseMentionsLife: false,
-      costBoosts: [],
-      addsDonFromDonDeck: false,
-      eventConditionDependsOnPool: true,
-      removalText: false,
-      advantageText: false,
-    },
-    officialTextHash:
-      "2eef597c2c8951e3c272e3a25a2b919aa98a31abed9c8e210cf919891635b02b",
-  },
-  {
-    cardNumber: "OP18-006",
     name: "Kung Fu Jugon",
     category: "character",
     cost: 1,
@@ -251,7 +204,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -289,7 +242,54 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "6de8b55078ce801b6809930c62f6fee93b7ceb9ec788408cc108883f419794e3",
+      "e73b274d9474ba6331c98bad6a0284177138271b96dac18b5c659c1bfa452a2e",
+  },
+  {
+    cardNumber: "OP18-006",
+    name: "Koza",
+    category: "character",
+    cost: 3,
+    power: 4000,
+    counter: 2000,
+    colors: ["Red"],
+    types: ["Alabasta"],
+    attribute: "Slash",
+    rarity: "C",
+    sourceMatch: true,
+    rules: {
+      keywords: [],
+      donRequirement: 0,
+      donDeckSize: 10,
+      hasTrigger: false,
+      hasCounterEvent: false,
+      hasPrintedEffect: true,
+      clauses: ["static"],
+      tokens: ["[Nefeltari Vivi]", "[Rush]"],
+      nameAliases: [],
+      identityWildcard: false,
+      cannotAttack: false,
+      mentionsCannotAttack: false,
+      survivesEmptyDeck: false,
+      winsOnEmptyDeck: false,
+      deckTypeRestriction: "",
+      deckEventCostLimit: null,
+      deckCostLimit: null,
+      openingStageType: "",
+      searchRevealPublic: false,
+      clauseSummaries: {},
+      copyLimit: 4,
+      eventRestricted: false,
+      triggerIsDeadWeightDebuff: false,
+      buffsAllCharacters: false,
+      koClauseMentionsLife: false,
+      costBoosts: [],
+      addsDonFromDonDeck: false,
+      eventConditionDependsOnPool: true,
+      removalText: false,
+      advantageText: false,
+    },
+    officialTextHash:
+      "b6b0e9b6850c2a6175f2b98470c4b1f9e7908c98d79dfce43bcf97a01daa442b",
   },
   {
     cardNumber: "OP18-007",
@@ -302,7 +302,7 @@ export const op18CardRecords = [
     types: ["Alabasta", "Navy"],
     attribute: "Special",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -336,7 +336,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "b1c886dcc91167028988e424a8494b41b19317926dfeed3835fa841ecc902a5c",
+      "aab741c5aa0faa510999568980915c809fc774131c94f1a0ece19912a18f1aae",
   },
   {
     cardNumber: "OP18-008",
@@ -349,7 +349,7 @@ export const op18CardRecords = [
     types: ["Alabasta"],
     attribute: "Slash",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -388,7 +388,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "35d2eab4502532a2b7d45e604264dfd5b4ec1d7c8e8050ca72eb2748b4ce9f33",
+      "fd70659ff6707ea3438ccc72032a3c3169715db0630778610527eaafd4cd8384",
   },
   {
     cardNumber: "OP18-009",
@@ -401,7 +401,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Rush"],
       donRequirement: 0,
@@ -440,7 +440,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "72d47a6786f82f7b4e33b7eba7d2e606492eb0248102ea8009f0e577f000f949",
+      "e4d621907fcd3ec0678501c807db6d9b0f2ad6bc70102be068dfc60c51847e3e",
   },
   {
     cardNumber: "OP18-010",
@@ -453,7 +453,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -504,7 +504,7 @@ export const op18CardRecords = [
     types: ["Alabasta"],
     attribute: "Wisdom",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -542,7 +542,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "de05914fec71ec7a8eb68d21c5f71179facece9163450692937dc57704391ec7",
+      "fecb972eb9a5ecfbfb19e1b96c4d5fce8bfe2319f68da00f4956ab2474adc26f",
   },
   {
     cardNumber: "OP18-012",
@@ -555,7 +555,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Strike",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -593,7 +593,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "6c2826c6f9fc22234c77c760ba6ba626d32a00775555cebfb49c9718d40fdd5f",
+      "c8b0470c743c0903bd3fddb011c34eff2db53e080e2e11062f97352f7f56ebd2",
   },
   {
     cardNumber: "OP18-013",
@@ -606,7 +606,7 @@ export const op18CardRecords = [
     types: ["Alabasta"],
     attribute: "Slash",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -658,7 +658,7 @@ export const op18CardRecords = [
     types: ["Alabasta", "Whitebeard Pirates"],
     attribute: "Special",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -696,7 +696,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "cacc4c311dab637e6b2b62798c0bcd076c1e8f2b768986e31766dcc6647d605a",
+      "5f0c953c59e95c5a87757ccc4800f9290da2d629ad2ed6c7aad806c4507222c3",
   },
   {
     cardNumber: "OP18-015",
@@ -709,7 +709,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: "Strike",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -761,7 +761,7 @@ export const op18CardRecords = [
     types: ["Alabasta", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Banish"],
       donRequirement: 0,
@@ -812,7 +812,7 @@ export const op18CardRecords = [
     types: ["Alabasta", "Straw Hat Crew"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -863,7 +863,7 @@ export const op18CardRecords = [
     types: ["Alabasta"],
     attribute: null,
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -905,7 +905,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-019",
-    name: "Quaaack!!",
+    name: "Quack!!!",
     category: "event",
     cost: 1,
     power: null,
@@ -914,7 +914,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -956,7 +956,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "fc373ac5a28ee16de8afa8cea48fa29a53e1378af7d7856719f4121c8fb166d7",
+      "2b82dc8df3ed133b1f28df51f89becb6e1a5440b0df1a362743d1a090f040ce9",
   },
   {
     cardNumber: "OP18-020",
@@ -969,7 +969,7 @@ export const op18CardRecords = [
     types: ["Alabasta"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1021,7 +1021,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "The Franky Family", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "L",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1044,7 +1044,7 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[Activate: Main]": {
-          cost: "DON!!−1",
+          cost: "DON!! −1",
           hasOtherEffect: true,
         },
       },
@@ -1060,7 +1060,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "ac07e1e6a7a3a87ba2896a81c1b5e36d47ff20504f1cc341290b07866d66bab2",
+      "34d574e99516eb4374317317eb6e64f4e081a94764bd9a3348e05ce7026fc31a",
   },
   {
     cardNumber: "OP18-022",
@@ -1073,7 +1073,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "L",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 3,
@@ -1124,7 +1124,7 @@ export const op18CardRecords = [
     types: ["East Blue"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1162,7 +1162,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "cefddae8bec686bff10886af1b5881cf502300c80000f1195e6287008c6166bd",
+      "a83e1bd934d1a8fadc778af7610e8aee13a6f21acb6639d9f3c438802037c88f",
   },
   {
     cardNumber: "OP18-024",
@@ -1175,7 +1175,7 @@ export const op18CardRecords = [
     types: ["Merfolk", "Water Seven"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -1210,11 +1210,11 @@ export const op18CardRecords = [
       costBoosts: [],
       addsDonFromDonDeck: false,
       eventConditionDependsOnPool: false,
-      removalText: false,
+      removalText: true,
       advantageText: false,
     },
     officialTextHash:
-      "fff97684fb1a282864b20858656dc3e779562f9f685de9d15072d8485f17d1f7",
+      "2890660aa7f2c6fabd05aad424d27b8a66d49bd554d74284da3209fbf2d8492b",
   },
   {
     cardNumber: "OP18-025",
@@ -1227,7 +1227,7 @@ export const op18CardRecords = [
     types: ["Animal", "Water Seven"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1278,7 +1278,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1312,7 +1312,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "87f4b040076d501923f7ef7236c45f119ca2a94b4d127d6f7ffd5838a763eacf",
+      "ccd136a168878a1d84104495b52ef27207a7fef5a8ca0b0288d3949f8fa668c4",
   },
   {
     cardNumber: "OP18-027",
@@ -1325,7 +1325,7 @@ export const op18CardRecords = [
     types: ["Sniper Island", "Water Seven", "Straw Hat Crew"],
     attribute: "Slash/Ranged",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1379,7 +1379,7 @@ export const op18CardRecords = [
     types: ["Water Seven"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1431,7 +1431,7 @@ export const op18CardRecords = [
     types: ["Animal", "Water Seven", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Rush"],
       donRequirement: 0,
@@ -1482,7 +1482,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: "Wisdom",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1520,7 +1520,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "f4d7fdcc7cbade24acd65b7f7b81fdea7edbe8ed457b5a8c6f509e8417770dc9",
+      "22a4e1626e00631880a09aa2dccf36ced7f7fdb2b05b3043b94dfea260b2db46",
   },
   {
     cardNumber: "OP18-031",
@@ -1533,7 +1533,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: "Wisdom",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1587,7 +1587,7 @@ export const op18CardRecords = [
     types: ["East Blue", "Buggy Pirates"],
     attribute: "Slash",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1628,7 +1628,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "c7be1290ae6080dc00a3bf8405a74858e9cd9721ca34eed189569d25b65f2a4e",
+      "ff640a88f5c80c5688df6a24e16e9c8807a5546794ac3ef4d0f1445ef5c369f5",
   },
   {
     cardNumber: "OP18-033",
@@ -1641,7 +1641,7 @@ export const op18CardRecords = [
     types: ["Water Seven"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -1664,7 +1664,7 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[End of Your Turn]": {
-          cost: "Trash this character",
+          cost: "Trash this Character",
           hasOtherEffect: true,
         },
       },
@@ -1676,11 +1676,11 @@ export const op18CardRecords = [
       costBoosts: [],
       addsDonFromDonDeck: false,
       eventConditionDependsOnPool: false,
-      removalText: false,
+      removalText: true,
       advantageText: false,
     },
     officialTextHash:
-      "ebd7674364e7fab57823bc702d1d6a3f14cb1fba2a53effb5d83dbbbe02ea298",
+      "e41d68ac71a5b4b6a3ad0cc658df38a2d0580c4c159b0a1669e95cc0707de7c7",
   },
   {
     cardNumber: "OP18-034",
@@ -1693,7 +1693,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "The Franky Family", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1735,7 +1735,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-035",
-    name: "Michael and Hoichael",
+    name: "Michael & Hoichael",
     category: "character",
     cost: 3,
     power: 5000,
@@ -1744,7 +1744,7 @@ export const op18CardRecords = [
     types: ["Water Seven"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1778,7 +1778,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-036",
@@ -1791,7 +1791,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1842,8 +1842,8 @@ export const op18CardRecords = [
     colors: ["Green"],
     types: ["Animal", "Water Seven"],
     attribute: "Strike",
-    rarity: "C",
-    sourceMatch: false,
+    rarity: "UC",
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -1881,11 +1881,11 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "f807fbc6e56d1ea51484888004b275bbb84222677386575138c2a975b829d4ce",
+      "b17a3e36d958c2bd92dcae7bc043a7e9c1d002efa208bf53c8c23a40b0bc8786",
   },
   {
     cardNumber: "OP18-038",
-    name: "Shoot Down That Flag",
+    name: "Shoot Down That Flag.",
     category: "event",
     cost: 1,
     power: null,
@@ -1894,7 +1894,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1945,7 +1945,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -1968,6 +1968,7 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[Counter]": {
+          power: 2000,
           hasOtherEffect: true,
         },
       },
@@ -1983,7 +1984,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "af827911d4b54c42dafe97995971b7e9eb6761f8a7d599cfee2b0da472b54864",
+      "1fe6f89c49328f1fb8c6f796d5c23c3cd723c5727abe9ee28a80e33f826ae0c1",
   },
   {
     cardNumber: "OP18-040",
@@ -1996,7 +1997,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: null,
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2047,7 +2048,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Wisdom",
     rarity: "L",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2094,7 +2095,7 @@ export const op18CardRecords = [
     types: ["Fish-Man", "Dressrosa", "Revolutionary Army"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2135,11 +2136,11 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "ce1b6d62efb8161801754edae17521fd236c1528fde2cb21ce993bd21072d559",
+      "0cdd5620eebfba82a10d0796d716aa5756d089f18e2cf63d609d7daf7cc31d9b",
   },
   {
     cardNumber: "OP18-043",
-    name: "Banana Gator",
+    name: "Accelegator",
     category: "character",
     cost: 4,
     power: 6000,
@@ -2148,7 +2149,7 @@ export const op18CardRecords = [
     types: ["Animal", "Alabasta", "Baroque Works"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2182,7 +2183,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-044",
@@ -2195,7 +2196,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2237,7 +2238,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-045",
-    name: "Mr. Prince",
+    name: "Mr.Prince",
     category: "character",
     cost: 3,
     power: 4000,
@@ -2245,8 +2246,8 @@ export const op18CardRecords = [
     colors: ["Blue"],
     types: ["Alabasta", "Straw Hat Crew"],
     attribute: "Strike",
-    rarity: "UC",
-    sourceMatch: false,
+    rarity: "C",
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2280,7 +2281,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "8755e3e0f775e8c12aa2eb2abc11f64504c03eed5a41b1f1193132325082aaba",
+      "62ddeaa603a337fc36f1735bde08fb7ae0e70cd9da0b2f896a1919b73d51f083",
   },
   {
     cardNumber: "OP18-046",
@@ -2291,9 +2292,9 @@ export const op18CardRecords = [
     counter: null,
     colors: ["Blue"],
     types: ["The Seven Warlords of the Sea", "Baroque Works"],
-    attribute: "Wisdom/Special",
+    attribute: "Special/Wisdom",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2335,11 +2336,11 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "697ced456d097e8dbe5fcb4352088a7c54852f6083d09a00a6ec2fc9c2bb4e72",
+      "22619bc9caf98868a7489e6f55035f330d19301b5c64874f0e18976be164177a",
   },
   {
     cardNumber: "OP18-047",
-    name: "Mr.1 (Daz.Bonez)",
+    name: "Mr.1(Daz.Bonez)",
     category: "character",
     cost: 2,
     power: 3000,
@@ -2348,7 +2349,7 @@ export const op18CardRecords = [
     types: ["Cross Guild", "Former Baroque Works"],
     attribute: "Slash",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2399,7 +2400,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Slash",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Rush"],
       donRequirement: 0,
@@ -2437,11 +2438,11 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "a354d77fd54bec97e245860a8ccd5f80dd4e84c9509c26918e8a63dc9de86073",
+      "8d37f481cc75473f04149adf986878c3878a2de9727125ef27cd696294d6ae03",
   },
   {
     cardNumber: "OP18-049",
-    name: "Mr.2.Bon.Kurei (Bentham)",
+    name: "Mr.2.Bon.Kurei(Bentham)",
     category: "character",
     cost: 5,
     power: 6000,
@@ -2450,7 +2451,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2470,7 +2471,7 @@ export const op18CardRecords = [
       deckEventCostLimit: null,
       deckCostLimit: null,
       openingStageType: "",
-      searchRevealPublic: false,
+      searchRevealPublic: true,
       clauseSummaries: {
         "[On Play]": {
           hasOtherEffect: true,
@@ -2488,7 +2489,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "93c844384a00f07c6d40efa846d35d7127d8fe11f6b3d3c65ce246b3f3f63d87",
+      "e759bfe6280cbb5ef04b66789166364030d9af5b0f252bdb6b9ee1333b662ab3",
   },
   {
     cardNumber: "OP18-050",
@@ -2501,7 +2502,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Special/Wisdom",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -2539,7 +2540,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "ad954e67c3a8dc7ab41ce07636e9af0ab2ee80138512881a96c878b06560d8ea",
+      "9cb74e5c49a42200a7fdf58c2f44113690f7cbf46bf17d1d54dac33eed28973a",
   },
   {
     cardNumber: "OP18-051",
@@ -2550,9 +2551,9 @@ export const op18CardRecords = [
     counter: 1000,
     colors: ["Blue"],
     types: ["Baroque Works"],
-    attribute: "Strike/Slash",
+    attribute: "Slash/Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2604,7 +2605,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Strike/Special",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2646,7 +2647,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-053",
-    name: "Mr.7 & Miss.Fathersday",
+    name: "Mr.7 & Miss.Father'sDay",
     category: "character",
     cost: 2,
     power: 3000,
@@ -2655,7 +2656,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Ranged",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2693,11 +2694,11 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "1de347bbd20d0862d17022e1fe0b1f1e2c994f0dd6693280fa8b38d78c469698",
+      "9125559429bd6244c7132f4c3406e578efcb97aa83dbe26ca3a61634a9481f91",
   },
   {
     cardNumber: "OP18-054",
-    name: "Mr.8 & Miss.Monday",
+    name: "Mr.8 & Ms. Monday",
     category: "character",
     cost: 2,
     power: 3000,
@@ -2706,7 +2707,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: "Strike/Ranged",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2744,7 +2745,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "c9f2fd2101940c4c3776682554f4de9b601ee2b6ecc6c0c40a6b0450852f7ea2",
+      "70786384813a8783dd07a016cc3c86bdb1c7730f04f1205eb74a01f53befeaeb",
   },
   {
     cardNumber: "OP18-055",
@@ -2755,9 +2756,9 @@ export const op18CardRecords = [
     counter: 1000,
     colors: ["Blue"],
     types: ["Baroque Works"],
-    attribute: "Strike/Slash",
+    attribute: "Slash/Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2808,7 +2809,7 @@ export const op18CardRecords = [
     types: ["Animal", "Baroque Works"],
     attribute: "Wisdom",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 1,
@@ -2860,7 +2861,7 @@ export const op18CardRecords = [
     types: ["Baroque Works"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2883,7 +2884,7 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[Main]": {
-          cost: "Rest 3 DON!! cards",
+          cost: "Rest 3 DON!!",
           hasOtherEffect: true,
         },
         "[Counter]": {
@@ -2903,11 +2904,11 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "04a9d287fcafc34ad0831e9d961d4c749f4b7274b0b796d7b23797412d4832e6",
+      "9b8c8769ec8518927221c9cc87ed5e318227ee0fb6020c208cfb0f8bed1837d6",
   },
   {
     cardNumber: "OP18-058",
-    name: "This Kingdom Is Doomed. You Can't Save It!",
+    name: "This Kingdom is Doomed. You Can't Save It!",
     category: "event",
     cost: 3,
     power: null,
@@ -2916,7 +2917,7 @@ export const op18CardRecords = [
     types: ["The Seven Warlords of the Sea", "Baroque Works"],
     attribute: null,
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -2968,7 +2969,7 @@ export const op18CardRecords = [
     types: ["The Seven Warlords of the Sea", "Baroque Works"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3025,7 +3026,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "Special",
     rarity: "L",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3077,7 +3078,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Galley-La Company"],
     attribute: "Wisdom",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3115,20 +3116,20 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "eb0f6896baee20cf0eccb0d8821eb5bd536ef0d5d04978eb93ce86edee425f7f",
+      "42b5edb96860a4f00cb54a56478ef73baff116254f63b5808243a61d2331a6d5",
   },
   {
     cardNumber: "OP18-062",
-    name: "Oimo and Kashii",
+    name: "Oimo & Kashii",
     category: "character",
     cost: 8,
     power: 10000,
     counter: 1000,
     colors: ["Purple"],
-    types: ["Giants", "World Government"],
+    types: ["Giant", "World Government"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3162,7 +3163,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-063",
@@ -3175,7 +3176,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "The Franky Family"],
     attribute: "Slash",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3226,7 +3227,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "Special",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3272,7 +3273,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d04bdab983510ae689ea29e81b9262606fc705a2028c8d18f4756e0f0d3925b0",
+      "10da2662d8e8d004da0facf88ff284fbb8cf14c9196c91a2cfb2c7b14e48006d",
   },
   {
     cardNumber: "OP18-065",
@@ -3285,7 +3286,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "?",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -3308,7 +3309,7 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[On Play]": {
-          cost: "DON!!−1",
+          cost: "DON!! −1",
           hasOtherEffect: true,
         },
       },
@@ -3324,7 +3325,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d20897dc49cccd24ccdd479107ae7600c3eba1414f43a8d9f9c6da73ac2bec22",
+      "9f9d1ffb55105267221d412b7010a22bcb69d9ae99828984048e5fee9c65a677",
   },
   {
     cardNumber: "OP18-066",
@@ -3337,7 +3338,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "The Franky Family"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3375,7 +3376,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "9c0243cdcd315920cfc50361ca3d907120e790258e888d0f78032beb031febcd",
+      "a283db88c71d809f9045ed873a207e210eccf19abdc17a876c0e2a0ccdfde307",
   },
   {
     cardNumber: "OP18-067",
@@ -3387,8 +3388,8 @@ export const op18CardRecords = [
     colors: ["Purple"],
     types: ["Big Mom Pirates"],
     attribute: "Slash",
-    rarity: "UC",
-    sourceMatch: false,
+    rarity: "C",
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3431,7 +3432,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-068",
-    name: "Señor Pink",
+    name: "Senor Pink",
     category: "character",
     cost: 8,
     power: 9000,
@@ -3440,7 +3441,7 @@ export const op18CardRecords = [
     types: ["Donquixote Pirates"],
     attribute: "Special",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3479,7 +3480,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "8892ff9914a096528d2bfbfbbbb576c813cc07e06dc1476778809a517e2d91b1",
+      "e15e438f81d6632f1d16068f49bb9a853b1d53bcf21c473a9ef505ed74ac4d7a",
   },
   {
     cardNumber: "OP18-069",
@@ -3492,7 +3493,7 @@ export const op18CardRecords = [
     types: ["Animal", "Water Seven", "The Franky Family"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3539,7 +3540,7 @@ export const op18CardRecords = [
     types: ["Fish-Man", "Water Seven"],
     attribute: "Wisdom",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3591,7 +3592,7 @@ export const op18CardRecords = [
     types: ["Donquixote Pirates"],
     attribute: "Special",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3600,7 +3601,7 @@ export const op18CardRecords = [
       hasCounterEvent: false,
       hasPrintedEffect: true,
       clauses: ["[Opponent's Turn]", "static"],
-      tokens: ["[Opponent's Turn]", "[Sugar]", "[Blocker]"],
+      tokens: ["[Once Per Turn]", "[Opponent's Turn]", "[Blocker]"],
       nameAliases: [],
       identityWildcard: false,
       cannotAttack: false,
@@ -3625,11 +3626,11 @@ export const op18CardRecords = [
       costBoosts: [],
       addsDonFromDonDeck: false,
       eventConditionDependsOnPool: false,
-      removalText: true,
+      removalText: false,
       advantageText: false,
     },
     officialTextHash:
-      "27e644c4c4f16fa6fd250147bfb3cb8ddb7ddb6060d91ec86f8e505e25d38d4e",
+      "2510e9b39096414c8990b63711e777b8cbf97a25ad79c63c1292a265058514ab",
   },
   {
     cardNumber: "OP18-072",
@@ -3642,7 +3643,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "The Franky Family"],
     attribute: "Slash",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -3680,7 +3681,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "b9b3174aeb045cf701a0fb847b6fd20cf7de6e340279695d881e5e823768709c",
+      "0a3dc2c238ee06d683a542c6322fa446d1d8ea662576b906ee1c8b0a97de3e9d",
   },
   {
     cardNumber: "OP18-073",
@@ -3693,7 +3694,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Navy"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3727,11 +3728,11 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-074",
-    name: "Can You Please Sail On The Ship I Made?",
+    name: "Can You Please Sail on the Ship I Made?!",
     category: "event",
     cost: 1,
     power: null,
@@ -3740,7 +3741,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "The Franky Family"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3763,7 +3764,8 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[Counter]": {
-          hasOtherEffect: true,
+          power: 4000,
+          hasOtherEffect: false,
         },
       },
       copyLimit: 4,
@@ -3778,7 +3780,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "2f99d5510dd78eb8af75fde898a8582b76163423b0813e3ab5b6aadd03794374",
+      "c6ca20671784d1c3b5fd88c003dcbb829144f14566ead6be0b360d16604be289",
   },
   {
     cardNumber: "OP18-075",
@@ -3791,7 +3793,7 @@ export const op18CardRecords = [
     types: ["Straw Hat Crew"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3814,7 +3816,7 @@ export const op18CardRecords = [
       searchRevealPublic: false,
       clauseSummaries: {
         "[Activate: Main]": {
-          cost: "DON!!−2, you may rest this stage",
+          cost: "DON!! −2, you may rest this Stage",
           hasOtherEffect: true,
         },
         "[On Play]": {
@@ -3833,7 +3835,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "22c3dae2b98250671b0d60b4fd55fef5f36e83f27315eb4695107fe2b15f530a",
+      "adfc23032252bb4ebd820291a42bab6d22bf087690d815ed829fd83731051e22",
   },
   {
     cardNumber: "OP18-076",
@@ -3846,7 +3848,7 @@ export const op18CardRecords = [
     types: ["Straw Hat Crew"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3892,7 +3894,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-077",
-    name: "White Hobby Horse",
+    name: "White Hobby Horse 1",
     category: "stage",
     cost: 5,
     power: null,
@@ -3901,7 +3903,7 @@ export const op18CardRecords = [
     types: ["Straw Hat Crew"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -3937,13 +3939,13 @@ export const op18CardRecords = [
       buffsAllCharacters: false,
       koClauseMentionsLife: false,
       costBoosts: [],
-      addsDonFromDonDeck: true,
+      addsDonFromDonDeck: false,
       eventConditionDependsOnPool: false,
       removalText: false,
       advantageText: true,
     },
     officialTextHash:
-      "af552bf38f5a5019db3b655fff7132b69b5abd01bd00375e7bd8361960ee30d6",
+      "e33d99240d8106aad771c6e7679d84408eef500e65e21b1477ff8c3e7ce4954d",
   },
   {
     cardNumber: "OP18-078",
@@ -3956,7 +3958,7 @@ export const op18CardRecords = [
     types: ["Straw Hat Crew"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4011,7 +4013,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Slash",
     rarity: "L",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4063,7 +4065,7 @@ export const op18CardRecords = [
     types: ["Egghead", "Blackbeard Pirates"],
     attribute: "Ranged",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4075,7 +4077,7 @@ export const op18CardRecords = [
       tokens: [
         "[Your Turn]",
         "[Once Per Turn]",
-        "[Marshall D. Teach]",
+        "[Marshall.D.Teach]",
         "[Van Augur]",
         "[On K.O.]",
       ],
@@ -4110,7 +4112,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "6554a1be9078d48b481f1170e3803591e40dfa5742b0aa5e3ce3a26ad7fa0f31",
+      "0ccd101323496c5d0ea5bd7cae2f3ad8a42c268e4d3213cab4008c7005fa9657",
   },
   {
     cardNumber: "OP18-081",
@@ -4123,7 +4125,7 @@ export const op18CardRecords = [
     types: ["Giant", "Thriller Bark Pirates"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4157,7 +4159,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "53fef8e81b8aed8a5561775d1169cdc1cce402740f84a6b08dbb61890364fd06",
+      "38b1e38f86d378b36f9837739cb824ef474ab581e788659d674555eb698d91f3",
   },
   {
     cardNumber: "OP18-082",
@@ -4170,7 +4172,7 @@ export const op18CardRecords = [
     types: ["Egghead", "Blackbeard Pirates"],
     attribute: "Special",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4225,7 +4227,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "Special",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4270,7 +4272,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "9eb41fb78b3b850d9e772d58c703ea62be4bf393b6a55beb76dbee16bc0751e6",
+      "3a416ae16e918cb6241cbc54f7fd196505c0b781c964e1e023d426696cbda76c",
   },
   {
     cardNumber: "OP18-084",
@@ -4283,7 +4285,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "Special",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4325,7 +4327,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "d45a37d995b056aec1e3276a86f1a6c98cb7ef1bf8a21f2d4639f14bcd9e7f5d",
+      "96affa1609911f5d84790be854e2c7c8a5d5053ebde8751c6b43b3a12e4cee7e",
   },
   {
     cardNumber: "OP18-085",
@@ -4338,7 +4340,7 @@ export const op18CardRecords = [
     types: ["Holy Knights of God"],
     attribute: "Slash",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4383,7 +4385,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "9940bf3eb50ba260d7fa575e44f7a00e1b608c5434c7ce03d8756e623f366dd5",
+      "a4330fa82307321902fa5e8d67bd60bc877ca1c215cb472edb8c98c2d52cca12",
   },
   {
     cardNumber: "OP18-086",
@@ -4396,7 +4398,7 @@ export const op18CardRecords = [
     types: ["Giant", "Elbaph", "New Giant Pirates"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4447,7 +4449,7 @@ export const op18CardRecords = [
     types: ["Giant", "Elbaph", "New Giant Pirates"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4472,7 +4474,7 @@ export const op18CardRecords = [
       copyLimit: 4,
       eventRestricted: false,
       triggerIsDeadWeightDebuff: false,
-      buffsAllCharacters: true,
+      buffsAllCharacters: false,
       koClauseMentionsLife: false,
       costBoosts: [12],
       addsDonFromDonDeck: false,
@@ -4481,7 +4483,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "a28ae258226c6a5d337ad5f423d55b11866a45394a677fe265e715469170f9a4",
+      "bb0e226bd9f9229adbc983be3bf6df7df1f7aa582fea13f824d07190ee7f02f9",
   },
   {
     cardNumber: "OP18-088",
@@ -4494,7 +4496,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "Special",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4552,7 +4554,7 @@ export const op18CardRecords = [
     types: ["Giant", "Elbaph", "Giant Pirates"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4604,7 +4606,7 @@ export const op18CardRecords = [
     types: ["Straw Hat Crew"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4638,7 +4640,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-091",
@@ -4651,7 +4653,7 @@ export const op18CardRecords = [
     types: ["Giant", "Elbaph", "Giant Pirates"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4703,7 +4705,7 @@ export const op18CardRecords = [
     types: ["Elbaph", "Straw Hat Crew"],
     attribute: "Slash",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4750,7 +4752,7 @@ export const op18CardRecords = [
     types: ["Elbaph"],
     attribute: "Special",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -4797,7 +4799,7 @@ export const op18CardRecords = [
     types: ["Elbaph", "The Four Emperors", "Straw Hat Crew"],
     attribute: null,
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4839,7 +4841,7 @@ export const op18CardRecords = [
   },
   {
     cardNumber: "OP18-095",
-    name: "I Will Be Late!!! I Won't Make It!",
+    name: "I'm Late, I'm Very Late!!",
     category: "event",
     cost: 1,
     power: null,
@@ -4847,8 +4849,8 @@ export const op18CardRecords = [
     colors: ["Black"],
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: null,
-    rarity: "C",
-    sourceMatch: false,
+    rarity: "UC",
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4886,7 +4888,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "79da0b326e5190bd53668e370eed1c9ba20fe6d6a4ae0c4e189983e68f74aec7",
+      "70af3d6494f62bf25675825fd08ce14d4ab77db78675c7af6755e641b5caa368",
   },
   {
     cardNumber: "OP18-096",
@@ -4899,7 +4901,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4942,11 +4944,11 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "f12d62774944f209de7bc95727c128629b719ebe50d8b91db92b57be742750a2",
+      "0a5adfd233d1386f1208174ce180f3bcf7236693bc335167bc29e05e3d8cb3ae",
   },
   {
     cardNumber: "OP18-097",
-    name: "Abyss",
+    name: "Abyss Pentagram",
     category: "stage",
     cost: 1,
     power: null,
@@ -4955,7 +4957,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God", "Five Elders"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -4993,7 +4995,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "e9b292dcf4eaaaa4d55623289d96a6aed6bf61e0f2e15608924828e4e9cd7dc9",
+      "a0884e180a6f7115a6434c76d59850f72ea311ae10c8df8134fb3d5d152c0b9d",
   },
   {
     cardNumber: "OP18-098",
@@ -5003,10 +5005,10 @@ export const op18CardRecords = [
     power: 7000,
     counter: 2000,
     colors: ["Yellow"],
-    types: ["Navy", "Vice Admiral"],
+    types: ["Vice Admiral", "Navy"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Unblockable"],
       donRequirement: 0,
@@ -5053,7 +5055,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Slash",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5091,7 +5093,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "a30139a426f7d3b3521febae706de29d47f8a534ce86081dbc2af47eec50fcdc",
+      "9b9a8d9bcd635eaf3569bb99ef51af1331f4dc0e11a7e72ef7dab92a896d4f76",
   },
   {
     cardNumber: "OP18-100",
@@ -5104,7 +5106,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Special",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5142,7 +5144,7 @@ export const op18CardRecords = [
       advantageText: true,
     },
     officialTextHash:
-      "a2397a3365a1b0e56b4c4bcda9964355397577013e678313a1b40c79bfa85a47",
+      "c267edf00557ca1c04e5945a8396a0c337c5b5d9f8e3e39cf55f820dfb730590",
   },
   {
     cardNumber: "OP18-101",
@@ -5155,7 +5157,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Strike",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5206,7 +5208,7 @@ export const op18CardRecords = [
     types: ["CP6"],
     attribute: "Strike",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5240,7 +5242,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "d87fdabd77d954b58562e20599a0630ad214a45b5d4e19f2403cc3a08b358745",
+      "a468ec3de8410c8c6ce0342ed51591beda49466039aa27803643533560c2516c",
   },
   {
     cardNumber: "OP18-103",
@@ -5253,7 +5255,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5291,7 +5293,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "89f9498840eadd80f3f07efd29c54915c233d3d9f8fa97cbcfea76cad23f2559",
+      "9e8b6f92786ce21bf4f3ebba8290d3db6cd3b55b66e850d62c65e7be871dd035",
   },
   {
     cardNumber: "OP18-104",
@@ -5301,10 +5303,10 @@ export const op18CardRecords = [
     power: 7000,
     counter: 2000,
     colors: ["Yellow"],
-    types: ["Navy", "Vice Admiral"],
+    types: ["Vice Admiral", "Navy"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Banish"],
       donRequirement: 0,
@@ -5351,7 +5353,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Slash",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5385,7 +5387,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "ef2f5cd8fd70a6f1282069d5249b309f897a8a3315f43a8671f2edc2e603bcb5",
+      "c00a3c4511309acccd8ea2f14493d4dafb8c67dd41c7d755c1fa1bfea9335eda",
   },
   {
     cardNumber: "OP18-106",
@@ -5398,7 +5400,7 @@ export const op18CardRecords = [
     types: ["Vice Admiral", "Navy"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Double Attack"],
       donRequirement: 0,
@@ -5445,7 +5447,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Ranged",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -5479,7 +5481,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "ab041779943cea83151c1eb3e4362124d678fa901a3a62207b20615751c870b0",
+      "4068c08c1ab3bedfb2ca7757388cbe2310008a041e92d41a2548634a79772c23",
   },
   {
     cardNumber: "OP18-108",
@@ -5492,7 +5494,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Slash",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5548,7 +5550,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Strike",
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -5582,7 +5584,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "7a9132a54aab973efab97d4ed4875b57f32ec72ecfdd643d55444b364eb9ea5e",
+      "658f320d27e4bb2b89859572879298427e0769335f15bb363a1eb8edde2c15c0",
   },
   {
     cardNumber: "OP18-110",
@@ -5595,7 +5597,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Strike",
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5646,7 +5648,7 @@ export const op18CardRecords = [
     types: ["Vice Admiral", "Navy"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Rush"],
       donRequirement: 0,
@@ -5680,7 +5682,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "3532f05b9c75117fb2f869c86793bfd048bf7615edcbe73baeb30a03a60c50e8",
+      "1baad808d15719bd776aa271067074a6a3a1db8f2611f217f7024d0f5290c846",
   },
   {
     cardNumber: "OP18-112",
@@ -5693,7 +5695,7 @@ export const op18CardRecords = [
     types: ["Vice Admiral", "Navy"],
     attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: ["Blocker"],
       donRequirement: 0,
@@ -5740,7 +5742,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: "Strike",
     rarity: "SR",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5781,7 +5783,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "fbe8ad42cccd791d6728aaa3811468229471edc2f80d1412d9929bc9bf275223",
+      "e32b77377a89e07d6d3e223362b9b9fd22ac7e8b995dbb4691cabaa1232314be",
   },
   {
     cardNumber: "OP18-114",
@@ -5792,9 +5794,9 @@ export const op18CardRecords = [
     counter: null,
     colors: ["Yellow"],
     types: ["CP7"],
-    attribute: "Strike",
+    attribute: "Slash",
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5832,7 +5834,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "6e649f49d1d01c02b65244f0a6559123c9b3e6aeff4a0c45a4264dc2590d8c6a",
+      "2a40ae527aa83599e4d6302683ec7f02267fb3398e459deb721f8297ba7ecd9a",
   },
   {
     cardNumber: "OP18-115",
@@ -5845,7 +5847,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: null,
     rarity: "UC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5883,7 +5885,7 @@ export const op18CardRecords = [
       advantageText: false,
     },
     officialTextHash:
-      "8209b69aa64188279b94bdc964094c0d4aa6e04accd7582083703bc8cb7dc093",
+      "5e604f97e0e732f551e07c4860431e638ea1be36465f09fc60ac86204dabdc6e",
   },
   {
     cardNumber: "OP18-116",
@@ -5896,7 +5898,7 @@ export const op18CardRecords = [
     types: ["CP9"],
     attribute: null,
     rarity: "C",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -5949,7 +5951,7 @@ export const op18CardRecords = [
     types: ["Navy", "CP9"],
     attribute: null,
     rarity: "R",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -6001,7 +6003,7 @@ export const op18CardRecords = [
     types: ["Water Seven", "Straw Hat Crew"],
     attribute: "Strike",
     rarity: "SEC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,
@@ -6055,7 +6057,7 @@ export const op18CardRecords = [
     types: ["Celestial Dragons", "Holy Knights of God"],
     attribute: "Slash",
     rarity: "SEC",
-    sourceMatch: false,
+    sourceMatch: true,
     rules: {
       keywords: [],
       donRequirement: 0,

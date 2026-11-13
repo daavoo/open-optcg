@@ -17,8 +17,7 @@ import {
 } from "./support/index.js";
 
 /**
- * OP-18's Black cards, plus the Red/Black Event OP18-095 and OP18-119 Saint
- * Shamrock.
+ * OP-18's Black cards, OP18-080 to OP18-097 and OP18-119 Saint Shamrock.
  *
  * No shipped list plays them, so every position seats two starter decks and
  * puts the card under test in a zone with a `with*` setter. Where a clause is
@@ -271,7 +270,7 @@ describe("OP18-082 Catarina Devon", () => {
 
   covers("OP18-082", "[On K.O.]");
 
-  it("comes back active for a card from hand behind a {Blackbeard Pirates} Leader", () => {
+  it("comes back rested for a card from hand behind a {Blackbeard Pirates} Leader", () => {
     const game = defending("op18-082-ko")
       .withLeader("p1", TEACH)
       .withHand("p1", filler("hand", 1))
@@ -284,7 +283,7 @@ describe("OP18-082 Catarina Devon", () => {
     const devon = game.state.players.p1.board.find(
       (card) => card.instanceId === "devon",
     );
-    expect(devon?.rested).toBe(false);
+    expect(devon?.rested).toBe(true);
   });
 
   it("spends the card and stays in the trash behind another Leader", () => {
@@ -783,7 +782,7 @@ describe("OP18-094 Hee Hee Hee!! I Smell Adventure!!", () => {
   });
 });
 
-describe("OP18-095 I Will Be Late!!! I Won't Make It!", () => {
+describe("OP18-095 I'm Late, I'm Very Late!!", () => {
   covers("OP18-095", "[Main]");
 
   it("adds a [Sleeptids] of the top 5 behind a {Celestial Dragons} Leader", () => {
@@ -904,7 +903,7 @@ describe("OP18-096 I'll Make the Call", () => {
   });
 });
 
-describe("OP18-097 Abyss", () => {
+describe("OP18-097 Abyss Pentagram", () => {
   covers("OP18-097", "static");
 
   it("takes 1 off a Holy Knight played from hand behind a {Celestial Dragons} Leader", () => {
