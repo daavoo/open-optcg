@@ -10,8 +10,9 @@ import * as footer from "./footer.js";
  * only its own work -- and it is not played without them: until a pack is in,
  * this screen is the whole app (see `assetsReady()` in ../assets.ts). The
  * player runs the "Get cards" bookmark on Bandai's card list
- * (../get-cards-bookmarklet.ts), which saves the pack as a zip, and hands
- * that zip to the page: one control, the same on every device.
+ * (../get-cards-bookmarklet.ts). Opened from here, the card list sends the
+ * pack straight back to this tab; opened any other way, it saves a zip the
+ * player hands to the page, which is also how a phone gets the cards.
  *
  * The same status line and control are printed in the Configure dialog once a
  * pack is in, which is where a newer one is loaded after a new set -- or just
@@ -49,6 +50,22 @@ const ZIP_CONTROL = `<label class="home-assets-load">
       <input type="file" data-asset-zip accept=".zip,application/zip,application/x-zip-compressed" hidden />
     </label>`;
 
+/** The steps and the zip control, wherever the gate's ask is printed. */
+function renderSteps(ctx: AssetGateContext): string {
+  return `<ol>
+          <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em>
+            <span class="asset-gate-aside">No bookmarks bar? Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> on a Mac) to show it. Can't drag? <button class="home-assets-help" type="button" data-copy-bookmarklet>Copy the bookmark</button>, add a new bookmark and paste it as the address (URL). <span data-copy-status aria-live="polite"></span></span>
+            <textarea class="asset-gate-code" data-bookmarklet-code readonly rows="3" hidden aria-label="The Get cards bookmark: copy this and paste it as a bookmark's address"></textarea></li>
+          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> from this button, and click the bookmark there. It takes a few minutes: you can switch to other tabs meanwhile. If that tab is closed, run the bookmark again and it carries on where it stopped.</li>
+          <li>When it finishes, the cards load into this page by themselves. If you opened the card list some other way, it saves a zip instead: choose <strong>Load asset pack (.zip)</strong> below and pick it.</li>
+        </ol>
+        <p>On a phone or tablet, where bookmarks are awkward, run the bookmark on a computer, save the zip from its panel, and move it over. The browser keeps the cards for your next visit. Nothing is uploaded anywhere.</p>
+        <div class="home-assets">
+          ${renderStatus(ctx)}
+          ${ZIP_CONTROL}
+        </div>`;
+}
+
 /** The whole app until a pack is in. */
 export function render(ctx: AssetGateContext): string {
   return `
@@ -61,21 +78,30 @@ export function render(ctx: AssetGateContext): string {
       </header>
       <section class="asset-gate-panel" aria-label="Card text and art">
         <h1>Load the card art and text</h1>
-        <ol>
-          <li>Drag <a class="home-assets-load asset-gate-bookmarklet" data-get-cards draggable="true">${icon("bookmark-plus", "")}<span>Get cards</span></a> to your bookmarks bar. <em data-get-cards-hint hidden>Drag it, rather than click it here: it runs on Bandai's page.</em>
-            <span class="asset-gate-aside">No bookmarks bar? Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> on a Mac) to show it. Can't drag? <button class="home-assets-help" type="button" data-copy-bookmarklet>Copy the bookmark</button>, add a new bookmark and paste it as the address (URL). <span data-copy-status aria-live="polite"></span></span>
-            <textarea class="asset-gate-code" data-bookmarklet-code readonly rows="3" hidden aria-label="The Get cards bookmark: copy this and paste it as a bookmark's address"></textarea></li>
-          <li>Open <button class="home-assets-help" type="button" data-bandai-cardlist>Bandai's card list</button> and click the bookmark there. It saves the cards as a zip. That takes a few minutes: you can switch to other tabs meanwhile. If that tab is closed, run the bookmark again and it carries on where it stopped.</li>
-          <li>Back here, choose <strong>Load asset pack (.zip)</strong> below and pick that zip.</li>
-        </ol>
-        <p>On a phone or tablet, where bookmarks are awkward, do the first two steps on a computer and move the zip over. The browser keeps the cards for your next visit. Nothing is uploaded anywhere.</p>
-        <div class="home-assets">
-          ${renderStatus(ctx)}
-          ${ZIP_CONTROL}
-        </div>
+        ${renderSteps(ctx)}
       </section>
       ${footer.render()}
     </main>`;
+}
+
+/** The dialog id {@link renderDialog} prints, for `toggleAppDialog`. */
+export const GET_CARDS_DIALOG = "get-cards-dialog";
+
+/**
+ * The same ask as a dialog, for a page that shows itself before the cards are
+ * in (the pre-release lobby) and asks for them when the player goes to play.
+ */
+export function renderDialog(ctx: AssetGateContext): string {
+  return `<div class="app-dialog-backdrop" id="${GET_CARDS_DIALOG}" hidden>
+    <div class="app-dialog asset-gate-panel asset-gate-dialog" role="dialog" aria-modal="true" aria-labelledby="${GET_CARDS_DIALOG}-title">
+      <div class="app-dialog-head">
+        <h2 id="${GET_CARDS_DIALOG}-title">Get the card art and text</h2>
+        <button class="text-button" type="button" data-close-dialog="${GET_CARDS_DIALOG}">${icon("x", "Close")}Close</button>
+      </div>
+      <p>The cards are Bandai's, so this site can't ship them. Your own browser fetches them from Bandai's card list, once.</p>
+      ${renderSteps(ctx)}
+    </div>
+  </div>`;
 }
 
 /**
@@ -106,7 +132,7 @@ function renderMissing(ctx: AssetGateContext): string {
   const cards = `${missing} card${missing === 1 ? "" : "s"}`;
   return `<p class="home-assets-missing">${cards} ${missing === 1 ? "has" : "have"} no art yet, usually a set added since your pack.
       <button class="home-assets-help" type="button" data-get-missing>Get only ${missing === 1 ? "that card" : `those ${missing}`}</button>
-      opens Bandai's card list: click your Get cards bookmark there, then load the zip it saves here.</p>`;
+      opens Bandai's card list: click your Get cards bookmark there, and they come back here.</p>`;
 }
 
 /** Wires the controls wherever they are printed: the gate or the dialog. */
@@ -164,12 +190,16 @@ export function bindControls(ctx: AssetGateContext): void {
           }, showCode);
       });
     });
-  // Opened in script rather than an `<a href>`, for the same reason.
+  // Opened in script rather than an `<a href>`, for the same reason. Without
+  // `noopener`: the card list keeps a handle on this tab, which is how the
+  // downloader hands the cards back (`listenForGetCards`). Across origins that
+  // handle can post messages to this tab or send it to another address; the
+  // app reads only the pack message, and only from Bandai's origin.
   document
     .querySelectorAll<HTMLElement>("[data-bandai-cardlist]")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        window.open(BANDAI_CARDLIST_URL, "_blank", "noopener");
+        window.open(BANDAI_CARDLIST_URL, "_blank");
       });
     });
   document
@@ -179,7 +209,6 @@ export function bindControls(ctx: AssetGateContext): void {
         window.open(
           missingCardsUrl(BANDAI_CARDLIST_URL, ctx.missingArt()),
           "_blank",
-          "noopener",
         );
       });
     });

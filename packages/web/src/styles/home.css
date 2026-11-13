@@ -380,6 +380,19 @@
   color: rgba(255, 255, 255, 0.86);
   line-height: 1.5;
 }
+/* The same ask as a dialog (the pre-release lobby's): the dark plate is the
+   dialog, so it keeps the panel's look but takes the dialog's place and size. */
+.app-dialog.asset-gate-dialog {
+  width: min(36rem, calc(100% - 2rem));
+  margin: 0;
+  background: rgba(12, 12, 14, 0.96);
+  color: rgba(255, 255, 255, 0.86);
+}
+.asset-gate-dialog .app-dialog-head h2,
+.asset-gate-dialog .app-dialog-head .text-button,
+.asset-gate-dialog .home-assets-load {
+  color: #fff;
+}
 .asset-gate-panel h1 {
   margin: 0;
   color: #fff;

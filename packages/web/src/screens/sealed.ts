@@ -45,6 +45,7 @@ import { icon } from "../icons.js";
 import { bindAppDialogDismissal, toggleAppDialog } from "../dialogs.js";
 import { downloadText, valueOf } from "../dom.js";
 import * as footer from "./footer.js";
+import { GET_CARDS_DIALOG } from "./asset-gate.js";
 import {
   createSwissEvent,
   eventComplete,
@@ -57,7 +58,7 @@ import {
   wins,
   yourOpponent,
   yourTable,
-  SWISS_PLAYERS,
+  swissPlayers,
   SWISS_ROUNDS,
   SWISS_ROUND_OPTIONS,
   YOU,
@@ -133,6 +134,15 @@ export interface SealedContext {
    * Plays AI-against-AI tables off the main thread, resolving each table's
    * winning seat (null at the action ceiling); see `swiss-tables.ts`.
    */
+  /**
+   * Whether the card art and text are in. The pre-release lobby shows itself
+   * without them and asks for them, through {@link renderGetCards}, when the
+   * player goes to play; the other sealed screens sit behind the app's gate.
+   */
+  cardsReady?(): boolean;
+  /** The dialog that asks for the cards; see `renderDialog` in ./asset-gate.ts. */
+  renderGetCards?(): string;
+  bindGetCards?(): void;
   playTables(
     tables: readonly HeadlessTable[],
     seedPrefix: string,
@@ -224,7 +234,7 @@ function boosterChoice(expansion: SealedExpansion, locked: boolean): string {
   if (locked)
     return `<div class="booster-choice">
     <span class="booster-choice-head">
-      <strong>${escapeHtml(expansion.title)} pre-release</strong>
+      <strong>${escapeHtml(expansion.productCode)} pre-release</strong>
     </span>
     <span class="booster-choice-body">
       ${packImage(expansion)}
@@ -280,7 +290,7 @@ function formatChoice(format: SealedFormat): string {
   return `<fieldset class="sealed-format">
     <legend class="sr-only">Format</legend>
     ${option("single", "One match", "Build, then play one AI")}
-    ${option("swiss", `Swiss, ${SWISS_ROUNDS} rounds`, `${SWISS_PLAYERS} players, paired by record`)}
+    ${option("swiss", `Swiss, ${SWISS_ROUNDS} rounds`, `${swissPlayers(SWISS_ROUNDS)} players, paired by record`)}
   </fieldset>`;
 }
 
@@ -289,11 +299,20 @@ function formatChoice(format: SealedFormat): string {
  * length. A pre-release is a Swiss event of sealed decks, so the length of the
  * event is the one choice left before the packs are opened.
  */
-function renderPrereleaseLobby(expansion: SealedExpansion): string {
+function renderPrereleaseLobby(
+  expansion: SealedExpansion,
+  ctx: SealedContext,
+): string {
+  const ready = ctx.cardsReady?.() ?? true;
   const buttons = SWISS_ROUND_OPTIONS.map(
     (rounds) =>
-      `<button class="prerelease-rounds" type="button" data-swiss-rounds="${rounds}"><strong>${rounds}</strong><span>${rounds === 1 ? "round" : "rounds"}</span></button>`,
+      `<button class="prerelease-rounds" type="button" data-swiss-rounds="${rounds}"><strong>${rounds}</strong><span>${rounds === 1 ? "round" : "rounds"}</span><small>${swissPlayers(rounds)} players</small></button>`,
   ).join("");
+  // Until the cards are in, the way to get them leads: a player new to the
+  // page has none, and a round button then opens the same dialog.
+  const getCards = ready
+    ? ""
+    : `<button class="prerelease-get-cards" type="button" data-open-get-cards>${icon("bookmark-plus", "")}Get the card art and text first</button>`;
   return `<main class="setup-shell sealed-shell prerelease-lobby">
     <header class="setup-topbar">
       <button class="brand-home" type="button" id="sealed-home">
@@ -304,11 +323,13 @@ function renderPrereleaseLobby(expansion: SealedExpansion): string {
     </header>
     <section class="prerelease-stage">
       ${packImage(expansion)}
-      <h1>${escapeHtml(expansion.title)} pre-release</h1>
-      <p>Open ${SEALED_PACK_COUNT} packs, build ${SEALED_DECK_SIZE} cards, play a Swiss event of ${SWISS_PLAYERS}.</p>
+      <h1>${escapeHtml(expansion.productCode)} pre-release</h1>
+      <p>Open ${SEALED_PACK_COUNT} packs and build ${SEALED_DECK_SIZE} cards. Swiss runs until one player is unbeaten, so more rounds means a bigger field.</p>
+      ${getCards}
       <div class="prerelease-round-buttons" role="group" aria-label="Swiss rounds">${buttons}</div>
     </section>
     ${footer.render()}
+    ${ready ? "" : (ctx.renderGetCards?.() ?? "")}
   </main>`;
 }
 
@@ -316,7 +337,7 @@ export function renderLobby(state: SealedState, ctx: SealedContext): string {
   const locked = Boolean(ctx.lockedExpansion);
   const expansion = currentExpansion(state, ctx.lockedExpansion);
   state.expansion = expansion.code;
-  if (locked) return renderPrereleaseLobby(expansion);
+  if (locked) return renderPrereleaseLobby(expansion, ctx);
   return `<main class="setup-shell sealed-shell">
     <header class="setup-topbar">
       <button class="brand-home" type="button" id="sealed-home">
@@ -357,11 +378,21 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
     .querySelectorAll<HTMLButtonElement>("[data-swiss-rounds]")
     .forEach((button) => {
       button.addEventListener("click", () => {
+        if (!(ctx.cardsReady?.() ?? true)) {
+          toggleAppDialog(GET_CARDS_DIALOG, true);
+          return;
+        }
         state.format = "swiss";
         state.swissRounds = Number(button.dataset.swissRounds);
         startRun(state, ctx);
       });
     });
+  document
+    .querySelector("[data-open-get-cards]")
+    ?.addEventListener("click", () => {
+      toggleAppDialog(GET_CARDS_DIALOG, true);
+    });
+  ctx.bindGetCards?.();
   document.querySelectorAll("[data-open-booster-picker]").forEach((button) => {
     button.addEventListener("click", () => {
       toggleAppDialog("booster-picker", true);
@@ -793,7 +824,7 @@ export function renderEvent(state: SealedState): string {
   const waitingOnOthers =
     mine.winner !== null && !roundComplete(event.rounds.at(-1)!);
   const headline = done
-    ? `You finished ${place}${ordinal(place)} of ${SWISS_PLAYERS}, ${record(event, YOU)}`
+    ? `You finished ${place}${ordinal(place)} of ${event.players.length}, ${record(event, YOU)}`
     : `Round ${roundNumber} of ${event.roundCount}`;
   const action = done
     ? `<button class="primary wide" id="swiss-new">${icon("sparkles", "New event")}Open new packs</button>`
