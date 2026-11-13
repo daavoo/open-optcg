@@ -141,8 +141,7 @@ export const op18BlueMechanics: SetMechanics = {
     ],
     [
       // OP18-046 Mr.0 & Ms. All Sunday: two cards, then rested DON!! to the
-      // Leader and to every Character, up to two apiece -- the Japanese text
-      // reads "2 each", which the English translation leaves ambiguous.
+      // Leader and to every Character, up to two apiece.
       //
       // Played as a full gift: `attach-don` with `each` hands every card its
       // two while the rested pile lasts, in board order, Leader first. Taking
@@ -184,7 +183,7 @@ export const op18BlueMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-047 Mr.1 (Daz.Bonez): [Unblockable] on the Leader for the turn,
+      // OP18-047 Mr.1(Daz.Bonez): [Unblockable] on the Leader for the turn,
       // behind a Leader that is {Cross Guild} or whose type includes Baroque
       // Works. The gate is the outermost `if`, so a Leader with neither is
       // asked nothing.
@@ -226,11 +225,10 @@ export const op18BlueMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-049 Mr.2.Bon.Kurei (Bentham): a five-card look for a card whose
-      // type includes Baroque Works -- the Japanese text says "including",
-      // where the English translation brackets it as the exact type -- then a
-      // rested DON!! to the Leader or a Character. The gift happens whether
-      // or not the search found anything.
+      // OP18-049 Mr.2.Bon.Kurei(Bentham): a five-card look for a card whose
+      // type includes Baroque Works, then up to one rested DON!! to the Leader
+      // or a Character. The gift happens whether or not the search found
+      // anything.
       "OP18-049",
       {
         effect: {
@@ -313,7 +311,7 @@ export const op18BlueMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-053 Mr.7 & Miss.Fathersday: the top three, in any order, all on
+      // OP18-053 Mr.7 & Miss.Father'sDay: the top three, in any order, all on
       // top or all on the bottom.
       "OP18-053",
       { effect: lookAndReplace(3, "op18-053-look", true) },
@@ -458,7 +456,7 @@ export const op18BlueMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-058 This Kingdom Is Doomed. You Can't Save It!: see
+      // OP18-058 This Kingdom is Doomed. You Can't Save It!: see
       // `kingdomIsDoomed`.
       "OP18-058",
       { cost: 3, program: kingdomIsDoomed },
@@ -522,7 +520,7 @@ export const op18BlueMechanics: SetMechanics = {
   ],
   replacement: [
     [
-      // OP18-054 Mr.8 & Miss.Monday: once a turn, on the opponent's turn, a
+      // OP18-054 Mr.8 & Ms. Monday: once a turn, on the opponent's turn, a
       // card from hand instead of a Baroque Works Character leaving the field
       // to an opponent's effect -- ST25-003's save behind an
       // `[Opponent's Turn]`. The `[DON!! x1]` on this card gates only its

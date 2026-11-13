@@ -508,7 +508,7 @@ export const op18GreenMechanics: SetMechanics = {
   ],
   eventMain: [
     [
-      // OP18-038 Shoot Down That Flag: look at 5, reveal up to 1 [Sogeking] or
+      // OP18-038 Shoot Down That Flag.: look at 5, reveal up to 1 [Sogeking] or
       // {Straw Hat Crew} card and add it to hand, the rest to the bottom.
       "OP18-038",
       {

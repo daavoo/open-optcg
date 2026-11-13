@@ -58,7 +58,7 @@ export const op18BlackStaticAbilities: readonly StaticAbility[] = [
     },
   },
   // OP18-092 Roronoa Zoro: the OP17 Elbaph payoff (either side's 12-cost
-  // body counts -- the Japanese text says "if there is", not "if you have"),
+  // body counts -- the text says "if there is", not "if you have"),
   // plus [Rush] once its controller's trash is 10 deep.
   {
     cardNumber: "OP18-092",
@@ -74,13 +74,12 @@ export const op18BlackStaticAbilities: readonly StaticAbility[] = [
         context.state.players[context.playerId].trash.length >= 10,
     },
   },
-  // OP18-097 Abyss (Stage): OP05-097 Mary Geoise's discount, behind a
-  // {Celestial Dragons} Leader, for {Holy Knights of God} or {Five Elders}
-  // Characters. The types follow the Japanese text (神の騎士団 / 五老星); the
-  // provisional English rendering names {Celestial Dragons} in place of the
-  // first. No turn gate is printed, but a card is only played from hand in
-  // its controller's own Main Phase anyway. Printed cost, as Mary Geoise
-  // reads: a hand card has no other.
+  // OP18-097 Abyss Pentagram (Stage): OP05-097 Mary Geoise's discount,
+  // behind a {Celestial Dragons} Leader, for {Holy Knights of God} or
+  // {Five Elders} Characters. No turn gate is printed; the `turnPlayer` check
+  // holds the discount to paying a card's cost from hand, which happens only
+  // in its controller's own Main Phase. Printed cost, as Mary Geoise reads: a
+  // hand card has no other.
   {
     cardNumber: "OP18-097",
     scope: "stage-aura",

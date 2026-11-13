@@ -30,7 +30,7 @@ export const op18BlueStaticAbilities: readonly StaticAbility[] = [
         !context.isLeader && attachedDon(context) >= 1 ? 1_000 : 0,
     },
   })),
-  // OP18-045 Mr. Prince: +1000 per *completed* five Events in its
+  // OP18-045 Mr.Prince: +1000 per *completed* five Events in its
   // controller's trash -- nine pay 1000, ten pay 2000. Its name alias
   // ([Sanji]) is derived into `rules.nameAliases` and needs no row.
   {

@@ -16,7 +16,7 @@ import {
  * Luffy Leader active again, so many of these cases are about a rested Leader
  * standing back up and about what holds it down through a Refresh Phase.
  *
- * OP18-035 Michael and Hoichael prints no text and has nothing to test.
+ * OP18-035 Michael & Hoichael prints no text and has nothing to test.
  */
 
 const GREEN_LUFFY = "OP18-022";
@@ -916,7 +916,7 @@ describe("OP18-037 Yokozuna [On K.O.]", () => {
   });
 });
 
-describe("OP18-038 Shoot Down That Flag", () => {
+describe("OP18-038 Shoot Down That Flag.", () => {
   covers("OP18-038", "[Main]");
 
   it("adds a {Straw Hat Crew} card from the top 5 and bottoms the rest", () => {
@@ -942,7 +942,7 @@ describe("OP18-038 Shoot Down That Flag", () => {
   });
 });
 
-describe("OP18-038 Shoot Down That Flag [Trigger]", () => {
+describe("OP18-038 Shoot Down That Flag. [Trigger]", () => {
   covers("OP18-038", "[Trigger]");
 
   it("draws 1 card when revealed from Life", () => {

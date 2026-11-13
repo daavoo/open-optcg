@@ -1,11 +1,7 @@
 /**
- * OP-18's Black cards (OP18-080 to OP18-097, OP18-119 Saint Shamrock and the
- * Red/Black Event OP18-095): every timed clause, one module for the colour.
- *
- * The set is provisional: the records come from an English rendering of the
- * Japanese cards (see `packages/cards/src/op18.ts`). Where that rendering and
- * the Japanese text disagree on what a card does, these programs follow the
- * Japanese text, and the entry says so.
+ * OP-18's Black cards (OP18-080 to OP18-097 and OP18-119 Saint Shamrock):
+ * every timed clause, one module for the colour. The Black/Yellow Leader
+ * OP18-079 lives with the Yellow cards.
  */
 import {
   SOURCE_BINDING,
@@ -75,10 +71,8 @@ const replayFromTrash = (
 
 /**
  * OP18-095's search: [Sleeptids] or a {Holy Knights of God} card, behind a
- * {Celestial Dragons} Leader. The Leader condition is in the Japanese text
- * (自分のリーダーが特徴《天竜人》を持つ場合) and missing from the provisional
- * English rendering. Shared by the [Main] and the [Trigger], which activates
- * that same effect.
+ * {Celestial Dragons} Leader. Shared by the [Main] and the [Trigger], which
+ * activates that same effect.
  */
 const lateSearch: MechanicProgram = {
   effect: {
@@ -203,7 +197,7 @@ export const op18BlackMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-097 Abyss (Stage): draw first, then mill 2 -- both mandatory.
+      // OP18-097 Abyss Pentagram (Stage): draw first, then mill 2 -- both mandatory.
       "OP18-097",
       {
         effect: {
@@ -260,9 +254,8 @@ export const op18BlackMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-082 Catarina Devon: EB04-052 Sanji's clause -- the Japanese text
-      // is the same sentence. The copy is taken once, as the attack is
-      // declared, and lasts the turn.
+      // OP18-082 Catarina Devon: EB04-052 Sanji's clause. The copy is taken
+      // once, as the attack is declared, and lasts the turn.
       "OP18-082",
       {
         effect: {
@@ -287,8 +280,7 @@ export const op18BlackMechanics: SetMechanics = {
     [
       // OP18-082 Catarina Devon: the card is paid before the Leader is
       // checked, so behind a non-{Blackbeard Pirates} Leader the card is spent
-      // for nothing -- the order the clause prints. The Japanese text plays
-      // it active (no レスト); the provisional English rendering says rested.
+      // for nothing -- the order the clause prints. It returns rested.
       "OP18-082",
       replayFromTrash(1, "op18-082-cost", {
         kind: "if",
@@ -297,7 +289,7 @@ export const op18BlackMechanics: SetMechanics = {
           player: "self",
           type: "Blackbeard Pirates",
         },
-        then: { kind: "play", binding: SOURCE_BINDING },
+        then: { kind: "play", binding: SOURCE_BINDING, rested: true },
       }),
     ],
     ["OP18-083", replayFromTrash(2, "op18-083-cost")],

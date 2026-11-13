@@ -277,7 +277,7 @@ describe("OP18-044 Mr.Beans & Miss.Katherina", () => {
   });
 });
 
-describe("OP18-045 Mr. Prince", () => {
+describe("OP18-045 Mr.Prince", () => {
   covers("OP18-045", "static");
 
   const withEvents = (seed: string, events: number, others = 0) =>
@@ -309,7 +309,7 @@ describe("OP18-045 Mr. Prince", () => {
 
   it("is also named [Sanji]", () => {
     expect(hasCardName("OP18-045", "Sanji")).toBe(true);
-    expect(hasCardName("OP18-045", "Mr. Prince")).toBe(true);
+    expect(hasCardName("OP18-045", "Mr.Prince")).toBe(true);
   });
 });
 
@@ -406,7 +406,7 @@ describe("OP18-046 Mr.0 & Ms. All Sunday", () => {
   });
 });
 
-describe("OP18-047 Mr.1 (Daz.Bonez)", () => {
+describe("OP18-047 Mr.1(Daz.Bonez)", () => {
   covers("OP18-047", "[On Play]");
 
   const played = (seed: string, leader?: string) => {
@@ -474,7 +474,7 @@ describe("OP18-048 Mr.1 & Miss Doublefinger", () => {
   });
 });
 
-describe("OP18-049 Mr.2.Bon.Kurei (Bentham)", () => {
+describe("OP18-049 Mr.2.Bon.Kurei(Bentham)", () => {
   covers("OP18-049", "[On Play]");
 
   it("adds a Baroque Works card from the top five, then gives a rested DON!!", () => {
@@ -639,7 +639,7 @@ describe("OP18-052 Mr.5 & Miss.Valentine", () => {
   });
 });
 
-describe("OP18-053 Mr.7 & Miss.Fathersday", () => {
+describe("OP18-053 Mr.7 & Miss.Father'sDay", () => {
   covers("OP18-053", "[On Play]");
 
   const mr7 = (seed: string) =>
@@ -681,7 +681,7 @@ describe("OP18-053 Mr.7 & Miss.Fathersday", () => {
   });
 });
 
-describe("OP18-054 Mr.8 & Miss.Monday", () => {
+describe("OP18-054 Mr.8 & Ms. Monday", () => {
   covers("OP18-054", "[Opponent's Turn]");
 
   /** p2 holds two OP09-058 Special Muggy Balls: cost-6-or-less bounces. */

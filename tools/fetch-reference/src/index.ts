@@ -124,39 +124,6 @@ const sources: Source[] = [
     authority: "secondary",
     contentType: "application/json",
   },
-  // OP-18 before Bandai lists it: the provisional set pass in
-  // `reference:audit` reads these and nothing else does. The egman payload is
-  // the same URL as `egman-cards` under its own path, so refreshing it for a
-  // set Bandai has not published leaves every audited comparison against the
-  // committed `egman/cards.json` where it was. Logbook fills the OP-18 numbers
-  // egman has no record of yet; it serves one page per card. Tier One
-  // transcribes the Japanese cards; it is what the audit's provisional
-  // corrections cite where the English renderings misread a card. Remove all
-  // of it once `CARDLIST_SERIES` carries OP-18.
-  {
-    id: "egman-cards-provisional",
-    url: "https://deckbuilder.egmanevents.com/api/cards/optcg",
-    path: "egman/cards-provisional.json",
-    authority: "secondary",
-    contentType: "application/json",
-  },
-  {
-    id: "tierone-op18",
-    url: "https://tier-one-onepiece.jp/blog/op18-card-list/",
-    path: "tierone/op18-card-list.html",
-    authority: "secondary",
-    contentType: "text/html",
-  },
-  ...Array.from({ length: 119 }, (_, index): Source => {
-    const number = `op18-${String(index + 1).padStart(3, "0")}`;
-    return {
-      id: `logbook-${number}`,
-      url: `https://logbook-optcg.com/cards/${number}/`,
-      path: `logbook/${number}.html`,
-      authority: "secondary",
-      contentType: "text/html",
-    };
-  }),
 ];
 
 const root = join(process.cwd(), "fixtures", "reference", snapshot);

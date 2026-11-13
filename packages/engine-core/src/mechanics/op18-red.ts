@@ -2,10 +2,6 @@
  * OP-18's red cards, OP18-001 to OP18-020: every timed clause they print, plus
  * OP18-017's removal replacement. Their continuous text is in
  * `op18-red-static.ts` and the Leader's K.O. draw in `op18-red-reactions.ts`.
- *
- * The set is imported provisionally from a fan translation of the Japanese
- * cards (see `cards/src/op18.ts`), so each program is written to the Japanese
- * text where the translation is loose.
  */
 import { type CardSelector, type MechanicEffect } from "../mechanics.js";
 import { SOURCE_BINDING } from "../mechanics.js";
@@ -219,8 +215,7 @@ export const op18RedMechanics: SetMechanics = {
   ],
   whenAttacking: [
     [
-      // OP18-012 Pincers: `pnpm card:text OP18-012`. The Japanese text's
-      // duration is "during this turn".
+      // OP18-012 Pincers: `pnpm card:text OP18-012`.
       "OP18-012",
       {
         effect: {
@@ -331,7 +326,7 @@ export const op18RedMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-019 Quaaack!!: `pnpm card:text OP18-019`. "Base power" of a
+      // OP18-019 Quack!!!: `pnpm card:text OP18-019`. "Base power" of a
       // Character on the field, which `maxPower`/`minPower` read.
       "OP18-019",
       {
@@ -357,12 +352,12 @@ export const op18RedMechanics: SetMechanics = {
                 zone: "board",
                 category: "character",
               },
-              bind: "op18-quaaack-debuff",
+              bind: "op18-quack-debuff",
               min: 0,
               max: 1,
               effect: {
                 kind: "modify-power",
-                binding: "op18-quaaack-debuff",
+                binding: "op18-quack-debuff",
                 amount: -3_000,
                 expiresAfterTurns: 0,
               },
@@ -374,7 +369,7 @@ export const op18RedMechanics: SetMechanics = {
   ],
   counterEvent: [
     [
-      // OP18-019 Quaaack!!: the [Counter] half, for the Leader only.
+      // OP18-019 Quack!!!: the [Counter] half, for the Leader only.
       "OP18-019",
       { cost: 1, power: 3_000, target: { isLeader: true } },
     ],
@@ -471,9 +466,9 @@ export const op18RedMechanics: SetMechanics = {
   ],
   replacement: [
     [
-      // OP18-017 Roronoa Zoro: `pnpm card:text OP18-017`. The Japanese text
-      // reads "leaves the field", so a bounce or a bury is answered as well as
-      // a K.O., on either player's turn. Zoro protects itself too: it is an
+      // OP18-017 Roronoa Zoro: `pnpm card:text OP18-017`. "Removed from the
+      // field" answers a bounce or a bury as well as a K.O., on either player's
+      // turn. Zoro protects itself too: it is an
       // {Alabasta} Character.
       "OP18-017",
       {

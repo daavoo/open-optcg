@@ -3,9 +3,8 @@
  * removal replacements. The continuous text is in `op18-purple-static.ts` and
  * the Leader's untimed watcher in `op18-purple-reactions.ts`.
  *
- * The set is provisional (see `cards/src/op18.ts`), so every comment here
- * names what a clause does in the engine's terms rather than quoting it; read
- * the card itself with `pnpm card:text <card>`.
+ * Every comment here names what a clause does in the engine's terms rather
+ * than quoting it; read the card itself with `pnpm card:text <card>`.
  *
  * The colour has two packages. The Celestial Dragons Leader recurs bodies out
  * of the trash and refunds DON!! for them; the Water Seven / Straw Hat half
@@ -272,7 +271,7 @@ export const op18PurpleMechanics: SetMechanics = {
       },
     ],
     [
-      // OP18-068 Señor Pink: DON!! −1 to stop one opposing Character of cost 7
+      // OP18-068 Senor Pink: DON!! −1 to stop one opposing Character of cost 7
       // or less being rested through the opponent's next End Phase.
       "OP18-068",
       {
@@ -669,7 +668,7 @@ export const op18PurpleMechanics: SetMechanics = {
   ],
   replacement: [
     [
-      // OP18-068 Señor Pink: once per turn, its own K.O. -- by any cause, the
+      // OP18-068 Senor Pink: once per turn, its own K.O. -- by any cause, the
       // text names none -- answered with one DON!! returned.
       "OP18-068",
       {
@@ -694,8 +693,8 @@ export const op18PurpleMechanics: SetMechanics = {
     ],
     [
       // OP18-071 Trebol: a {Donquixote Pirates} Character leaving the field to
-      // the opponent's effect, answered with one DON!! returned. Once per
-      // turn: the Japanese card prints it, the provisional English drops it.
+      // the opponent's effect, answered with one DON!! returned, once per
+      // turn.
       "OP18-071",
       {
         opponentEffectOnly: true,
