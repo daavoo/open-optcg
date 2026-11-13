@@ -443,71 +443,83 @@ export const op18YellowMechanics: SetMechanics = {
       // names at most, which is why the deck is shuffled after.
       //
       // The trash of Life is the cost and is paid under any Leader; only the
-      // payoff reads Spandam.
+      // payoff reads Spandam. With no Life there is nothing to trash, so the
+      // cost is unpaid and the Event resolves to nothing (Bandai's OP18-117
+      // Q&A) -- the outer gate, not a wipe on an empty trash.
       "OP18-117",
       {
         cost: 10,
         program: {
           effect: {
-            kind: "optional",
-            effect: {
-              kind: "sequence",
-              effects: [
-                {
-                  kind: "select",
-                  selector: { player: "self", zone: "life" },
-                  bind: "op18-117-life",
-                  count: "all",
-                  effect: {
-                    kind: "move",
-                    binding: "op18-117-life",
-                    to: { player: "self", zone: "trash" },
+            kind: "if",
+            condition: {
+              kind: "zone-count",
+              player: "self",
+              zone: "life",
+              operator: "gte",
+              value: 1,
+            },
+            then: {
+              kind: "optional",
+              effect: {
+                kind: "sequence",
+                effects: [
+                  {
+                    kind: "select",
+                    selector: { player: "self", zone: "life" },
+                    bind: "op18-117-life",
+                    count: "all",
+                    effect: {
+                      kind: "move",
+                      binding: "op18-117-life",
+                      to: { player: "self", zone: "trash" },
+                    },
                   },
-                },
-                {
-                  kind: "if",
-                  condition: {
-                    kind: "leader-has-name",
-                    player: "self",
-                    name: "Spandam",
+                  {
+                    kind: "if",
+                    condition: {
+                      kind: "leader-has-name",
+                      player: "self",
+                      name: "Spandam",
+                    },
+                    then: {
+                      kind: "sequence",
+                      effects: [
+                        {
+                          kind: "select",
+                          selector: {
+                            player: "either",
+                            zone: "board",
+                            category: "character",
+                          },
+                          bind: "op18-117-wipe",
+                          count: "all",
+                          effect: {
+                            kind: "move",
+                            binding: "op18-117-wipe",
+                            to: { player: "owner", zone: "trash" },
+                          },
+                        },
+                        {
+                          kind: "choose",
+                          selector: {
+                            player: "self",
+                            zone: ["deck", "trash"],
+                            category: "character",
+                            type: "Vice Admiral",
+                          },
+                          bind: "op18-117-play",
+                          min: 0,
+                          max: 5,
+                          distinctNames: true,
+                          effect: { kind: "play", binding: "op18-117-play" },
+                        },
+                        { kind: "shuffle-deck", player: "self" },
+                      ],
+                    },
                   },
-                  then: {
-                    kind: "sequence",
-                    effects: [
-                      {
-                        kind: "select",
-                        selector: {
-                          player: "either",
-                          zone: "board",
-                          category: "character",
-                        },
-                        bind: "op18-117-wipe",
-                        count: "all",
-                        effect: {
-                          kind: "move",
-                          binding: "op18-117-wipe",
-                          to: { player: "owner", zone: "trash" },
-                        },
-                      },
-                      {
-                        kind: "choose",
-                        selector: {
-                          player: "self",
-                          zone: ["deck", "trash"],
-                          category: "character",
-                          type: "Vice Admiral",
-                        },
-                        bind: "op18-117-play",
-                        min: 0,
-                        max: 5,
-                        distinctNames: true,
-                        effect: { kind: "play", binding: "op18-117-play" },
-                      },
-                      { kind: "shuffle-deck", player: "self" },
-                    ],
-                  },
-                },
-              ],
+                ],
+              },
             },
           },
         },

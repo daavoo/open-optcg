@@ -83,6 +83,92 @@ const kingdomIsDoomed: MechanicProgram = {
   },
 };
 
+const haveRestedDon: MechanicCondition = {
+  kind: "rested-don",
+  player: "self",
+  operator: "gte",
+  value: 1,
+};
+
+const giveRestedDon = (
+  count: number,
+  target: "leader" | { binding: string; each: true },
+): MechanicEffect => ({
+  kind: "attach-don",
+  player: "self",
+  from: "rested",
+  count,
+  target,
+});
+
+/** Up to five Characters under one binding: the whole board. */
+const ownCharacters = (bind: string, excludeBinding?: string) => ({
+  selector: {
+    player: "self" as const,
+    zone: "board" as const,
+    category: "character" as const,
+    ...(excludeBinding ? { excludeBinding } : {}),
+  },
+  bind,
+  min: 0,
+  max: 5,
+});
+
+/**
+ * OP18-046's gift: 0, 1 or 2 rested DON!! to the Leader and to each Character,
+ * chosen card by card (Bandai's OP18-046 Q&A). Withholding DON!! is a real
+ * line -- a rested DON!! left in the cost area still pays OP18-042 Hack's or
+ * OP18-078 Mini-Merry's gift, and a short pile is the player's to split.
+ *
+ * The Leader's share is a three-way `choice`; the Characters are two `choose`
+ * steps, the ones getting two and then, from the rest, the ones getting one,
+ * which reaches every per-card assignment without a prompt per Character.
+ * Each step is skipped once the rested pile is empty.
+ */
+const upToTwoRestedDonEach: MechanicEffect = {
+  kind: "sequence",
+  effects: [
+    {
+      kind: "if",
+      condition: haveRestedDon,
+      then: {
+        kind: "choice",
+        branches: [
+          {
+            id: "leader-2",
+            label: "Give your Leader 2 rested DON!!",
+            effect: giveRestedDon(2, "leader"),
+          },
+          {
+            id: "leader-1",
+            label: "Give your Leader 1 rested DON!!",
+            effect: giveRestedDon(1, "leader"),
+          },
+          { id: "leader-0", label: "Give your Leader none" },
+        ],
+      },
+    },
+    {
+      kind: "if",
+      condition: haveRestedDon,
+      then: {
+        kind: "choose",
+        ...ownCharacters("op18-046-two"),
+        effect: giveRestedDon(2, { binding: "op18-046-two", each: true }),
+      },
+    },
+    {
+      kind: "if",
+      condition: haveRestedDon,
+      then: {
+        kind: "choose",
+        ...ownCharacters("op18-046-one", "op18-046-two"),
+        effect: giveRestedDon(1, { binding: "op18-046-one", each: true }),
+      },
+    },
+  ],
+};
+
 /**
  * OP18-051's payoff: two Characters with two ceilings, either side's, under
  * their owners' decks together.
@@ -140,44 +226,15 @@ export const op18BlueMechanics: SetMechanics = {
       { effect: drawAndDiscard(1, 1, "op18-044-discard") },
     ],
     [
-      // OP18-046 Mr.0 & Ms. All Sunday: two cards, then rested DON!! to the
-      // Leader and to every Character, up to two apiece.
-      //
-      // Played as a full gift: `attach-don` with `each` hands every card its
-      // two while the rested pile lasts, in board order, Leader first. Taking
-      // fewer than the full gift is never a better line -- the DON!! is
-      // already spent for the turn and returns to the cost area at the
-      // Refresh Phase either way.
+      // OP18-046 Mr.0 & Ms. All Sunday: two cards, then up to two rested
+      // DON!! to the Leader and to each Character. See `upToTwoRestedDonEach`.
       "OP18-046",
       {
         effect: {
           kind: "sequence",
           effects: [
             { kind: "draw", player: "self", count: 2 },
-            {
-              kind: "attach-don",
-              player: "self",
-              from: "rested",
-              count: 2,
-              target: "leader",
-            },
-            {
-              kind: "select",
-              selector: {
-                player: "self",
-                zone: "board",
-                category: "character",
-              },
-              bind: "op18-046-board",
-              count: "all",
-              effect: {
-                kind: "attach-don",
-                player: "self",
-                from: "rested",
-                count: 2,
-                target: { binding: "op18-046-board", each: true },
-              },
-            },
+            upToTwoRestedDonEach,
           ],
         },
       },

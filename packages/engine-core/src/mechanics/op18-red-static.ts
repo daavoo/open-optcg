@@ -78,19 +78,24 @@ export const op18RedStaticAbilities: readonly StaticAbility[] = [
   },
   // OP18-005 Kung Fu Jugon: `pnpm card:text OP18-005`. Counts every copy on
   // its controller's board, itself included: "every [Kung Fu Jugon]" names no
-  // "other", so a lone copy is a 1000.
+  // "other", so a lone copy is a 1000. The Leader counts too when it answers
+  // to the name -- a Leader with every card name is one more (Q1506).
   {
     cardNumber: "OP18-005",
     scope: "self",
     power: {
       kind: "add",
-      value: (context) =>
-        turnPlayer(context) === context.playerId
-          ? 1_000 *
-            context.state.players[context.playerId].board.filter((card) =>
-              hasCardName(card.cardNumber, "Kung Fu Jugon"),
-            ).length
-          : 0,
+      value: (context) => {
+        if (turnPlayer(context) !== context.playerId) return 0;
+        const player = context.state.players[context.playerId];
+        const leader = hasCardName(player.leaderCardNumber, "Kung Fu Jugon")
+          ? 1
+          : 0;
+        const characters = player.board.filter((card) =>
+          hasCardName(card.cardNumber, "Kung Fu Jugon"),
+        ).length;
+        return 1_000 * (leader + characters);
+      },
     },
   },
   // OP18-006 Koza: `pnpm card:text OP18-006`. "If you have" reads the whole
