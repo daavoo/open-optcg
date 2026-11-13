@@ -18,11 +18,11 @@ import { instance, scenario } from "./support/index.js";
  * what this file holds is that the list is the one the shelf and the policy
  * expect: a Standard-legal fifty under EB05-010, on the Tournaments shelf,
  * and kept by `eb05-robin-policy.ts` on a digger or an early body -- not on
- * the 0-cost Counter Event the generic keep would accept, nor on the Wisdom
- * List's cheap Nico Olvia and Nojiko.
+ * the 0-cost Counter Event the generic keep would accept, nor on the cheap
+ * Nico Olvia and Nojiko.
  */
 
-const LIST = "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6";
+const LIST = "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "EB05-010";
@@ -58,7 +58,7 @@ describe("the opening hand", () => {
     return action.type === "mulligan-decision" ? action.decision : action.type;
   }
 
-  it("keeps Atlas or Daifuku and ships a hand whose only cheap card is an Event", async () => {
+  it("keeps Atlas or Lilith and ships a hand whose only cheap card is an Event", async () => {
     expect(
       await decision([
         "EB05-050",
@@ -70,7 +70,7 @@ describe("the opening hand", () => {
     ).toBe("keep");
     expect(
       await decision([
-        "OP17-107",
+        "OP13-113",
         "EB05-016",
         "EB05-055",
         "OP17-022",
@@ -84,6 +84,18 @@ describe("the opening hand", () => {
         "EB05-055",
         "OP17-022",
         "OP17-112",
+      ]),
+    ).toBe("mulligan");
+  });
+
+  it("ships a hand whose only cheap cards are Olvia and Nojiko", async () => {
+    expect(
+      await decision([
+        "OP09-106",
+        "EB05-057",
+        "EB05-016",
+        "EB05-055",
+        "OP17-022",
       ]),
     ).toBe("mulligan");
   });

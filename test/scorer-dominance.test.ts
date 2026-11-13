@@ -513,7 +513,7 @@ describe("a [When Attacking] gated on the attacker's power", () => {
   function gated(given: number) {
     const game = scenario()
       .decks(
-        "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
+        "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8",
         "(Green) Roronoa Zoro - Starter Deck 32",
       )
       .seed("scorer-dominance-gated")
@@ -583,7 +583,7 @@ describe("OP14-001 Trafalgar Law's swap when no pairing changes anything", () =>
   function lawBoard(board: Parameters<typeof character>[]) {
     const game = scenario()
       .decks(
-        "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
+        "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8",
         "(Green) Roronoa Zoro - Starter Deck 32",
       )
       .seed("scorer-dominance-swap")

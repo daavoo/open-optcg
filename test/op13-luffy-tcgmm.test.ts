@@ -12,20 +12,22 @@ import {
 import { trainingManifest } from "../ml/bridge/decks.js";
 
 /**
- * The Miracle Luffy EB05 list, the Community list under OP13-001.
+ * The TCG Match Making EB05 Red/Green Luffy list, the Community list under
+ * OP13-001.
  *
  * Every card it plays is driven in its set's card tests already; what this
  * file holds is that the list sits where the shelf and the picker expect: a
  * Standard-legal fifty on the Community shelf, the one list the app offers for
  * the Leader, named without the counter a second list on one shelf would get.
- * The Open OPTCG list it replaced is a training list under its old id.
+ * The Miracle Luffy EB05 list it replaced is a training list under its old
+ * id, as is the Open OPTCG list before it.
  */
 
-const LIST = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
-const REPLACED = "(Red/Green) Monkey.D.Luffy - Open OPTCG";
+const LIST = "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2";
+const REPLACED = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
 const LEADER = "OP13-001";
 
-describe("the Miracle Luffy EB05 list", () => {
+describe("the TCG Match Making EB05 Red/Green Luffy list", () => {
   it("is a Standard-legal 50 under OP13-001 on the Community shelf", () => {
     const manifest = deckManifests[LIST]!;
     expect(loadDeck(LIST)).toHaveLength(50);
@@ -50,7 +52,7 @@ describe("the Miracle Luffy EB05 list", () => {
     expect(deckDisplayName(LIST)).toBe("Monkey.D.Luffy (Red/Green)");
   });
 
-  it("leaves the Open OPTCG list a training list under its id", () => {
+  it("leaves the Miracle Luffy EB05 list a training list under its id", () => {
     expect(deckManifests[REPLACED]).toBeUndefined();
     expect(trainingManifest(REPLACED)?.leader).toBe(LEADER);
   });

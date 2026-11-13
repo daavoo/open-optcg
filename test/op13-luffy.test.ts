@@ -18,7 +18,8 @@ import {
  * Community list; each places the cards it needs.
  */
 
-const LUFFY = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
+const LUFFY =
+  "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2";
 const ZORO = "(Green) Roronoa Zoro - Starter Deck 32";
 
 /** p1, behind OP13-001, in its own Main Phase with ten DON!! active. */

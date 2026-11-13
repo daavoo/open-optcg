@@ -282,10 +282,10 @@ describe("the extracted rules reach the same verdicts", () => {
     // keep names cards the other does not contain, so an ungated rule discards
     // every opening hand of the deck it does not belong to. Both directions.
     await expect(
-      mulliganVerdict("(Red/Black) Sabo - TCG Match Making EB05 #8", [
-        instance("saul", "OP17-089"),
-        ...copies(4, "OP17-095", "zoro"),
-      ]),
+      mulliganVerdict(
+        "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10",
+        [instance("saul", "OP17-089"), ...copies(4, "OP17-095", "zoro")],
+      ),
     ).resolves.toBe("keep");
     await expect(
       mulliganVerdict("(Red/Black) Sabo - Starter Deck 35", [

@@ -9,14 +9,14 @@ import { op13SaboTcgmmManifest } from "./op13-sabo-tcgmm-manifest.js";
 import { op17ShanksManifest } from "./op17-shanks-manifest.js";
 import { op17XebecManifest } from "./op17-xebec-manifest.js";
 import { op17KaidoManifest } from "./op17-kaido-manifest.js";
-import { op17KaidoFieldManifest } from "./op17-kaido-field-manifest.js";
+import { op17KaidoTcgmmManifest } from "./op17-kaido-tcgmm-manifest.js";
 import { op17LuffyManifest } from "./op17-luffy-manifest.js";
 import { op17LuffyTournamentManifest } from "./op17-luffy-tournament-manifest.js";
 import { st33KuzanTournamentManifest } from "./st33-kuzan-tournament-manifest.js";
 import { op06ReijuRegionalManifest } from "./op06-reiju-regional-manifest.js";
 import { op11KobyTournamentManifest } from "./op11-koby-tournament-manifest.js";
 import { op16AceOpenManifest } from "./op16-ace-open-manifest.js";
-import { op17XebecOpenManifest } from "./op17-xebec-open-manifest.js";
+import { op17XebecTcgmmManifest } from "./op17-xebec-tcgmm-manifest.js";
 import { op08PuddingManifest } from "./op08-pudding-manifest.js";
 import { op12ZoroManifest } from "./op12-zoro-manifest.js";
 import { op16AceManifest } from "./op16-ace-manifest.js";
@@ -62,11 +62,11 @@ import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
 import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
-import { op13LuffyMiracleManifest } from "./op13-luffy-miracle-manifest.js";
-import { op09BuggyTournamentManifest } from "./op09-buggy-tournament-manifest.js";
-import { op14LawTournamentManifest } from "./op14-law-tournament-manifest.js";
+import { op13LuffyTcgmmManifest } from "./op13-luffy-tcgmm-manifest.js";
+import { op09BuggyTcgmmManifest } from "./op09-buggy-tcgmm-manifest.js";
+import { op12RosinanteTcgmmManifest } from "./op12-rosinante-tcgmm-manifest.js";
+import { op14LawTcgmmManifest } from "./op14-law-tcgmm-manifest.js";
 import { eb05RobinTcgmmManifest } from "./eb05-robin-tcgmm-manifest.js";
-import { op12RosinanteTournamentManifest } from "./op12-rosinante-tournament-manifest.js";
 import { op14JinbeManifest } from "./op14-jinbe-manifest.js";
 import { op16YamatoManifest } from "./op16-yamato-manifest.js";
 import { op14CrocodileManifest } from "./op14-crocodile-manifest.js";
@@ -293,7 +293,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue/Yellow) Nami - Official Feature Deck",
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck",
   "(Purple) Enel - Official Feature Deck",
-  "(Red/Black) Sabo - TCG Match Making EB05 #8",
+  "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10",
   "(Green) Shanks - Official Feature Deck",
   "(Blue) Rocks.D.Xebec - Official Feature Deck",
   "(Black) Monkey.D.Luffy - Official Feature Deck",
@@ -329,21 +329,20 @@ export const TOURNAMENT_DECK_IDS = [
   "(Purple) Donquixote Doflamingo - Official Feature Deck",
   "(Yellow) Charlotte Linlin - Official Feature Deck",
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1",
-  "(Purple) Kaido - Open OPTCG",
+  "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5",
   "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19",
   "(Black) Monkey.D.Luffy - Open OPTCG",
   "(Red) Portgas.D.Ace - Open OPTCG",
-  "(Blue) Rocks.D.Xebec - Open OPTCG",
+  "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1",
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG",
   "(Green) Roronoa Zoro - OP17 Post-Ban List",
   "(Blue) Kuzan - 1st Place Bandai Hiroshima",
   "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27",
   "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105",
-  "(Blue) Buggy - 12th Place ChinoizeCup #124",
-  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125",
-  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6",
-  "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125",
+  "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3",
+  "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8",
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4",
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15",
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02",
   "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10",
@@ -364,13 +363,14 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red/Yellow) Jewelry Bonney - 13th Place ChinoizeCup #104",
   "(Blue) Jinbe - 11th Place ChinoizeCup #120",
   "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01",
-  "(Yellow) Enel - TCG Match Making OP17.5 #3",
+  "(Yellow) Enel - TCG Match Making EB05 2026-11-12 #6",
   "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25",
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16",
   "(Purple/Black) Monkey.D.Luffy - 1st Place 2v2 2025-06-13",
   "(Red) Monkey.D.Luffy - Open OPTCG",
   "(Yellow) Charlotte Linlin - ChinoizeCup #121",
-  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05",
+  "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2",
+  "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9",
 ] as const;
 export type TournamentDeckId = (typeof TOURNAMENT_DECK_IDS)[number];
 
@@ -467,7 +467,8 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Blue/Yellow) Nami - Official Feature Deck": op16NamiManifest,
   "(Black/Yellow) Marshall.D.Teach - Official Feature Deck": op16TeachManifest,
   "(Purple) Enel - Official Feature Deck": op16EnelManifest,
-  "(Red/Black) Sabo - TCG Match Making EB05 #8": op13SaboTcgmmManifest,
+  "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10":
+    op13SaboTcgmmManifest,
   "(Green) Shanks - Official Feature Deck": op17ShanksManifest,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecManifest,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyManifest,
@@ -505,12 +506,14 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Yellow) Charlotte Linlin - Official Feature Deck": op17LinlinManifest,
   "(Purple/Yellow) Nico Robin - 2nd Place EU Championship 26-27 S1":
     op09RobinManifest,
-  "(Purple) Kaido - Open OPTCG": op17KaidoFieldManifest,
+  "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5":
+    op17KaidoTcgmmManifest,
   "(Red/Green) Luffy & Ace - 2nd Place CDMX Regional 2026-09-19":
     st30LuffyAceCdmxManifest,
   "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentManifest,
   "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenManifest,
-  "(Blue) Rocks.D.Xebec - Open OPTCG": op17XebecOpenManifest,
+  "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1":
+    op17XebecTcgmmManifest,
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingManifest,
   "(Green) Roronoa Zoro - OP17 Post-Ban List": op12ZoroManifest,
   "(Blue) Kuzan - 1st Place Bandai Hiroshima": st33KuzanTournamentManifest,
@@ -520,12 +523,11 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op11KobyTournamentManifest,
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentManifest,
-  "(Blue) Buggy - 12th Place ChinoizeCup #124": op09BuggyTournamentManifest,
-  "(Red) Trafalgar Law - 9th Place ChinoizeCup #125": op14LawTournamentManifest,
-  "(Green/Yellow) Nico Robin - TCG Match Making EB05 #6":
+  "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3": op09BuggyTcgmmManifest,
+  "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8":
+    op14LawTcgmmManifest,
+  "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4":
     eb05RobinTcgmmManifest,
-  "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125":
-    op12RosinanteTournamentManifest,
   "(Yellow) Monkey.D.Luffy - 1st Place Store Battle 2026-07-15":
     st29LuffyTournamentManifest,
   "(Purple) Charlotte Katakuri - 1st Place Store Battle 2026-08-02":
@@ -561,7 +563,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Blue) Jinbe - 11th Place ChinoizeCup #120": op14JinbeTournamentManifest,
   "(Red/Blue) Portgas.D.Ace - 1st Place OPTCGSim 2026-06-01":
     op13AceTournamentManifest,
-  "(Yellow) Enel - TCG Match Making OP17.5 #3": op05EnelTcgmmManifest,
+  "(Yellow) Enel - TCG Match Making EB05 2026-11-12 #6": op05EnelTcgmmManifest,
   "(Green/Purple) Monkey.D.Luffy - 1st Place Store Championship 2026-04-25":
     eb02LuffyTournamentManifest,
   "(Green) Jinbe - 1st Place Shop Event 2026-09-16":
@@ -570,7 +572,10 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     op09LuffyTournamentManifest,
   "(Red) Monkey.D.Luffy - Open OPTCG": st21LuffyOpenManifest,
   "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentManifest,
-  "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05": op13LuffyMiracleManifest,
+  "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2":
+    op13LuffyTcgmmManifest,
+  "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9":
+    op12RosinanteTcgmmManifest,
 };
 
 const starterDecks: Record<StarterDeckId, DeckManifest> = {

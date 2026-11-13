@@ -2,7 +2,7 @@ import type { DeckStrategyDossier } from "./types.js";
 
 export const op13SaboTcgmmDossier: DeckStrategyDossier = {
   version: 1,
-  deckId: "(Red/Black) Sabo - TCG Match Making EB05 #8",
+  deckId: "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10",
   archetype:
     "Red/Black Sabo in front of the OP-17 Elbaph shell with the EB-05 cards: three cost-12 giants -- Saul, Ripley and Loki -- grow every cheap {Straw Hat Crew} body by +3000 and switch on the Leader's aura, ST01-011 Brook hands the Leader its DON!!, and EB05-046 Yamato is the defence against big bodies.",
   gamePlan: [
@@ -29,6 +29,7 @@ export const op13SaboTcgmmDossier: DeckStrategyDossier = {
     "Not every OP17 giant works here. OP17-081 Gerd and OP17-094 Rodo gain their +12 cost only under an {Elbaph} Leader, and Sabo is not one. Ripley's +12 has no such condition.",
   ],
   commonVariants: [
+    '"(Red/Black) Sabo - TCG Match Making EB05 #8", ranked 8th the week before, is the same shell with four Yamato and three each of Loki, Docking Six and Brook where this list plays two Yamato, four Loki, four Docking Six, two Brook and a second OP04-016.',
     '"(Red/Black) Sabo - 1st Place PlayTCG EGB 2026-09-20" plays a wider red package -- EB04-007 Roronoa Zoro and OP13-007 Ace & Sabo & Luffy -- and OP14-096 Ground Death where this list plays Yamato and Ripley. Expect a −3000 and a negation from it, and one giant fewer.',
     '"(Red/Black) Sabo - OP17 Elbaph List" is the build with only OP04-016 for red: OP17-091 Brook, OP17-098 Gum-Gum Kong Gun and OP15-094 Roronoa Zoro in the flex slots.',
     "The Leader's starter deck build is the Revolutionary Army list (ST-35 with OP12/OP13 support), which reaches cost 8 through {Revolutionary Army} cost-raising cards instead of giants. Expect either when the Leader is OP13-004.",
@@ -64,12 +65,12 @@ export const op13SaboTcgmmDossier: DeckStrategyDossier = {
   sources: [
     {
       url: "https://www.patreon.com/tcgmatchmaking",
-      retrievedAt: "2026-11-09",
-      note: "The deck's own 50: the Red/Black Sabo list in TCG Match Making's \"EB05 Weekly Power Rankings - November 5th\" post (5 Nov 2026), ranked 8th, from high-rank online play. A Patreon post with no pilot or event.",
+      retrievedAt: "2026-11-12",
+      note: "The deck's own 50: the Red/Black Sabo list in TCG Match Making's \"EB05 Weekly Power Rankings - November 12th\" post (12 Nov 2026), ranked 10th, from high-rank online play, with Blue Xebec and Red/Green Luffy named as its main problems; the 5 Nov post ranked the first variants line 8th. A Patreon post with no pilot or event.",
     },
     {
       url: "https://stats.tcgmatchmaking.com/",
-      retrievedAt: "2026-11-09",
+      retrievedAt: "2026-11-12",
       note: "TCG Match Making's stats dashboard, the play data the power rankings are drawn from.",
     },
     {

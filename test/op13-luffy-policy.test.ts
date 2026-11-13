@@ -14,7 +14,8 @@ import { character, copies, instance, scenario } from "./support/index.js";
  * does.
  */
 
-const LUFFY = "(Red/Green) Monkey.D.Luffy - Miracle Luffy EB05";
+const LUFFY =
+  "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP13-001";
@@ -135,6 +136,35 @@ describe("the opening hand", () => {
         ...copies(2, "OP15-035", "laboon"),
         ...copies(2, "OP05-038", "charlestone"),
         instance("gatling", "OP06-018"),
+      ]),
+    ).toBe("mulligan");
+  });
+
+  it("keeps the Land of Wano build's Garp or Bonney", async () => {
+    // The Community list plays none of the Straw Hat searches; its guide keeps
+    // a hand with OP13-016 Garp or EB05-001 Bonney.
+    expect(
+      await decisionFor([
+        instance("garp", "OP13-016"),
+        ...copies(2, "OP17-022", "shanks"),
+        ...copies(2, "OP01-055", "samurai"),
+      ]),
+    ).toBe("keep");
+    expect(
+      await decisionFor([
+        instance("bonney", "EB05-001"),
+        ...copies(2, "OP17-022", "shanks"),
+        ...copies(2, "OP01-055", "samurai"),
+      ]),
+    ).toBe("keep");
+  });
+
+  it("ships a Land of Wano hand with neither Garp nor Bonney", async () => {
+    expect(
+      await decisionFor([
+        ...copies(2, "OP07-022", "otama"),
+        ...copies(2, "ST30-004", "ivankov"),
+        instance("samurai", "OP01-055"),
       ]),
     ).toBe("mulligan");
   });

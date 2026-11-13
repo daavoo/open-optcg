@@ -29,7 +29,7 @@ import {
  * thresholds this list runs on are answered by the same card, and that every
  * slot is one a Red/Black Leader may legally play.
  */
-const DECK = "(Red/Black) Sabo - TCG Match Making EB05 #8";
+const DECK = "(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10";
 
 /**
  * A neutral table with the Sabo list on p1, built the way `test/op16.test.ts`

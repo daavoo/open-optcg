@@ -196,7 +196,7 @@ describe("deck overview analytics", () => {
     expect(tribal.sharedType).toBe(50);
 
     const pile = deckAnalytics(
-      editableDeck("(Red/Black) Sabo - TCG Match Making EB05 #8"),
+      editableDeck("(Red/Black) Sabo - TCG Match Making EB05 2026-11-12 #10"),
     );
     expect(pile.sharedType).toBe(0);
   });
