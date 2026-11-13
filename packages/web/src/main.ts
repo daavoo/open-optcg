@@ -49,6 +49,7 @@ import * as editorScreen from "./screens/editor.js";
 import type { EditorContext, EditorState } from "./screens/editor.js";
 import * as sealedScreen from "./screens/sealed.js";
 import { prereleaseExpansion } from "./prerelease.js";
+import { listenForGetCards } from "./get-cards-bookmarklet.js";
 import { playHeadlessTables } from "./swiss-tables.js";
 import type { SealedContext, SealedState } from "./screens/sealed.js";
 import * as assetGateScreen from "./screens/asset-gate.js";
@@ -499,6 +500,21 @@ const assetGateDeps: AssetGateContext = {
   missingArt: missingCardArt,
 };
 
+/**
+ * A pack the Get cards bookmark sent from the card list this tab opened. It
+ * loads as a picked zip would, except that a match on the board keeps its
+ * screen: the cards are stored and show up from the next render on.
+ */
+async function receiveAssetPack(file: File): Promise<boolean> {
+  if (store.game && !afterAssetGate) {
+    await cacheAssetFiles([file]);
+    applyAssetAnchors();
+    return assetsReady();
+  }
+  await assetGateDeps.loadAssets([file]);
+  return assetsReady();
+}
+
 /** Shows the gate, or the lobby again when a load came from its dialog. */
 function rerenderAssets(): void {
   if (afterAssetGate) showAssetGate(afterAssetGate);
@@ -781,6 +797,11 @@ const sealedDeps: SealedContext = {
   },
   goHome,
   lockedExpansion: prereleaseExpansion(),
+  cardsReady: assetsReady,
+  renderGetCards: () => assetGateScreen.renderDialog(assetGateDeps),
+  bindGetCards: () => {
+    assetGateScreen.bindControls(assetGateDeps);
+  },
   playTables: playHeadlessTables,
 };
 
@@ -1127,7 +1148,11 @@ if (learnedModelIsFetched()) {
    overrides a bundled build's text card for card. */
 loadBuiltInPrintedText();
 
+listenForGetCards(receiveAssetPack);
+
+/* The pre-release page opens on its lobby either way, and asks for the cards
+   there when the player goes to play. */
 void restoreCachedAssets().then(() => {
-  if (assetsReady()) goHome();
+  if (assetsReady() || prereleaseExpansion()) goHome();
   else showAssetGate(goHome);
 });

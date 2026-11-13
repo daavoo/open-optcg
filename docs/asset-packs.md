@@ -22,18 +22,28 @@ Nothing is installed.
    you cannot drag, choose **Copy the bookmark**, add a new bookmark by hand
    and paste what was copied as its address (URL). No browser lets a page add
    a bookmark for you, so one of these two is needed once.
-2. Open [Bandai's card list](https://en.onepiece-cardgame.com/cardlist/) and
-   click the bookmark. A panel opens in the corner of Bandai's page.
+2. Open Bandai's card list **from the app's _Bandai's card list_ button**, and
+   click the bookmark there. A panel opens in the corner of Bandai's page.
 3. Choose **Download the cards**. It fetches the printed text and about 2,000
    images (roughly 430 MB, a few minutes); the panel counts them and
-   estimates the time left, then saves `open-optcg-assets.zip` to your
-   downloads. You can switch to other tabs while it runs. Closing, reloading
-   or browsing away from that tab stops it (the browser asks first), but
-   nothing fetched is lost: run the bookmark again and it carries on from
-   the images already saved.
-4. Back in the app, choose **Load asset pack (.zip)** and pick that zip. The
-   browser keeps the cards for the next visit. Nothing is uploaded anywhere. A
-   newer pack loads from **Configure matchup**, under _Card text and art_.
+   estimates the time left. You can switch to other tabs while it runs.
+   Closing, reloading or browsing away from that tab stops it (the browser
+   asks first), but nothing fetched is lost: run the bookmark again and it
+   carries on from the images already saved.
+4. When it finishes, the cards go straight into the app tab that opened the
+   card list, and the browser keeps them for the next visit. Nothing is
+   uploaded anywhere. The panel also offers to save them as a zip, for another
+   browser or a phone. A newer pack loads from **Configure matchup**, under
+   _Card text and art_.
+
+Opened from the app, the card list keeps a handle on the app's tab
+(`window.opener`); the downloader says hello through it, and once an Open
+OPTCG page answers, it posts the finished pack to that page instead of saving
+it. The app accepts a pack only from Bandai's origin
+(`listenForGetCards` in `packages/web/src/get-cards-bookmarklet.ts`). If you
+open the card list some other way, or close the app tab before the run ends,
+nothing answers: the panel saves `open-optcg-assets.zip` to your downloads, and
+you load it with **Load asset pack (.zip)**.
 
 The bookmark only fetches the downloader script from the hosted site and runs
 it, so it stays current without being re-added.

@@ -9,7 +9,9 @@
  * straight from Bandai to the player's machine.
  *
  * It writes what `tools/download-assets.ts` writes -- `printed-text.json` and
- * `art/<card number>.png` -- into a zip it saves, which the app loads.
+ * `art/<card number>.png` -- into a zip. When an Open OPTCG tab opened the
+ * card list, the zip goes straight to that tab (see `listenForGetCards`);
+ * otherwise it is saved for the player to load.
  *
  * Built by `tools/build-get-cards.ts` into `dist/get-cards.js`, which the
  * hosted site serves next to the app. The bookmarklet only fetches and runs
@@ -32,7 +34,13 @@ import {
   CARDLIST_SERIES,
   cardlistUrl,
 } from "./fetch-reference/src/sources.js";
-import { parseMissingCards } from "../packages/web/src/get-cards-bookmarklet.js";
+import {
+  GET_CARDS_APP_HERE,
+  GET_CARDS_HELLO,
+  GET_CARDS_PACK,
+  GET_CARDS_RECEIVED,
+  parseMissingCards,
+} from "../packages/web/src/get-cards-bookmarklet.js";
 
 /** Every card number the engine knows, sorted; injected by the build. */
 declare const __WANTED_CARDS__: string[];
@@ -50,13 +58,13 @@ declare const __MAX_IN_FLIGHT__: number;
 
 const PANEL_ID = "open-optcg-get-cards";
 
-/** The pack as a zip assembled in memory, saved as a download at the end. */
+/** The pack as a zip assembled in memory, handed over or saved at the end. */
 interface ZipWriter {
   write(path: string, data: Uint8Array): void;
-  finish(): Promise<void>;
+  finish(): Promise<Blob>;
 }
 
-function zipWriter(name: string): ZipWriter {
+function zipWriter(): ZipWriter {
   // Streamed into chunks rather than one buffer: a full run is a few hundred
   // MB of PNGs, and a Blob made of parts never needs them contiguous.
   const parts: Uint8Array[] = [];
@@ -78,20 +86,96 @@ function zipWriter(name: string): ZipWriter {
     async finish() {
       zip.end();
       await finished;
-      const url = URL.createObjectURL(
-        new Blob(parts as BlobPart[], { type: "application/zip" }),
-      );
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = name;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 60_000);
+      return new Blob(parts as BlobPart[], { type: "application/zip" });
     },
   };
+}
+
+function saveZip(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 60_000);
+}
+
+/** The Open OPTCG tab that opened this page, and the origin it answered from. */
+interface AppTab {
+  window: Window;
+  origin: string;
+}
+
+/**
+ * Says hello to the tab that opened this page and waits briefly for an Open
+ * OPTCG page to answer. Null when nothing opened this tab, or what did is not
+ * the app. The hello carries nothing, so it may go to any origin; the pack
+ * goes only to the one that answered.
+ */
+function findAppTab(): Promise<AppTab | null> {
+  const opener = window.opener as Window | null;
+  if (!opener) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const finish = (tab: AppTab | null) => {
+      clearTimeout(timer);
+      window.removeEventListener("message", onMessage);
+      resolve(tab);
+    };
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: unknown } | null;
+      if (event.source === opener && data?.type === GET_CARDS_APP_HERE)
+        finish({ window: opener, origin: event.origin });
+    };
+    const timer = setTimeout(() => {
+      finish(null);
+    }, 1500);
+    window.addEventListener("message", onMessage);
+    try {
+      opener.postMessage({ type: GET_CARDS_HELLO }, "*");
+    } catch {
+      finish(null);
+    }
+  });
+}
+
+/**
+ * Hands the pack to the app tab and waits for it to say whether it loaded.
+ * False when the tab has gone, refused it, or never answered.
+ */
+function sendToApp(app: AppTab, zip: Blob, name: string): Promise<boolean> {
+  if (app.window.closed) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const finish = (ok: boolean) => {
+      clearTimeout(timer);
+      window.removeEventListener("message", onMessage);
+      resolve(ok);
+    };
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: unknown; ok?: unknown } | null;
+      if (event.source === app.window && data?.type === GET_CARDS_RECEIVED)
+        finish(data.ok === true);
+    };
+    // Unpacking a full pack into the app's storage takes a while on a slow
+    // machine; this only bounds a tab that will never answer.
+    const timer = setTimeout(() => {
+      finish(false);
+    }, 180_000);
+    window.addEventListener("message", onMessage);
+    try {
+      app.window.postMessage(
+        { type: GET_CARDS_PACK, name, zip },
+        // A page opened from a file has the opaque origin "null", which a
+        // target origin cannot name.
+        app.origin === "null" ? "*" : app.origin,
+      );
+    } catch {
+      finish(false);
+    }
+  });
 }
 
 /**
@@ -226,10 +310,8 @@ async function run(
   cache: ArtCache | null,
   say: (line: string) => void,
   only: readonly string[] | null,
-): Promise<string> {
-  const zip = zipWriter(
-    only ? "open-optcg-assets-update.zip" : "open-optcg-assets.zip",
-  );
+): Promise<{ summary: string; zip: Blob }> {
+  const zip = zipWriter();
   const wantedSet = new Set(__WANTED_CARDS__);
   const wanted = only ?? __WANTED_CARDS__;
   const fetcher = new PoliteFetcher({ max: __MAX_IN_FLIGHT__ });
@@ -318,16 +400,16 @@ async function run(
     );
   });
   say("Finishing…");
-  await zip.finish();
-  return (
+  const blob = await zip.finish();
+  const summary =
     `Printed text for ${Object.keys(sorted).length} of ${__WANTED_CARDS__.length} cards, ` +
     `${wanted.length - failed.length} images` +
     (saved ? ` (${saved} of them saved from an earlier run)` : "") +
     (failed.length
       ? `, ${failed.length} not found (${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""})`
       : "") +
-    "."
-  );
+    ".";
+  return { summary, zip: blob };
 }
 
 /** The art URL of a promo or reprint no list page carries, from Bandai's search. */
@@ -367,7 +449,7 @@ async function start(): Promise<void> {
     };
     return;
   }
-  const cache = await openArtCache();
+  const [cache, app] = await Promise.all([openArtCache(), findAppTab()]);
   const kept = (await cache?.count()) ?? 0;
   // The cards the app said it has no art for, when it opened this page.
   const asked = parseMissingCards(location.hash);
@@ -381,27 +463,30 @@ async function start(): Promise<void> {
   const linkButton = (attribute: string, label: string) =>
     `<button type="button" ${attribute} style="${small};display:block;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:inherit;text-align:left">${label}</button>`;
   const cards = (count: number) => `${count} card${count === 1 ? "" : "s"}`;
+  const then = app
+    ? `<p style="${small}">They go straight into the Open OPTCG tab that opened this page.</p>`
+    : `<p style="${small}">Then, in Open OPTCG, load the zip.</p>`;
   const keepGoing = `<p style="margin:8px 0 0">You can switch to other tabs while it runs. If this tab is closed or reloaded, run the bookmark again: it carries on from the images already saved.</p>`;
   ui.show(
     asked
-      ? `<p style="margin:0">Open OPTCG asked for the ${cards(asked.length)} it has no art for. This downloads their images and the printed text into a small zip, to load on top of the cards you already have.</p>` +
+      ? `<p style="margin:0">Open OPTCG asked for the ${cards(asked.length)} it has no art for. This downloads their images and the printed text, to add to the cards you already have.</p>` +
           keepGoing +
           ui.button(
             `Download ${asked.length === 1 ? "that card" : `those ${asked.length} cards`}`,
           ) +
-          `<p style="${small}">Then, in Open OPTCG, load the zip.</p>` +
+          then +
           linkButton("data-run-all", "Download every card instead")
-      : `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site, into one zip. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
+      : `<p style="margin:0">Downloads the printed text and art of every card Open OPTCG plays, from this site. About ${Math.round((__WANTED_CARDS__.length * 0.2) / 10) * 10} MB, a few minutes.</p>` +
           (kept
             ? `<p style="margin:8px 0 0">${kept} card images are already saved in this browser from an earlier run; only the rest are downloaded.</p>`
             : "") +
           keepGoing +
           ui.button("Download the cards") +
-          `<p style="${small}">Then, in Open OPTCG, load the zip.</p>` +
+          then +
           (offerUnsaved
             ? linkButton(
                 "data-run-unsaved",
-                `Only the ${cards(unsaved.length)} this browser has not saved yet: a small zip to load on top of the one you loaded before`,
+                `Only the ${cards(unsaved.length)} this browser has not saved yet, to add to the cards you loaded before`,
               )
             : "") +
           (kept ? linkButton("data-forget", "Forget the saved images") : ""),
@@ -428,20 +513,42 @@ async function start(): Promise<void> {
     };
     window.addEventListener("beforeunload", holdPage);
     try {
-      const summary = await run(cache, status, only);
+      const { summary, zip } = await run(cache, status, only);
       const name = only
         ? "open-optcg-assets-update.zip"
         : "open-optcg-assets.zip";
+      let sent = false;
+      if (app) {
+        status("Handing the cards to Open OPTCG…");
+        sent = await sendToApp(app, zip, name);
+      }
+      if (!sent) saveZip(zip, name);
+      const remembered = cache
+        ? `<p style="${small}">The images stay saved in this browser, so after a new set the next run fetches only the new cards.</p>`
+        : "";
       ui.show(
-        `<p style="margin:0">Done: <strong>${name}</strong> is in your downloads. ${summary}</p>` +
-          (only
-            ? `<p style="${small}">Load it in Open OPTCG on top of the cards you already have.</p>`
-            : "") +
-          (cache
-            ? `<p style="${small}">The images stay saved in this browser, so after a new set the next run fetches only the new cards.</p>`
-            : "") +
-          ui.button("Close"),
+        (sent
+          ? `<p style="margin:0">Done: the cards are in Open OPTCG. Switch back to its tab to play. ${summary}</p>`
+          : `<p style="margin:0">Done: <strong>${name}</strong> is in your downloads. ${summary}</p>` +
+            (app
+              ? `<p style="${small}">The Open OPTCG tab did not take the cards (it may have been closed), so they were saved as a zip instead. Load it there.</p>`
+              : only
+                ? `<p style="${small}">Load it in Open OPTCG on top of the cards you already have.</p>`
+                : "")) +
+          remembered +
+          ui.button("Close") +
+          (sent
+            ? linkButton(
+                "data-save-zip",
+                "Also save them as a zip, for another browser or a phone",
+              )
+            : ""),
       );
+      ui.box
+        .querySelector<HTMLButtonElement>("[data-save-zip]")
+        ?.addEventListener("click", () => {
+          saveZip(zip, name);
+        });
     } catch (error) {
       ui.show(
         `<p style="margin:0">Stopped: ${error instanceof Error ? error.message : String(error)}</p>` +

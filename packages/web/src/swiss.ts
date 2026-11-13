@@ -1,15 +1,15 @@
 /**
- * A sealed Swiss event: the player and seven AI players, each with a pool of
- * their own, over three rounds.
+ * A sealed Swiss event: the player and AI players, each with a pool of their
+ * own, paired by record over a fixed number of rounds.
  *
- * Eight seats because that is the smallest pod three rounds resolve: after
- * three rounds exactly one player can be 3-0. An event may run one to seven
- * rounds -- eight players have seven opponents each -- and every round
- * pairs players on the same number of wins where it can and never pairs two
- * players a second time. The player's table is a match on the board; the
- * other three tables are AI against AI, played out by the engine off the main
- * thread (see `playTables` in `SealedContext`), so the standings are games
- * that happened rather than a draw of results.
+ * The rounds set the pod: Swiss runs as many rounds as it takes to leave one
+ * player undefeated, which is log2 of the field, so an event of N rounds seats
+ * 2^N players -- 2 for one round, 8 for three, 32 for five. Every round pairs
+ * players on the same record and never pairs two players a second time. The
+ * player's table is a match on the board; the other tables are AI against AI,
+ * played out by the engine off the main thread (see `playTables` in
+ * `SealedContext`), so the standings are games that happened rather than a
+ * draw of results.
  *
  * Everything here is DOM-free and deterministic in the event's seed.
  */
@@ -26,7 +26,15 @@ import { openSealedPool } from "./sealed-mode.js";
 export const SWISS_ROUNDS = 3;
 /** The round counts the pre-release page offers. */
 export const SWISS_ROUND_OPTIONS = [1, 3, 5] as const;
-export const SWISS_PLAYERS = 8;
+/** The most rounds an event runs: 64 players, where a round's AI tables
+    already take the worker several minutes. */
+export const SWISS_MAX_ROUNDS = 6;
+
+/** The pod a Swiss of `roundCount` rounds resolves: one player per possible
+    record at the end, 2^rounds. */
+export function swissPlayers(roundCount: number): number {
+  return 2 ** roundCount;
+}
 /** The player's seat in {@link SwissEvent.players}. */
 export const YOU = 0;
 
@@ -58,9 +66,9 @@ export interface SwissEvent {
 }
 
 /**
- * Seats the person's deck beside seven AI players, each opening six packs of
- * the same set and bringing the auto-builder's deck, as the single-match
- * opponent does.
+ * Seats the person's deck beside the AI players the round count calls for,
+ * each opening six packs of the same set and bringing the auto-builder's
+ * deck, as the single-match opponent does.
  */
 export function createSwissEvent(
   seed: string,
@@ -71,25 +79,28 @@ export function createSwissEvent(
   if (
     !Number.isInteger(roundCount) ||
     roundCount < 1 ||
-    roundCount >= SWISS_PLAYERS
+    roundCount > SWISS_MAX_ROUNDS
   )
     throw new Error(
-      `A Swiss event of ${SWISS_PLAYERS} runs 1 to ${SWISS_PLAYERS - 1} rounds, not ${roundCount}.`,
+      `A Swiss event runs 1 to ${SWISS_MAX_ROUNDS} rounds, not ${roundCount}.`,
     );
   const you: SwissPlayer = {
     name: "You",
     deck: sealedDeckManifest({ cards: deck }, pool),
   };
-  const others = Array.from({ length: SWISS_PLAYERS - 1 }, (_, index) => {
-    const { pool: aiPool } = openSealedPool(
-      `${seed}:seat-${index + 1}`,
-      pool.expansion,
-    );
-    return {
-      name: `AI player ${index + 1}`,
-      deck: sealedDeckManifest(autoBuildSealedDeckBest(aiPool), aiPool),
-    };
-  });
+  const others = Array.from(
+    { length: swissPlayers(roundCount) - 1 },
+    (_, index) => {
+      const { pool: aiPool } = openSealedPool(
+        `${seed}:seat-${index + 1}`,
+        pool.expansion,
+      );
+      return {
+        name: `AI player ${index + 1}`,
+        deck: sealedDeckManifest(autoBuildSealedDeckBest(aiPool), aiPool),
+      };
+    },
+  );
   const event: SwissEvent = {
     seed,
     expansion: pool.expansion,

@@ -64,3 +64,69 @@ export function parseMissingCards(hash: string): string[] | null {
   ];
   return cards.length > 0 ? cards : null;
 }
+
+/**
+ * The handoff between the downloader on Bandai's page and the Open OPTCG tab
+ * that opened it, so the cards go straight into the app instead of through a
+ * zip the player then loads by hand.
+ *
+ * The app opens the card list with `window.open` and no `noopener`, which
+ * leaves the card list a handle on it (`window.opener`). The downloader says
+ * hello to that handle; an Open OPTCG page answers, and the downloader then
+ * sends the finished pack -- the same zip it would have saved, as a Blob -- to
+ * the origin that answered. The app takes a pack only from Bandai's origin
+ * and loads it as if the player had picked the zip. Without an answer (the
+ * card list opened some other way, or the app tab closed) the downloader
+ * saves the zip as before.
+ */
+export const BANDAI_ORIGIN = "https://en.onepiece-cardgame.com";
+export const GET_CARDS_HELLO = "open-optcg:get-cards-hello";
+export const GET_CARDS_APP_HERE = "open-optcg:app-here";
+export const GET_CARDS_PACK = "open-optcg:asset-pack";
+export const GET_CARDS_RECEIVED = "open-optcg:asset-pack-received";
+
+/** A pack the downloader sent: the zip, and the name it would have saved. */
+export interface SentAssetPack {
+  type: typeof GET_CARDS_PACK;
+  name: string;
+  zip: Blob;
+}
+
+/**
+ * Answers the downloader's hello and hands every pack it sends to `receive`,
+ * which resolves whether the pack loaded. Only messages from Bandai's origin
+ * are read; the reply goes back to that origin alone.
+ */
+export function listenForGetCards(
+  receive: (file: File) => Promise<boolean>,
+  target: Window = window,
+): void {
+  target.addEventListener("message", (event: MessageEvent) => {
+    if (event.origin !== BANDAI_ORIGIN) return;
+    const source = event.source as Window | null;
+    const data = event.data as { type?: unknown } | null;
+    if (!source || typeof data !== "object" || data === null) return;
+    if (data.type === GET_CARDS_HELLO) {
+      source.postMessage({ type: GET_CARDS_APP_HERE }, BANDAI_ORIGIN);
+      return;
+    }
+    const pack = data as Partial<SentAssetPack>;
+    if (pack.type !== GET_CARDS_PACK || !(pack.zip instanceof Blob)) return;
+    const name =
+      typeof pack.name === "string" && pack.name.endsWith(".zip")
+        ? pack.name
+        : "open-optcg-assets.zip";
+    const file = new File([pack.zip], name, { type: "application/zip" });
+    void receive(file).then(
+      (ok) => {
+        source.postMessage({ type: GET_CARDS_RECEIVED, ok }, BANDAI_ORIGIN);
+      },
+      () => {
+        source.postMessage(
+          { type: GET_CARDS_RECEIVED, ok: false },
+          BANDAI_ORIGIN,
+        );
+      },
+    );
+  });
+}

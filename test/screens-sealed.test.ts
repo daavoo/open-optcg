@@ -84,6 +84,45 @@ describe("the pre-release page's lobby", () => {
   });
 });
 
+describe("the pre-release lobby before the cards are in", () => {
+  it("leads with the way to get them, and prints their dialog", () => {
+    const html = renderLobby(
+      emptyState(),
+      stubContext({
+        lockedExpansion: "OP18",
+        cardsReady: () => false,
+        renderGetCards: () => '<div id="get-cards-dialog"></div>',
+      }),
+    );
+    expect(html).toContain("data-open-get-cards");
+    expect(html).toContain('id="get-cards-dialog"');
+    expect(html).toContain('data-swiss-rounds="3"');
+  });
+
+  it("drops both once the cards are in", () => {
+    const html = renderLobby(
+      emptyState(),
+      stubContext({
+        lockedExpansion: "OP18",
+        cardsReady: () => true,
+        renderGetCards: () => '<div id="get-cards-dialog"></div>',
+      }),
+    );
+    expect(html).not.toContain("data-open-get-cards");
+    expect(html).not.toContain('id="get-cards-dialog"');
+  });
+
+  it("names the field each round count plays", () => {
+    const html = renderLobby(
+      emptyState(),
+      stubContext({ lockedExpansion: "OP18" }),
+    );
+    expect(html).toContain("2 players");
+    expect(html).toContain("8 players");
+    expect(html).toContain("32 players");
+  });
+});
+
 describe("the sealed builder's pool", () => {
   it("keeps a card in the pool after a copy goes into the deck", () => {
     const state = runningState("OP18");

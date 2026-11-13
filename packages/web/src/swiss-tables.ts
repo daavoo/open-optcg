@@ -22,11 +22,41 @@ export interface HeadlessTable {
 let runs = 0;
 
 /**
+ * How many workers a round's tables are split across: one per spare core, up
+ * to four. A 32-player round is fifteen AI tables, and one worker playing them
+ * in turn would keep the person waiting for the next pairing long after their
+ * own match ended.
+ */
+function workerCount(tables: number): number {
+  const cores =
+    typeof navigator === "undefined" ? 2 : navigator.hardwareConcurrency || 2;
+  return Math.max(1, Math.min(tables, 4, cores - 1));
+}
+
+/**
  * Each table's winning seat, or null for a game that hit the action ceiling,
- * in the order given. Rejects when the worker reports an error, so the caller
+ * in the order given. Rejects when a worker reports an error, so the caller
  * can fall back to another pilot.
  */
-export function playHeadlessTables(
+export async function playHeadlessTables(
+  tables: readonly HeadlessTable[],
+  seedPrefix: string,
+  pilot: AnalyticsPilot,
+): Promise<Array<Seat | null>> {
+  const workers = workerCount(tables.length);
+  const shares = Array.from({ length: workers }, (_, worker) =>
+    tables.filter((_, index) => index % workers === worker),
+  );
+  const results = await Promise.all(
+    shares.map((share) => playInOneWorker(share, seedPrefix, pilot)),
+  );
+  return tables.map(
+    (_, index) =>
+      results[index % workers]![Math.floor(index / workers)] ?? null,
+  );
+}
+
+function playInOneWorker(
   tables: readonly HeadlessTable[],
   seedPrefix: string,
   pilot: AnalyticsPilot,
