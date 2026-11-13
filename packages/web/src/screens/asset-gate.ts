@@ -90,6 +90,8 @@ export const GET_CARDS_DIALOG = "get-cards-dialog";
 /**
  * The same ask as a dialog, for a page that shows itself before the cards are
  * in (the pre-release lobby) and asks for them when the player goes to play.
+ * A player whose pack predates the set gets the shorter way first: only the
+ * cards it lacks.
  */
 export function renderDialog(ctx: AssetGateContext): string {
   return `<div class="app-dialog-backdrop" id="${GET_CARDS_DIALOG}" hidden>
@@ -99,6 +101,7 @@ export function renderDialog(ctx: AssetGateContext): string {
         <button class="text-button" type="button" data-close-dialog="${GET_CARDS_DIALOG}">${icon("x", "Close")}Close</button>
       </div>
       <p>The cards are Bandai's, so this site can't ship them. Your own browser fetches them from Bandai's card list, once.</p>
+      ${renderMissing(ctx)}
       ${renderSteps(ctx)}
     </div>
   </div>`;

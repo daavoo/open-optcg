@@ -265,6 +265,9 @@ export async function cacheAssetFiles(
   }
   try {
     const database = await openAssetDatabase();
+    const textToCache = textPack
+      ? await textOverCached(database, textPack)
+      : undefined;
     const transaction = database.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
     for (const file of images) {
@@ -275,12 +278,12 @@ export async function cacheAssetFiles(
         blob: file,
       } satisfies CachedAsset);
     }
-    if (textPack) {
+    if (textToCache) {
       store.put({
         key: TEXT_PACK_KEY,
-        name: textPack.name,
+        name: textToCache.name,
         type: "application/json",
-        blob: textPack,
+        blob: textToCache,
       } satisfies CachedAsset);
     }
     await completeTransaction(transaction);
@@ -289,6 +292,42 @@ export async function cacheAssetFiles(
     // Runtime assets still work when persistent browser storage is unavailable.
   }
   return summary;
+}
+
+/**
+ * The text pack to keep: the new one laid over the one already kept. The
+ * store holds one text record, and a pack of only the cards a new set added
+ * (`missingCardsUrl`) would otherwise replace the text of every card before
+ * it on the next visit. Images need no such step: each is its own record.
+ */
+async function textOverCached(
+  database: IDBDatabase,
+  textPack: File,
+): Promise<File> {
+  try {
+    const transaction = database.transaction(STORE_NAME, "readonly");
+    const request = transaction.objectStore(STORE_NAME).get(TEXT_PACK_KEY);
+    const cached = await new Promise<CachedAsset | undefined>(
+      (resolve, reject) => {
+        request.addEventListener("success", () => {
+          resolve(request.result as CachedAsset | undefined);
+        });
+        request.addEventListener("error", () => {
+          reject(request.error ?? new Error("ASSET_CACHE_READ_FAILED"));
+        });
+      },
+    );
+    await completeTransaction(transaction);
+    if (!cached) return textPack;
+    const before = parsePrintedTextPack(await cached.blob.text());
+    const after = parsePrintedTextPack(await textPack.text());
+    const merged = { ...after, cards: { ...before.cards, ...after.cards } };
+    return new File([JSON.stringify(merged)], textPack.name, {
+      type: "application/json",
+    });
+  } catch {
+    return textPack;
+  }
 }
 
 export async function restoreCachedAssets(): Promise<number> {
