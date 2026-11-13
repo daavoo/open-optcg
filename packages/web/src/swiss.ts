@@ -2,8 +2,9 @@
  * A sealed Swiss event: the player and seven AI players, each with a pool of
  * their own, over three rounds.
  *
- * Eight seats and three rounds because that is the smallest pod Swiss
- * resolves: after three rounds exactly one player can be 3-0. Every round
+ * Eight seats because that is the smallest pod three rounds resolve: after
+ * three rounds exactly one player can be 3-0. An event may run one to seven
+ * rounds -- eight players have seven opponents each -- and every round
  * pairs players on the same number of wins where it can and never pairs two
  * players a second time. The player's table is a match on the board; the
  * other three tables are AI against AI, played out by the engine off the main
@@ -21,7 +22,10 @@ import {
 import { seedRng, shuffle } from "@one-piece-sim/protocol";
 import { openSealedPool } from "./sealed-mode.js";
 
+/** The round count an event runs when none is chosen. */
 export const SWISS_ROUNDS = 3;
+/** The round counts the pre-release page offers. */
+export const SWISS_ROUND_OPTIONS = [1, 3, 5] as const;
 export const SWISS_PLAYERS = 8;
 /** The player's seat in {@link SwissEvent.players}. */
 export const YOU = 0;
@@ -47,6 +51,8 @@ export interface SwissEvent {
   readonly seed: string;
   readonly expansion: string;
   readonly players: readonly SwissPlayer[];
+  /** How many rounds the event runs. */
+  readonly roundCount: number;
   /** Rounds paired so far, oldest first; the last may still be playing. */
   readonly rounds: SwissTable[][];
 }
@@ -60,7 +66,16 @@ export function createSwissEvent(
   seed: string,
   pool: SealedPool,
   deck: Record<string, number>,
+  roundCount: number = SWISS_ROUNDS,
 ): SwissEvent {
+  if (
+    !Number.isInteger(roundCount) ||
+    roundCount < 1 ||
+    roundCount >= SWISS_PLAYERS
+  )
+    throw new Error(
+      `A Swiss event of ${SWISS_PLAYERS} runs 1 to ${SWISS_PLAYERS - 1} rounds, not ${roundCount}.`,
+    );
   const you: SwissPlayer = {
     name: "You",
     deck: sealedDeckManifest({ cards: deck }, pool),
@@ -78,6 +93,7 @@ export function createSwissEvent(
   const event: SwissEvent = {
     seed,
     expansion: pool.expansion,
+    roundCount,
     players: [you, ...others],
     rounds: [],
   };
@@ -148,7 +164,8 @@ export function roundComplete(round: readonly SwissTable[]): boolean {
 
 export function eventComplete(event: SwissEvent): boolean {
   return (
-    event.rounds.length === SWISS_ROUNDS && roundComplete(event.rounds.at(-1)!)
+    event.rounds.length === event.roundCount &&
+    roundComplete(event.rounds.at(-1)!)
   );
 }
 
@@ -208,7 +225,7 @@ export function recordResult(
 ): boolean {
   table.winner = winner;
   const current = event.rounds.at(-1)!;
-  if (!roundComplete(current) || event.rounds.length >= SWISS_ROUNDS)
+  if (!roundComplete(current) || event.rounds.length >= event.roundCount)
     return false;
   event.rounds.push(pairRound(event));
   return true;

@@ -29,7 +29,6 @@ import {
 import { exportDeckList, type EditableDeck } from "../deck-editor.js";
 import {
   bindCatalogFilters,
-  catalogFilterIsEmpty,
   closeCatalogMenus,
   EMPTY_CATALOG_FILTER,
   matchesCatalogFilter,
@@ -60,6 +59,7 @@ import {
   yourTable,
   SWISS_PLAYERS,
   SWISS_ROUNDS,
+  SWISS_ROUND_OPTIONS,
   YOU,
   type SwissEvent,
   type SwissTable,
@@ -67,7 +67,7 @@ import {
 import type { Seat } from "../analytics.js";
 import type { HeadlessTable } from "../swiss-tables.js";
 
-/** What the lobby's Start leads to: one match, or a three-round Swiss pod. */
+/** What the lobby's Start leads to: one match, or a Swiss pod. */
 export type SealedFormat = "single" | "swiss";
 
 export interface SealedRun {
@@ -97,6 +97,8 @@ export interface SealedState {
   message: string;
   catalogScrollTop: number;
   format: SealedFormat;
+  /** How many rounds a Swiss event entered from this run will last. */
+  swissRounds: number;
   /** The Swiss event the run's deck is entered in, once it has started. */
   event: SwissEvent | null;
   /** The person's table whose match is on the board, until it is recorded. */
@@ -147,6 +149,7 @@ export function emptyState(): SealedState {
     message: "",
     catalogScrollTop: 0,
     format: "single",
+    swissRounds: SWISS_ROUNDS,
     event: null,
     playingTable: null,
   };
@@ -281,10 +284,39 @@ function formatChoice(format: SealedFormat): string {
   </fieldset>`;
 }
 
+/**
+ * The pre-release page's lobby: the pack on the table and a button per Swiss
+ * length. A pre-release is a Swiss event of sealed decks, so the length of the
+ * event is the one choice left before the packs are opened.
+ */
+function renderPrereleaseLobby(expansion: SealedExpansion): string {
+  const buttons = SWISS_ROUND_OPTIONS.map(
+    (rounds) =>
+      `<button class="prerelease-rounds" type="button" data-swiss-rounds="${rounds}"><strong>${rounds}</strong><span>${rounds === 1 ? "round" : "rounds"}</span></button>`,
+  ).join("");
+  return `<main class="setup-shell sealed-shell prerelease-lobby">
+    <header class="setup-topbar">
+      <button class="brand-home" type="button" id="sealed-home">
+        <svg class="brand-mark small"><use href="#brand-hex" /></svg>
+        <span class="setup-wordmark">Open OPTCG</span>
+        <span class="sr-only">Home</span>
+      </button>
+    </header>
+    <section class="prerelease-stage">
+      ${packImage(expansion)}
+      <h1>${escapeHtml(expansion.title)} pre-release</h1>
+      <p>Open ${SEALED_PACK_COUNT} packs, build ${SEALED_DECK_SIZE} cards, play a Swiss event of ${SWISS_PLAYERS}.</p>
+      <div class="prerelease-round-buttons" role="group" aria-label="Swiss rounds">${buttons}</div>
+    </section>
+    ${footer.render()}
+  </main>`;
+}
+
 export function renderLobby(state: SealedState, ctx: SealedContext): string {
   const locked = Boolean(ctx.lockedExpansion);
   const expansion = currentExpansion(state, ctx.lockedExpansion);
   state.expansion = expansion.code;
+  if (locked) return renderPrereleaseLobby(expansion);
   return `<main class="setup-shell sealed-shell">
     <header class="setup-topbar">
       <button class="brand-home" type="button" id="sealed-home">
@@ -300,7 +332,7 @@ export function renderLobby(state: SealedState, ctx: SealedContext): string {
       <button class="text-button wide" type="button" id="sealed-import">${icon("file-up", "Import a deck")}Import a ${SEALED_DECK_SIZE}-card list instead</button>
     </form>
     ${footer.render()}
-    ${locked ? "" : boosterPickerDialog(state)}
+    ${boosterPickerDialog(state)}
     ${ctx.renderImportDialog()}
   </main>`;
 }
@@ -319,6 +351,15 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
       input.addEventListener("change", () => {
         state.format = input.value as SealedFormat;
         ctx.rerender();
+      });
+    });
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-swiss-rounds]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        state.format = "swiss";
+        state.swissRounds = Number(button.dataset.swissRounds);
+        startRun(state, ctx);
       });
     });
   document.querySelectorAll("[data-open-booster-picker]").forEach((button) => {
@@ -466,13 +507,9 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
   const deckCards = poolCards.filter(
     (card) => (run.deck[card.cardNumber] ?? 0) > 0,
   );
-  // What the filters are narrowing: everything opened that the deck has not
-  // already taken every copy of.
-  const undrafted = poolCards.filter(
-    (card) =>
-      (opened.get(card.cardNumber) ?? 0) - (run.deck[card.cardNumber] ?? 0) > 0,
-  );
-  const availableCards = undrafted.filter((card) =>
+  // The pool shows every card opened, in the deck or not, so a card stays
+  // where it was found while copies move in and out of the deck above it.
+  const availableCards = poolCards.filter((card) =>
     matchesCatalogFilter(card, state.filter),
   );
   const renderQuantity = (card: CardDefinition): string => {
@@ -509,8 +546,8 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
       <section class="deck-card-section"><div class="catalog-heading"><div><p class="eyebrow">Current deck</p><h2>${deckCards.length} unique cards</h2></div></div>
         <div class="catalog-list deck-card-list">${deckCards.map((card) => renderQuantity(card)).join("")}</div>
       </section>
-      <section class="pool-card-section"><div class="catalog-heading">${renderCatalogFilters("sealed", state.filter, state.sort, poolCards)}${renderCatalogCount(availableCards.length, undrafted.length, state.filter)}</div>
-        <div class="catalog-list pool-card-list">${availableCards.map((card) => renderQuantity(card)).join("") || `<p class="catalog-empty">${catalogFilterIsEmpty(state.filter) ? "Every card you opened is already in the deck." : "No available cards match these filters."}</p>`}</div>
+      <section class="pool-card-section"><div class="catalog-heading">${renderCatalogFilters("sealed", state.filter, state.sort, poolCards)}${renderCatalogCount(availableCards.length, poolCards.length, state.filter)}</div>
+        <div class="catalog-list pool-card-list">${availableCards.map((card) => renderQuantity(card)).join("") || `<p class="catalog-empty">No cards in your pool match these filters.</p>`}</div>
       </section>
     </section>
     ${ctx.renderCardDetailDialog()}
@@ -619,7 +656,12 @@ function enterEvent(state: SealedState, ctx: SealedContext): void {
   if (!state.run) return;
   const run = state.run;
   if (validateSealedDeck({ cards: run.deck }, run.pool).errors.length) return;
-  state.event = createSwissEvent(ctx.randomSeed(), run.pool, run.deck);
+  state.event = createSwissEvent(
+    ctx.randomSeed(),
+    run.pool,
+    run.deck,
+    state.swissRounds,
+  );
   state.playingTable = null;
   playAiTables(state, ctx);
   ctx.rerender();
@@ -752,7 +794,7 @@ export function renderEvent(state: SealedState): string {
     mine.winner !== null && !roundComplete(event.rounds.at(-1)!);
   const headline = done
     ? `You finished ${place}${ordinal(place)} of ${SWISS_PLAYERS}, ${record(event, YOU)}`
-    : `Round ${roundNumber} of ${SWISS_ROUNDS}`;
+    : `Round ${roundNumber} of ${event.roundCount}`;
   const action = done
     ? `<button class="primary wide" id="swiss-new">${icon("sparkles", "New event")}Open new packs</button>`
     : waitingOnOthers

@@ -80,6 +80,36 @@ describe("a sealed Swiss event", () => {
     expect(standings(event)[0]).toBe(undefeated[0]);
   });
 
+  it.each([1, 5])(
+    "runs a %i-round event to its end with no rematch",
+    (count) => {
+      const { pool } = openSealedPool("rounds:you", "OP18");
+      const event = createSwissEvent(
+        "rounds",
+        pool,
+        autoBuildSealedDeckGrape(pool).cards,
+        count,
+      );
+      for (let round = 0; round < count; round += 1) {
+        expect(eventComplete(event)).toBe(false);
+        playRound(event);
+      }
+      expect(event.rounds).toHaveLength(count);
+      expect(eventComplete(event)).toBe(true);
+      const meetings = event.rounds
+        .flat()
+        .map((table) => [table.a, table.b].sort().join("-"));
+      expect(new Set(meetings).size).toBe(meetings.length);
+    },
+  );
+
+  it("refuses a round count eight players cannot fill", () => {
+    const { pool } = openSealedPool("rounds:you", "OP18");
+    const deck = autoBuildSealedDeckGrape(pool).cards;
+    expect(() => createSwissEvent("rounds", pool, deck, 0)).toThrow();
+    expect(() => createSwissEvent("rounds", pool, deck, 8)).toThrow();
+  });
+
   it("counts a game with no winner as a loss for both seats", () => {
     const event = newEvent();
     const table = pendingAiTables(event)[0]!;

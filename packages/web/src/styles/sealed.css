@@ -295,3 +295,108 @@
 .swiss-outcome {
   float: right;
 }
+
+/* The pre-release page's lobby: no card behind it, just the pack standing on
+   the scene and the three event lengths under it. The words are lettered
+   like the front page's YOU / AI: white display italic, outlined in ink so
+   they hold against the drawing, and each choice stands on a torn brush
+   stroke of the same ink. */
+.prerelease-stage {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1rem;
+  text-align: center;
+  color: #ffffff;
+}
+.prerelease-stage .booster-pack {
+  width: min(13rem, 46vw);
+  filter: drop-shadow(0 14px 22px rgba(10, 10, 11, 0.45));
+}
+.prerelease-stage h1,
+.prerelease-rounds {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.14em #0a0a0b;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 3px 8px rgba(10, 10, 11, 0.55));
+}
+.prerelease-stage h1 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.6rem, 4.6vw, 2.8rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.prerelease-stage p {
+  margin: 0;
+  max-width: 34ch;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(10, 10, 11, 0.9);
+}
+.prerelease-round-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 7.5rem));
+  gap: 1.1rem;
+  margin-top: 0.4rem;
+}
+.prerelease-rounds {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.4rem 0.65rem;
+  border: 0;
+  background: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+.prerelease-rounds::before {
+  content: "";
+  position: absolute;
+  inset: 4% -4% 2% -6%;
+  z-index: -1;
+  background: #0a0a0b;
+  transform: skewX(-14deg);
+  clip-path: polygon(
+    4% 18%,
+    22% 4%,
+    58% 10%,
+    96% 0,
+    100% 46%,
+    92% 88%,
+    64% 96%,
+    30% 100%,
+    0 84%
+  );
+}
+.prerelease-rounds strong {
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  line-height: 1;
+}
+.prerelease-rounds span {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  -webkit-text-stroke: 0;
+}
+.prerelease-rounds:hover,
+.prerelease-rounds:focus-visible {
+  transform: translateY(-2px) rotate(-1deg);
+}
+.prerelease-rounds:focus-visible {
+  outline: 2px solid var(--parchment);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .prerelease-rounds {
+    transition: none;
+  }
+  .prerelease-rounds:hover,
+  .prerelease-rounds:focus-visible {
+    transform: none;
+  }
+}

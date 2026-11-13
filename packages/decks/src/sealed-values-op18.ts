@@ -1,11 +1,11 @@
-// Written by tools/write-sealed-values.ts from the op18b model's card-value
+// Written by tools/write-sealed-values.ts from the op18b (OP18-005/006 renumbered to Bandai's list) model's card-value
 // fit over 119456 self-play games. Do not edit by hand; refit and rewrite.
 export const OP18_CARD_VALUES: Readonly<Record<string, number>> = {
   "OP18-002": 0.0,
   "OP18-003": 0.1,
   "OP18-004": -0.4,
-  "OP18-005": 2.8,
-  "OP18-006": -1.0,
+  "OP18-005": -1.0,
+  "OP18-006": 2.8,
   "OP18-007": 1.2,
   "OP18-008": 4.4,
   "OP18-009": 0.1,
