@@ -672,10 +672,10 @@ export function createOnKoResult(
   cause: "battle" | "effect" = "effect",
 ): OnPlayResult {
   // OP16-119 Marshall.D.Teach's Trigger can switch a Character off for the turn,
-  // and a Character K.O.'d while negated takes its [On K.O.] with it.
-  if (effectsNegated(state, source.instanceId)) {
-    return { pending: null, events: [] };
-  }
+  // and a Character K.O.'d while negated takes its [On K.O.] with it -- but
+  // only its own: the K.O. still happened, so another card's clause watching
+  // for one (OP18-041 Ms. All Sunday's Leader) still answers it.
+  const negated = effectsNegated(state, source.instanceId);
   // A Character leaving the board is a `card-moved` signal in its own right, and
   // some clauses watch for one without being the dead card's own [On K.O.]:
   // OP16-041 Buggy replays a Prisoner "[printed text omitted -- pnpm card:text OP16-041]". Battle destruction and the imperative
@@ -697,7 +697,9 @@ export function createOnKoResult(
     ],
     false,
   );
-  const mechanicProgram = getOnKoMechanicProgram(source.cardNumber, cause);
+  const mechanicProgram = negated
+    ? undefined
+    : getOnKoMechanicProgram(source.cardNumber, cause);
   if (mechanicProgram) {
     // The card's own clause and whatever was watching for the K.O. triggered
     // together, so the controller orders them (OP10-042#1).
@@ -724,7 +726,9 @@ export function createOnKoResult(
       events: dispatched.events,
     };
   }
-  const legacy = createOnKoEffect(state, playerId, source, resumePlayerId, db);
+  const legacy = negated
+    ? null
+    : createOnKoEffect(state, playerId, source, resumePlayerId, db);
   if (legacy || removalWatchers.length === 0) {
     return { pending: legacy, events: [] };
   }
