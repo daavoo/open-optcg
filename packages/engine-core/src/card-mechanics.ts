@@ -770,6 +770,14 @@ export function getMechanicSignalInvocations(
             ? signal.card
             : undefined;
         if (exited) sources.push(exited);
+        // A negated card runs none of its own clauses, and a reaction rule is
+        // one: the Leader's source is `<player>-leader`, which is the id
+        // `leaderEffectsNegated` reads, so the same check covers all three.
+        const live = sources.filter(
+          (source) => !effectsNegated(state, source.instanceId),
+        );
+        sources.length = 0;
+        sources.push(...live);
         if (
           signal.kind !== rule.signal.kind ||
           sources.length === 0 ||

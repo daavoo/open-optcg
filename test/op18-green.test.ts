@@ -185,6 +185,36 @@ describe("OP18-021 Franky (Leader) [Activate: Main]", () => {
     ).toBe(false);
   });
 
+  // The play is a play: the Stage's own [On Play] resolves. A Stage put out by
+  // an effect used to land without it, so the Leader's Sunny never drew.
+  it("resolves the played Stage's own [On Play]", () => {
+    const game = ownTurn("op18-021-stage-on-play")
+      .withLeader("p1", FRANKY_LEADER)
+      .withDon("p1", { active: 3 })
+      .withDonDeck("p1", 1)
+      .withHand("p1", [instance("sunny", "OP18-075")])
+      .build();
+    const deckBefore = game.state.players.p1.deck.length;
+    const restedBefore = game.state.players.p1.restedDon.length;
+
+    game.play({ type: "activate-main", summary: "[OP18-021]" });
+    game.play({ type: "resolve-effect", optionId: "sunny" });
+
+    const p1 = game.state.players.p1;
+    expect(p1.stage?.instanceId).toBe("sunny");
+    expect(game.state.pendingEffect).toBeNull();
+    // Draw 1, then one rested DON!!: the one the Leader returned comes back.
+    expect(p1.deck).toHaveLength(deckBefore - 1);
+    expect(p1.hand).toHaveLength(1);
+    expect(p1.restedDon).toHaveLength(restedBefore + 1);
+    expect(
+      game.events.some(
+        (event) =>
+          event.type === "stage-played" && event.cardInstanceId === "sunny",
+      ),
+    ).toBe(true);
+  });
+
   it("is not offered with no Stage in hand", () => {
     const game = ownTurn("op18-021-no-stage")
       .withLeader("p1", FRANKY_LEADER)

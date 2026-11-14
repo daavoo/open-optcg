@@ -2033,9 +2033,10 @@ export function continueExecution(
         if (eventPlay(state, instanceId, db)) continue;
         // A Stage is played into the Stage area, not the Character area: it is
         // subject to neither the five-Character limit nor the Character ban
-        // above. OP12-080 Baratie's "[Trigger] Play this card" is the only
-        // clause in the pool that plays one, and before this it landed on the
-        // board as if it were a Character.
+        // above. It is still a play: the `card-played` signal is what runs the
+        // Stage's own `[On Play]` (OP18-075 Thousand Sunny's draw, when the
+        // OP18-021 Franky Leader plays it) and what the play watchers read,
+        // exactly as `playOntoBoard` raises it for a Character.
         if (stagePlay(state, instanceId, execution.context, db)) {
           const previous = player.stage;
           if (previous) {
@@ -2058,13 +2059,30 @@ export function continueExecution(
             cardNumber: card.cardNumber,
             rested: effect.rested ?? false,
           };
+          // Where the card came from, as `playOntoBoard` reports it: hand is
+          // what a play already implies, so only another origin gets a step.
+          if (located && located.zone !== "hand") {
+            events.push({
+              type: "card-moved",
+              playerId,
+              cardInstanceId: card.instanceId,
+              cardNumber: card.cardNumber,
+              from: located.zone,
+              to: "stage",
+              sourceCardNumber: execution.context.source.cardNumber,
+            });
+          }
           events.push({
-            type: "card-moved",
+            type: "stage-played",
             playerId,
             cardInstanceId: card.instanceId,
             cardNumber: card.cardNumber,
-            from: "hand",
-            to: "stage",
+          });
+          signals.push({
+            kind: "card-played",
+            card: { instanceId: card.instanceId, cardNumber: card.cardNumber },
+            playerId,
+            ...playSource(execution.context, db),
           });
           continue;
         }

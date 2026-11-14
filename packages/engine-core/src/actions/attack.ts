@@ -19,6 +19,7 @@ import { type CardInstance } from "../model.js";
 import { handOverPendingEffect } from "../pending.js";
 import { battleAttackPower } from "../queries.js";
 import { effectsNegated } from "../static-abilities.js";
+import { conditionMatches, SOURCE_BINDING } from "../mechanics.js";
 import { type MechanicEffect } from "../mechanic-dsl.js";
 import { type ActionContext } from "./context.js";
 
@@ -215,6 +216,23 @@ export function applyAttack({
       activePlayer,
       attackerCard,
     )!;
+    // A clause whose outermost condition fails as the attack is declared --
+    // a `[DON!! xN]` short of its DON!! -- never took effect, so it has no
+    // `[Once Per Turn]` use to spend: a later attack the same turn that meets
+    // it (the OP18-022 Leader, stood back up by Chimney) is still answered.
+    // Read before dispatch, because a clause that does fire can change what
+    // the condition reads.
+    const effect = program.program.effect;
+    const gateFailed =
+      effect.kind === "if" &&
+      effect.else === undefined &&
+      !conditionMatches(
+        state,
+        { sourcePlayerId: activePlayer, source: attackerCard },
+        effect.condition,
+        { [SOURCE_BINDING]: [attackerCard.instanceId] },
+        db,
+      );
     const dispatched = dispatchMechanicInvocations(
       state,
       [
@@ -259,7 +277,7 @@ export function applyAttack({
           oncePerTurnKey,
         };
       }
-    } else if (program.oncePerTurn) {
+    } else if (program.oncePerTurn && !gateFailed) {
       // A program that resolved without asking anything has been used --
       // the same rule `offerOnOpponentAttackEffect` follows, since
       // `requires` (and `handCardsMatching`) already guarantee this dispatch
