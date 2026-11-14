@@ -19,6 +19,7 @@ import { type CardInstance } from "../model.js";
 import { handOverPendingEffect } from "../pending.js";
 import { battleAttackPower } from "../queries.js";
 import { effectsNegated } from "../static-abilities.js";
+import { type MechanicEffect } from "../mechanic-dsl.js";
 import { type ActionContext } from "./context.js";
 
 export function applyAttack({
@@ -240,7 +241,13 @@ export function applyAttack({
       // The first question may be the defender's: P-048 Arlong
       // has them choose the card from their own hand (Bandai's P-048#1).
       handOverPendingEffect(state);
-      if (program.oncePerTurn) {
+      if (program.oncePerTurn && !declinedBySkip(program.program.effect)) {
+        // Only a "you may" clause can be declined: anything else has been
+        // used once it is dispatched, and "skip" there answers an inner
+        // "up to N" with none while the rest resolves (OP18-029 Chopper
+        // restands either way).
+        state.oncePerTurn.push(oncePerTurnKey);
+      } else if (program.oncePerTurn) {
         // A dual-timed card (OP17-048/058 print both this and `[On Your
         // Opponent's Attack]`) shares its budget with that table's own
         // `onOpponentAttackPending` -- the resolve-effect handler that
@@ -371,4 +378,18 @@ export function applyAttack({
       state.activePlayer = defenderPlayerId;
     }
   }
+}
+
+/**
+ * Whether the first question `effect` asks is a "you may" whose "skip" leaves
+ * the whole clause unresolved, so its `[Once Per Turn]` use is still unspent.
+ */
+function declinedBySkip(effect: MechanicEffect): boolean {
+  if (effect.kind === "optional") return true;
+  if (effect.kind === "if")
+    return (
+      declinedBySkip(effect.then) &&
+      (effect.else === undefined || declinedBySkip(effect.else))
+    );
+  return false;
 }

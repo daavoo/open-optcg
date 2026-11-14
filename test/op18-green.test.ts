@@ -590,6 +590,33 @@ describe("OP18-029 Tony Tony.Chopper", () => {
     expect(boardCard(game, "p1", "chopper")?.rested).toBe(true);
   });
 
+  it("spends its [Once Per Turn] when it gives none of its DON!!", () => {
+    // "skip" answers "up to 3" with zero and Chopper still restands, so an
+    // unspent use let it attack and restand without end.
+    const game = ownTurn("op18-029-give-none")
+      .withDon("p1", { rested: 3 })
+      .withBoard("p1", [character("chopper", "OP18-029")])
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "chopper",
+      targetInstanceId: "p2-leader",
+    });
+    game.play({ type: "resolve-effect", optionId: "skip" });
+    expect(game.state.players.p1.leaderAttachedDon).toHaveLength(0);
+    expect(boardCard(game, "p1", "chopper")?.rested).toBe(false);
+    finishBattle(game);
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "chopper",
+      targetInstanceId: "p2-leader",
+    });
+    expect(game.state.pendingEffect).toBeNull();
+    expect(boardCard(game, "p1", "chopper")?.rested).toBe(true);
+  });
+
   it("still restands with no rested DON!! to give", () => {
     const game = ownTurn("op18-029-no-don")
       .withBoard("p1", [character("chopper", "OP18-029")])
