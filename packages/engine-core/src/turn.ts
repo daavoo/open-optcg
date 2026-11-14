@@ -12,8 +12,10 @@ import {
 } from "@one-piece-sim/cards";
 import type { PlayerId, PublicEvent } from "@one-piece-sim/protocol";
 import {
+  dispatchMechanicInvocations,
   dispatchMechanicSignals,
   getOnEndOfYourTurnMechanicProgram,
+  orderSimultaneous,
   getOnStartOfYourTurnMechanicProgram,
 } from "./card-mechanics.js";
 import {
@@ -596,14 +598,74 @@ export function endTurn(
   // so a board-only loop simply never saw it. The Leader is walked too, for the
   // same reason: OP05-022 Donquixote Rosinante is the first Leader to print
   // one, and a Leader is in no zone at all.
-  for (const card of [
+  const endOfTurnSources = [
     {
       instanceId: leaderInstanceId(playerId),
       cardNumber: player.leaderCardNumber,
     },
     ...player.board,
     ...(player.stage ? [player.stage] : []),
-  ]) {
+  ];
+  // Clauses of two or more different cards trigger together, so their
+  // controller picks the order: OP-18's Banban setting Gonbe active
+  // first switches off Gonbe's "if this Character is rested". They go through
+  // the same ordering every simultaneous reaction does, each spending its use
+  // as it resolves; the walk below then finds them spent. One card, or copies
+  // of one, has no order worth asking for and resolves there as before.
+  const unresolved = endOfTurnSources.filter(
+    (card) =>
+      getOnEndOfYourTurnMechanicProgram(card.cardNumber) !== undefined &&
+      !effectsNegated(state, card.instanceId) &&
+      !state.oncePerTurn.includes(
+        `${state.turn}:${card.instanceId}:end-of-turn`,
+      ),
+  );
+  if (new Set(unresolved.map((card) => card.cardNumber)).size >= 2) {
+    const dispatched = dispatchMechanicInvocations(
+      state,
+      orderSimultaneous(
+        state,
+        unresolved.map((card) => {
+          const program = getOnEndOfYourTurnMechanicProgram(card.cardNumber)!;
+          return {
+            context: {
+              sourcePlayerId: playerId,
+              source: {
+                instanceId: card.instanceId,
+                cardNumber: card.cardNumber,
+              },
+            },
+            program: {
+              ...program,
+              effect: {
+                kind: "sequence",
+                effects: [
+                  {
+                    kind: "spend-once-per-turn",
+                    key: `${state.turn}:${card.instanceId}:end-of-turn`,
+                  },
+                  program.effect,
+                ],
+              },
+            },
+          };
+        }),
+      ),
+      db,
+    );
+    events.push(...dispatched.events);
+    if (dispatched.pending && dispatched.invocation) {
+      state.pendingEffect = mechanicPendingEffect(
+        dispatched.invocation,
+        dispatched.pending,
+        dispatched.continuations,
+        true,
+      );
+      state.activePlayer = state.pendingEffect.playerId;
+      return;
+    }
+  }
+  for (const card of endOfTurnSources) {
     if (
       !getOnEndOfYourTurnMechanicProgram(card.cardNumber) ||
       state.oncePerTurn.includes(`${state.turn}:${card.instanceId}:end-of-turn`)

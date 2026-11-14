@@ -87,13 +87,18 @@ function effectOptions(game: Game): string[] {
     .map((action) => action.optionId);
 }
 
-/** Picks one card in an open effect choice, by instance id. */
+/**
+ * Picks one card in an open effect choice, by instance id. A card taken from
+ * the top of face-down Life is offered as its place, not by name, so the id is
+ * what identifies it.
+ */
 const choose = (game: Game, instanceId: string): void => {
   game.play(
     (action) =>
       action.type === "resolve-effect" &&
-      action.option.kind === "card" &&
-      action.option.card.instanceId === instanceId,
+      (action.optionId === instanceId ||
+        (action.option.kind === "card" &&
+          action.option.card.instanceId === instanceId)),
   );
 };
 

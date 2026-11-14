@@ -36,7 +36,12 @@ import {
   type MechanicPendingChoice,
   type MechanicProgram,
 } from "./mechanics.js";
-import type { CardInstance, GameState, PendingEffect } from "./model.js";
+import {
+  forgetOncePerTurnUses,
+  type CardInstance,
+  type GameState,
+  type PendingEffect,
+} from "./model.js";
 import {} from "./removal.js";
 import { orderSummary } from "./offered-action.js";
 import { damageReplacementOption } from "./damage-replacement.js";
@@ -98,6 +103,7 @@ export function placeCharacter(
       events: [],
     };
   }
+  forgetOncePerTurnUses(state, card.instanceId);
   player.board.push({
     ...card,
     rested,
@@ -1309,22 +1315,69 @@ function reactionSourceName(
   return `${db.require(source.cardNumber).name} [${source.cardNumber}]`;
 }
 
+/**
+ * Where a card the pending question picks without looking sits: one end of a
+ * deck the clause takes "from the top of your deck" (OP18-079's Leader), or a
+ * face-down Life card. Undefined for a card the deciding player may see --
+ * including a deck card a search names, which has no `position`.
+ *
+ * Both label paths read it -- the summary and the typed option -- so neither
+ * can name the card while the other hides it.
+ */
+export function hiddenPickPosition(
+  state: GameState,
+  instanceId: string,
+):
+  | { owner: PlayerId; zone: "deck" | "life"; position?: "top" | "bottom" }
+  | undefined {
+  const pending = state.pendingEffect;
+  const blindDeck =
+    pending?.kind === "mechanic-choice" &&
+    pending.choice.kind === "cards" &&
+    pending.choice.selector.position !== undefined &&
+    [pending.choice.selector.zone].flat().includes("deck");
+  for (const owner of ["p1", "p2"] as const) {
+    const player = state.players[owner];
+    for (const [zone, cards] of [
+      ["deck", blindDeck ? player.deck : []],
+      ["life", player.life.filter((card) => card.faceUp !== true)],
+    ] as const) {
+      if (!cards.some((card) => card.instanceId === instanceId)) continue;
+      const all = zone === "deck" ? player.deck : player.life;
+      const position =
+        all[0]?.instanceId === instanceId
+          ? "top"
+          : all.at(-1)?.instanceId === instanceId
+            ? "bottom"
+            : undefined;
+      return { owner, zone, ...(position ? { position } : {}) };
+    }
+  }
+  return undefined;
+}
+
 function describeCardOption(
   state: GameState,
   instanceId: string,
   db: CardDatabase,
 ): string {
+  const hidden = hiddenPickPosition(state, instanceId);
+  if (hidden) {
+    const whose =
+      hidden.owner === state.pendingEffect?.playerId
+        ? "your"
+        : "your opponent's";
+    if (hidden.zone === "deck") {
+      return `the ${hidden.position ?? "top"} card of ${whose} deck`;
+    }
+    return hidden.position
+      ? `${whose} ${hidden.position} Life card`
+      : `one of ${whose} face-down Life cards`;
+  }
   const visible = findCardByInstanceId(state, instanceId);
   if (visible) return db.require(visible.cardNumber).name;
   const donOwner = activeDonOwner(state, instanceId);
   if (donOwner) return `1 active DON!! of ${donOwner}`;
-  for (const playerId of ["p1", "p2"] as const) {
-    const life = state.players[playerId].life;
-    if (life[0]?.instanceId === instanceId) return "your top Life card";
-    if (life.at(-1)?.instanceId === instanceId) return "your bottom Life card";
-    if (life.some((card) => card.instanceId === instanceId))
-      return "a face-down Life card";
-  }
   throw new Error(`MISSING_EFFECT_TARGET: ${instanceId}`);
 }
 
@@ -1354,9 +1407,12 @@ export function getEffectOptions(
   db: CardDatabase = defaultCardDatabase,
 ): EffectOption[] {
   return computeEffectOptions(state, db).map((option) => {
+    const instanceId = rawInstanceId(option.optionId);
     const optionCardNumber =
       option.optionCardNumber ??
-      findCardByInstanceId(state, rawInstanceId(option.optionId))?.cardNumber;
+      (hiddenPickPosition(state, instanceId)
+        ? undefined
+        : findCardByInstanceId(state, instanceId)?.cardNumber);
     return { ...option, ...(optionCardNumber ? { optionCardNumber } : {}) };
   });
 }

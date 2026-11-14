@@ -25,7 +25,8 @@ const animalAlabastaCharacter = (context: AbilityContext): boolean =>
 
 /**
  * OP18-004's own current power. Safe from a keyword predicate for the reason
- * OP06-002 gives: power layers never ask about keywords.
+ * OP06-002 gives: power layers never ask about keywords. Given DON!! count only
+ * on its controller's turn, as they do everywhere else.
  */
 const ownPower = (context: AbilityContext): number =>
   context.isLeader
@@ -34,7 +35,7 @@ const ownPower = (context: AbilityContext): number =>
         context.state,
         context.playerId,
         context.card as BoardCard,
-        true,
+        turnPlayer(context) === context.playerId,
         context.db,
       );
 

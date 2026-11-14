@@ -1404,7 +1404,10 @@ describe("OP14-034 Monkey.D.Luffy", () => {
     expect(currentPower(game.state, "p1", "usopp")).toBe(6000);
     expect(currentPower(game.state, "p1", "kiku")).toBe(2000);
 
+    // Usopp and Kikunojo both print [End of Your Turn], so ending the turn
+    // first asks which resolves first.
     game.pass();
+    while (game.state.pendingEffect) game.play({ type: "resolve-effect" });
     expect(currentPower(game.state, "p1", "usopp")).toBe(5000);
   });
 

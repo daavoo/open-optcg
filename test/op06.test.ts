@@ -3972,8 +3972,8 @@ describe("OP06-099 Aisa", () => {
     // The destination is worded without a possessive because the card goes
     // back to its own owner; which stack it is was settled by the branch above.
     expect(game.summaries("p1")).toEqual([
-      "Place your top Life card at the top of the Life cards",
-      "Place your top Life card at the bottom of the Life cards",
+      "Place your opponent's top Life card at the top of the Life cards",
+      "Place your opponent's top Life card at the bottom of the Life cards",
     ]);
     game.play({ type: "resolve-effect", optionId: "order:0|1" });
     settle(game);

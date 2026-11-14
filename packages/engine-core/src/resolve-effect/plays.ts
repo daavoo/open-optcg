@@ -5,6 +5,7 @@
  * `resolve-effect/index.ts` for the table and the contract they share.
  */
 import { returnDonToDeck } from "../don.js";
+import { forgetOncePerTurnUses } from "../model.js";
 import {
   createOnPlayEffect,
   effectSource,
@@ -52,6 +53,7 @@ export function resolveFreePlay({
         cardNumber: player.stage.cardNumber,
       });
     }
+    forgetOncePerTurnUses(state, card.instanceId);
     player.stage = { ...card, rested: false };
     events.push({
       type: "stage-played",

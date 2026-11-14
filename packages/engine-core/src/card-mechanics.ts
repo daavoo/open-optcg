@@ -506,7 +506,30 @@ export function mechanicProgramEffects<K extends MechanicEffect["kind"]>(
 export function getTriggerMechanicProgram(
   cardNumber: string,
 ): MechanicProgram | undefined {
-  return triggerPrograms.get(cardNumber);
+  const program = triggerPrograms.get(cardNumber);
+  return program === undefined ? undefined : asActivatedTrigger(program);
+}
+
+/**
+ * A `[Trigger] DON!! −N: <effect>` with its "you may pay" already answered.
+ *
+ * `donMinus` writes the cost as a gated `optional`, the shape every other
+ * timing needs, because there nothing else asks whether to pay. A [Trigger]
+ * has already asked: "activate" is the decision to use it, cost and all, so a
+ * second apply/skip is a question with no legal "skip": its skip would trash
+ * the card with nothing resolved, where declining the Trigger adds it to hand.
+ */
+function asActivatedTrigger(program: MechanicProgram): MechanicProgram {
+  const effect = program.effect;
+  if (
+    effect.kind !== "if" ||
+    effect.else !== undefined ||
+    effect.condition.kind !== "field-don" ||
+    effect.then.kind !== "optional"
+  ) {
+    return program;
+  }
+  return { ...program, effect: { ...effect, then: effect.then.effect } };
 }
 
 /**

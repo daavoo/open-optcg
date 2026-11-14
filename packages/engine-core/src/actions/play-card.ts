@@ -7,6 +7,7 @@
 import { playCostFromHand } from "../hand-price.js";
 import { createOnPlayEffect, placeCharacter } from "../effects.js";
 import { EngineError } from "../errors.js";
+import { forgetOncePerTurnUses } from "../model.js";
 import { handOverPendingEffect } from "../pending.js";
 import { type ActionContext } from "./context.js";
 
@@ -45,6 +46,7 @@ export function applyPlayCard({
         cardNumber: player.stage.cardNumber,
       });
     }
+    forgetOncePerTurnUses(state, card.instanceId);
     player.stage = { ...card, rested: false };
     events.push({
       type: "stage-played",

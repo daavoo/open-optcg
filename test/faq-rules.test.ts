@@ -818,7 +818,9 @@ describe("Bandai rules Q&A: Keyword Effects, damage", () => {
       game.play(
         (action) =>
           action.type === "resolve-effect" &&
-          (action.option.kind === "confirm" || action.option.kind === "card"),
+          (action.option.kind === "confirm" ||
+            action.option.kind === "card" ||
+            action.option.kind === "position"),
       );
     }
 

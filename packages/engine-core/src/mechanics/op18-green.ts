@@ -192,7 +192,9 @@ export const op18GreenMechanics: SetMechanics = {
       // [Monkey.D.Luffy] Leader active.
       //
       // Both rests are the price, so the activation needs an active Gonbe and
-      // an active Chimney; the top-level `if` is what the offer gate reads. A
+      // an active Chimney, neither under a "cannot be rested" effect -- a rest
+      // that changes nothing pays nothing. The top-level `if` is what the
+      // offer gate reads. A
       // Leader of any other name still lets the price be paid -- the clause
       // then does nothing, which is the printed outcome.
       "OP18-028",
@@ -205,7 +207,12 @@ export const op18GreenMechanics: SetMechanics = {
             condition: {
               kind: "selector-count",
               player: "self",
-              selector: { zone: "board", name: "Gonbe", rested: false },
+              selector: {
+                zone: "board",
+                name: "Gonbe",
+                rested: false,
+                canRest: true,
+              },
               operator: "gte",
               value: 1,
             },
@@ -216,6 +223,7 @@ export const op18GreenMechanics: SetMechanics = {
                 zone: "board",
                 name: "Gonbe",
                 rested: false,
+                canRest: true,
               },
               bind: "op18-chimney-gonbe",
               min: 1,

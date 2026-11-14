@@ -17,6 +17,12 @@ import {
 } from "./mechanics.js";
 import { activeDonOwner, donPoolSize } from "./don.js";
 import { currentPower, donPowerApplies } from "./queries.js";
+import { hiddenPickPosition } from "./effects.js";
+
+/** The instance an option names, after any `prefix:` a compound id adds. */
+function rawOptionInstanceId(optionId: string): string {
+  return optionId.split(":").at(-1) ?? optionId;
+}
 
 function cardRef(card: CardInstance, db: CardDatabase): KnownCardRef {
   const definition = db.require(card.cardNumber);
@@ -235,6 +241,18 @@ export function describeEffectOption(
 
   if (activeDonOwner(state, optionId)) {
     return { kind: "resource", resource: "don" };
+  }
+  // A clause that takes a card "from the top" of a deck or of face-down Life
+  // picks a place, not a card: `locate` would name what the deciding player
+  // has not seen.
+  const hidden = hiddenPickPosition(state, rawOptionInstanceId(optionId));
+  if (
+    hidden?.position !== undefined &&
+    pendingChoice?.kind === "mechanic-choice" &&
+    pendingChoice.choice.kind === "cards" &&
+    pendingChoice.choice.selector.position !== undefined
+  ) {
+    return { kind: "position", position: hidden.position };
   }
   const direct = locate(state, optionId);
   if (direct) return describeCard(state, decidingPlayerId, direct, {}, db);

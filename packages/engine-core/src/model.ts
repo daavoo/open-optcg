@@ -1328,6 +1328,22 @@ export type PendingEffect =
     };
 
 /**
+ * Forgets the `[Once Per Turn]` uses a card spent before it last left the
+ * field, as it enters the field again. A card that moves zones is treated as a
+ * new card, so a Character K.O.'d and played back the same
+ * turn -- Saint Shamrock by its own `[On K.O.]` -- has every use
+ * fresh. Keys name the card by instance id, which the move keeps.
+ */
+export function forgetOncePerTurnUses(
+  state: GameState,
+  instanceId: string,
+): void {
+  state.oncePerTurn = state.oncePerTurn.filter(
+    (key) => !key.split(":").includes(instanceId),
+  );
+}
+
+/**
  * A pending effect together with anything it displaced, outermost first.
  *
  * `return-don` parks the decision its action had already queued so it can ask

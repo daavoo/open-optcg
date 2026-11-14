@@ -22,6 +22,7 @@ import {
   type BoardCard,
   type CardInstance,
   type GameState,
+  forgetOncePerTurnUses,
   retargetAttack,
 } from "./model.js";
 import {
@@ -631,6 +632,7 @@ export function playOntoBoard(
   const player = state.players[playerId];
   const located = findCardZone(state, instanceId);
   if (!located && instanceId === context.source.instanceId) {
+    forgetOncePerTurnUses(state, context.source.instanceId);
     player.board.push({
       instanceId: context.source.instanceId,
       cardNumber: context.source.cardNumber,
@@ -661,6 +663,7 @@ export function playOntoBoard(
   const { card, playerId: ownerId, zone: from } = removeCard(state, instanceId);
   if (ownerId !== playerId)
     throw new Error(`INVALID_PLAY_OWNER: ${instanceId}`);
+  forgetOncePerTurnUses(state, card.instanceId);
   player.board.push({
     instanceId: card.instanceId,
     cardNumber: card.cardNumber,
@@ -2054,6 +2057,7 @@ export function continueExecution(
                 instanceId: execution.context.source.instanceId,
                 cardNumber: execution.context.source.cardNumber,
               };
+          forgetOncePerTurnUses(state, card.instanceId);
           player.stage = {
             instanceId: card.instanceId,
             cardNumber: card.cardNumber,

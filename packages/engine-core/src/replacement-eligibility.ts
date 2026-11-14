@@ -10,6 +10,7 @@ import {
 import type { PlayerId } from "@one-piece-sim/protocol";
 import type { BoardCard, GameState } from "./model.js";
 import type { ReplacementProgram } from "./mechanics/types.js";
+import { restLocked } from "./board.js";
 import { fieldDonCount } from "./don.js";
 import {
   type CardSelector,
@@ -295,16 +296,19 @@ export function eligibleReplacements(
       continue;
     }
     // "Rest this Character and trash 1 card": an already-rested protector cannot
-    // pay the first half.
+    // pay the first half, and nor can one under a "cannot be rested" effect --
+    // its rest would change nothing and the protection would come free
+    // (`restLocked`, as for [Blocker] and every other rest-paid ability).
+    const cannotRest = protector.rested || restLocked(state, protector);
     if (
       (entry.cost.kind === "trash-from-hand" ||
         entry.cost.kind === "return-don") &&
       entry.cost.restsSelf
     ) {
-      if (protector.rested) continue;
+      if (cannotRest) continue;
     }
     // Nor can it pay a cost that is nothing but the rest.
-    if (entry.cost.kind === "rest-self" && protector.rested) continue;
+    if (entry.cost.kind === "rest-self" && cannotRest) continue;
     // Active DON!! only: resting a rested DON!! is not a payment.
     if (
       entry.cost.kind === "rest-don" &&
