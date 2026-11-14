@@ -553,7 +553,6 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
     <aside class="deck-editor-tools">
       <div class="editor-leader-card">${renderCatalogCard(sealedLeader, 0, false)}<div class="leader-summary"><span>All colours</span><strong>${escapeHtml(sealedLeader.name)}</strong></div></div>
       ${packNote("Your pool", run.packsOpened)}
-      <button class="secondary wide" id="sealed-auto-build">${icon("sparkles", "Auto-build")}Auto-build a deck</button>
       <button class="secondary wide" id="sealed-export">${icon("download", "Export deck list")}Export deck list</button>
       <div class="deck-rule-status ${validation.errors.length ? "invalid" : "valid"}"><strong>${validation.errors.length ? "Deck needs attention" : "Ready to play"}</strong>${validation.errors.length ? `<ul>${validation.errors.map((error) => `<li>${escapeHtml(error)}</li>`).join("")}</ul>` : `<p>${SEALED_DECK_SIZE} cards, all from your opened pool.</p>`}</div>
       ${packNote("Opponent's pool", run.opponentPacksOpened)}
@@ -590,13 +589,6 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
   ctx.bindCardDetailDialog(() => {
     ctx.rerender();
   });
-  document
-    .querySelector("#sealed-auto-build")
-    ?.addEventListener("click", () => {
-      if (!state.run) return;
-      state.run.deck = { ...autoBuildSealedDeckBest(state.run.pool).cards };
-      ctx.rerender();
-    });
   bindCatalogFilters("sealed", state.filter, () => {
     ctx.rerender();
   });

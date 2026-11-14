@@ -3129,8 +3129,12 @@ test("sealed mode opens packs, builds a deck, and starts a match", async ({
   await page.locator("#sealed-colors summary").click();
   await page.locator("#sealed-sort").selectOption("name");
 
-  // Auto-build reaches a legal 40-card deck, which is what enables Start.
-  await page.getByRole("button", { name: /Auto-build/ }).click();
+  // Forty cards from the pool make a legal deck, which is what enables Start.
+  for (let card = 0; card < 40; card += 1)
+    await page
+      .locator("[data-sealed-increase]:not([disabled])")
+      .first()
+      .click();
   await expect(page.locator(".deck-count b")).toHaveText("40");
   await expect(page.locator(".deck-rule-status")).toHaveClass(/valid/);
 

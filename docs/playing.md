@@ -117,8 +117,7 @@ Solved puzzles are remembered in the browser.
 
 **Sealed** opens six random boosters. You build a 40-card deck from the pool
 under a wildcard Sealed Leader. Any colour is allowed, and there is no copy
-limit. The opponent opens six packs from the same expansion. **Auto-build**
-fills a legal deck if you would rather just play.
+limit. The opponent opens six packs from the same expansion.
 
 The lobby opens on the newest expansion. **Pick a different expansion** lists
 every supported booster: OP-10 through OP-17. A set is offered only once its
