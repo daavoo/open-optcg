@@ -1847,8 +1847,31 @@ export function createBattleScreen(
         return `<li class="bottom-order-slot">${renderCard({ instanceId: card.instanceId, cardNumber: card.cardNumber, name: card.name }, null, "order-preview", false)}<div class="bottom-order-controls">${move(-1, "earlier", "&#8592;")}<span>${position + 1}</span>${move(1, "later", "&#8594;")}</div></li>`;
       })
       .join("");
-    const chosen = reorderAction(action, order);
-    return `<p class="bottom-order-note">Placed left to right, so the leftmost card ends up deepest in your deck.</p><ol class="bottom-order">${slots}</ol><div class="action-list bottom-order-confirm"><button class="action-button resolve-effect" data-action="${escapeHtml(chosen.actionId)}"><b>Place them in this order</b></button></div>`;
+    const confirm = (chosen: LegalAction, label: string) =>
+      `<button class="action-button resolve-effect" data-action="${escapeHtml(chosen.actionId)}"><b>${escapeHtml(label)}</b></button>`;
+    // A "top or bottom" placement is two offers, one per end, and the end is
+    // the player's to pick -- so each end gets its own button rather than the
+    // composer submitting whichever offer the engine listed first.
+    const { destination, alternate } = action.option;
+    const buttons =
+      alternate === undefined
+        ? confirm(reorderAction(action, order), "Place them in this order")
+        : (
+            [
+              [destination ?? "the bottom of your deck", cards.length],
+              [alternate, 0],
+            ] as const
+          )
+            .map(([end, atPrimary]) =>
+              confirm(
+                reorderAction(action, order, atPrimary),
+                `Place them at ${end}`,
+              ),
+            )
+            .join("");
+    // Each card is placed in turn against the end it goes to, so the last one
+    // placed is outermost: on top at the top, last at the bottom.
+    return `<p class="bottom-order-note">Placed left to right, so the rightmost card ends up outermost: on top at the top, last at the bottom.</p><ol class="bottom-order">${slots}</ol><div class="action-list bottom-order-confirm">${buttons}</div>`;
   }
 
   /** The order on screen: whatever the arrows have made of the offer so far. */
