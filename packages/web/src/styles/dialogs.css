@@ -61,3 +61,14 @@
   align-items: center;
   gap: 0.6rem;
 }
+/* `.secondary` is drawn for the dark screens, parchment on near-clear; on the
+   dialog's paper it would vanish, so it takes the paper's ink and border. */
+.app-dialog .secondary:not(.action-button) {
+  border-color: var(--editor-border);
+  background: var(--editor-field);
+  color: var(--editor-ink);
+}
+.app-dialog .secondary:not(.action-button):hover {
+  border-color: var(--ember);
+  background: var(--editor-paper);
+}
