@@ -14,7 +14,7 @@ import { character, copies, instance, scenario } from "./support/index.js";
  * states what the generic ladder would have done as well as what the rule does.
  */
 
-const KOBY = "(Red/Black) Koby - 2nd Place Indonesia Regional Final";
+const KOBY = "(Red/Black) Koby - Top 16 Wolverhampton Regional 2026-07-19";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP11-001";

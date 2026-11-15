@@ -12,7 +12,6 @@ import { genericDossier } from "./generic.js";
 import { op13SaboTcgmmDossier } from "./op13-sabo-tcgmm.js";
 import { op16EnelDossier } from "./op16-enel.js";
 import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
-import { op16AceOpenDossier } from "./op16-ace-open.js";
 import { op17XebecTcgmmDossier } from "./op17-xebec-tcgmm.js";
 import { op08PuddingDossier } from "./op08-pudding.js";
 import { op12ZoroPostBanDossier } from "./op12-zoro-post-ban.js";
@@ -34,7 +33,6 @@ import { op12KoalaDossier } from "./op12-koala.js";
 import { eb02LuffyDossier } from "./eb02-luffy.js";
 import { op11ShirahoshiDossier } from "./op11-shirahoshi.js";
 import { op06ReijuRegionalDossier } from "./op06-reiju-regional.js";
-import { op11KobyDossier } from "./op11-koby.js";
 import { op13AceDossier } from "./op13-ace.js";
 import { op12SanjiDossier } from "./op12-sanji.js";
 import { op10UsoppDossier } from "./op10-usopp.js";
@@ -104,6 +102,11 @@ import { op09LuffyTournamentDossier } from "./op09-luffy-tournament.js";
 import { st21LuffyOpenDossier } from "./st21-luffy-open.js";
 import { op17LinlinTournamentDossier } from "./op17-linlin-tournament.js";
 import { op13LuffyTcgmmDossier } from "./op13-luffy-tcgmm.js";
+import { op16LuffyTcgplayerDossier } from "./op16-luffy-tcgplayer.js";
+import { op11KobyRegionalT16Dossier } from "./op11-koby-regional-t16.js";
+import { op17NewgateChinoizeDossier } from "./op17-newgate-chinoize.js";
+import { op16AceFlameflameDossier } from "./op16-ace-flameflame.js";
+import { st22AceNewgateTournamentDossier } from "./st22-ace-newgate-tournament.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
@@ -136,7 +139,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Green/Yellow) Shirahoshi - Official Feature Deck": op11ShirahoshiDossier,
   "(Blue/Purple) Vinsmoke Reiju - Top 32 Regional 2025-09-27":
     op06ReijuRegionalDossier,
-  "(Red/Black) Koby - 2nd Place Indonesia Regional Final": op11KobyDossier,
   "(Red/Blue) Portgas.D.Ace - Official Feature Deck": op13AceDossier,
   "(Blue/Purple) Sanji - Official Feature Deck": op12SanjiDossier,
   "(Blue/Black) Usopp - Official Feature Deck": op10UsoppDossier,
@@ -151,7 +153,6 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op13SaboTcgmmDossier,
   "(Green) Shanks - Official Feature Deck": op17ShanksDossier,
   "(Red) Portgas.D.Ace - Official Feature Deck": op16AceDossier,
-  "(Red) Portgas.D.Ace - Open OPTCG": op16AceOpenDossier,
   "(Blue) Rocks.D.Xebec - TCG Match Making EB05 2026-11-12 #1":
     op17XebecTcgmmDossier,
   "(Purple/Yellow) Charlotte Pudding - Open OPTCG": op08PuddingDossier,
@@ -230,6 +231,14 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Yellow) Charlotte Linlin - ChinoizeCup #121": op17LinlinTournamentDossier,
   "(Red/Green) Monkey.D.Luffy - TCG Match Making EB05 2026-11-12 #2":
     op13LuffyTcgmmDossier,
+  "(Green/Blue) Monkey.D.Luffy - TCGplayer EB-05 Heroines Vol.2":
+    op16LuffyTcgplayerDossier,
+  "(Red/Black) Koby - Top 16 Wolverhampton Regional 2026-07-19":
+    op11KobyRegionalT16Dossier,
+  "(Red) Edward.Newgate - ChinoizeCup #115": op17NewgateChinoizeDossier,
+  "(Red) Portgas.D.Ace - FlameFlame 2026-10-04": op16AceFlameflameDossier,
+  "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
+    st22AceNewgateTournamentDossier,
 };
 
 /**

@@ -26,7 +26,7 @@ import {
  * Character the turn it lands, and a small {Navy} body surviving the
  * opponent's removal for three trash cards.
  */
-const DECK = "(Red/Black) Koby - 2nd Place Indonesia Regional Final";
+const DECK = "(Red/Black) Koby - Top 16 Wolverhampton Regional 2026-07-19";
 const OPPONENT = "(Green) Roronoa Zoro - Starter Deck 32";
 const LEADER = "OP11-001";
 /** A Leader with no {Navy} type, for the clauses that ask for one. */

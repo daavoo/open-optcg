@@ -4,17 +4,18 @@ import { currentPower } from "@one-piece-sim/engine-core";
 import { character, covers, instance, scenario } from "./support/index.js";
 
 /**
- * The OP-16 Red Portgas.D.Ace Open OPTCG list.
+ * The OP-16 Red Portgas.D.Ace FlameFlame list, the Leader's Community list.
  *
  * The feature deck's tests and the OP-17 Newgate deck's drive every card the
- * lists share. OP10-005 Sanji is the one identity no other shipped deck
- * plays, so its two clauses are driven here.
+ * lists share. OP10-005 Sanji is played by the "(Red) Portgas.D.Ace - Open
+ * OPTCG" training list and by no shipped deck, so its two clauses are driven
+ * here, on this list's table.
  */
 
-const LIST = "(Red) Portgas.D.Ace - Open OPTCG";
+const LIST = "(Red) Portgas.D.Ace - FlameFlame 2026-10-04";
 const OPPONENT = "(Red) Monkey.D.Luffy - Starter Deck 31";
 
-describe("the Red Ace Open OPTCG list", () => {
+describe("the Red Ace FlameFlame list", () => {
   it("is a legal 50 under the OP16-001 Leader, shelved under Tournaments", () => {
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(deckManifests[LIST]?.leader).toBe("OP16-001");

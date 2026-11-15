@@ -639,13 +639,12 @@ export const REJECTED_SEARCH_TABLES: readonly SearchTable[] = [
         "OP16-010",
         "OP16-004",
         "OP16-016",
-        // The Open OPTCG list's OP-17 bodies, in the same unordered pool.
+        // The FlameFlame list's own cards, in the same unordered pool.
         "OP17-005",
         "OP17-006",
-        "OP17-016",
-        "EB01-002",
-        "OP10-005",
         "OP17-017",
+        "OP16-020",
+        "OP08-118",
       ],
     ],
   },
@@ -669,6 +668,9 @@ export const REJECTED_SEARCH_TABLES: readonly SearchTable[] = [
       "OP16-032", // Boa Hancock -- Unblockable 9000, the last turn's card
       "OP16-034", // Monkey.D.Luffy -- 0 power; the deck is holding one already
       "OP16-038", // Let's Go!! To the Navy Headquarters!!
+      // The Community list's own cards, after the feature deck's, which the
+      // order above was written for.
+      ["EB05-025", "EB05-028", "OP02-068"],
     ],
   },
 ];

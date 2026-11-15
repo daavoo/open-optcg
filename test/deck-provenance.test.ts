@@ -161,8 +161,11 @@ describe("deck provenance rows", () => {
     // lists of 12 Nov 2026 replace eight Community lists -- Xebec 16 for 15,
     // Red/Green Luffy 15 for 15, Buggy 15 for 16, Robin 16 for 15, Kaido 16
     // for 18, Enel 15 for 14, Law 20 for 16 and Sabo 17 for 17 -- and the
-    // Rosinante list, the first behind its Leader, adds 15.
-    expect(communityDeckCardRows).toHaveLength(1363);
+    // Rosinante list, the first behind its Leader, adds 15. v29's
+    // best-measured lists add Green/Blue Luffy 17, Red Newgate 14 and Ace &
+    // Newgate 15, and replace two Community lists -- Koby 18 for 17 and Red
+    // Ace 15 for 16.
+    expect(communityDeckCardRows).toHaveLength(1409);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -232,7 +235,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(94);
+    expect(reports).toHaveLength(97);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);

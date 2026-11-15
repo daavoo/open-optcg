@@ -146,6 +146,23 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9",
     null,
   ],
+  [
+    "(Green/Blue) Monkey.D.Luffy - TCGplayer EB-05 Heroines Vol.2",
+    "(Green/Blue) Monkey.D.Luffy - Official Feature Deck",
+  ],
+  ["(Red/Black) Koby - Top 16 Wolverhampton Regional 2026-07-19", null],
+  [
+    "(Red) Edward.Newgate - ChinoizeCup #115",
+    "(Red) Edward.Newgate - Official Feature Deck",
+  ],
+  [
+    "(Red) Portgas.D.Ace - FlameFlame 2026-10-04",
+    "(Red) Portgas.D.Ace - Official Feature Deck",
+  ],
+  [
+    "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07",
+    "(Blue) Ace & Newgate - Starter Deck 22",
+  ],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {
@@ -202,6 +219,8 @@ describe("the Community lists the new builds replace", () => {
       "(Purple/Yellow) Donquixote Rosinante - 2nd Place ChinoizeCup #125",
       "OP12-061",
     ],
+    ["(Red/Black) Koby - 2nd Place Indonesia Regional Final", "OP11-001"],
+    ["(Red) Portgas.D.Ace - Open OPTCG", "OP16-001"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();

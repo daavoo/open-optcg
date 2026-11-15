@@ -1133,7 +1133,10 @@ describe("FAQ OP11-092 Helmeppo", () => {
 describe("FAQ OP11-097 After All These Years I'm Losing My Edge!!!", () => {
   const edgeCounter = (seed: string, trash: number) =>
     scenario()
-      .decks("(Red/Black) Koby - 2nd Place Indonesia Regional Final", ST32)
+      .decks(
+        "(Red/Black) Koby - Top 16 Wolverhampton Regional 2026-07-19",
+        ST32,
+      )
       .seed(seed)
       .atTurn(12, { active: "p2" })
       .bareTable()

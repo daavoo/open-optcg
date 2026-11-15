@@ -625,6 +625,61 @@ const LISTS: Record<string, DeckManifest> = {
       "ST10-010": 3,
     },
   },
+  // Red/Black OP11-001 Koby, 2nd (9-3) for "Tridtigger" at a Bandai Regional
+  // Final in Indonesia on 22 Aug 2026, off onepiecetopdecks.com's Japan OP-17
+  // page. It was the Leader's Community list until the Wolverhampton Regional
+  // top-16 build replaced it there; it stays here under its old id because
+  // checkpoints and its variants name it.
+  "(Red/Black) Koby - 2nd Place Indonesia Regional Final": {
+    id: "(Red/Black) Koby - 2nd Place Indonesia Regional Final",
+    format: "standard",
+    leader: "OP11-001",
+    cards: {
+      "EB03-008": 4,
+      "EB03-041": 4,
+      "EB04-003": 2,
+      "EB04-044": 4,
+      "EB04-047": 4,
+      "OP11-004": 4,
+      "OP11-008": 4,
+      "OP11-013": 1,
+      "OP11-082": 4,
+      "OP11-092": 4,
+      "OP11-096": 3,
+      "OP11-097": 4,
+      "OP11-099": 4,
+      "OP13-007": 2,
+      "OP13-020": 1,
+      "PRB02-001": 1,
+    },
+  },
+  // Red OP16-001 Portgas.D.Ace, the Whitebeard Pirates build supplied as a
+  // card list by the maintainer on 28 Sep 2026 without an event or pilot. It
+  // was the Leader's Community list until the FlameFlame build replaced it
+  // there; it stays here under its old id because the meta field,
+  // checkpoints and its variants name it.
+  "(Red) Portgas.D.Ace - Open OPTCG": {
+    id: "(Red) Portgas.D.Ace - Open OPTCG",
+    format: "standard",
+    leader: "OP16-001",
+    cards: {
+      "EB01-002": 2,
+      "OP10-005": 3,
+      "OP13-016": 4,
+      "OP16-003": 3,
+      "OP16-004": 4,
+      "OP16-011": 3,
+      "OP16-014": 3,
+      "OP16-015": 4,
+      "OP16-017": 4,
+      "OP16-021": 4,
+      "OP16-118": 4,
+      "OP17-005": 3,
+      "OP17-006": 4,
+      "OP17-016": 2,
+      "OP17-017": 3,
+    },
+  },
 };
 
 /**
