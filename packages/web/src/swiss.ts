@@ -3,8 +3,8 @@
  * own, paired by record.
  *
  * The field sets the rounds: as many as it takes to leave one player
- * undefeated, log2 of the field rounded up -- one against 1 AI player, three
- * against 4, four against 8. An odd field gives one AI player a bye each round
+ * undefeated, log2 of the field rounded up -- one against 1 AI player, two
+ * against 3, three against 5. An odd field gives one AI player a bye each round
  * (a win, the lowest-placed one without a bye yet); the person always plays.
  * Every round pairs players on the same record and, where the field allows,
  * never pairs two players a second time. The
@@ -25,9 +25,13 @@ import { seedRng, shuffle } from "@one-piece-sim/protocol";
 import { openSealedPool } from "./sealed-mode.js";
 
 /** How many AI players an event seats when none is chosen. */
-export const SWISS_BOTS = 4;
-/** The fields the pre-release page offers, in AI players. */
-export const SWISS_BOT_OPTIONS = [1, 4, 8] as const;
+export const SWISS_BOTS = 3;
+/**
+ * The fields the pre-release page offers, in AI players. Each is odd, so with
+ * the person the field is even and every round seats everyone: an odd field
+ * sits one player out on a bye every round.
+ */
+export const SWISS_BOT_OPTIONS = [1, 3, 5] as const;
 /** The most AI players an event seats: a round's AI tables are played out in
     the background, and a bigger field keeps the person waiting on them. */
 export const SWISS_MAX_BOTS = 31;

@@ -68,7 +68,7 @@ describe("the pre-release page's lobby", () => {
     expect(html).not.toContain("data-open-booster-picker");
   });
 
-  it("offers a Swiss against 1, 4 or 8 AI players and nothing else", () => {
+  it("offers a Swiss against 1, 3 or 5 AI players and nothing else", () => {
     const html = renderLobby(
       emptyState(),
       stubContext({ lockedExpansion: "OP18" }),
@@ -76,7 +76,7 @@ describe("the pre-release page's lobby", () => {
     const bots = [...html.matchAll(/data-swiss-bots="(\d+)"/g)].map((match) =>
       Number(match[1]),
     );
-    expect(bots).toEqual([1, 4, 8]);
+    expect(bots).toEqual([1, 3, 5]);
     expect(html).toContain("Play Swiss format against AI opponents.");
     expect(html).not.toContain('id="sealed-form"');
     expect(html).not.toContain('id="sealed-import"');
@@ -95,7 +95,7 @@ describe("the pre-release lobby before the cards are in", () => {
       }),
     );
     expect(html).toContain('id="get-cards-steps"');
-    expect(html).toMatch(/data-swiss-bots="4" disabled/);
+    expect(html).toMatch(/data-swiss-bots="3" disabled/);
   });
 
   it("enables them once the cards are in", () => {

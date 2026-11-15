@@ -40,7 +40,7 @@ function playRound(event: SwissEvent): void {
 }
 
 describe("a sealed Swiss event", () => {
-  it("seats four AI players with legal 40-card decks from their own pools", () => {
+  it("seats three AI players with legal 40-card decks from their own pools", () => {
     const event = newEvent();
     expect(event.players).toHaveLength(SWISS_BOTS + 1);
     expect(new Set(event.players.map((player) => player.deck.id)).size).toBe(
@@ -50,19 +50,20 @@ describe("a sealed Swiss event", () => {
       const total = Object.values(player.deck.cards).reduce((a, b) => a + b, 0);
       expect(total).toBe(40);
     }
-    // Five players: two tables and a bye, never the person's.
+    // Four players: two tables and no bye, so no one sits a round out.
     const round = event.rounds[0]!;
-    expect(round.filter((table) => table.b !== BYE)).toHaveLength(2);
-    const bye = round.find((table) => table.b === BYE)!;
-    expect(bye.a).not.toBe(YOU);
-    expect(bye.winner).toBe(bye.a);
+    expect(round).toHaveLength(2);
+    expect(round.some((table) => table.b === BYE)).toBe(false);
     expect(pendingAiTables(event)).toHaveLength(1);
   });
 
+  // 1, 3 and 5 are the fields the pre-release page offers; 4 is an odd field,
+  // which the default lobby can still seat, for the bye.
   it.each([
     [1, 1],
+    [3, 2],
     [4, 3],
-    [8, 4],
+    [5, 3],
   ])(
     "against %i AI players runs %i rounds: the person plays each, no rematch, a bye at most once each",
     (bots, rounds) => {
@@ -157,7 +158,7 @@ describe("the Swiss event screen", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(pendingAiTables(event)).toHaveLength(0);
     const html = renderEvent(state);
-    expect(html).toContain("Round 2 of 3");
+    expect(html).toContain("Round 2 of 2");
     expect(html).toContain('id="swiss-play"');
   });
 
@@ -170,14 +171,14 @@ describe("the Swiss event screen", () => {
     expect(losses(event, YOU)).toBe(1);
   });
 
-  it("ends on the final standings after three rounds", () => {
+  it("ends on the final standings after two rounds", () => {
     const state = emptyState();
     const event = newEvent("final-test");
     for (let round = 0; round < event.roundCount; round += 1) playRound(event);
     state.event = event;
     const html = renderEvent(state);
-    // The person is seat 0, so the lower-seat-wins rule makes them 3-0.
-    expect(html).toContain("You finished 1st of 5, 3&ndash;0");
+    // The person is seat 0, so the lower-seat-wins rule makes them 2-0.
+    expect(html).toContain("You finished 1st of 4, 2&ndash;0");
     expect(html).toContain('id="swiss-new"');
   });
 
