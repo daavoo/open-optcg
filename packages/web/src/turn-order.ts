@@ -73,7 +73,7 @@ function askTurnOrder(chooser: string): Promise<TurnOrderChoice> {
     `${chooser} won the roll`,
     `${chooser} ${verb} whether to go first or second, before the opening hands are seen.`,
     `<button class="primary" type="button" data-turn-order="first">${icon("play", "Go first")}Go first</button>
-     <button type="button" data-turn-order="second">Go second</button>`,
+     <button class="secondary" type="button" data-turn-order="second">${icon("hourglass", "Go second")}Go second</button>`,
   );
 }
 
