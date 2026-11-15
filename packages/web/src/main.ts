@@ -32,6 +32,7 @@ import { forgetMatch, rememberMatch, resumableMatch } from "./match-resume.js";
 import { rememberedSetupDecks, rememberSetupDecks } from "./setup-decks.js";
 import { replayTurnStarts, replayViewer, takeoverConfig } from "./replay.js";
 import { beginSimulation } from "./simulate.js";
+import { settleTurnOrder } from "./turn-order.js";
 import { boardViewer } from "./viewer.js";
 import {
   applyAssetAnchors,
@@ -744,8 +745,13 @@ function resetBattleUiState(): void {
 
 /** Starts `config` and switches to the board. Shared by the constructed lobby
     and sealed mode, which build their `MatchConfig` very differently but both
-    land here to reset the same per-match UI state. */
+    land here to reset the same per-match UI state. A `random` first player is
+    rolled for here, and the winner asked to choose, before anything is dealt. */
 function beginMatch(config: MatchConfig): void {
+  void settleTurnOrder(config).then(startMatch);
+}
+
+function startMatch(config: MatchConfig): void {
   store.game = new BrowserGameController(config);
   // A match with an agent in both seats is one nobody at this page is playing,
   // so the board watches it rather than waiting on it. Read off the config

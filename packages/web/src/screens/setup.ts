@@ -313,7 +313,7 @@ function renderMatchupDialog(
       </div>
       <label>Starting player
         <select id="starting-player">
-          <option value="random">Seeded random</option>
+          <option value="random">Roll: the winner chooses</option>
           <option value="p1">Left deck</option>
           <option value="p2">Right deck</option>
         </select>
