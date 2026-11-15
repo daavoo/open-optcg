@@ -5,7 +5,7 @@ import { expect, test, type Page } from "./fixtures.js";
 import { pathToFileURL } from "node:url";
 import { strToU8, zipSync } from "fflate";
 import { cardRegistry } from "@one-piece-sim/cards";
-import { SEALED_LEADER } from "@one-piece-sim/decks";
+import { SEALED_EXPANSIONS, SEALED_LEADER } from "@one-piece-sim/decks";
 import { openShelfOf } from "./deck-picker.js";
 
 /**
@@ -167,6 +167,18 @@ async function openMatch(page: Page): Promise<void> {
   await page.locator("#seed").fill(seed);
   await closeMatchupConfig(page);
   await page.getByRole("button", { name: /Start match/ }).click();
+}
+
+/**
+ * Answers the turn-order roll a match with a random starting player opens on:
+ * "Go first" when the person won it, "Continue" when the opponent did. Both
+ * are the dialog's first button.
+ */
+async function settleTurnOrder(page: Page): Promise<void> {
+  const dialog = page.locator("#turn-order");
+  await expect(dialog).toBeVisible();
+  await dialog.locator("[data-turn-order]").first().click();
+  await expect(dialog).toHaveCount(0);
 }
 
 async function enterMainPhase(page: Page): Promise<void> {
@@ -810,6 +822,7 @@ test("mat colors follow deck leaders without a manual picker", async ({
   await expect(page.locator("html")).toHaveAttribute("data-theme-dual", "true");
 
   await page.getByRole("button", { name: /Start match/ }).click();
+  await settleTurnOrder(page);
   await expect(page.getByTitle("Table mat")).toHaveCount(0);
   await expect(page.locator(".self-board")).toHaveCSS(
     "--mat-self-secondary-tint",
@@ -1485,9 +1498,11 @@ test("a newer pack loads from the Configure dialog and survives a reload", async
     "ST31-001": { effect: "[On Play] Second card." },
   });
   await page.reload();
+  // The stored text is the new pack laid over the one already in, so the
+  // seeded pack's TEST-001 keeps its text beside the two new cards.
   await expect(
     page.locator(".dialog-assets .home-assets-status"),
-  ).toContainText("printed text for 2 cards");
+  ).toContainText("printed text for 3 cards");
 });
 
 test("after a new set, the Configure dialog asks for just its cards", async ({
@@ -1498,14 +1513,20 @@ test("after a new set, the Configure dialog asks for just its cards", async ({
     .filter((card) => !card.startsWith("FIX-") && card !== SEALED_LEADER)
     .sort((left, right) => left.localeCompare(right));
   const newSet = cards.slice(-2);
+  // Get cards also fetches each sealed set's pack photo and the sealed
+  // Leader's art, so a pack from before the new set carries those too.
+  const extras = [
+    ...SEALED_EXPANSIONS.map((expansion) => `${expansion.code}-PACK`),
+    SEALED_LEADER,
+  ];
   await page.goto(appUrl);
   await page
     .locator(".dialog-assets [data-asset-zip]")
     .setInputFiles(
-      await writePackZip(
-        { "OP01-016": { effect: "Text." } },
-        cards.slice(0, -2),
-      ),
+      await writePackZip({ "OP01-016": { effect: "Text." } }, [
+        ...cards.slice(0, -2),
+        ...extras,
+      ]),
     );
   await expect(
     page.locator(".dialog-assets .home-assets-missing"),
@@ -3139,5 +3160,6 @@ test("sealed mode opens packs, builds a deck, and starts a match", async ({
   await expect(page.locator(".deck-rule-status")).toHaveClass(/valid/);
 
   await page.getByRole("button", { name: /Start match/ }).click();
+  await settleTurnOrder(page);
   await expect(page.locator(".game-shell")).toBeVisible();
 });
