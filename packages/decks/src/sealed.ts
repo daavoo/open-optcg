@@ -71,7 +71,7 @@ export interface PackSlot {
  *
  * Deliberately data rather than logic, because the exact rates are the least
  * certain thing here. Public sources agree on the shape -- 12 cards, mostly C
- * and UC, at least one R -- and OP17-specific community-aggregated pull data
+ * and UC, at least one R, a Leader only in some packs -- and OP17-specific community-aggregated pull data
  * (314 packs) puts the hit slot at roughly 2 SR per 24-pack box and 1 SEC per
  * *three* boxes, not per box: SEC is three times rarer than a same-set-shape
  * guess would suggest, because the set carries only 2 SEC card numbers total
@@ -90,9 +90,21 @@ export interface PackSlot {
  *   https://tcgtalk.com/guides/op17-pull-rates-case-opening
  *   https://tcgtalk.com/guides/one-piece-tcg-box-pull-rates
  *   https://onepiece.gg/rarity-of-cards-in-the-one-piece-card-game/
+ *   https://tcgking.nl/blogs/collecting/all-one-piece-tcg-rarities-explained
  */
 export const BOOSTER_PACK: readonly PackSlot[] = [
-  { count: 1, options: [{ rarity: "L", weight: 24 }] },
+  // A Leader is not in every pack: retail pull guides put it at one per two to
+  // four packs, and Bandai publishes no figure. One in three (8 per 24-pack
+  // box) sits in the middle of that range; the rest of the time the slot is
+  // one more Common. A guaranteed Leader here would turn six of a six-pack
+  // pool's 72 cards into sideboard every time.
+  {
+    count: 1,
+    options: [
+      { rarity: "L", weight: 8 },
+      { rarity: "C", weight: 16 },
+    ],
+  },
   { count: 6, options: [{ rarity: "C", weight: 24 }] },
   { count: 3, options: [{ rarity: "UC", weight: 24 }] },
   { count: 1, options: [{ rarity: "R", weight: 24 }] },
@@ -382,8 +394,8 @@ export function poolCounts(pool: SealedPool): ReadonlyMap<string, number> {
 /**
  * The pool cards a deck could legally contain.
  *
- * One exclusion: Leaders are not main-deck cards, so the `L` slot's card is
- * always sideboard. Every other opened card is playable -- a card only reaches
+ * One exclusion: Leaders are not main-deck cards, so a Leader the first slot
+ * opens is always sideboard. Every other opened card is playable -- a card only reaches
  * the registry once the engine runs its printed text, and the clauses that are
  * an exception are named by {@link sealedPoolCoverage}.
  */
@@ -544,7 +556,8 @@ export function sealedDeckManifest(
  * Separate from {@link validateSealedDeck} because while an expansion is still
  * being implemented the interesting failure is not "this deck is illegal" but
  * "no legal deck exists from this pool yet", and those want different messages.
- * A 6-pack pool opens 66 main-deck cards, so the format needs roughly 60% of a
+ * A 6-pack pool opens about 70 main-deck cards (72 less a Leader every third
+ * pack or so), so the format needs roughly 60% of a
  * set implemented before its pools reliably clear 40 playable -- which is why
  * {@link SEALED_EXPANSIONS} admits only fully implemented sets.
  */

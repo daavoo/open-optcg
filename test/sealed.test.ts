@@ -37,6 +37,20 @@ describe("sealed booster packs", () => {
     expect(pool.cards).toHaveLength(72);
   });
 
+  it("opens a Leader in about one pack in three, not in every pack", () => {
+    // Bandai prints no Leader rate; retail pull guides put it at one per two to
+    // four packs. A guaranteed Leader per pack would sideboard 6 of 72 cards.
+    const packs = Array.from({ length: 40 }, (_, index) =>
+      openPacks(`leader-rate:${index}`, 6),
+    ).flatMap((pool) => pool.packs);
+    const withLeader = packs.filter((pack) =>
+      pack.some((id) => cardRegistry.get(id)!.rarity === "L"),
+    ).length;
+    const rate = withLeader / packs.length;
+    expect(rate).toBeGreaterThan(0.2);
+    expect(rate).toBeLessThan(0.5);
+  });
+
   it("is reproducible from its seed and varies between seeds", () => {
     expect(openPacks("seed-a", 6).cards).toEqual(openPacks("seed-a", 6).cards);
     expect(openPacks("seed-b", 6).cards).not.toEqual(
@@ -54,10 +68,12 @@ describe("sealed booster packs", () => {
     }
   });
 
-  it("gives every pack exactly one Leader and at least one Rare or better", () => {
+  it("gives a pack at most one Leader and at least one Rare or better", () => {
     for (const pack of openPacks("rarity-seed", 6).packs) {
       const rarities = pack.map((id) => cardRegistry.get(id)!.rarity);
-      expect(rarities.filter((rarity) => rarity === "L")).toHaveLength(1);
+      expect(
+        rarities.filter((rarity) => rarity === "L").length,
+      ).toBeLessThanOrEqual(1);
       expect(
         rarities.filter((rarity) => ["R", "SR", "SEC"].includes(rarity!))
           .length,
@@ -168,8 +184,12 @@ describe("sealed pool coverage", () => {
   it("counts every opened main-deck card and names any partial one", () => {
     const pool = openPacks("coverage", 6);
     const coverage = sealedPoolCoverage(pool);
-    // 72 opened minus the six Leaders, one per pack.
-    expect(coverage.mainDeckCards).toBe(66);
+    // 72 opened minus whatever Leaders the packs held: at most one per pack.
+    const leaders = pool.cards.filter(
+      (id) => cardRegistry.get(id)!.category === "leader",
+    ).length;
+    expect(leaders).toBeLessThanOrEqual(6);
+    expect(coverage.mainDeckCards).toBe(72 - leaders);
     // A thin pool is bad luck, not missing card support: every opened card is
     // playable unless it names a clause in `UNIMPLEMENTED_CLAUSES`.
     expect(playablePoolCards(pool).size).toBeGreaterThan(0);
