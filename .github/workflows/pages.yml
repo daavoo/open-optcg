@@ -6,6 +6,11 @@ name: Deploy hosted app
 # Publishing it is fine because nothing of Bandai's is in it, nor in the
 # get-cards.js served beside it.
 #
+# The one exception is the OP-18 pre-release page at /op18/: it carries
+# OP-18's art and text, fetched from Bandai's card list on each deploy, so a
+# new player can open packs without the Get cards step. Nothing of it is
+# committed.
+#
 # Pages has to be switched on once in the repository settings, with "GitHub
 # Actions" as the source; until then this workflow fails at the deploy step.
 
@@ -61,13 +66,22 @@ jobs:
       # The OP-18 pre-release page (packages/web/src/prerelease.ts), at
       # /op18/. It plays the model trained on OP-18 sealed decks when a
       # `prerelease-op18-model` release carries one, the main model otherwise.
+      # It inlines OP-18's text and art, its pack photo and the sealed Leader;
+      # if Bandai cannot be reached the page ships without them and asks for
+      # Get cards as before, rather than holding up the main page's deploy.
       - run: |
           gh release download prerelease-op18-model -p scorer-model.json -D prerelease-model || true
+          flags="--prerelease=OP18 --external-model"
           if [ -f prerelease-model/scorer-model.json ]; then
-            pnpm web:build --prerelease=OP18 --external-model --model=prerelease-model/scorer-model.json
-          else
-            pnpm web:build --prerelease=OP18 --external-model
+            flags="$flags --model=prerelease-model/scorer-model.json"
           fi
+          if pnpm assets:download --set=OP18 --text-only --output=prerelease-assets/text \
+            && pnpm art:download OP18 --output=prerelease-assets/art \
+            && pnpm art:download SEALED --output=prerelease-assets/art \
+            && pnpm art:download BOOSTERS --output=prerelease-assets/art; then
+            flags="$flags --with-art=prerelease-assets/art --with-text=prerelease-assets/text/printed-text.json"
+          fi
+          pnpm web:build $flags
           mkdir -p site/op18
           cp dist/prerelease/open-optcg.html site/op18/index.html
           cp dist/get-cards.js site/op18/get-cards.js
