@@ -90,6 +90,31 @@ describe("asset downloader", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("takes one set's text alone when asked, and no images", async () => {
+    const output = await mkdtemp(join(tmpdir(), "open-optcg-assets-"));
+    const fetch = vi.fn<(url: string) => Promise<Response>>(() =>
+      Promise.resolve(
+        new Response("<html></html>", {
+          headers: { "content-type": "text/html" },
+        }),
+      ),
+    );
+    vi.stubGlobal("fetch", fetch);
+    try {
+      const report = await downloadAssets(output, () => {}, {
+        set: "OP18",
+        textOnly: true,
+      });
+      expect(report).toMatchObject({ downloaded: 0, alreadyThere: 0 });
+      expect(
+        fetch.mock.calls.filter(([url]) => url.includes("/images/")),
+      ).toEqual([]);
+      expect(await readdir(join(output, "art"))).toEqual([]);
+    } finally {
+      await rm(output, { recursive: true, force: true });
+    }
+  });
+
   describe("into a folder that already holds a pack", () => {
     const wanted = supportedCardNumbers().filter(
       (card) => card !== SEALED_LEADER,

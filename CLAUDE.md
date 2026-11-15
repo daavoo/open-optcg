@@ -80,7 +80,10 @@ test — not the whole engine.
   player loads an asset pack zip. `local-art/` is gitignored and filled only
   by `pnpm art:download`; the build never fetches, and
   `pnpm web:build --with-art` (art) and `--with-text` (a text pack) are for a
-  personal copy only.
+  personal copy only. The one exception is the OP-18 pre-release page at
+  `/op18/`: `pages.yml` fetches OP-18's art and text from Bandai at deploy
+  time and inlines them, so a new player needs no Get cards step. Nothing of
+  it is committed, and no other page or release carries it.
 - **Don't reach into `GameState` to set up a test.** Use `test/support/`; a
   position the engine could never produce makes a green test worthless.
 

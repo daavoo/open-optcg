@@ -6,9 +6,13 @@
  * that quote printed text and the System-1 research read.
  *
  *   pnpm assets:download [--output=<dir>]     (default: open-optcg-assets/)
+ *                        [--set=<code>] [--text-only]
  *
  * writes `<dir>/printed-text.json` (the text of every card the engine knows)
- * and `<dir>/art/<card number>.png` (one image per card).
+ * and `<dir>/art/<card number>.png` (one image per card). `--set` narrows both
+ * to one set's cards, and `--text-only` skips the images: the pre-release
+ * page's Pages build takes one set's text this way and its webp art from
+ * `pnpm art:download`.
  *
  * Rerunning it into the same folder fetches only what is missing: an image
  * already on disk is never fetched again, and a folder that already holds
@@ -193,22 +197,34 @@ export interface DownloadReport {
   failed: string[];
 }
 
+export interface DownloadOptions {
+  /** Only this set's cards, by card-number prefix (`OP18`). */
+  set?: string;
+  /** The text pack alone, no images. */
+  textOnly?: boolean;
+}
+
 /** Fills `output` with the text pack and every card's art that is missing. */
 export async function downloadAssets(
   output: string,
   log: (line: string) => void = console.log,
+  options: DownloadOptions = {},
 ): Promise<DownloadReport> {
-  const wanted = wantedCards();
+  const wanted = wantedCards().filter(
+    (card) => !options.set || card.startsWith(`${options.set}-`),
+  );
   await mkdir(join(output, "art"), { recursive: true });
   const text = await readTextPack(output);
   const have = await existingArt(output);
-  const missingArt = wanted.filter((card) => !have.has(card));
+  const missingArt = options.textOnly
+    ? []
+    : wanted.filter((card) => !have.has(card));
   const missingText = wanted.filter((card) => !(card in text));
   const report: DownloadReport = {
     output,
     textCards: Object.keys(text).length,
     downloaded: 0,
-    alreadyThere: wanted.length - missingArt.length,
+    alreadyThere: options.textOnly ? 0 : wanted.length - missingArt.length,
     failed: [],
   };
   if (missingArt.length === 0 && missingText.length === 0) {
@@ -299,11 +315,13 @@ function message(error: unknown): string {
 export async function main(args: readonly string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
     console.log(
-      "Usage: pnpm assets:download [--output=<dir>]\n\n" +
+      "Usage: pnpm assets:download [--output=<dir>] [--set=<code>] [--text-only]\n\n" +
         "Downloads the printed text and card art the Open OPTCG app ships without,\n" +
         `from Bandai's card list, into <dir> (default ${DEFAULT_FOLDER_NAME}/):\n` +
         "  <dir>/printed-text.json  the printed text of every card the engine knows\n" +
         "  <dir>/art/               one image per card\n\n" +
+        "  --set=<code>             only that set's cards (OP18)\n" +
+        "  --text-only              the text pack alone, no images\n\n" +
         "Run again into the same folder to fetch only what is missing.",
     );
     return;
@@ -312,8 +330,13 @@ export async function main(args: readonly string[]): Promise<void> {
   const output = resolve(
     outputArg ? outputArg.slice("--output=".length) : DEFAULT_FOLDER_NAME,
   );
+  const setArg = args.find((arg) => arg.startsWith("--set="));
+  const options: DownloadOptions = {
+    ...(setArg ? { set: setArg.slice("--set=".length).toUpperCase() } : {}),
+    textOnly: args.includes("--text-only"),
+  };
   console.log(`Downloading Open OPTCG card text and art into ${output}`);
-  const report = await downloadAssets(output);
+  const report = await downloadAssets(output, console.log, options);
   const failed =
     report.failed.length === 0
       ? ""
