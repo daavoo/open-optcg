@@ -80,7 +80,7 @@ const boardCard = (game: Game, player: "p1" | "p2", id: string) =>
   game.state.players[player].board.find((card) => card.instanceId === id);
 
 describe("OP18-021 Franky (Leader)", () => {
-  covers(FRANKY_LEADER, "static");
+  covers("OP18-021", "static");
 
   it("gives a Stage in hand a +3000 Counter", () => {
     const game = theirTurn("op18-021-counter")
@@ -150,7 +150,7 @@ describe("OP18-021 Franky (Leader)", () => {
 });
 
 describe("OP18-021 Franky (Leader) [Activate: Main]", () => {
-  covers(FRANKY_LEADER, "[Activate: Main]");
+  covers("OP18-021", "[Activate: Main]");
 
   it("returns 1 DON!! to play a Stage with a cost of 5 or less from hand, once per turn", () => {
     const game = ownTurn("op18-021-activate")

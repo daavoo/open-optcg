@@ -227,32 +227,47 @@ describe("OP18-042 Hack", () => {
   });
 });
 
-/** The `[DON!! x1]` +1000 the Baroque Works pairs print on themselves. */
-describe.each([
-  ["OP18-044", 4000],
-  ["OP18-051", 3000],
-  ["OP18-052", 4000],
-  ["OP18-053", 3000],
-  ["OP18-054", 3000],
-  ["OP18-055", 4000],
-  ["OP18-056", 3000],
-])("%s's [DON!! x1]", (cardNumber, printed) => {
-  covers(cardNumber, "static");
+/**
+ * The `[DON!! x1]` +1000 the Baroque Works pairs print on themselves. Each
+ * card is named in its own `covers()` because the clause-coverage gate reads
+ * the annotations as written, not the table below.
+ */
+describe("the Baroque Works pairs' [DON!! x1]", () => {
+  covers("OP18-044", "static");
+  covers("OP18-051", "static");
+  covers("OP18-052", "static");
+  covers("OP18-053", "static");
+  covers("OP18-054", "static");
+  covers("OP18-055", "static");
+  covers("OP18-056", "static");
 
-  it("is 1000 bigger with a DON!! given, on the opponent's turn too", () => {
-    const bare = defending(`${cardNumber}-bare`)
-      .withBoard("p1", [character("pair", cardNumber)])
-      .build();
-    expect(currentPower(bare.state, "p1", "pair")).toBe(printed);
+  it.each([
+    ["OP18-044", 4000],
+    ["OP18-051", 3000],
+    ["OP18-052", 4000],
+    ["OP18-053", 3000],
+    ["OP18-054", 3000],
+    ["OP18-055", 4000],
+    ["OP18-056", 3000],
+  ])(
+    "%s is 1000 bigger with a DON!! given, on the opponent's turn too",
+    (cardNumber, printed) => {
+      const bare = defending(`${cardNumber}-bare`)
+        .withBoard("p1", [character("pair", cardNumber)])
+        .build();
+      expect(currentPower(bare.state, "p1", "pair")).toBe(printed);
 
-    // Read without the given DON!!'s own +1000, so the difference is the
-    // clause alone.
-    const given = defending(`${cardNumber}-given`)
-      .withBoard("p1", [character("pair", cardNumber)])
-      .withGivenDon("p1", "pair", 1)
-      .build();
-    expect(currentPower(given.state, "p1", "pair", false)).toBe(printed + 1000);
-  });
+      // Read without the given DON!!'s own +1000, so the difference is the
+      // clause alone.
+      const given = defending(`${cardNumber}-given`)
+        .withBoard("p1", [character("pair", cardNumber)])
+        .withGivenDon("p1", "pair", 1)
+        .build();
+      expect(currentPower(given.state, "p1", "pair", false)).toBe(
+        printed + 1000,
+      );
+    },
+  );
 });
 
 describe("OP18-044 Mr.Beans & Miss.Katherina", () => {

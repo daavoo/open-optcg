@@ -519,6 +519,34 @@ const ARCHETYPE_BY_LEADER: ReadonlyMap<string, Archetype> = new Map([
   // and OP15-035 answers removal with a rest of its own. It develops, denies a
   // turn's attacks and absorbs the rest, which is this table's midrange shape.
   ["OP13-001", "midrange"],
+  // OP18 (Red/Blue) Karoo, a pre-release list. The Leader gives every {Animal}
+  // {Alabasta} Character [Rush] and +1000, and most of the fifty is one: the
+  // 3- to 5-costs attack the turn they land, and the deck's card flow pays for
+  // more bodies rather than for answers. Pressure on curve.
+  ["OP18-001", "aggro"],
+  // OP18 (Green/Purple) Franky, a pre-release list. Twelve Stages that are
+  // +3000 Counters in hand, ST-18 bodies that wake at 8 DON!!, and Shanks with
+  // Birdcage clearing the board at 10: it defends with its hand and wins late.
+  ["OP18-021", "control"],
+  // OP18 (Green) Monkey.D.Luffy, a pre-release list. Green Straw Hats that rest
+  // and K.O. the opponent's rested bodies (Kouzaburou, Megalo, Carrot) on a
+  // curve of 4- and 5-costs: it trades on the board rather than racing Life.
+  ["OP18-022", "midrange"],
+  // OP18 (Blue) Ms. All Sunday, a pre-release list. A wide board of cheap
+  // {Baroque Works} pairs, each of which costs the opponent a card when it is
+  // K.O.'d, refilled by 5- and 6-cost chain plays: an attrition deck that
+  // wins by trading bodies and cards.
+  ["OP18-041", "midrange"],
+  // OP18 (Purple/Black) Saint Gunko, a pre-release list. Fills the trash and
+  // plays the {Holy Knights of God} back out of it, drawing off each return:
+  // the bodies come back faster than they are answered, a board deck rather
+  // than a race.
+  ["OP18-060", "midrange"],
+  // OP18 (Black/Yellow) Spandam, a pre-release list. Almost every card is a
+  // [Trigger], CP9 bodies put cards from hand into Life face-up, and the
+  // Leader buys Life off the deck, so every hit the opponent lands pays back:
+  // the absorbing shape OP17-099 above has.
+  ["OP18-079", "control"],
 ]);
 
 export function patternOf(leaderCardNumber: string): Archetype {

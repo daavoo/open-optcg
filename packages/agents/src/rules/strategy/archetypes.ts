@@ -1969,6 +1969,96 @@ const controlUnenrolled: StrategyProfile = {
   ],
 };
 
+/**
+ * OP18 Red/Blue Karoo, OP18-001.
+ *
+ * Enrolled under the `aggro` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op18-karoo-policy.ts`.
+ */
+const aggroKarooOp18: StrategyProfile = {
+  id: "aggro-karoo-op18",
+  extends: "aggro",
+  summary:
+    "OP18 Red/Blue Karoo: every {Animal} {Alabasta} Character gets [Rush] and +1000, so the curve attacks the turn it lands.",
+  pattern: "aggro",
+  leaders: ["OP18-001"],
+};
+
+/**
+ * OP18 Green/Purple Franky, OP18-021.
+ *
+ * Enrolled under the `control` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op18-franky-policy.ts`.
+ */
+const controlFrankyOp18: StrategyProfile = {
+  id: "control-franky-op18",
+  extends: "control",
+  summary:
+    "OP18 Green/Purple Franky: Stages as +3000 Counters and free plays off the Leader, ST-18 bodies at 8 DON!!, and Shanks with Birdcage at 10.",
+  pattern: "control",
+  leaders: ["OP18-021"],
+};
+
+/**
+ * OP18 Green Monkey.D.Luffy, OP18-022.
+ *
+ * Enrolled under the `midrange` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op18-luffy-policy.ts`.
+ */
+const midrangeLuffyOp18: StrategyProfile = {
+  id: "midrange-luffy-op18",
+  extends: "midrange",
+  summary:
+    "OP18 Green Monkey.D.Luffy: green Straw Hats that rest the opponent's board and K.O. what is rested.",
+  pattern: "midrange",
+  leaders: ["OP18-022"],
+};
+
+/**
+ * OP18 Blue Ms. All Sunday, OP18-041.
+ *
+ * Enrolled under the `midrange` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op18-all-sunday-policy.ts`.
+ */
+const midrangeAllSundayOp18: StrategyProfile = {
+  id: "midrange-all-sunday-op18",
+  extends: "midrange",
+  summary:
+    "OP18 Blue Ms. All Sunday: cheap {Baroque Works} pairs that each cost the opponent a card when K.O.'d, refilled by chain plays.",
+  pattern: "midrange",
+  leaders: ["OP18-041"],
+};
+
+/**
+ * OP18 Purple/Black Saint Gunko, OP18-060.
+ *
+ * Enrolled under the `midrange` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op18-gunko-policy.ts`.
+ */
+const midrangeGunkoOp18: StrategyProfile = {
+  id: "midrange-gunko-op18",
+  extends: "midrange",
+  summary:
+    "OP18 Purple/Black Saint Gunko: fill the trash, play the {Holy Knights of God} back out of it, and draw off each return.",
+  pattern: "midrange",
+  leaders: ["OP18-060"],
+};
+
+/**
+ * OP18 Black/Yellow Spandam, OP18-079.
+ *
+ * Enrolled under the `control` root with nothing but a mulligan of its own,
+ * for the reason `midrangeReijuOp06` gives. See `op18-spandam-policy.ts`.
+ */
+const controlSpandamOp18: StrategyProfile = {
+  id: "control-spandam-op18",
+  extends: "control",
+  summary:
+    "OP18 Black/Yellow Spandam: a {CP9} [Trigger] deck that banks cards into Life and is paid by every hit it takes.",
+  pattern: "control",
+  leaders: ["OP18-079"],
+};
+
 /** Every built-in profile, in tree order. */
 export const BUILT_IN_STRATEGY_PROFILES: readonly StrategyProfile[] = [
   aggro,
@@ -2026,6 +2116,12 @@ export const BUILT_IN_STRATEGY_PROFILES: readonly StrategyProfile[] = [
   controlLinlinOp17,
   controlEnelOp05,
   controlUnenrolled,
+  aggroKarooOp18,
+  controlFrankyOp18,
+  midrangeLuffyOp18,
+  midrangeAllSundayOp18,
+  midrangeGunkoOp18,
+  controlSpandamOp18,
 ];
 
 for (const profile of BUILT_IN_STRATEGY_PROFILES) {

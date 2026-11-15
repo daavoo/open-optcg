@@ -164,8 +164,10 @@ describe("deck provenance rows", () => {
     // Rosinante list, the first behind its Leader, adds 15. v29's
     // best-measured lists add Green/Blue Luffy 17, Red Newgate 14 and Ace &
     // Newgate 15, and replace two Community lists -- Koby 18 for 17 and Red
-    // Ace 15 for 16.
-    expect(communityDeckCardRows).toHaveLength(1409);
+    // Ace 15 for 16. The pre-release lists for the six OP-18 Leaders add 88:
+    // Karoo 15, Franky 15, Green Luffy 16, Ms. All Sunday 14, Saint Gunko 14
+    // and Spandam 14.
+    expect(communityDeckCardRows).toHaveLength(1497);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -235,7 +237,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(97);
+    expect(reports).toHaveLength(103);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);

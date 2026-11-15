@@ -163,6 +163,12 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07",
     "(Blue) Ace & Newgate - Starter Deck 22",
   ],
+  ["(Red/Blue) Karoo - VersusTCG OP-18 Pre-release", null],
+  ["(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release", null],
+  ["(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release", null],
+  ["(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release", null],
+  ["(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release", null],
+  ["(Black/Yellow) Spandam - tinkerer OP-18 Pre-release", null],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {

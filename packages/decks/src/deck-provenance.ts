@@ -65,6 +65,12 @@ import { op11JinbeTournamentManifest } from "./op11-jinbe-tournament-manifest.js
 import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js";
 import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
+import { op18KarooPreviewManifest } from "./op18-karoo-preview-manifest.js";
+import { op18FrankyPreviewManifest } from "./op18-franky-preview-manifest.js";
+import { op18LuffyPreviewManifest } from "./op18-luffy-preview-manifest.js";
+import { op18AllSundayPreviewManifest } from "./op18-all-sunday-preview-manifest.js";
+import { op18GunkoPreviewManifest } from "./op18-gunko-preview-manifest.js";
+import { op18SpandamPreviewManifest } from "./op18-spandam-preview-manifest.js";
 import { st22AceNewgateTournamentManifest } from "./st22-ace-newgate-tournament-manifest.js";
 import { op16LuffyTcgplayerManifest } from "./op16-luffy-tcgplayer-manifest.js";
 import { op11KobyRegionalT16Manifest } from "./op11-koby-regional-t16-manifest.js";
@@ -282,6 +288,18 @@ export type CommunityDeckId =
   | "(Red) Portgas.D.Ace - FlameFlame 2026-10-04"
   | "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07"
   /**
+   * Pre-release lists for the six new OP-18 Leaders: fan builds shared before
+   * the set's release, and one automated builder's list, each the first list
+   * behind its Leader and its `recommended` Community list until tournament
+   * results exist. Validated one identity at a time like the lists above.
+   */
+  | "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release"
+  | "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release"
+  | "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release"
+  | "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release"
+  | "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release"
+  | "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release"
+  /**
    * TCG Match Making's EB05 Weekly Power Rankings of 12 Nov 2026: the top
    * ten's lists but the Blue/Yellow Boa Hancock one, each its Leader's
    * `recommended` Community list. A power ranking rather than an event, so
@@ -456,6 +474,17 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Red) Portgas.D.Ace - FlameFlame 2026-10-04": op16AceFlameflameManifest,
     "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
       st22AceNewgateTournamentManifest,
+    "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewManifest,
+    "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release":
+      op18FrankyPreviewManifest,
+    "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
+      op18LuffyPreviewManifest,
+    "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":
+      op18AllSundayPreviewManifest,
+    "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release":
+      op18GunkoPreviewManifest,
+    "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release":
+      op18SpandamPreviewManifest,
     "(Purple) Monkey.D.Luffy - Starter Deck 18": st18LuffyManifest,
     "(Blue) Ace & Newgate - Starter Deck 22": st22AceNewgateManifest,
     "(Red) Shanks - Starter Deck 23": st23ShanksManifest,

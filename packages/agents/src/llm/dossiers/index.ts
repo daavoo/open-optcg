@@ -107,6 +107,12 @@ import { op11KobyRegionalT16Dossier } from "./op11-koby-regional-t16.js";
 import { op17NewgateChinoizeDossier } from "./op17-newgate-chinoize.js";
 import { op16AceFlameflameDossier } from "./op16-ace-flameflame.js";
 import { st22AceNewgateTournamentDossier } from "./st22-ace-newgate-tournament.js";
+import { op18KarooPreviewDossier } from "./op18-karoo-preview.js";
+import { op18FrankyPreviewDossier } from "./op18-franky-preview.js";
+import { op18LuffyPreviewDossier } from "./op18-luffy-preview.js";
+import { op18AllSundayPreviewDossier } from "./op18-all-sunday-preview.js";
+import { op18GunkoPreviewDossier } from "./op18-gunko-preview.js";
+import { op18SpandamPreviewDossier } from "./op18-spandam-preview.js";
 import type { DeckStrategyDossier } from "./types.js";
 
 const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
@@ -239,6 +245,17 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Red) Portgas.D.Ace - FlameFlame 2026-10-04": op16AceFlameflameDossier,
   "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
     st22AceNewgateTournamentDossier,
+  "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewDossier,
+  "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release":
+    op18FrankyPreviewDossier,
+  "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
+    op18LuffyPreviewDossier,
+  "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":
+    op18AllSundayPreviewDossier,
+  "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release":
+    op18GunkoPreviewDossier,
+  "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release":
+    op18SpandamPreviewDossier,
 };
 
 /**

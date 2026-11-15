@@ -323,6 +323,12 @@ import {
   createSt36MulliganModule,
   createSt36RulesPolicy,
 } from "./decks/st36-policy.js";
+import { createOp18KarooMulliganModule } from "./decks/op18-karoo-policy.js";
+import { createOp18FrankyMulliganModule } from "./decks/op18-franky-policy.js";
+import { createOp18LuffyMulliganModule } from "./decks/op18-luffy-policy.js";
+import { createOp18AllSundayMulliganModule } from "./decks/op18-all-sunday-policy.js";
+import { createOp18GunkoMulliganModule } from "./decks/op18-gunko-policy.js";
+import { createOp18SpandamMulliganModule } from "./decks/op18-spandam-policy.js";
 import {
   createCounterBudgetModule,
   createCounterEventReserveModule,
@@ -438,6 +444,12 @@ export const LEADERS = {
   ELBAPH_LUFFY: "OP17-079",
   GREEN_YELLOW_ROBIN: "EB05-010",
   PURPLE_YELLOW_ROSINANTE: "OP12-061",
+  KAROO: "OP18-001",
+  FRANKY: "OP18-021",
+  OP18_LUFFY: "OP18-022",
+  ALL_SUNDAY: "OP18-041",
+  SAINT_GUNKO: "OP18-060",
+  SPANDAM: "OP18-079",
 } as const;
 
 /**
@@ -1849,6 +1861,48 @@ registerPolicy({
   deck: LEADERS.PURPLE_YELLOW_ROSINANTE,
   priority: MULLIGAN_PRIORITY,
   create: createOp12RosinanteMulliganModule,
+});
+// (Red/Blue) Karoo's opening hand, the OP-18 Leader's only rule so far. See
+// `op18-karoo-policy.ts`.
+registerPolicy({
+  deck: LEADERS.KAROO,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp18KarooMulliganModule,
+});
+// (Green/Purple) Franky's opening hand, the OP-18 Leader's only rule so far. See
+// `op18-franky-policy.ts`.
+registerPolicy({
+  deck: LEADERS.FRANKY,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp18FrankyMulliganModule,
+});
+// (Green) Monkey.D.Luffy's opening hand, the OP-18 Leader's only rule so far. See
+// `op18-luffy-policy.ts`.
+registerPolicy({
+  deck: LEADERS.OP18_LUFFY,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp18LuffyMulliganModule,
+});
+// (Blue) Ms. All Sunday's opening hand, the OP-18 Leader's only rule so far. See
+// `op18-all-sunday-policy.ts`.
+registerPolicy({
+  deck: LEADERS.ALL_SUNDAY,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp18AllSundayMulliganModule,
+});
+// (Purple/Black) Saint Gunko's opening hand, the OP-18 Leader's only rule so far. See
+// `op18-gunko-policy.ts`.
+registerPolicy({
+  deck: LEADERS.SAINT_GUNKO,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp18GunkoMulliganModule,
+});
+// (Black/Yellow) Spandam's opening hand, the OP-18 Leader's only rule so far. See
+// `op18-spandam-policy.ts`.
+registerPolicy({
+  deck: LEADERS.SPANDAM,
+  priority: MULLIGAN_PRIORITY,
+  create: createOp18SpandamMulliganModule,
 });
 // (Red/Black) Koby's opening hand. See `op11-koby-policy.ts`.
 registerPolicy({
