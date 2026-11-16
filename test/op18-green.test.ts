@@ -215,6 +215,36 @@ describe("OP18-021 Franky (Leader) [Activate: Main]", () => {
     ).toBe(true);
   });
 
+  // OP13-118 Luffy bars Characters of base cost 5 or more for the turn; a
+  // Stage is not a Character, so the Leader still plays a 5-cost one. The ban
+  // used to swallow the choice, and the DON!! went back for nothing.
+  it("plays a 5-cost Stage after OP13-118 Luffy's Character ban", () => {
+    const game = ownTurn("op18-021-under-op13-118")
+      .withLeader("p1", FRANKY_LEADER)
+      .withDon("p1", { active: 10 })
+      .withHand("p1", [
+        instance("luffy", "OP13-118"),
+        instance("shark", "OP18-076"),
+      ])
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "OP13-118" });
+    while (game.state.pendingEffect) game.pass();
+    game.play({ type: "activate-main", summary: "[OP18-021]" });
+    // Which DON!! goes back is its own choice first; any one will do.
+    const offersStage = () =>
+      game
+        .legalActions()
+        .some(
+          (action) =>
+            action.type === "resolve-effect" && action.optionId === "shark",
+        );
+    while (!offersStage()) game.play({ type: "resolve-effect" });
+    game.play({ type: "resolve-effect", optionId: "shark" });
+
+    expect(game.state.players.p1.stage?.instanceId).toBe("shark");
+  });
+
   it("is not offered with no Stage in hand", () => {
     const game = ownTurn("op18-021-no-stage")
       .withLeader("p1", FRANKY_LEADER)
