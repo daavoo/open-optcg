@@ -297,6 +297,18 @@ export function donPaymentUnsettled(
 }
 
 /**
+ * A Counter card offer: its power, and the card it goes onto when that is not
+ * the one being attacked.
+ *
+ * `power` is the engine's, not the printed Counter: a hand bonus such as
+ * OP18-021 Franky's makes a Stage, which prints no Counter at all, a +3000
+ * Counter card, and only the offer knows it.
+ */
+export function counterCardSummary(power: number, onto?: string): string {
+  return `Counter +${formatCompactStat(power)}${onto ? ` onto ${onto}` : ""}`;
+}
+
+/**
  * A [Counter] Event offer, as short as the counter cards beside it.
  *
  * The engine's summary quotes the printed clause and then spells the

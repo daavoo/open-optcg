@@ -33,6 +33,7 @@ import {
   automaticSteps,
   clauseQuote,
   costOverlay,
+  counterCardSummary,
   counterEventSummary,
   defenseStopsAttack,
   destinationVerb,
@@ -2665,11 +2666,12 @@ export function createBattleScreen(
       if (card) {
         // A Counter onto a card other than the one being attacked names the
         // card it goes to; otherwise it reads exactly like the defender's.
-        const onto =
+        return counterCardSummary(
+          action.counterPower ?? card.counter,
           action.targetInstanceId === undefined
-            ? ""
-            : ` onto ${observationCardName(observation, action.targetInstanceId)}`;
-        return `Counter +${formatCompactStat(card.counter)}${onto}`;
+            ? undefined
+            : observationCardName(observation, action.targetInstanceId),
+        );
       }
     }
     if (action.type === "activate-counter-event") {
