@@ -5,6 +5,7 @@ import {
   automaticSteps,
   clauseQuote,
   costOverlay,
+  counterCardSummary,
   counterEventSummary,
   defenseStopsAttack,
   destinationVerb,
@@ -250,6 +251,15 @@ describe("battle UI", () => {
     ).toBe("Rest Brook");
     expect(picturedSummary("Rest X.Drake and Brook", "Brook", "X.Drake")).toBe(
       "Rest Brook",
+    );
+  });
+
+  it("labels a Counter card with the offer's power, not the printed Counter", () => {
+    // OP18-077 White Hobby Horse 1 is a Stage and prints no Counter; under
+    // OP18-021 Franky the engine offers it at +3000, and the button read +0.
+    expect(counterCardSummary(3_000)).toBe("Counter +3k");
+    expect(counterCardSummary(1_000, "Brook (Character)")).toBe(
+      "Counter +1k onto Brook (Character)",
     );
   });
 
