@@ -105,8 +105,10 @@ How to read it:
   - `ml/bridge/deck-candidates.ts --leader <L> --cards <cards>` counts the other training
     lists that play each card.
 
-  A card only this deck plays is learned only through it, and an adapter leaves
-  the card table frozen.
+  A card only this deck plays is learned only through it. An adapter trained
+  without `--train-cards` leaves the card table frozen; with it, the adapter
+  trains that list's rows and no others. So a card the list does not play stays
+  as the general model knows it, even under an adapter.
 
 - **Unknown is not always the reason.** Training mon's adapter with its own card
   rows (`compact_ppo --train-cards`, shipped in the adapter as `cardRows`) gave
@@ -136,6 +138,36 @@ Prefer cards that meet all four:
 
 Test cheap fixes before clever ones: a vanilla 2000-Counter body beat both
 removal Events.
+
+## 4b. Choosing between whole builds of a new Leader
+
+The paired A/B below holds the pilot fixed, so it measures the list only for
+cards the pilot knows. Comparing whole builds of a Leader from a new set breaks
+that. The general model has barely trained on the set's cards, so it wins most
+with the build that asks least of it. That is usually a generic list that
+ignores the Leader's ability, not the build players rate.
+
+Green Luffy (OP18-022) is the example. Its Leader attacks twice with 3 DON!!
+given, then skips its next Refresh, and Kokoro, Gonbe, Chimney and OP18-036
+set it active again. v29 picked OPTCG Deck Explorer's automated ramp list over
+three fan builds of that package. Recorded games showed why: with v29 piloting,
+the Leader reached 3 DON!! in about 1 of its own turns in 8, so the reset cards
+had nothing to reset. The list shipped, and tier lists rated the deck far above
+what it measured.
+
+Before letting the model choose between builds:
+
+1. **Read the Leader and ask which cards its ability needs.** A candidate that
+   plays none of them is suspect, however it measures.
+2. **Check the model knows those cards:** `scripts/card_knowledge.py`, and
+   whether any trained list plays them (`deck-candidates.ts`).
+3. **If it does not, give every build the same chance.** Train an adapter with
+   `--train-cards` on each build, same recipe and seeds, and compare the
+   adapters. Comparing builds that the general model pilots ranks the model's
+   gaps, not the decks.
+4. **Prefer a list a player built** (a placing, a creator, a store event) over
+   an automated builder's, all else equal. An automated build is tuned to its
+   own site's AI.
 
 ## 5. Decide with a paired list A/B
 

@@ -30,6 +30,13 @@ candidate to ship when that difference is above 2 standard errors. With ten
 variants, the best of ten noisy estimates is biased upwards: a margin just
 past 2 SE on a Leader with many variants deserves a second run on fresh
 seeds (`--seed`) before it ships.
+
+The ranking is only as good as the checkpoint's knowledge of the cards. A
+Leader from a set the checkpoint has barely trained on is ranked by what the
+checkpoint can already pilot, which favours a generic build over one built
+on the Leader's ability. For such a Leader, compare per-build adapters instead
+(`.claude/skills/evaluate-deck-list`, "Choosing between whole builds of a new
+Leader").
 """
 
 from __future__ import annotations
