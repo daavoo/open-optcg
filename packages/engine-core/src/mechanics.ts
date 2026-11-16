@@ -896,13 +896,15 @@ export function continueExecution(
           effect.effect.kind === "play" &&
           (state.players[execution.context.sourcePlayerId]
             .cannotPlayCharactersUntilTurn ?? -1) >= state.turn &&
-          // A cost floor on the ban leaves cheaper plays legal, so the choice
-          // is still worth offering. See `cannotPlayCharactersMinCost`.
+          // A cost floor on the ban leaves cheaper plays legal, and the ban
+          // names Characters, so a Stage is never barred by it: either way the
+          // choice is still worth offering. See `cannotPlayCharactersMinCost`.
           eligible.every(
             (card) =>
+              db.require(card.cardNumber).category !== "stage" &&
               (db.require(card.cardNumber).cost ?? 0) >=
-              (state.players[execution.context.sourcePlayerId]
-                .cannotPlayCharactersMinCost ?? 0),
+                (state.players[execution.context.sourcePlayerId]
+                  .cannotPlayCharactersMinCost ?? 0),
           ))
       ) {
         execution.bindings[effect.bind] = [];
@@ -2006,12 +2008,13 @@ export function continueExecution(
       // Without this, the two giants play each other without bound: Dorry's
       // [On Play] plays Brogy, Brogy's plays a Dorry, and with a full Character
       // area the copy trashed to make room is a legal target again, so the pool
-      // never drains. A `play` node always lands on the board, which is the
-      // Character area, so there is no Stage half to exempt the way the
-      // main-phase gate has to.
+      // never drains. The ban names Characters, so a Stage is exempt, as it is
+      // from the main-phase gate: OP13-118 Luffy's lock must not stop the
+      // OP18-021 Franky Leader playing a 5-cost Stage.
       if (
         (player.cannotPlayCharactersUntilTurn ?? -1) >= state.turn &&
         instanceIds.every((instanceId) => {
+          if (stagePlay(state, instanceId, execution.context, db)) return false;
           const located = findCardZone(state, instanceId);
           const card = located
             ? zoneCards(state, located.playerId, located.zone).find(
