@@ -154,6 +154,26 @@ describe("card detail popup", () => {
     expect(html).not.toContain("from another card");
   });
 
+  it("says which of a card's own conditional keywords are in force", () => {
+    // OP18-004 Karoo at 6000: its text lists three power thresholds, and only
+    // the badges say it has reached two of them.
+    const html = renderCardDetailDialog(
+      { cardDetailCard: "OP18-004", cardDetailInstance: "p1-card-3" },
+      {
+        currentPower: 6_000,
+        attachedDon: 0,
+        attachedDonApplies: true,
+        powerModifiers: [],
+        staticPowerModifiers: [],
+        effectiveKeywords: ["Rush", "Banish"],
+      },
+    );
+    expect(html).toContain("[Rush] active");
+    expect(html).toContain("[Banish] active");
+    expect(html).not.toContain("[Unblockable] active");
+    expect(html).not.toContain("from another card");
+  });
+
   /**
    * The popup is what a card you cannot act on gets -- an opponent's Character,
    * a catalog entry -- and the in-game modal is what one of your own gets. They

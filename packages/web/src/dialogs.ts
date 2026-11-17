@@ -271,25 +271,28 @@ export function renderCardStatusBadges(
         `<div class="ability-status active" role="status"><span>${icon("sparkles", `Granted ${grant.keyword}`)}</span><div><b>[${grant.keyword}] granted this turn</b><small>Through turn ${grant.expiresAtTurn} · ${escapeHtml(GRANTED_KEYWORD_CONSEQUENCE[grant.keyword])}</small></div></div>`,
     )
     .join("");
-  // A keyword in force that this card's own text never names, and that no
-  // turn-scoped grant explains, came from another card's continuous ability --
-  // and this popup was the last place a player could hope to find that out.
+  // A keyword in force that the card does not print outright, and that no
+  // turn-scoped grant explains, comes from a continuous condition -- and this
+  // popup is the only place a player can see whether that condition holds.
   //
-  // The test is the card's own text rather than `cardFacts().keywords`, because
-  // that list is only the *printed* keywords: ST31-003 Brook's "[Opponent's
-  // Turn] ... gains [Blocker]" is correctly not printed and just as correctly
-  // not somebody else's doing. The card below the badges already says it.
+  // `rules.keywords` is only the unconditional printed keywords, so a plain
+  // [Blocker] stays unbadged: the card text already says it. A keyword the
+  // card's own text names under a condition -- ST31-003 Brook's "[Opponent's
+  // Turn] ... gains [Blocker]", OP18-004 Karoo's power thresholds -- is badged
+  // as its own, because the text says only when it might apply, not that it
+  // does. One the text never names came from another card's aura.
   const grantedNow = new Set(
     (powerDetails?.grantedKeywords ?? []).map((grant) => grant.keyword),
   );
-  const auraBadges = (powerDetails?.effectiveKeywords ?? [])
+  const conditionalBadges = (powerDetails?.effectiveKeywords ?? [])
     .filter(
       (keyword) =>
-        !grantedNow.has(keyword) && !card.rules.tokens.includes(`[${keyword}]`),
+        !grantedNow.has(keyword) && !card.rules.keywords.includes(keyword),
     )
-    .map(
-      (keyword) =>
-        `<div class="ability-status active" role="status"><span>${icon("sparkles", `${keyword} from another card`)}</span><div><b>[${keyword}] from another card</b><small>Lasts while that card's condition holds · ${escapeHtml(GRANTED_KEYWORD_CONSEQUENCE[keyword])}</small></div></div>`,
+    .map((keyword) =>
+      card.rules.tokens.includes(`[${keyword}]`)
+        ? `<div class="ability-status active" role="status"><span>${icon("sparkles", `${keyword} active`)}</span><div><b>[${keyword}] active</b><small>This card's own condition holds · ${escapeHtml(GRANTED_KEYWORD_CONSEQUENCE[keyword])}</small></div></div>`
+        : `<div class="ability-status active" role="status"><span>${icon("sparkles", `${keyword} from another card`)}</span><div><b>[${keyword}] from another card</b><small>Lasts while that card's condition holds · ${escapeHtml(GRANTED_KEYWORD_CONSEQUENCE[keyword])}</small></div></div>`,
     )
     .join("");
   const attacksActiveBadge =
@@ -299,7 +302,7 @@ export function renderCardStatusBadges(
   const immunityBadge = removalImmunity
     ? `<div class="ability-status ${removalImmunity.active ? "active" : "inactive"}" role="status"><span>${icon("shield", "Removal immunity")}</span><div><b>Opponent-effect removal immunity ${removalImmunity.active ? "active" : "inactive"}</b><small>${removalImmunity.fieldDon} field DON!! ${removalImmunity.active ? "(6 or fewer)" : "(requires 6 or fewer)"}</small></div></div>`
     : "";
-  return `${grantedBadges}${attacksActiveBadge}${auraBadges}${immunityBadge}`;
+  return `${grantedBadges}${attacksActiveBadge}${conditionalBadges}${immunityBadge}`;
 }
 
 /**
