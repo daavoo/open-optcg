@@ -166,7 +166,8 @@ describe("deck provenance rows", () => {
     // Newgate 15, and replace two Community lists -- Koby 18 for 17 and Red
     // Ace 15 for 16. The pre-release lists for the six OP-18 Leaders add 88:
     // Karoo 15, Franky 15, Green Luffy 16, Ms. All Sunday 14, Saint Gunko 14
-    // and Spandam 14.
+    // and Spandam 14. The Open OPTCG Franky list replaces Sunny_OPTCG's, 15
+    // for 15.
     expect(communityDeckCardRows).toHaveLength(1497);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),

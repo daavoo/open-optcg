@@ -164,7 +164,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Blue) Ace & Newgate - Starter Deck 22",
   ],
   ["(Red/Blue) Karoo - VersusTCG OP-18 Pre-release", null],
-  ["(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release", null],
+  ["(Green/Purple) Franky - Open OPTCG", null],
   ["(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release", null],
   ["(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release", null],
   ["(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release", null],
@@ -227,6 +227,7 @@ describe("the Community lists the new builds replace", () => {
     ],
     ["(Red/Black) Koby - 2nd Place Indonesia Regional Final", "OP11-001"],
     ["(Red) Portgas.D.Ace - Open OPTCG", "OP16-001"],
+    ["(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release", "OP18-021"],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();

@@ -680,6 +680,34 @@ const LISTS: Record<string, DeckManifest> = {
       "OP17-017": 3,
     },
   },
+  // Green/Purple OP18-021 Franky, the "Straw Hat package" build content
+  // creator Sunny_OPTCG tested in a YouTube video on 16 Sep 2026
+  // (https://www.youtube.com/watch?v=VBPnhuFmRE8), before most of OP-18's
+  // support for this Leader was revealed: ST-18 purple Straw Hats, EB02-041
+  // Merry Go and OP05-040 Birdcage around four OP18-078 Mini-Merry. It was the
+  // Leader's Community list until the Open OPTCG build replaced it there; it
+  // stays here under its old id because checkpoints name it.
+  "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release": {
+    id: "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release",
+    format: "standard",
+    leader: "OP18-021",
+    cards: {
+      "EB02-017": 4,
+      "EB02-041": 4,
+      "OP05-040": 4,
+      "OP07-064": 4,
+      "OP09-078": 4,
+      "OP17-022": 3,
+      "OP17-023": 2,
+      "OP17-074": 2,
+      "OP18-078": 4,
+      "PRB02-012": 4,
+      "ST18-001": 4,
+      "ST18-003": 4,
+      "ST18-004": 3,
+      "ST18-005": 4,
+    },
+  },
 };
 
 /**
