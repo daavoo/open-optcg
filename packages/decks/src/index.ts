@@ -61,7 +61,7 @@ import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js
 import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
 import { op18KarooPreviewManifest } from "./op18-karoo-preview-manifest.js";
-import { op18FrankyPreviewManifest } from "./op18-franky-preview-manifest.js";
+import { op18FrankyOpenManifest } from "./op18-franky-open-manifest.js";
 import { op18LuffyPreviewManifest } from "./op18-luffy-preview-manifest.js";
 import { op18AllSundayPreviewManifest } from "./op18-all-sunday-preview-manifest.js";
 import { op18GunkoPreviewManifest } from "./op18-gunko-preview-manifest.js";
@@ -393,7 +393,7 @@ export const TOURNAMENT_DECK_IDS = [
   "(Red) Portgas.D.Ace - FlameFlame 2026-10-04",
   "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07",
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release",
-  "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release",
+  "(Green/Purple) Franky - Open OPTCG",
   "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release",
   "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release",
   "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release",
@@ -609,8 +609,7 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
   "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
     st22AceNewgateTournamentManifest,
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewManifest,
-  "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release":
-    op18FrankyPreviewManifest,
+  "(Green/Purple) Franky - Open OPTCG": op18FrankyOpenManifest,
   "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
     op18LuffyPreviewManifest,
   "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":

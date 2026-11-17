@@ -108,7 +108,7 @@ import { op17NewgateChinoizeDossier } from "./op17-newgate-chinoize.js";
 import { op16AceFlameflameDossier } from "./op16-ace-flameflame.js";
 import { st22AceNewgateTournamentDossier } from "./st22-ace-newgate-tournament.js";
 import { op18KarooPreviewDossier } from "./op18-karoo-preview.js";
-import { op18FrankyPreviewDossier } from "./op18-franky-preview.js";
+import { op18FrankyOpenDossier } from "./op18-franky-open.js";
 import { op18LuffyPreviewDossier } from "./op18-luffy-preview.js";
 import { op18AllSundayPreviewDossier } from "./op18-all-sunday-preview.js";
 import { op18GunkoPreviewDossier } from "./op18-gunko-preview.js";
@@ -246,8 +246,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
     st22AceNewgateTournamentDossier,
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewDossier,
-  "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release":
-    op18FrankyPreviewDossier,
+  "(Green/Purple) Franky - Open OPTCG": op18FrankyOpenDossier,
   "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
     op18LuffyPreviewDossier,
   "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":

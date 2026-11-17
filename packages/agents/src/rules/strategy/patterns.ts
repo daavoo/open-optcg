@@ -524,9 +524,10 @@ const ARCHETYPE_BY_LEADER: ReadonlyMap<string, Archetype> = new Map([
   // 3- to 5-costs attack the turn they land, and the deck's card flow pays for
   // more bodies rather than for answers. Pressure on curve.
   ["OP18-001", "aggro"],
-  // OP18 (Green/Purple) Franky, a pre-release list. Twelve Stages that are
-  // +3000 Counters in hand, ST-18 bodies that wake at 8 DON!!, and Shanks with
-  // Birdcage clearing the board at 10: it defends with its hand and wins late.
+  // OP18 (Green/Purple) Franky, the maintainer's pre-release list. Sixteen
+  // Stages that are +3000 Counters in hand and a card and a DON!! each on the
+  // field, and Shanks with OP18-040 clearing the board late: it defends with its
+  // hand and wins late.
   ["OP18-021", "control"],
   // OP18 (Green) Monkey.D.Luffy, a pre-release list. Green Straw Hats that rest
   // and K.O. the opponent's rested bodies (Kouzaburou, Megalo, Carrot) on a

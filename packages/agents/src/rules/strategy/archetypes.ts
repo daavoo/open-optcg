@@ -1994,7 +1994,7 @@ const controlFrankyOp18: StrategyProfile = {
   id: "control-franky-op18",
   extends: "control",
   summary:
-    "OP18 Green/Purple Franky: Stages as +3000 Counters and free plays off the Leader, ST-18 bodies at 8 DON!!, and Shanks with Birdcage at 10.",
+    "OP18 Green/Purple Franky: Stages as +3000 Counters and free plays off the Leader that draw and ramp, 6-cost Luffys the Stages ready, and Shanks with OP18-040 late.",
   pattern: "control",
   leaders: ["OP18-021"],
 };

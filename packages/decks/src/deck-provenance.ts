@@ -66,7 +66,7 @@ import { op09LuffyTournamentManifest } from "./op09-luffy-tournament-manifest.js
 import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
 import { op18KarooPreviewManifest } from "./op18-karoo-preview-manifest.js";
-import { op18FrankyPreviewManifest } from "./op18-franky-preview-manifest.js";
+import { op18FrankyOpenManifest } from "./op18-franky-open-manifest.js";
 import { op18LuffyPreviewManifest } from "./op18-luffy-preview-manifest.js";
 import { op18AllSundayPreviewManifest } from "./op18-all-sunday-preview-manifest.js";
 import { op18GunkoPreviewManifest } from "./op18-gunko-preview-manifest.js";
@@ -289,12 +289,13 @@ export type CommunityDeckId =
   | "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07"
   /**
    * Pre-release lists for the six new OP-18 Leaders: fan builds shared before
-   * the set's release, and one automated builder's list, each the first list
-   * behind its Leader and its `recommended` Community list until tournament
-   * results exist. Validated one identity at a time like the lists above.
+   * the set's release, one automated builder's list and, for Franky, the
+   * maintainer's own build, each the only list behind its Leader and its
+   * `recommended` Community list until tournament results exist. Validated one
+   * identity at a time like the lists above.
    */
   | "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release"
-  | "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release"
+  | "(Green/Purple) Franky - Open OPTCG"
   | "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release"
   | "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release"
   | "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release"
@@ -475,8 +476,7 @@ const communityDeckManifests: Readonly<Record<CommunityDeckId, DeckManifest>> =
     "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
       st22AceNewgateTournamentManifest,
     "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewManifest,
-    "(Green/Purple) Franky - Sunny_OPTCG OP-18 Pre-release":
-      op18FrankyPreviewManifest,
+    "(Green/Purple) Franky - Open OPTCG": op18FrankyOpenManifest,
     "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
       op18LuffyPreviewManifest,
     "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":
