@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Builds the BepInEx plugin against the player's own copy of OPTCGSim and
+    BepInEx: none of their assemblies are in this repository.
+
+      dotnet build -c Release -p:GameManaged=<Managed folder> -p:BepInExCore=<BepInEx/core>
+
+    On macOS the Managed folder is OPTCGSim.app/Contents/Resources/Data/Managed.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>OpenOptcgBridge</AssemblyName>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp" HintPath="$(GameManaged)/Assembly-CSharp.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(GameManaged)/UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameManaged)/UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="UnityEngine.IMGUIModule" HintPath="$(GameManaged)/UnityEngine.IMGUIModule.dll" Private="false" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(GameManaged)/UnityEngine.InputLegacyModule.dll" Private="false" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(GameManaged)/Newtonsoft.Json.dll" Private="false" />
+    <Reference Include="System.Net.Http" HintPath="$(GameManaged)/System.Net.Http.dll" Private="false" />
+    <Reference Include="BepInEx" HintPath="$(BepInExCore)/BepInEx.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(BepInExCore)/0Harmony.dll" Private="false" />
+  </ItemGroup>
+</Project>

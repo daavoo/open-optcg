@@ -61,3 +61,7 @@ packages/web/src/scorer-adapters/
 # The model's per-deck standings (ml/sys1/deck_standings.py), a release asset
 # beside the pack; they order the deck picker's Community shelf.
 packages/web/src/deck-standings.json
+
+# OPTCGSim plugin build output (tools/optcgsim/plugin)
+tools/optcgsim/plugin/bin/
+tools/optcgsim/plugin/obj/
