@@ -60,6 +60,11 @@ cannot derive is carried over as a flat modifier (`SimFieldCard.power`).
    inside an effect), the panel says so and the table is yours. The panel
    (drag it anywhere) also stops the model or switches its side. Plain Solo V
    Self games start with the model off.
+
+   Both decks must be made of cards this engine knows: one unknown card, on
+   either side, leaves the model unable to read the table. Solo vs AI checks
+   the decks once the sim deals them, and a game that fails goes back to the
+   main menu naming the cards.
    Settings (port, seat, the delay between clicks) are in
    `BepInEx/config/dev.open-optcg.optcgsim-bridge.cfg`.
 

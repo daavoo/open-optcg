@@ -142,6 +142,17 @@ export function engineCardNumber(simCardNumber: string): string {
   return number;
 }
 
+/** The sim card numbers in `simCardNumbers` the engine lacks, once each. */
+export function unknownCards(simCardNumbers: readonly string[]): string[] {
+  return [
+    ...new Set(
+      simCardNumbers
+        .map((number) => number.trim().toUpperCase().split("_")[0]!)
+        .filter((number) => !cards.get(number)),
+    ),
+  ];
+}
+
 /** Every sim card on a side, named or in its deck list. */
 function cardNumbersOn(side: SimSide): string[] {
   return [
@@ -160,13 +171,8 @@ function cardNumbersOn(side: SimSide): string[] {
  * needs the whole list to pick a deck the model can play.
  */
 function assertKnownCards(snapshot: TableSnapshot): void {
-  const missing = (side: SimSide): string[] => [
-    ...new Set(
-      cardNumbersOn(side)
-        .map((number) => number.trim().toUpperCase().split("_")[0]!)
-        .filter((number) => !cards.get(number)),
-    ),
-  ];
+  const missing = (side: SimSide): string[] =>
+    unknownCards(cardNumbersOn(side));
   const own = snapshot.seat;
   const parts = [
     { whose: "the AI's deck", numbers: missing(snapshot.players[own]) },

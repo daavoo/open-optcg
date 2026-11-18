@@ -71,6 +71,11 @@ namespace OpenOptcg.OptcgSimBridge
         // Set while the plugin itself clicks, so its clicks pass the block on
         // the person's.
         static bool ownClick;
+        // A Solo vs AI game has just been dealt and its decks are not checked
+        // yet; the model does nothing until they are.
+        bool deckCheckPending;
+        // Why the last Solo vs AI game was called off, shown on the main menu.
+        string menuMessage;
         Task<string> request;
         string requestKey;
         string lastAnsweredKey;
@@ -116,6 +121,8 @@ namespace OpenOptcg.OptcgSimBridge
             // Solo vs AI seats the model as the sim's "Opponent", across the
             // table from the person.
             if (active) modelSeat.Value = 1;
+            deckCheckPending = active;
+            if (active) menuMessage = null;
             aiRequested = false;
             steps.Clear();
             request = null;
@@ -159,6 +166,57 @@ namespace OpenOptcg.OptcgSimBridge
             static bool ChoiceClicked() => PersonMayClick();
 
             static bool PersonMayClick() => ownClick || instance == null || !instance.ModelHasTheTable();
+        }
+
+        // ---- Deck check --------------------------------------------------------
+
+        // A Solo vs AI game is only played with decks whose every card the
+        // engine knows: one unknown card, on either side, leaves the model
+        // unable to read the table for the whole game. The decks are read once
+        // the sim has dealt them, and a game that fails goes back to the menu
+        // with the cards named.
+        bool DecksArePlayable()
+        {
+            var decks = new JObject();
+            for (var seat = 0; seat < 2; seat++)
+            {
+                var player = gls.Lps_Players[seat];
+                var list = new JArray();
+                foreach (var zone in new[] { player.Lgo_MyLeader, player.Lgo_MyDeck, player.Lgo_MyHand, player.Lgo_MyDeploy, player.Lgo_MyStage, player.Lgo_MyLifeDeck, player.Lgo_MyTrash })
+                    foreach (var card in zone)
+                        if (card != null) list.Add(CardNumber(card));
+                decks[seat == 0 ? "p1" : "p2"] = list;
+            }
+            string problem;
+            try
+            {
+                var body = new StringContent(new JObject { ["decks"] = decks }.ToString(Formatting.None), Encoding.UTF8, "application/json");
+                var call = Http.PostAsync(bridgeUrl.Value.TrimEnd('/') + "/check", body);
+                if (!call.Wait(TimeSpan.FromSeconds(3))) throw new TimeoutException();
+                var missing = (JObject)JObject.Parse(call.Result.Content.ReadAsStringAsync().Result)["missing"];
+                var ai = modelSeat.Value == 0 ? "p1" : "p2";
+                var you = modelSeat.Value == 0 ? "p2" : "p1";
+                var parts = new List<string>();
+                if (missing[ai] is JArray aiMissing && aiMissing.Count > 0)
+                    parts.Add("the AI's deck has " + string.Join(", ", aiMissing));
+                if (missing[you] is JArray yourMissing && yourMissing.Count > 0)
+                    parts.Add("your deck has " + string.Join(", ", yourMissing));
+                problem = parts.Count == 0
+                    ? null
+                    : "The AI can't play with these decks: " + string.Join("; ", parts)
+                        + ". Pick decks made of cards it knows.";
+            }
+            catch (Exception)
+            {
+                problem = "No AI bridge at " + bridgeUrl.Value + ". Start it with `pnpm optcgsim:bridge`, then try again.";
+            }
+            if (problem == null) return true;
+            Logger.LogWarning(problem);
+            menuMessage = problem;
+            OnMainMenu();
+            var menu = FindAnyObjectByType<HostJoinScript>();
+            if (menu != null) AccessTools.Method(typeof(HostJoinScript), "LoadMain").Invoke(menu, null);
+            return false;
         }
 
         // ---- The "Solo vs AI" menu button -------------------------------------
@@ -209,6 +267,11 @@ namespace OpenOptcg.OptcgSimBridge
             if (aiMenuButton != null && soloMenuButton != null && aiMenuButton.activeSelf != soloMenuButton.activeSelf)
                 aiMenuButton.SetActive(soloMenuButton.activeSelf);
             if (!InSoloGame()) return;
+            if (deckCheckPending)
+            {
+                deckCheckPending = false;
+                if (!DecksArePlayable()) return;
+            }
             Trace();
             if (!active) return;
             if (Time.unscaledTime < nextAt) return;
@@ -230,7 +293,18 @@ namespace OpenOptcg.OptcgSimBridge
 
         void OnGUI()
         {
-            if (!InSoloGame()) return;
+            if (!InSoloGame())
+            {
+                if (menuMessage == null) return;
+                var box = new Rect(Screen.width / 2f - 300, Screen.height / 2f - 90, 600, 180);
+                GUILayout.BeginArea(box, GUI.skin.box);
+                GUILayout.Label("Solo vs AI");
+                GUILayout.Label(menuMessage);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("OK")) menuMessage = null;
+                GUILayout.EndArea();
+                return;
+            }
             // A window, so it can be dragged off whatever part of the sim's UI
             // it covers.
             panel = GUI.Window(0x6f70, panel, DrawPanel, "AI opponent (open-optcg)");

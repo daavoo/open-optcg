@@ -6,6 +6,8 @@
  *
  *   GET  /health  -> {"ok":true,"model":"<checkpoint>"}
  *   POST /decide  <- TableSnapshot   -> Decision (`decide.ts`)
+ *   POST /check   <- {"decks":{"p1":[card numbers],"p2":[...]}}
+ *                 -> {"missing":{"p1":[...],"p2":[...]}}, the cards the engine lacks
  *
  * Binds 127.0.0.1 only: the sim is on this machine, and nothing else should be
  * able to ask it to move.
@@ -14,6 +16,7 @@ import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { Decider } from "./decide.js";
+import { unknownCards } from "./position.js";
 import { SNAPSHOT_VERSION, type TableSnapshot } from "./snapshot.js";
 
 function flag(name: string, fallback: string): string {
@@ -48,8 +51,11 @@ const server = createServer((request, response) => {
     reply(200, { ok: true, model: decider.source });
     return;
   }
-  if (request.method !== "POST" || request.url !== "/decide") {
-    reply(404, { error: "POST /decide or GET /health" });
+  if (
+    request.method !== "POST" ||
+    (request.url !== "/decide" && request.url !== "/check")
+  ) {
+    reply(404, { error: "POST /decide, POST /check or GET /health" });
     return;
   }
   const chunks: Buffer[] = [];
@@ -62,6 +68,15 @@ const server = createServer((request, response) => {
       };
     } catch {
       reply(400, { error: "the body is not JSON" });
+      return;
+    }
+    if (request.url === "/check") {
+      const decks = (body as { decks?: Record<string, unknown> }).decks ?? {};
+      const missing = (seat: string): string[] => {
+        const list = decks[seat];
+        return Array.isArray(list) ? unknownCards(list.map(String)) : [];
+      };
+      reply(200, { missing: { p1: missing("p1"), p2: missing("p2") } });
       return;
     }
     if (body.version !== SNAPSHOT_VERSION) {
