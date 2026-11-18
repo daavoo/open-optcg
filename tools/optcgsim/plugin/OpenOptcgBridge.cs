@@ -33,6 +33,7 @@ namespace OpenOptcg.OptcgSimBridge
     public class Plugin : BaseUnityPlugin
     {
         // GameplayState values the model is asked about.
+        const int TurnSelection = 0;
         const int MulliganChoice = 4;
         const int DrawCardWait = 10;
         const int DrawDonWait = 12;
@@ -63,6 +64,10 @@ namespace OpenOptcg.OptcgSimBridge
         ConfigEntry<string> bridgeUrl;
         ConfigEntry<int> modelSeat;
         ConfigEntry<float> stepDelay;
+        ConfigEntry<bool> selfPlay;
+        ConfigEntry<bool> autoStart;
+        bool autoStarted;
+        float autoStartAt = -1;
 
         static Plugin instance;
 
@@ -108,6 +113,8 @@ namespace OpenOptcg.OptcgSimBridge
             bridgeUrl = Config.Bind("Bridge", "Url", "http://127.0.0.1:7788", "Where `pnpm optcgsim:bridge` listens.");
             modelSeat = Config.Bind("Bridge", "Seat", 1, "The seat the model plays: 0 for Player 1, 1 for Player 2.");
             stepDelay = Config.Bind("Bridge", "StepDelay", 0.7f, "Seconds between the model's clicks, so a person can follow them.");
+            selfPlay = Config.Bind("Testing", "SelfPlay", false, "The model plays both seats of a Solo vs AI game, so the plugin can be tested end to end without a person.");
+            autoStart = Config.Bind("Testing", "AutoStart", false, "Start one Solo vs AI game with the decks last chosen as soon as the main menu shows.");
             instance = this;
             try
             {
@@ -313,6 +320,37 @@ namespace OpenOptcg.OptcgSimBridge
             aiMenuButton.SetActive(solo.activeSelf);
         }
 
+        // Testing: open Solo vs AI and press its Start, with whichever decks
+        // the deck screen remembers, once per launch.
+        void AutoStart()
+        {
+            if (!autoStart.Value || autoStarted || aiMenuButton == null || !aiMenuButton.activeInHierarchy) return;
+            var menu = FindAnyObjectByType<HostJoinScript>();
+            if (menu == null) return;
+            if (autoStartAt < 0)
+            {
+                aiMenuButton.GetComponent<Button>().onClick.Invoke();
+                autoStartAt = Time.unscaledTime + 2f;
+                Logger.LogInfo("testing: opened Solo vs AI");
+                return;
+            }
+            if (Time.unscaledTime < autoStartAt) return;
+            autoStarted = true;
+            Logger.LogInfo("testing: starting the game");
+            AccessTools.Method(typeof(HostJoinScript), "SoloSelf").Invoke(menu, null);
+        }
+
+        // Testing: in self-play the model's seat is whichever seat the sim is
+        // waiting on.
+        void FollowDecider()
+        {
+            var game = gls.gsv_CurrentGame;
+            if (game == null || steps.Count > 0 || request != null) return;
+            var seat = gls.acaActive != null ? gls.acaActive.iPlayerID : game.iPlayerAction;
+            if (seat != 0 && seat != 1) return;
+            if (modelSeat.Value != seat) modelSeat.Value = seat;
+        }
+
         void Update()
         {
             AddMenuButton();
@@ -320,7 +358,9 @@ namespace OpenOptcg.OptcgSimBridge
             // follows the original.
             if (aiMenuButton != null && soloMenuButton != null && aiMenuButton.activeSelf != soloMenuButton.activeSelf)
                 aiMenuButton.SetActive(soloMenuButton.activeSelf);
+            AutoStart();
             if (!InSoloGame()) return;
+            if (selfPlay.Value) FollowDecider();
             if (deckCheckPending)
             {
                 deckCheckPending = false;
@@ -418,6 +458,9 @@ namespace OpenOptcg.OptcgSimBridge
             // asked about a hit taken on the person's turn.
             if ((int)gls.e_CurrentState == LifeTrigger && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
                 return ButtonChoiceType.Trigger;
+            // Testing: with no person at the table, self-play also decides
+            // who goes first.
+            if (selfPlay.Value && (int)gls.e_CurrentState == TurnSelection) return ButtonChoiceType.GoFirst;
             if (game.iPlayerTurn != modelSeat.Value) return null;
             switch ((int)gls.e_CurrentState)
             {
