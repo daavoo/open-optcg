@@ -80,7 +80,7 @@ namespace OpenOptcg.OptcgSimBridge
                 steps.Clear();
             }
             if (!active) return;
-            if (gls == null) gls = FindObjectOfType<GameplayLogicScript>();
+            if (gls == null) gls = FindAnyObjectByType<GameplayLogicScript>();
             if (gls == null) return;
             if (gls.e_GameStyle != GameStyle.SoloVSelf)
             {

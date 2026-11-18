@@ -38,10 +38,12 @@ cannot derive is carried over as a flat modifier (`SimFieldCard.power`).
 1. **The model.** `pnpm model:fetch` writes `packages/web/src/scorer-model.json`.
 2. **BepInEx 5** (the Mono build) into the folder holding `OPTCGSim.app`, from
    the [BepInEx releases](https://github.com/BepInEx/BepInEx/releases)
-   (`BepInEx_macos_universal_5.4.x`). In `run_bepinex.sh` set
+   (`BepInEx_macos_universal_5.4.23.6` is the one the plugin is built
+   against). In `run_bepinex.sh` set
    `executable_name="OPTCGSim.app"`, then start the sim once with
    `./run_bepinex.sh` so BepInEx creates its folders.
-3. **Build the plugin** against your copies (needs the .NET SDK):
+3. **Build the plugin** against your copies (needs the .NET SDK,
+   `brew install dotnet`):
    ```sh
    cd tools/optcgsim/plugin
    dotnet build -c Release \
