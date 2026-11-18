@@ -2009,7 +2009,7 @@ const midrangeLuffyOp18: StrategyProfile = {
   id: "midrange-luffy-op18",
   extends: "midrange",
   summary:
-    "OP18 Green Monkey.D.Luffy: green Straw Hats that rest the opponent's board and K.O. what is rested.",
+    "OP18 Green Monkey.D.Luffy: a Leader that attacks twice and is reset at end of turn, behind green Straw Hats that rest the opponent's board and K.O. what is rested.",
   pattern: "midrange",
   leaders: ["OP18-022"],
 };

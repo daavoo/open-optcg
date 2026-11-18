@@ -167,8 +167,10 @@ describe("deck provenance rows", () => {
     // Ace 15 for 16. The pre-release lists for the six OP-18 Leaders add 88:
     // Karoo 15, Franky 15, Green Luffy 16, Ms. All Sunday 14, Saint Gunko 14
     // and Spandam 14. The Open OPTCG Franky list replaces Sunny_OPTCG's, 15
-    // for 15.
-    expect(communityDeckCardRows).toHaveLength(1497);
+    // for 15. The DuelVoyager weekly Green Luffy list replaces Deck
+    // Explorer's, 14 for 16, and the ChinoizeCup #136 Ms. All Sunday list
+    // replaces Card Kaizoku's, 17 for 14.
+    expect(communityDeckCardRows).toHaveLength(1498);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );

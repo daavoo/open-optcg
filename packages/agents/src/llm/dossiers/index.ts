@@ -109,8 +109,8 @@ import { op16AceFlameflameDossier } from "./op16-ace-flameflame.js";
 import { st22AceNewgateTournamentDossier } from "./st22-ace-newgate-tournament.js";
 import { op18KarooPreviewDossier } from "./op18-karoo-preview.js";
 import { op18FrankyOpenDossier } from "./op18-franky-open.js";
-import { op18LuffyPreviewDossier } from "./op18-luffy-preview.js";
-import { op18AllSundayPreviewDossier } from "./op18-all-sunday-preview.js";
+import { op18LuffyTournamentDossier } from "./op18-luffy-tournament.js";
+import { op18AllSundayTournamentDossier } from "./op18-all-sunday-tournament.js";
 import { op18GunkoPreviewDossier } from "./op18-gunko-preview.js";
 import { op18SpandamPreviewDossier } from "./op18-spandam-preview.js";
 import type { DeckStrategyDossier } from "./types.js";
@@ -247,10 +247,10 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     st22AceNewgateTournamentDossier,
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewDossier,
   "(Green/Purple) Franky - Open OPTCG": op18FrankyOpenDossier,
-  "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
-    op18LuffyPreviewDossier,
-  "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":
-    op18AllSundayPreviewDossier,
+  "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03":
+    op18LuffyTournamentDossier,
+  "(Blue) Ms. All Sunday - 4th Place ChinoizeCup #136":
+    op18AllSundayTournamentDossier,
   "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release":
     op18GunkoPreviewDossier,
   "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release":

@@ -3,8 +3,8 @@
  *
  * A {Baroque Works} attrition deck: a wide board of cheap partner pairs, each
  * of which costs the opponent a card when it is K.O.'d at 3000 base power or
- * more, refilled by the 5- and 6-cost chain plays. The deck arrived with its
- * pre-release list and nothing else, so its only rule is the opening hand.
+ * more, refilled by the 4- to 6-cost chain plays. The deck has nothing but its
+ * shipped list behind it, so its only rule is the opening hand.
  */
 import { createMulliganModule } from "../mulligan.js";
 import type { PolicyModule } from "../policy-module.js";
