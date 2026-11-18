@@ -34,6 +34,8 @@ namespace OpenOptcg.OptcgSimBridge
     {
         // GameplayState values the model is asked about.
         const int MulliganChoice = 4;
+        const int DrawCardWait = 10;
+        const int DrawDonWait = 12;
         const int MainAction = 14;
         const int AttachingDon = 15;
         const int SelectingTarget = 17;
@@ -222,6 +224,7 @@ namespace OpenOptcg.OptcgSimBridge
                 ReceiveDecision();
                 return;
             }
+            if (PressTurnStep()) return;
             AskIfOurDecision();
         }
 
@@ -267,7 +270,32 @@ namespace OpenOptcg.OptcgSimBridge
         {
             if (!active || !InSoloGame()) return false;
             if (steps.Count > 0 || request != null) return true;
+            if (TurnStepButton() != null) return true;
             return !handedBack && AskableStep() != null;
+        }
+
+        // Solo V Self waits for a click on "Draw Card" and "Draw Don" at the
+        // start of each turn. They are not choices, so on the model's turn the
+        // plugin presses them itself rather than asking the bridge.
+        ButtonChoiceType? TurnStepButton()
+        {
+            var game = gls.gsv_CurrentGame;
+            if (game == null || game.iPlayerTurn != modelSeat.Value || gls.bCardIsMoving) return null;
+            switch ((int)gls.e_CurrentState)
+            {
+                case DrawCardWait: return ButtonChoiceType.DrawCard;
+                case DrawDonWait: return ButtonChoiceType.DrawDon;
+                default: return null;
+            }
+        }
+
+        bool PressTurnStep()
+        {
+            var button = TurnStepButton();
+            if (button == null || !Press(button.Value)) return false;
+            status = button == ButtonChoiceType.DrawCard ? "drawing" : "drawing DON!!";
+            nextAt = Time.unscaledTime + stepDelay.Value;
+            return true;
         }
 
         // The step the model is asked about at this moment, or null when it is
