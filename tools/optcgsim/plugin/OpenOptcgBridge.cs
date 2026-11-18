@@ -43,12 +43,12 @@ namespace OpenOptcg.OptcgSimBridge
         ConfigEntry<string> bridgeUrl;
         ConfigEntry<int> modelSeat;
         ConfigEntry<float> stepDelay;
-        ConfigEntry<KeyboardShortcut> toggleKey;
-        ConfigEntry<KeyboardShortcut> seatKey;
 
         bool active;
         string status = "off";
         GameplayLogicScript gls;
+        float nextLookAt;
+        Rect panel = new Rect(12, 12, 360, 96);
         Task<string> request;
         string requestKey;
         string lastAnsweredKey;
@@ -61,32 +61,24 @@ namespace OpenOptcg.OptcgSimBridge
             bridgeUrl = Config.Bind("Bridge", "Url", "http://127.0.0.1:7788", "Where `pnpm optcgsim:bridge` listens.");
             modelSeat = Config.Bind("Bridge", "Seat", 1, "The seat the model plays: 0 for Player 1, 1 for Player 2.");
             stepDelay = Config.Bind("Bridge", "StepDelay", 0.7f, "Seconds between the model's clicks, so a person can follow them.");
-            toggleKey = Config.Bind("Keys", "Toggle", new KeyboardShortcut(KeyCode.F8), "Turns the model on and off.");
-            seatKey = Config.Bind("Keys", "SwitchSeat", new KeyboardShortcut(KeyCode.F9), "Switches the seat the model plays.");
-            Logger.LogInfo("open-optcg model bridge loaded; F8 in a Solo V Self game hands a seat to the model");
+            Logger.LogInfo("open-optcg model bridge loaded; its panel appears in a Solo V Self game");
+        }
+
+        bool InSoloGame()
+        {
+            // The menus have no GameplayLogicScript, so look for one at most
+            // once a second rather than searching the scene every frame.
+            if (gls == null && Time.unscaledTime >= nextLookAt)
+            {
+                nextLookAt = Time.unscaledTime + 1f;
+                gls = FindAnyObjectByType<GameplayLogicScript>();
+            }
+            return gls != null && gls.e_GameStyle == GameStyle.SoloVSelf;
         }
 
         void Update()
         {
-            if (toggleKey.Value.IsDown())
-            {
-                active = !active;
-                steps.Clear();
-                status = active ? "on" : "off";
-            }
-            if (seatKey.Value.IsDown())
-            {
-                modelSeat.Value = 1 - modelSeat.Value;
-                steps.Clear();
-            }
-            if (!active) return;
-            if (gls == null) gls = FindAnyObjectByType<GameplayLogicScript>();
-            if (gls == null) return;
-            if (gls.e_GameStyle != GameStyle.SoloVSelf)
-            {
-                status = "Solo V Self only";
-                return;
-            }
+            if (!active || !InSoloGame()) return;
             if (Time.time < nextAt) return;
 
             if (steps.Count > 0)
@@ -105,9 +97,31 @@ namespace OpenOptcg.OptcgSimBridge
 
         void OnGUI()
         {
-            if (!active && status == "off") return;
-            var seat = modelSeat.Value == 0 ? "P1" : "P2";
-            GUI.Label(new Rect(12, 12, 900, 24), $"open-optcg model ({seat}): {status}   [F8 on/off, F9 seat]");
+            if (!InSoloGame()) return;
+            // A window, so it can be dragged off whatever part of the sim's UI
+            // it covers.
+            panel = GUI.Window(0x6f70, panel, DrawPanel, "open-optcg model");
+        }
+
+        void DrawPanel(int id)
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(active ? "Stop the model" : "Start the model"))
+            {
+                active = !active;
+                steps.Clear();
+                request = null;
+                status = active ? "waiting for its turn" : "off";
+            }
+            if (GUILayout.Button(modelSeat.Value == 0 ? "Plays Player 1" : "Plays Player 2"))
+            {
+                modelSeat.Value = 1 - modelSeat.Value;
+                steps.Clear();
+                request = null;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label(status);
+            GUI.DragWindow();
         }
 
         // ---- When to ask ----------------------------------------------------
