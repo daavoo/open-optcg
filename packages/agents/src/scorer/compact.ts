@@ -28,7 +28,7 @@ import {
 import { LEADER_PRIORS } from "./leader-priors.js";
 import { historyFacts, turnStart } from "./render.js";
 
-export const COMPACT_VERSION = 5;
+export const COMPACT_VERSION = 6;
 
 export const ZONES = [
   "my-leader",
@@ -130,8 +130,16 @@ export const V4_CARD_NUMBERS = 14 + KEYWORDS.length;
 export const CARD_CONDITIONAL_COLUMN = V4_CARD_NUMBERS;
 /** Version 5: a hand card's Counter less its printed Counter, in thousands. */
 export const CARD_COUNTER_COLUMN = CARD_CONDITIONAL_COLUMN + KEYWORDS.length;
+/** The card numbers a version-5 model was trained on: the first 27. Version 6
+    appends `CARD_LIFE_TOP_COLUMN`, so dropping it is the version-5 decision. */
+export const V5_CARD_NUMBERS = CARD_COUNTER_COLUMN + 1;
+/** Version 6: 1 on the face-up Life token whose card number is the top card of
+    that side's Life: the next one damage takes, so a face-up [Trigger] there
+    is known to answer the next hit on that Leader. A face-down top card
+    flags nothing -- `observe` gives it no number. */
+export const CARD_LIFE_TOP_COLUMN = V5_CARD_NUMBERS;
 /** Width of a card row after [row, zone]. */
-export const CARD_NUMBERS = CARD_COUNTER_COLUMN + 1;
+export const CARD_NUMBERS = CARD_LIFE_TOP_COLUMN + 1;
 /** The card number columns a Stage fills from version 5: rested, dormant. */
 export const STAGE_COLUMNS: readonly number[] = [3, 9];
 /** The option number that is a card row (a searched card's), not a quantity. */
@@ -219,7 +227,7 @@ function modifierTotal(entry: BoardCard | Leader): number {
   );
 }
 
-/** [power, don, modifiers, rested, sick, noattack, negated, cost delta, count, dormant, attacker, target, mine, lasting], keywords, conditional keywords, counter delta. */
+/** [power, don, modifiers, rested, sick, noattack, negated, cost delta, count, dormant, attacker, target, mine, lasting], keywords, conditional keywords, counter delta, Life top. */
 function inPlay(
   entry: BoardCard | Leader,
   instanceId: string,
@@ -256,6 +264,7 @@ function inPlay(
     ...KEYWORDS.map((keyword) =>
       entry.conditionalKeywords?.includes(keyword as never) ? 1 : 0,
     ),
+    0,
     0,
   ];
 }
@@ -621,20 +630,24 @@ export function compactDecision(
   };
   counted(self.trash, "my-trash", true);
   counted(opponent.trash, "op-trash", false);
-  counted(
-    self.life
-      .filter((e) => e.faceUp && e.cardNumber)
-      .map((e) => ({ cardNumber: e.cardNumber! })),
-    "my-life-up",
-    true,
-  );
-  counted(
-    opponent.life
-      .filter((e) => e.faceUp && e.cardNumber)
-      .map((e) => ({ cardNumber: e.cardNumber! })),
-    "op-life-up",
-    false,
-  );
+  // Life arrives top first (`observe`), so a face-up top card's number is the
+  // first life-up token of its side; the flag goes on that token rather than a
+  // token of its own, so the tokens and their order are version 5's.
+  const lifeUp = (side: Side, zone: "my-life-up" | "op-life-up") => {
+    const first = cards.length;
+    counted(
+      side.life
+        .filter((e) => e.faceUp && e.cardNumber)
+        .map((e) => ({ cardNumber: e.cardNumber! })),
+      zone,
+      zone === "my-life-up",
+    );
+    if (side.life[0]?.faceUp && first < cards.length)
+      // After [row, zone].
+      cards[first]![2 + CARD_LIFE_TOP_COLUMN] = 1;
+  };
+  lifeUp(self, "my-life-up");
+  lifeUp(opponent, "op-life-up");
   if (self.knowledge.ownDeckTop)
     add(
       undefined,

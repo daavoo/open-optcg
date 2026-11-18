@@ -32,7 +32,7 @@ FAILED = ROOT / "checkpoints" / "failed-games.jsonl"
 # Must match bridge/compact.ts; repeated here so the workers' protocol does not
 # import MLX.
 GLOBAL_NUMBERS = 45
-CARD_WIDTH = 29
+CARD_WIDTH = 30
 OPTION_WIDTH = 52
 
 

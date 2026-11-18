@@ -16,6 +16,7 @@ import {
   CARD_NUMBERS,
   POOLED_ZONES,
   STAGE_COLUMNS,
+  V5_CARD_NUMBERS,
   ZONES,
   type CompactDecision,
 } from "./compact.js";
@@ -272,17 +273,20 @@ export class CompactModel {
    * Each version appends: zones after every earlier token, so dropping them
    * leaves every option's card pointer where it was, (version 3) global
    * numbers after every earlier one, (version 4) option numbers after every
-   * earlier one, and (version 5) card numbers after every earlier one. Version
-   * 5 also fills a Stage's rested and dormant columns, which an older model
-   * only ever saw at 0, so they are cleared for it.
+   * earlier one, and (versions 5 and 6) card numbers after every earlier one.
+   * Version 5 also fills a Stage's rested and dormant columns, which a
+   * version-4 or older model only ever saw at 0, so they are cleared for it.
+   * Version 6 flags the top face-up Life card's existing token, so its tokens
+   * are version 5's and dropping the flag is the version-5 decision.
    */
   #known(input: CompactDecision): CompactDecision {
     if (this.#cardNumbers < CARD_NUMBERS) {
       const width = CARD_INDEX + this.#cardNumbers;
+      const stage = this.#cardNumbers < V5_CARD_NUMBERS;
       input = {
         ...input,
         cards: input.cards.map((row) =>
-          STAGE_ZONES.includes(row[1]!)
+          stage && STAGE_ZONES.includes(row[1]!)
             ? row
                 .slice(0, width)
                 .map((v, i) => (STAGE_COLUMNS.includes(i - CARD_INDEX) ? 0 : v))
