@@ -377,8 +377,9 @@ namespace OpenOptcg.OptcgSimBridge
             var key = snapshot.ToString(Formatting.None);
             if (key == lastAnsweredKey)
             {
+                // Keep the reason a handed-back decision already shows.
+                if (!handedBack) status = "its last move did not take; over to you";
                 handedBack = true;
-                status = "its last move did not take; over to you";
                 return;
             }
             handedBack = false;

@@ -142,7 +142,49 @@ export function engineCardNumber(simCardNumber: string): string {
   return number;
 }
 
+/** Every sim card on a side, named or in its deck list. */
+function cardNumbersOn(side: SimSide): string[] {
+  return [
+    side.leader.cardNumber,
+    ...(side.deckList ?? []),
+    ...(Array.isArray(side.hand) ? side.hand.map((c) => c.cardNumber) : []),
+    ...side.characters.map((c) => c.cardNumber),
+    ...(side.stage ? [side.stage.cardNumber] : []),
+    ...side.trash.map((c) => c.cardNumber),
+  ];
+}
+
+/**
+ * Refuses a table with a card the engine lacks, naming all of them and whose
+ * they are: one missing card stops every decision of the game, so the person
+ * needs the whole list to pick a deck the model can play.
+ */
+function assertKnownCards(snapshot: TableSnapshot): void {
+  const missing = (side: SimSide): string[] => [
+    ...new Set(
+      cardNumbersOn(side)
+        .map((number) => number.trim().toUpperCase().split("_")[0]!)
+        .filter((number) => !cards.get(number)),
+    ),
+  ];
+  const own = snapshot.seat;
+  const parts = [
+    { whose: "the AI's deck", numbers: missing(snapshot.players[own]) },
+    {
+      whose: "the other deck",
+      numbers: missing(snapshot.players[other(own)]),
+    },
+  ].filter((part) => part.numbers.length > 0);
+  if (parts.length === 0) return;
+  throw new Error(
+    `cards this engine does not know: ${parts
+      .map((part) => `${part.whose} has ${part.numbers.join(", ")}`)
+      .join("; ")}`,
+  );
+}
+
 function normalized(snapshot: TableSnapshot): TableSnapshot {
+  assertKnownCards(snapshot);
   const card = <T extends { cardNumber: string }>(entry: T): T => ({
     ...entry,
     cardNumber: engineCardNumber(entry.cardNumber),

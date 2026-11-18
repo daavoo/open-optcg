@@ -159,6 +159,15 @@ describe("OPTCGSim card ids", () => {
   it("names a card the engine does not know, so the seat can hand it back", () => {
     expect(() => engineCardNumber("ZZ99-999")).toThrow(/ZZ99-999/);
   });
+
+  it("names every unknown card on the table, and whose deck it is in", () => {
+    const snapshot = luffyMain();
+    snapshot.players.p1.deckList!.push("ZZ99-001", "ZZ99-001");
+    snapshot.players.p2.trash.push({ id: "t1", cardNumber: "ZZ99-002" });
+    expect(() => importPosition(snapshot)).toThrow(
+      "cards this engine does not know: the AI's deck has ZZ99-001; the other deck has ZZ99-002",
+    );
+  });
 });
 
 const modelPath = join(process.cwd(), "packages/web/src/scorer-model.json");
