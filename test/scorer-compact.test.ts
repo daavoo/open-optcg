@@ -27,6 +27,7 @@ import {
 import {
   CARD_CONDITIONAL_COLUMN,
   CARD_COUNTER_COLUMN,
+  CARD_LIFE_TOP_COLUMN,
   CARD_NUMBERS,
   GLOBAL_NUMBERS,
   OPTION_COST_COLUMN,
@@ -38,6 +39,7 @@ import {
   V3_OPTION_NUMBERS,
   V4_CARD_NUMBERS,
   V4_GLOBAL_NUMBERS,
+  V5_CARD_NUMBERS,
   ZONES,
   leaderPrior,
 } from "../packages/agents/src/scorer/compact.js";
@@ -502,11 +504,12 @@ describe("compact scorer encoding, version 3", () => {
       loadCompact(pack(2, V2_GLOBAL_NUMBERS)),
       loadCompact(pack(3, V4_GLOBAL_NUMBERS)),
       loadCompact(pack(4, V4_GLOBAL_NUMBERS, OPTION_NUMBERS)),
-      loadCompact(pack(5, GLOBAL_NUMBERS, OPTION_NUMBERS, CARD_NUMBERS)),
+      loadCompact(pack(5, GLOBAL_NUMBERS, OPTION_NUMBERS, V5_CARD_NUMBERS)),
+      loadCompact(pack(6, GLOBAL_NUMBERS, OPTION_NUMBERS, CARD_NUMBERS)),
     ])
       expect(model.score(decision).probs).toHaveLength(decision.options.length);
     expect(() =>
-      loadCompact(pack(6, GLOBAL_NUMBERS, OPTION_NUMBERS, CARD_NUMBERS)),
+      loadCompact(pack(7, GLOBAL_NUMBERS, OPTION_NUMBERS, CARD_NUMBERS)),
     ).toThrow("COMPACT_ENCODING_MISMATCH");
   });
 });
@@ -791,6 +794,165 @@ describe("compact scorer encoding, version 5", () => {
       ),
     };
     expect(v5.score(decision).probs).not.toEqual(v5.score(unrested).probs);
+  });
+});
+
+/**
+ * p1 on the ST-31 list, its Thousand Sunny ready to rest, against Spandam with
+ * `life` as p2's Life, top first; my own Life's top card is face up too.
+ */
+function lifeTopPosition(life: ReturnType<typeof instance>[]) {
+  return scenario()
+    .decks(
+      "(Red) Monkey.D.Luffy - Starter Deck 31",
+      "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release",
+    )
+    .seed("scorer-compact-life-top")
+    .atTurn(7, { active: "p1" })
+    .withBoard("p1", [
+      character("luffy", "ST31-004", { playedTurn: 7 }),
+      character("brook", "ST31-003", { playedTurn: 1 }),
+    ])
+    .withStage("p1", { instanceId: "sunny", cardNumber: "ST31-005" })
+    .withDon("p1", { rested: 7 })
+    .withLife("p1", [
+      instance("my-top", "ST31-002", { faceUp: true }),
+      instance("my-next", "ST31-003"),
+    ])
+    .withLife("p2", life)
+    .build();
+}
+
+/** Every life-up token of `zone`, as [card number, count, Life top flag]. */
+function lifeUpTokens(
+  observation: ReturnType<typeof observe>,
+  zone: "my-life-up" | "op-life-up",
+): [string | undefined, number, number][] {
+  return compactDecision(observation, observation.legalActions, ROWS)
+    .cards.filter((row) => row[1] === zoneOf(zone))
+    .map((row) => [
+      CARDS[row[0]!],
+      row[2 + 8]!,
+      row[2 + CARD_LIFE_TOP_COLUMN]!,
+    ]);
+}
+
+describe("compact scorer encoding, version 6", () => {
+  it("flags the face-up card on top of each side's Life, seen from either seat", () => {
+    const game = lifeTopPosition([
+      instance("their-top", "OP18-109", { faceUp: true }),
+      instance("their-next", "OP18-103"),
+      instance("their-third", "OP18-101", { faceUp: true }),
+    ]);
+    const mine = observe(game.state, "p1");
+    expect(lifeUpTokens(mine, "my-life-up")).toEqual([["ST31-002", 1, 1]]);
+    expect(lifeUpTokens(mine, "op-life-up")).toEqual([
+      ["OP18-109", 1, 1],
+      ["OP18-101", 1, 0],
+    ]);
+    // Face-up Life is public: p2 reads the same two facts across the table.
+    const theirs = observe(game.state, "p2");
+    expect(lifeUpTokens(theirs, "op-life-up")).toEqual([["ST31-002", 1, 1]]);
+    expect(lifeUpTokens(theirs, "my-life-up")).toEqual([
+      ["OP18-109", 1, 1],
+      ["OP18-101", 1, 0],
+    ]);
+  });
+
+  it("flags nothing when the face-up card is below a face-down top card", () => {
+    const game = lifeTopPosition([
+      instance("their-top", "OP18-103"),
+      instance("their-next", "OP18-109", { faceUp: true }),
+    ]);
+    const observation = observe(game.state, "p1");
+    expect(observation.opponent.life[0]?.faceUp).toBe(false);
+    expect(lifeUpTokens(observation, "op-life-up")).toEqual([
+      ["OP18-109", 1, 0],
+    ]);
+  });
+
+  it("flags the shared token when the top card's number is face up lower down too", () => {
+    // One token a card number, as version 5 wrote it: the count says two are
+    // face up, the flag that one of them is next.
+    const game = lifeTopPosition([
+      instance("their-top", "OP18-109", { faceUp: true }),
+      instance("their-next", "OP18-103"),
+      instance("their-third", "OP18-109", { faceUp: true }),
+    ]);
+    expect(lifeUpTokens(observe(game.state, "p1"), "op-life-up")).toEqual([
+      ["OP18-109", 2, 1],
+    ]);
+  });
+
+  it("writes the flag nowhere but a life-up token", () => {
+    const game = lifeTopPosition([
+      instance("their-top", "OP18-109", { faceUp: true }),
+    ]);
+    const observation = observe(game.state, "p1");
+    const decision = compactDecision(
+      observation,
+      observation.legalActions,
+      ROWS,
+    );
+    for (const row of decision.cards) {
+      expect(row).toHaveLength(2 + CARD_NUMBERS);
+      if (row[1] !== zoneOf("my-life-up") && row[1] !== zoneOf("op-life-up"))
+        expect(row[2 + CARD_LIFE_TOP_COLUMN]).toBe(0);
+    }
+  });
+
+  it("is read by a version-5 model exactly as the version-5 decision", () => {
+    const game = lifeTopPosition([
+      instance("their-top", "OP18-109", { faceUp: true }),
+      instance("their-next", "OP18-103"),
+      instance("their-third", "OP18-109", { faceUp: true }),
+    ]);
+    // A rested Stage: version 5 already wrote its flags, so a version-5
+    // model keeps them, as only a version-4 one has them cleared.
+    game.play({ type: "activate-main", sourceCardNumber: "ST31-005" });
+    game.play({ optionId: "p1-leader" });
+    const observation = observe(game.state, "p1");
+    const decision = compactDecision(
+      observation,
+      observation.legalActions,
+      ROWS,
+    );
+    const v5 = {
+      ...decision,
+      cards: decision.cards.map((row) => row.slice(0, 2 + V5_CARD_NUMBERS)),
+    };
+    const stage = v5.cards.find((row) => row[1] === zoneOf("my-stage"));
+    expect(stage?.[2 + 3]).toBe(1);
+    expect(
+      decision.cards.filter((row) => row[2 + CARD_LIFE_TOP_COLUMN] === 1),
+    ).toHaveLength(2);
+    const model = tinyModel(
+      ZONES.length,
+      GLOBAL_NUMBERS,
+      OPTION_NUMBERS,
+      V5_CARD_NUMBERS,
+    );
+    expect(model.score(decision)).toEqual(model.score(v5));
+    // Both of those pass through the model's own reading, so the Stage's flag
+    // is checked to reach it: a cleared one would score the same either way.
+    const unrested = {
+      ...v5,
+      cards: v5.cards.map((row) =>
+        row[1] === zoneOf("my-stage")
+          ? row.map((v, i) => (i === 2 + 3 ? 0 : v))
+          : row,
+      ),
+    };
+    expect(model.score(v5).probs).not.toEqual(model.score(unrested).probs);
+    // And the flag reaches a version-6 model.
+    const v6 = tinyModel();
+    const unflagged = {
+      ...decision,
+      cards: decision.cards.map((row) =>
+        row.map((v, i) => (i === 2 + CARD_LIFE_TOP_COLUMN ? 0 : v)),
+      ),
+    };
+    expect(v6.score(decision).probs).not.toEqual(v6.score(unflagged).probs);
   });
 });
 

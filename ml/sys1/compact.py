@@ -37,7 +37,7 @@ from .timers import timed
 DATA = Path(__file__).resolve().parent.parent / "data"
 
 # Must match bridge/compact.ts.
-COMPACT_VERSION = 5
+COMPACT_VERSION = 6
 ZONES = 28
 # Version 2 appends zones after every version-1 token (bridge/compact.ts), so
 # a model trained on the first 16 reads a version-2 decision with the rest
@@ -71,7 +71,12 @@ CARD_INDEX = 2  # [row, zone]
 # them dropped (`CompactPolicy`), and starts a version-5 run with zero weight
 # on them (`load_widened`).
 V4_CARD_NUMBERS = 20
-CARD_NUMBERS = V4_CARD_NUMBERS + 6 + 1
+V5_CARD_NUMBERS = V4_CARD_NUMBERS + 6 + 1
+# Version 6 appends one flag, 1 on the face-up Life token whose number is the
+# top card of that side's Life (the next one damage takes). It marks a token
+# version 5 already wrote, so dropping it is the version-5 decision, tokens
+# and order included.
+CARD_NUMBERS = V5_CARD_NUMBERS + 1
 # Version 5 also fills a Stage's rested and dormant flags (card number columns
 # 3 and 9, where `inPlay` puts them), which every earlier version left 0: an
 # older checkpoint has them cleared again (`known_cards`), so it reads a Stage
@@ -469,8 +474,10 @@ def options_of(config: dict) -> int:
 
 
 def cards_of(config: dict) -> int:
-    """The card numbers a checkpoint was trained with: 20 before version 5."""
-    return config.get("card_numbers", V4_CARD_NUMBERS if config.get("compact_version", 1) < 5 else CARD_NUMBERS)
+    """The card numbers a checkpoint was trained with: 20 before version 5, 27
+    in version 5."""
+    version = config.get("compact_version", 1)
+    return config.get("card_numbers", V4_CARD_NUMBERS if version < 5 else V5_CARD_NUMBERS if version < 6 else CARD_NUMBERS)
 
 
 def card_rows(decision: dict) -> np.ndarray:
@@ -480,16 +487,17 @@ def card_rows(decision: dict) -> np.ndarray:
 
 
 def known_cards(decisions: list[dict], card_nums: int) -> list[dict]:
-    """`decisions` with card numbers past `card_nums` dropped, and a Stage's
-    version-5 flags cleared, for a checkpoint trained before version 5."""
+    """`decisions` with card numbers past `card_nums` dropped, and, for a
+    checkpoint trained before version 5, a Stage's version-5 flags cleared."""
     if card_nums >= CARD_NUMBERS:
         return decisions
     out = []
     for d in decisions:
         cards = card_rows(d)[:, : CARD_INDEX + card_nums].copy()
-        stage = np.isin(cards[:, 1], STAGE_ZONES)
-        for column in STAGE_COLUMNS:
-            cards[stage, CARD_INDEX + column] = 0
+        if card_nums < V5_CARD_NUMBERS:
+            stage = np.isin(cards[:, 1], STAGE_ZONES)
+            for column in STAGE_COLUMNS:
+                cards[stage, CARD_INDEX + column] = 0
         out.append({**d, "compact": {**d["compact"], "cards": cards}})
     return out
 
