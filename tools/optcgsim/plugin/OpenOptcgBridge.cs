@@ -192,7 +192,7 @@ namespace OpenOptcg.OptcgSimBridge
             static bool CardClicked() => PersonMayClick();
 
             [HarmonyPrefix, HarmonyPatch(typeof(ChoiceButtonScript), "ImClicked")]
-            static bool ChoiceClicked() => PersonMayClick();
+            static bool ChoiceClicked() => PersonMayClick() && (instance == null || !instance.ButtonsCovered());
 
             static bool PersonMayClick() => ownClick || instance == null || !instance.ModelHasTheTable();
 
@@ -400,9 +400,65 @@ namespace OpenOptcg.OptcgSimBridge
                 GUILayout.EndArea();
                 return;
             }
+            CoverChoiceButtons();
             // A window, so it can be dragged off whatever part of the sim's UI
             // it covers.
             panel = GUI.Window(0x6f70, panel, DrawPanel, "AI opponent (open-optcg)");
+        }
+
+        GUIStyle coverStyle;
+
+        // While the decision on the table is the model's, the sim's choice
+        // buttons are its to press: they are drawn over with "AI playing", and
+        // the person's clicks on them are dropped (`ChoiceClicked`). A decision
+        // handed back uncovers them.
+        bool ButtonsCovered() => active && InSoloGame() && !handedBack && ModelDecides();
+
+        void CoverChoiceButtons()
+        {
+            if (!ButtonsCovered()) return;
+            var area = Rect.zero;
+            foreach (var button in VisibleChoiceButtons())
+            {
+                var rect = ScreenRect(button.GetComponent<RectTransform>());
+                if (rect.width <= 0) continue;
+                area = area.width <= 0 ? rect : Rect.MinMaxRect(Mathf.Min(area.xMin, rect.xMin), Mathf.Min(area.yMin, rect.yMin), Mathf.Max(area.xMax, rect.xMax), Mathf.Max(area.yMax, rect.yMax));
+            }
+            if (area.width <= 0) return;
+            if (coverStyle == null)
+            {
+                coverStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
+                var fill = new Texture2D(1, 1);
+                fill.SetPixel(0, 0, new Color(0.12f, 0.12f, 0.14f, 0.96f));
+                fill.Apply();
+                coverStyle.normal.background = fill;
+                coverStyle.normal.textColor = Color.white;
+            }
+            coverStyle.fontSize = Mathf.Clamp((int)(area.height * 0.4f), 14, 64);
+            GUI.Box(area, "AI playing", coverStyle);
+        }
+
+        // Whose decision the sim is waiting on: the owner of an effect in
+        // progress, otherwise the player it is waiting on to act.
+        bool ModelDecides()
+        {
+            var game = gls.gsv_CurrentGame;
+            if (game == null) return false;
+            var seat = gls.acaActive != null ? gls.acaActive.iPlayerID : game.iPlayerAction;
+            return seat == modelSeat.Value;
+        }
+
+        // A UI element's rectangle in IMGUI's coordinates (origin top left).
+        static Rect ScreenRect(RectTransform rect)
+        {
+            if (rect == null) return Rect.zero;
+            var canvas = rect.GetComponentInParent<Canvas>();
+            var camera = canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            var min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
+            var max = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+            return Rect.MinMaxRect(min.x, Screen.height - max.y, max.x, Screen.height - min.y);
         }
 
         void DrawPanel(int id)
@@ -449,25 +505,43 @@ namespace OpenOptcg.OptcgSimBridge
         // Solo V Self waits for a click on "Draw Card" and "Draw Don" at the
         // start of each turn. They are not choices, so on the model's turn the
         // plugin presses them itself rather than asking the bridge.
+        // The button the plugin presses for a step that is not a choice, among
+        // the ones the sim is showing; null when it shows none of them, so a
+        // prompt the plugin does not know never holds the table.
         ButtonChoiceType? TurnStepButton()
         {
             var game = gls.gsv_CurrentGame;
             if (game == null || gls.bCardIsMoving) return null;
-            // A Life card's [Trigger] is activated whenever the sim offers it:
-            // a Trigger is printed to be worth taking, and the engine is not
-            // asked about a hit taken on the person's turn.
-            if ((int)gls.e_CurrentState == LifeTrigger && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
-                return ButtonChoiceType.Trigger;
+            foreach (var type in TurnStepCandidates(game))
+                if (FindButton(type) != null) return type;
+            return null;
+        }
+
+        IEnumerable<ButtonChoiceType> TurnStepCandidates(GameStateVars game)
+        {
+            var state = (int)gls.e_CurrentState;
+            // A hit Life card: its [Trigger] is activated whenever the sim
+            // offers one -- a Trigger is printed to be worth taking, and the
+            // engine is not asked about a hit taken on the person's turn. A
+            // card without one offers "No Trigger Effect" instead.
+            if (state == LifeTrigger && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
+            {
+                yield return ButtonChoiceType.Trigger;
+                yield return ButtonChoiceType.TriggerOutOfOrder;
+                yield return ButtonChoiceType.NoTrigger;
+                yield return ButtonChoiceType.NoTriggerOutOfOrder;
+                yield break;
+            }
             // Testing: with no person at the table, self-play also decides
             // who goes first.
-            if (selfPlay.Value && (int)gls.e_CurrentState == TurnSelection) return ButtonChoiceType.GoFirst;
-            if (game.iPlayerTurn != modelSeat.Value) return null;
-            switch ((int)gls.e_CurrentState)
+            if (selfPlay.Value && state == TurnSelection)
             {
-                case DrawCardWait: return ButtonChoiceType.DrawCard;
-                case DrawDonWait: return ButtonChoiceType.DrawDon;
-                default: return null;
+                yield return ButtonChoiceType.GoFirst;
+                yield break;
             }
+            if (game.iPlayerTurn != modelSeat.Value) yield break;
+            if (state == DrawCardWait) yield return ButtonChoiceType.DrawCard;
+            if (state == DrawDonWait) yield return ButtonChoiceType.DrawDon;
         }
 
         // Several of the model's abilities waiting at once: the sim asks which
@@ -886,26 +960,41 @@ namespace OpenOptcg.OptcgSimBridge
 
         // Presses the first visible choice button of that type, the way a
         // click on it does.
-        bool Press(ButtonChoiceType type)
+        static readonly string[] ChoiceButtonFields = { "go_ChoiceButton1", "go_ChoiceButton2", "go_ChoiceButton3", "go_ChoiceButton4" };
+
+        IEnumerable<GameObject> VisibleChoiceButtons()
         {
-            foreach (var name in new[] { "go_ChoiceButton1", "go_ChoiceButton2", "go_ChoiceButton3", "go_ChoiceButton4" })
+            foreach (var name in ChoiceButtonFields)
             {
                 var button = Get<GameObject>(name);
-                if (button == null || !button.activeInHierarchy) continue;
-                var script = button.GetComponent<ChoiceButtonScript>();
-                if (script == null || script.myType != type) continue;
-                ownClick = true;
-                try
-                {
-                    script.ImClicked();
-                }
-                finally
-                {
-                    ownClick = false;
-                }
-                return true;
+                if (button != null && button.activeInHierarchy) yield return button;
             }
-            return false;
+        }
+
+        ChoiceButtonScript FindButton(ButtonChoiceType type)
+        {
+            foreach (var button in VisibleChoiceButtons())
+            {
+                var script = button.GetComponent<ChoiceButtonScript>();
+                if (script != null && script.myType == type) return script;
+            }
+            return null;
+        }
+
+        bool Press(ButtonChoiceType type)
+        {
+            var script = FindButton(type);
+            if (script == null) return false;
+            ownClick = true;
+            try
+            {
+                script.ImClicked();
+            }
+            finally
+            {
+                ownClick = false;
+            }
+            return true;
         }
 
         T Get<T>(string field) => (T)AccessTools.Field(typeof(GameplayLogicScript), field).GetValue(gls);
