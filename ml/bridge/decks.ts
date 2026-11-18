@@ -708,6 +708,61 @@ const LISTS: Record<string, DeckManifest> = {
       "ST18-005": 4,
     },
   },
+  // Green OP18-022 Monkey.D.Luffy, not a person's build: the "control" list
+  // OPTCG Deck Explorer's automated deck builder made from the OP-18 cards
+  // revealed by 14 Nov 2026 (https://optcgdeckexplorer.com/, NEWLISTS entry
+  // "OP18-022"; https://optcgdeckexplorer.com/guides/OP18-022/), a DON!!-ramp
+  // midrange deck without the Leader's OP-18 restand package. It was the
+  // Leader's Community list until the DuelVoyager weekly list replaced it
+  // there; it stays here under its old id because checkpoints name it.
+  "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release": {
+    id: "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release",
+    format: "standard",
+    leader: "OP18-022",
+    cards: {
+      "EB02-017": 4,
+      "EB04-018": 4,
+      "OP08-023": 4,
+      "OP12-029": 4,
+      "OP13-027": 4,
+      "OP13-031": 2,
+      "OP13-034": 2,
+      "OP13-037": 2,
+      "OP14-022": 2,
+      "OP18-027": 3,
+      "OP18-029": 4,
+      "OP18-030": 3,
+      "P-102": 4,
+      "PRB02-006": 4,
+      "ST30-012": 4,
+    },
+  },
+  // Blue OP18-041 Ms. All Sunday, the pre-release {Baroque Works} build Card
+  // Kaizoku published on 10 Nov 2026 through its deck builder, whose URL
+  // encodes the list (https://www.cardkaizoku.com/deckbuilder?deck=1xOP18-041%7C4xOP09-056%7C4xOP16-056%7C4xOP18-044%7C4xOP18-046%7C2xOP18-047%7C4xOP18-048%7C4xOP18-049%7C4xOP18-050%7C4xOP18-051%7C4xOP18-052%7C4xOP18-053%7C4xOP18-054%7C4xOP18-059&rotation=1&game=onepiece).
+  // It was the Leader's Community list until the ChinoizeCup #136 list
+  // replaced it there; it stays here under its old id because checkpoints
+  // name it.
+  "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release": {
+    id: "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release",
+    format: "standard",
+    leader: "OP18-041",
+    cards: {
+      "OP09-056": 4,
+      "OP16-056": 4,
+      "OP18-044": 4,
+      "OP18-046": 4,
+      "OP18-047": 2,
+      "OP18-048": 4,
+      "OP18-049": 4,
+      "OP18-050": 4,
+      "OP18-051": 4,
+      "OP18-052": 4,
+      "OP18-053": 4,
+      "OP18-054": 4,
+      "OP18-059": 4,
+    },
+  },
 };
 
 /**

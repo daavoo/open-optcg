@@ -1,16 +1,19 @@
 /**
  * (Green) Monkey.D.Luffy's policy, behind the OP18-022 Leader.
  *
- * A DON!!-ramp midrange deck: {Straw Hat Crew} Characters whose [On Play]s set
- * spent DON!! active again, rest-and-K.O. pieces to lock the opponent's board,
- * and OP18-029 Tony Tony.Chopper to load the Leader for a turn of extra
- * attacks. The deck arrived with its pre-release list and nothing else, so its
- * only rule is the opening hand.
+ * A reset deck: the Leader stands itself up to attack twice, and {Water
+ * Seven} Straw Hats set it active again at the end of the turn, while 4-cost
+ * bodies rest the opponent's Characters and Megalo K.O.s what is rested. The
+ * deck has nothing but its shipped list behind it, so its only rule is the
+ * opening hand.
  */
 import { createMulliganModule } from "../mulligan.js";
 import type { PolicyModule } from "../policy-module.js";
 
-/** The ramp's top end: nothing at 5 or more pays before the curve is down. */
+/**
+ * The curve's floor: the reset pieces, the searcher and the rest-and-K.O.
+ * bodies all cost 4 or less, and the 5- and 9-costs wait on them.
+ */
 const EARLY_COST = 4;
 
 export function createOp18LuffyMulliganModule(): PolicyModule {
@@ -23,8 +26,8 @@ export function createOp18LuffyMulliganModule(): PolicyModule {
           card.cost <= EARLY_COST,
       ),
     keepBecause:
-      "Keep a Character at 4 or less: the DON!! these bodies set active only pays once the curve is on the board.",
+      "Keep a Character at 4 or less: the reset pieces, Nami's search and the bodies that rest and K.O. are all on the early curve.",
     mulliganBecause:
-      "Mulligan a hand of 5-costs and Chopper with nothing at 4 or less: the ramp has no curve to ramp from.",
+      "Mulligan a hand with no Character at 4 or less: Perona, Zoro & Sogeking and the 9-cost Luffy have no board to build on.",
   });
 }

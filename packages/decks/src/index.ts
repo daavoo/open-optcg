@@ -62,8 +62,8 @@ import { st21LuffyOpenManifest } from "./st21-luffy-open-manifest.js";
 import { op17LinlinTournamentManifest } from "./op17-linlin-tournament-manifest.js";
 import { op18KarooPreviewManifest } from "./op18-karoo-preview-manifest.js";
 import { op18FrankyOpenManifest } from "./op18-franky-open-manifest.js";
-import { op18LuffyPreviewManifest } from "./op18-luffy-preview-manifest.js";
-import { op18AllSundayPreviewManifest } from "./op18-all-sunday-preview-manifest.js";
+import { op18LuffyTournamentManifest } from "./op18-luffy-tournament-manifest.js";
+import { op18AllSundayTournamentManifest } from "./op18-all-sunday-tournament-manifest.js";
 import { op18GunkoPreviewManifest } from "./op18-gunko-preview-manifest.js";
 import { op18SpandamPreviewManifest } from "./op18-spandam-preview-manifest.js";
 import { st22AceNewgateTournamentManifest } from "./st22-ace-newgate-tournament-manifest.js";
@@ -394,8 +394,8 @@ export const TOURNAMENT_DECK_IDS = [
   "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07",
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release",
   "(Green/Purple) Franky - Open OPTCG",
-  "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release",
-  "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release",
+  "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03",
+  "(Blue) Ms. All Sunday - 4th Place ChinoizeCup #136",
   "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release",
   "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release",
 ] as const;
@@ -610,10 +610,10 @@ const tournamentDecks: Record<TournamentDeckId, DeckManifest> = {
     st22AceNewgateTournamentManifest,
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewManifest,
   "(Green/Purple) Franky - Open OPTCG": op18FrankyOpenManifest,
-  "(Green) Monkey.D.Luffy - OPTCG Deck Explorer OP-18 Pre-release":
-    op18LuffyPreviewManifest,
-  "(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release":
-    op18AllSundayPreviewManifest,
+  "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03":
+    op18LuffyTournamentManifest,
+  "(Blue) Ms. All Sunday - 4th Place ChinoizeCup #136":
+    op18AllSundayTournamentManifest,
   "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release":
     op18GunkoPreviewManifest,
   "(Black/Yellow) Spandam - tinkerer OP-18 Pre-release":
