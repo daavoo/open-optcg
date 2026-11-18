@@ -53,11 +53,13 @@ cannot derive is carried over as a flat modifier (`SimFieldCard.power`).
    ```
 4. **Run the bridge** from the repo root: `pnpm optcgsim:bridge`.
 5. **Play.** Start the sim with `./run_bepinex.sh` and pick **Solo vs AI** on
-   the main menu, beside Solo V Self. Choose the two decks as usual; the model
-   plays Player 2 from the first decision, clicking for itself. A small panel
-   in the game (drag it anywhere) says what it is doing, stops or restarts it,
-   and switches the seat it plays. Plain Solo V Self games start with the
-   model off, and the same panel can hand it a seat.
+   the main menu, beside Solo V Self. Choose the two decks as usual: you play
+   the bottom of the table ("You" in the sim's log) and the model plays the
+   top ("Opponent"), clicking for itself. While it holds a decision your clicks
+   on cards and choice buttons are ignored; when it hands one back (a choice
+   inside an effect), the panel says so and the table is yours. The panel
+   (drag it anywhere) also stops the model or switches its side. Plain Solo V
+   Self games start with the model off.
    Settings (port, seat, the delay between clicks) are in
    `BepInEx/config/dev.open-optcg.optcgsim-bridge.cfg`.
 

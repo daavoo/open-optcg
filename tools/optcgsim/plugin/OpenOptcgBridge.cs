@@ -52,7 +52,7 @@ namespace OpenOptcg.OptcgSimBridge
         string status = "off";
         GameplayLogicScript gls;
         float nextLookAt;
-        Rect panel = new Rect(12, 12, 360, 96);
+        Rect panel = new Rect(12, 12, 380, 110);
         // A Solo V Self game is on the table: set when the sim starts one, and
         // cleared when it goes back to the main menu. The menu and the game
         // share a scene, so the GameplayLogicScript alone does not say which.
@@ -62,6 +62,13 @@ namespace OpenOptcg.OptcgSimBridge
         bool aiRequested;
         GameObject aiMenuButton;
         GameObject soloMenuButton;
+        // The model gave the current decision back to the person (a move it
+        // cannot click, or a click the sim refused); cleared on its next turn
+        // to decide.
+        bool handedBack;
+        // Set while the plugin itself clicks, so its clicks pass the block on
+        // the person's.
+        static bool ownClick;
         Task<string> request;
         string requestKey;
         string lastAnsweredKey;
@@ -104,10 +111,14 @@ namespace OpenOptcg.OptcgSimBridge
             gls = FindAnyObjectByType<GameplayLogicScript>();
             inSoloGame = gls != null;
             active = inSoloGame && aiRequested;
+            // Solo vs AI seats the model as the sim's "Opponent", across the
+            // table from the person.
+            if (active) modelSeat.Value = 1;
             aiRequested = false;
             steps.Clear();
             request = null;
             lastAnsweredKey = null;
+            handedBack = false;
             status = active ? "waiting for its turn" : "off";
         }
 
@@ -135,6 +146,17 @@ namespace OpenOptcg.OptcgSimBridge
 
             [HarmonyPostfix, HarmonyPatch(typeof(HostJoinScript), "BackToMain")]
             static void BackedOut() => instance?.OnMainMenu();
+
+            // Solo V Self lets one person click for both seats; while the
+            // model holds a decision, the person's clicks on cards and on the
+            // choice buttons are dropped so the two cannot interleave.
+            [HarmonyPrefix, HarmonyPatch(typeof(GameplayLogicScript), "HandleMouseClickCard")]
+            static bool CardClicked() => PersonMayClick();
+
+            [HarmonyPrefix, HarmonyPatch(typeof(ChoiceButtonScript), "ImClicked")]
+            static bool ChoiceClicked() => PersonMayClick();
+
+            static bool PersonMayClick() => ownClick || instance == null || !instance.ModelHasTheTable();
         }
 
         // ---- The "Solo vs AI" menu button -------------------------------------
@@ -206,28 +228,71 @@ namespace OpenOptcg.OptcgSimBridge
             if (!InSoloGame()) return;
             // A window, so it can be dragged off whatever part of the sim's UI
             // it covers.
-            panel = GUI.Window(0x6f70, panel, DrawPanel, "open-optcg model");
+            panel = GUI.Window(0x6f70, panel, DrawPanel, "AI opponent (open-optcg)");
         }
 
         void DrawPanel(int id)
         {
+            // The sim's own log calls Player 1 "You" (the bottom of the table)
+            // and Player 2 "Opponent" (the top), so the panel does too.
+            var side = modelSeat.Value == 1 ? "Opponent (top)" : "You (bottom)";
+            GUILayout.Label(active ? $"The AI plays: {side}" : "The AI is off");
+            GUILayout.Label(status, GUILayout.MinHeight(36));
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(active ? "Stop the model" : "Start the model"))
+            if (GUILayout.Button(active ? "Stop the AI" : "Start the AI"))
             {
                 active = !active;
                 steps.Clear();
                 request = null;
+                handedBack = false;
                 status = active ? "waiting for its turn" : "off";
             }
-            if (GUILayout.Button(modelSeat.Value == 0 ? "Plays Player 1" : "Plays Player 2"))
+            if (GUILayout.Button("Switch side"))
             {
                 modelSeat.Value = 1 - modelSeat.Value;
                 steps.Clear();
                 request = null;
+                handedBack = false;
             }
             GUILayout.EndHorizontal();
-            GUILayout.Label(status);
             GUI.DragWindow();
+        }
+
+        // The model is working on a decision: asking the bridge, clicking its
+        // move, or about to ask. A decision it has handed back, or one inside
+        // an effect it does not click, belongs to the person.
+        bool ModelHasTheTable()
+        {
+            if (!active || !InSoloGame()) return false;
+            if (steps.Count > 0 || request != null) return true;
+            return !handedBack && AskableStep() != null;
+        }
+
+        // The step the model is asked about at this moment, or null when it is
+        // not the model's decision or not one it plays.
+        string AskableStep()
+        {
+            var game = gls.gsv_CurrentGame;
+            if (game == null || game.iPlayerAction != modelSeat.Value) return null;
+            if (gls.acaActive != null || gls.bOpponentResolving || gls.bForcingOpponentAction) return null;
+            if (gls.bCardIsMoving) return null;
+            var pendingAbilities = Get<List<GameObject>>("lgo_ActionChoices");
+            if (pendingAbilities != null && pendingAbilities.Count > 0) return null;
+            switch ((int)gls.e_CurrentState)
+            {
+                case MulliganChoice: return "mulligan";
+                case MainAction: return "main";
+                case WaitOnBlocker: return "block";
+                case WaitOnCounters: return "counter";
+                default: return null;
+            }
+        }
+
+        // A summary's first clause: the move, without the bridge's reasoning.
+        static string Short(string summary)
+        {
+            var cut = summary.IndexOf(" (", StringComparison.Ordinal);
+            return cut > 0 ? summary.Substring(0, cut) : summary;
         }
 
         // ---- When to ask ----------------------------------------------------
@@ -235,20 +300,18 @@ namespace OpenOptcg.OptcgSimBridge
         void AskIfOurDecision()
         {
             var game = gls.gsv_CurrentGame;
-            if (game == null || game.iPlayerAction != modelSeat.Value) return;
-            if (gls.acaActive != null || gls.bOpponentResolving || gls.bForcingOpponentAction) return;
-            if (gls.bCardIsMoving) return;
-            var pendingAbilities = Get<List<GameObject>>("lgo_ActionChoices");
-            if (pendingAbilities != null && pendingAbilities.Count > 0) return;
-
-            string step;
-            switch ((int)gls.e_CurrentState)
+            if (game == null) return;
+            if (game.iPlayerAction != modelSeat.Value)
             {
-                case MulliganChoice: step = "mulligan"; break;
-                case MainAction: step = "main"; break;
-                case WaitOnBlocker: step = "block"; break;
-                case WaitOnCounters: step = "counter"; break;
-                default: return;
+                handedBack = false;
+                if (status != "off") status = "waiting for its turn";
+                return;
+            }
+            var step = AskableStep();
+            if (step == null)
+            {
+                if (!gls.bCardIsMoving && gls.acaActive != null) status = "over to you: make the effect's choice for it";
+                return;
             }
             JObject snapshot;
             try
@@ -268,9 +331,11 @@ namespace OpenOptcg.OptcgSimBridge
             var key = snapshot.ToString(Formatting.None);
             if (key == lastAnsweredKey)
             {
-                status = "the last move did not take; over to you";
+                handedBack = true;
+                status = "its last move did not take; over to you";
                 return;
             }
+            handedBack = false;
             requestKey = key;
             status = "thinking";
             var body = new StringContent(key, Encoding.UTF8, "application/json");
@@ -295,10 +360,11 @@ namespace OpenOptcg.OptcgSimBridge
             Logger.LogInfo($"model: {summary} -> {move.ToString(Formatting.None)}");
             if (!Plan(move))
             {
-                status = "over to you: " + ((string)move["reason"] ?? summary);
+                handedBack = true;
+                status = "over to you: " + ((string)move["reason"] ?? Short(summary));
                 return;
             }
-            status = summary;
+            status = Short(summary);
         }
 
         // ---- Reading the table ---------------------------------------------
@@ -491,6 +557,7 @@ namespace OpenOptcg.OptcgSimBridge
             if (!ok)
             {
                 steps.Clear();
+                handedBack = true;
                 status = "a click did not take; over to you";
             }
             nextAt = Time.time + stepDelay.Value;
@@ -499,7 +566,15 @@ namespace OpenOptcg.OptcgSimBridge
         bool Click(GameObject card)
         {
             if (card == null) return false;
-            AccessTools.Method(typeof(GameplayLogicScript), "HandleMouseClickCard").Invoke(gls, new object[] { card });
+            ownClick = true;
+            try
+            {
+                AccessTools.Method(typeof(GameplayLogicScript), "HandleMouseClickCard").Invoke(gls, new object[] { card });
+            }
+            finally
+            {
+                ownClick = false;
+            }
             return true;
         }
 
@@ -513,7 +588,15 @@ namespace OpenOptcg.OptcgSimBridge
                 if (button == null || !button.activeInHierarchy) continue;
                 var script = button.GetComponent<ChoiceButtonScript>();
                 if (script == null || script.myType != type) continue;
-                script.ImClicked();
+                ownClick = true;
+                try
+                {
+                    script.ImClicked();
+                }
+                finally
+                {
+                    ownClick = false;
+                }
                 return true;
             }
             return false;
