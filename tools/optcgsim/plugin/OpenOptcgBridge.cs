@@ -206,8 +206,10 @@ namespace OpenOptcg.OptcgSimBridge
             // follows the original.
             if (aiMenuButton != null && soloMenuButton != null && aiMenuButton.activeSelf != soloMenuButton.activeSelf)
                 aiMenuButton.SetActive(soloMenuButton.activeSelf);
-            if (!active || !InSoloGame()) return;
-            if (Time.time < nextAt) return;
+            if (!InSoloGame()) return;
+            Trace();
+            if (!active) return;
+            if (Time.unscaledTime < nextAt) return;
 
             if (steps.Count > 0)
             {
@@ -286,6 +288,22 @@ namespace OpenOptcg.OptcgSimBridge
                 case WaitOnCounters: return "counter";
                 default: return null;
             }
+        }
+
+        // One log line each time what the plugin decides on changes, so a
+        // seat that stops moving can be read from BepInEx/LogOutput.log.
+        string lastTrace;
+        void Trace()
+        {
+            var game = gls.gsv_CurrentGame;
+            if (game == null) return;
+            var pending = Get<List<GameObject>>("lgo_ActionChoices");
+            var line = $"state {gls.e_CurrentState} ({(int)gls.e_CurrentState}), action P{game.iPlayerAction + 1}, turn P{game.iPlayerTurn + 1} #{game.iPlayerTurnNumber}, first P{game.iPlayerGoesFirst + 1}"
+                + $" | ability {(gls.acaActive != null ? "active" : "-")}, resolving {gls.bOpponentResolving}, forcing {gls.bForcingOpponentAction}, moving {gls.bCardIsMoving}, pending {pending?.Count ?? 0}"
+                + $" | model {(active ? "on" : "off")} P{modelSeat.Value + 1}, steps {steps.Count}, asking {request != null}, handed back {handedBack}: {status}";
+            if (line == lastTrace) return;
+            lastTrace = line;
+            Logger.LogInfo(line);
         }
 
         // A summary's first clause: the move, without the bridge's reasoning.
@@ -560,7 +578,7 @@ namespace OpenOptcg.OptcgSimBridge
                 handedBack = true;
                 status = "a click did not take; over to you";
             }
-            nextAt = Time.time + stepDelay.Value;
+            nextAt = Time.unscaledTime + stepDelay.Value;
         }
 
         bool Click(GameObject card)
