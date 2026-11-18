@@ -9,7 +9,7 @@
 // has no click sequence here (a choice inside an effect), the seat waits for
 // the person at the table.
 //
-// Every name below is OPTCGSim 1.45a's. Most of the members the plugin needs
+// Every name below is OPTCGSim 1.45b's. Most of the members the plugin needs
 // are private, so they are reached through Harmony's AccessTools; a rename in
 // a later sim build shows up as one "missing member" line in the BepInEx log.
 using System;

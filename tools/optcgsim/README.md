@@ -70,7 +70,7 @@ curl -s -X POST localhost:7788/decide --data @snapshot.json
 
 ## Where it is fragile
 
-The plugin is written against OPTCGSim 1.45a's internals (`GameplayLogicScript`,
+The plugin is written against OPTCGSim 1.45b's internals (`GameplayLogicScript`,
 its `GameplayState` and `ButtonChoiceType` enums, its choice buttons). A sim
 update that renames them breaks the plugin, and the BepInEx log
 (`BepInEx/LogOutput.log`) names the member. OPTCGSim is closed source; none of
