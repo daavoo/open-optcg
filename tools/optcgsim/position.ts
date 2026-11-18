@@ -259,7 +259,9 @@ export function importPosition(simSnapshot: TableSnapshot): ImportedPosition {
         state = applyAction(state, { ...keep, revision: state.revision }).state;
       }
     }
-  } else if (step.kind === "main") {
+  } else if (step.kind === "main" || step.kind === "effect") {
+    // An effect step is answered from the engine's own replay of the move
+    // that started it (`decide.ts`); as a position it is the main phase.
     state.phase = "main";
     state.activePlayer = snapshot.turnPlayer;
   } else {

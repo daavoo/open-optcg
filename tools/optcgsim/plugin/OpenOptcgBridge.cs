@@ -36,6 +36,22 @@ namespace OpenOptcg.OptcgSimBridge
         const int MulliganChoice = 4;
         const int DrawCardWait = 10;
         const int DrawDonWait = 12;
+        const int LifeTrigger = 21;
+        const int GameOver = 26;
+        const int ConfirmRevealedCard = 30;
+        const int ConfirmRevealedCardOnOpponentsTurn = 31;
+
+        // The buttons that close a target selection: confirming fewer targets
+        // than the most an "up to" effect allows, or none, or finishing a
+        // look-at-the-top arrangement.
+        static readonly ButtonChoiceType[] ConfirmButtons =
+        {
+            ButtonChoiceType.SelectTargets, ButtonChoiceType.SelectFriendlyTargets,
+            ButtonChoiceType.SelectEnemyTargets, ButtonChoiceType.SelectEnemyCharacters,
+            ButtonChoiceType.SelectEnemyLeaders, ButtonChoiceType.SelectEnemyStage,
+            ButtonChoiceType.SelectTrashTargets, ButtonChoiceType.ConfirmInfiniteTargets,
+            ButtonChoiceType.FinalizeTopDeck, ButtonChoiceType.ConfirmRevealedCard,
+        };
         const int MainAction = 14;
         const int AttachingDon = 15;
         const int SelectingTarget = 17;
@@ -59,6 +75,10 @@ namespace OpenOptcg.OptcgSimBridge
         // cleared when it goes back to the main menu. The menu and the game
         // share a scene, so the GameplayLogicScript alone does not say which.
         bool inSoloGame;
+        // This game was started from "Solo vs AI": the model's hand and the
+        // cards its effects look at are kept face down for the person, even
+        // while the model is stopped.
+        bool aiGame;
         // The game being set up was started from "Solo vs AI", so the model
         // takes its seat when it begins.
         bool aiRequested;
@@ -118,6 +138,7 @@ namespace OpenOptcg.OptcgSimBridge
             gls = FindAnyObjectByType<GameplayLogicScript>();
             inSoloGame = gls != null;
             active = inSoloGame && aiRequested;
+            aiGame = active;
             // Solo vs AI seats the model as the sim's "Opponent", across the
             // table from the person.
             if (active) modelSeat.Value = 1;
@@ -134,6 +155,7 @@ namespace OpenOptcg.OptcgSimBridge
         void OnMainMenu()
         {
             inSoloGame = false;
+            aiGame = false;
             active = false;
             steps.Clear();
             request = null;
@@ -166,7 +188,39 @@ namespace OpenOptcg.OptcgSimBridge
             static bool ChoiceClicked() => PersonMayClick();
 
             static bool PersonMayClick() => ownClick || instance == null || !instance.ModelHasTheTable();
+
+            // Solo V Self deals both hands face up. The model's hand is turned
+            // face down as the sim lays it out, which also keeps it out of the
+            // hover preview (that shows face-up cards only); the states in
+            // which the sim itself shows a hand card are left alone.
+            [HarmonyPostfix, HarmonyPatch(typeof(GameplayLogicScript), "SetupHandCard")]
+            static void HandCardLaidOut(GameObject card, int playerIndex, GameplayState currentState)
+            {
+                if (instance == null || !instance.HidesSeat(playerIndex)) return;
+                var state = (int)currentState;
+                if (state == GameOver || state == ConfirmRevealedCard || state == ConfirmRevealedCardOnOpponentsTurn) return;
+                var script = card == null ? null : card.GetComponent<CardLogicScript>();
+                if (script != null && script.myCard.bFaceUp) script.SetFaceUp(false);
+            }
+
+            // The cards one of the model's effects looks at from its deck.
+            [HarmonyPostfix, HarmonyPatch(typeof(GameplayLogicScript), "RefreshTopDeckPositions")]
+            static void TopDeckLaidOut(GameplayLogicScript __instance)
+            {
+                var aca = __instance.acaActive;
+                if (instance == null || aca == null || !instance.HidesSeat(aca.iPlayerID)) return;
+                foreach (var card in TopDeck(__instance))
+                {
+                    var script = card == null ? null : card.GetComponent<CardLogicScript>();
+                    if (script != null && script.myCard.bFaceUp) script.SetFaceUp(false);
+                }
+            }
         }
+
+        static List<GameObject> TopDeck(GameplayLogicScript script) =>
+            (List<GameObject>)AccessTools.Field(typeof(GameplayLogicScript), "lgo_TopDeck").GetValue(script) ?? new List<GameObject>();
+
+        bool HidesSeat(int seat) => aiGame && inSoloGame && seat == modelSeat.Value;
 
         // ---- Deck check --------------------------------------------------------
 
@@ -288,6 +342,7 @@ namespace OpenOptcg.OptcgSimBridge
                 return;
             }
             if (PressTurnStep()) return;
+            if (ChooseAbility()) return;
             AskIfOurDecision();
         }
 
@@ -345,6 +400,9 @@ namespace OpenOptcg.OptcgSimBridge
             if (!active || !InSoloGame()) return false;
             if (steps.Count > 0 || request != null) return true;
             if (TurnStepButton() != null) return true;
+            var pending = Get<List<GameObject>>("lgo_ActionChoices");
+            var game = gls.gsv_CurrentGame;
+            if (pending != null && pending.Count > 0 && game != null && game.iPlayerAction == modelSeat.Value) return true;
             return !handedBack && AskableStep() != null;
         }
 
@@ -354,13 +412,33 @@ namespace OpenOptcg.OptcgSimBridge
         ButtonChoiceType? TurnStepButton()
         {
             var game = gls.gsv_CurrentGame;
-            if (game == null || game.iPlayerTurn != modelSeat.Value || gls.bCardIsMoving) return null;
+            if (game == null || gls.bCardIsMoving) return null;
+            // A Life card's [Trigger] is activated whenever the sim offers it:
+            // a Trigger is printed to be worth taking, and the engine is not
+            // asked about a hit taken on the person's turn.
+            if ((int)gls.e_CurrentState == LifeTrigger && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
+                return ButtonChoiceType.Trigger;
+            if (game.iPlayerTurn != modelSeat.Value) return null;
             switch ((int)gls.e_CurrentState)
             {
                 case DrawCardWait: return ButtonChoiceType.DrawCard;
                 case DrawDonWait: return ButtonChoiceType.DrawDon;
                 default: return null;
             }
+        }
+
+        // Several of the model's abilities waiting at once: the sim asks which
+        // resolves first, and the plugin takes them in the order offered.
+        bool ChooseAbility()
+        {
+            var game = gls.gsv_CurrentGame;
+            if (game == null || gls.bCardIsMoving || game.iPlayerAction != modelSeat.Value || gls.acaActive != null) return false;
+            var choices = Get<List<GameObject>>("lgo_ActionChoices");
+            var first = choices?.FirstOrDefault(c => c != null && c.activeInHierarchy);
+            if (first == null || !Click(first)) return false;
+            status = "choosing which ability resolves";
+            nextAt = Time.unscaledTime + stepDelay.Value;
+            return true;
         }
 
         bool PressTurnStep()
@@ -377,9 +455,13 @@ namespace OpenOptcg.OptcgSimBridge
         string AskableStep()
         {
             var game = gls.gsv_CurrentGame;
-            if (game == null || game.iPlayerAction != modelSeat.Value) return null;
-            if (gls.acaActive != null || gls.bOpponentResolving || gls.bForcingOpponentAction) return null;
-            if (gls.bCardIsMoving) return null;
+            if (game == null || gls.bCardIsMoving) return null;
+            // An effect belongs to the seat whose card it is, whichever
+            // player's turn it is.
+            var aca = gls.acaActive;
+            if (aca != null) return aca.iPlayerID == modelSeat.Value ? "effect" : null;
+            if (game.iPlayerAction != modelSeat.Value) return null;
+            if (gls.bOpponentResolving || gls.bForcingOpponentAction) return null;
             var pendingAbilities = Get<List<GameObject>>("lgo_ActionChoices");
             if (pendingAbilities != null && pendingAbilities.Count > 0) return null;
             switch ((int)gls.e_CurrentState)
@@ -421,16 +503,14 @@ namespace OpenOptcg.OptcgSimBridge
         {
             var game = gls.gsv_CurrentGame;
             if (game == null) return;
-            if (game.iPlayerAction != modelSeat.Value)
-            {
-                handedBack = false;
-                if (status != "off") status = "waiting for its turn";
-                return;
-            }
             var step = AskableStep();
             if (step == null)
             {
-                if (!gls.bCardIsMoving && gls.acaActive != null) status = "over to you: make the effect's choice for it";
+                if (game.iPlayerAction != modelSeat.Value)
+                {
+                    handedBack = false;
+                    if (status != "off") status = "waiting for its turn";
+                }
                 return;
             }
             JObject snapshot;
@@ -485,7 +565,9 @@ namespace OpenOptcg.OptcgSimBridge
                 status = "over to you: " + ((string)move["reason"] ?? Short(summary));
                 return;
             }
-            status = Short(summary);
+            // An effect's choice can name a card from the model's hand or deck,
+            // which the panel must not show the person.
+            status = (string)move["kind"] == "choose" ? "resolving an effect" : Short(summary);
         }
 
         // ---- Reading the table ---------------------------------------------
@@ -508,6 +590,31 @@ namespace OpenOptcg.OptcgSimBridge
                 stepJson["attackPower"] = gls.CardPower(attacker, true, false);
                 stepJson["counterPower"] = gls.iCounterAmount;
             }
+            if (step == "effect")
+            {
+                var aca = gls.acaActive;
+                stepJson["source"] = aca.goActor != null ? Id(aca.goActor) : "";
+                var candidates = new JArray();
+                var seen = new HashSet<GameObject>();
+                var viable = AccessTools.Method(typeof(GameplayLogicScript), "CheckCardIsViableTargetV3");
+                foreach (var card in TableCards())
+                {
+                    if (card == null || !seen.Add(card)) continue;
+                    bool ok;
+                    try
+                    {
+                        ok = (bool)viable.Invoke(gls, new object[] { aca, card, 0 });
+                    }
+                    catch (Exception)
+                    {
+                        ok = false;
+                    }
+                    if (ok) candidates.Add(Id(card));
+                }
+                stepJson["candidates"] = candidates;
+                stepJson["revealed"] = new JArray(TopDeck(gls).Where(c => c != null).Select(Card));
+                stepJson["remaining"] = (int)AccessTools.Method(typeof(GameplayLogicScript), "RemainingTargetsToSelect").Invoke(gls, new object[] { aca });
+            }
             return new JObject
             {
                 ["version"] = 1,
@@ -517,6 +624,18 @@ namespace OpenOptcg.OptcgSimBridge
                 ["step"] = stepJson,
                 ["players"] = players,
             };
+        }
+
+        // Every card an effect could name: both players' zones, and the cards
+        // an effect has turned over from the top of a deck.
+        IEnumerable<GameObject> TableCards()
+        {
+            foreach (var player in gls.Lps_Players)
+                foreach (var zone in new[] { player.Lgo_MyHand, player.Lgo_MyDeploy, player.Lgo_MyLeader, player.Lgo_MyStage, player.Lgo_MyTrash, player.Lgo_MyLifeDeck })
+                    foreach (var card in zone)
+                        yield return card;
+            foreach (var card in TopDeck(gls))
+                yield return card;
         }
 
         JObject Side(PlayerState player, bool mine)
@@ -653,6 +772,29 @@ namespace OpenOptcg.OptcgSimBridge
                 case "no-counter":
                     steps.Enqueue(() => Press(ButtonChoiceType.ResolveAttack));
                     return true;
+                case "choose":
+                {
+                    var aca = gls.acaActive;
+                    if (aca == null) return false;
+                    var stepAt = aca.iActionStep;
+                    foreach (var id in move["cards"] ?? new JArray())
+                    {
+                        var target = cardsById.TryGetValue((string)id ?? "", out var go) ? go : null;
+                        if (target == null) return false;
+                        steps.Enqueue(() => Click(target));
+                    }
+                    // The sim moves on by itself once the last target it needs
+                    // is chosen; otherwise its confirm button closes the
+                    // selection with the targets so far, or with none.
+                    steps.Enqueue(() =>
+                    {
+                        if (gls.acaActive != aca || aca.iActionStep != stepAt) return true;
+                        foreach (var type in ConfirmButtons)
+                            if (Press(type)) return true;
+                        return true;
+                    });
+                    return true;
+                }
                 case "end-turn":
                     steps.Enqueue(() => Press(ButtonChoiceType.EndTurn));
                     steps.Enqueue(() => { Press(ButtonChoiceType.ConfirmEndTurn); return true; });

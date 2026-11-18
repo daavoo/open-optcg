@@ -193,4 +193,24 @@ describe.skipIf(!existsSync(modelPath))("OPTCGSim bridge decision", () => {
     expect(decision.move.kind).not.toBe("defer");
     expect(decision.offered.length).toBeGreaterThan(1);
   });
+
+  it("answers an effect it cannot replay with the strongest opposing target", async () => {
+    const snapshot = luffyMain();
+    snapshot.players.p2.characters.push({
+      id: "z2",
+      cardNumber: "ST32-002",
+      rested: false,
+      don: 0,
+      power: 3000,
+    });
+    snapshot.step = {
+      kind: "effect",
+      source: "h1",
+      candidates: ["z2", "z1"],
+      revealed: [],
+      remaining: 1,
+    };
+    const decision = await new Decider(modelPath).decide(snapshot);
+    expect(decision.move).toEqual({ kind: "choose", cards: ["z1"] });
+  });
 });

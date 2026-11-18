@@ -65,6 +65,24 @@ export type SimStep =
       attackPower: number;
       /** Counter power already added to the target this battle. */
       counterPower?: number;
+    }
+  | {
+      /**
+       * A choice inside one of the model's own effects: the sim has an effect
+       * of the model's seat in progress and is waiting for its targets.
+       */
+      kind: "effect";
+      /** The card whose effect it is. */
+      source: string;
+      /** Every card the sim would accept as the next target. */
+      candidates: string[];
+      /**
+       * Cards the effect has the model look at from its deck, top first.
+       * They are hidden from the table, so the engine's deck is set to match.
+       */
+      revealed: SimCard[];
+      /** Targets still to choose; fewer may be confirmed when the effect says "up to". */
+      remaining: number;
     };
 
 export interface TableSnapshot {
@@ -79,9 +97,11 @@ export interface TableSnapshot {
 }
 
 /**
- * What the model chose, in the sim's terms. `defer` hands the decision back
- * to the person at the table: the decision the engine put to the model has no
- * counterpart the plugin can perform yet (a choice inside an effect).
+ * What the model chose, in the sim's terms. `choose` answers an `effect`
+ * step: the cards to select, in order, then the sim's confirm -- an empty
+ * list confirms choosing nothing, and `decline` passes on an optional effect.
+ * `defer` hands the decision back to the person at the table: the decision
+ * the engine put to the model has no counterpart the plugin can perform.
  */
 export type SimMove =
   | { kind: "keep" }
@@ -95,4 +115,5 @@ export type SimMove =
   | { kind: "end-turn" }
   | { kind: "no-block" }
   | { kind: "no-counter" }
+  | { kind: "choose"; cards: string[]; decline?: boolean }
   | { kind: "defer"; reason: string };
