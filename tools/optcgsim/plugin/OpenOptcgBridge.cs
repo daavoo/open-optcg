@@ -23,7 +23,9 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace OpenOptcg.OptcgSimBridge
 {
@@ -44,11 +46,22 @@ namespace OpenOptcg.OptcgSimBridge
         ConfigEntry<int> modelSeat;
         ConfigEntry<float> stepDelay;
 
+        static Plugin instance;
+
         bool active;
         string status = "off";
         GameplayLogicScript gls;
         float nextLookAt;
         Rect panel = new Rect(12, 12, 360, 96);
+        // A Solo V Self game is on the table: set when the sim starts one, and
+        // cleared when it goes back to the main menu. The menu and the game
+        // share a scene, so the GameplayLogicScript alone does not say which.
+        bool inSoloGame;
+        // The game being set up was started from "Solo vs AI", so the model
+        // takes its seat when it begins.
+        bool aiRequested;
+        GameObject aiMenuButton;
+        GameObject soloMenuButton;
         Task<string> request;
         string requestKey;
         string lastAnsweredKey;
@@ -61,23 +74,116 @@ namespace OpenOptcg.OptcgSimBridge
             bridgeUrl = Config.Bind("Bridge", "Url", "http://127.0.0.1:7788", "Where `pnpm optcgsim:bridge` listens.");
             modelSeat = Config.Bind("Bridge", "Seat", 1, "The seat the model plays: 0 for Player 1, 1 for Player 2.");
             stepDelay = Config.Bind("Bridge", "StepDelay", 0.7f, "Seconds between the model's clicks, so a person can follow them.");
-            Logger.LogInfo("open-optcg model bridge loaded; its panel appears in a Solo V Self game");
+            instance = this;
+            try
+            {
+                new Harmony("dev.open-optcg.optcgsim-bridge").PatchAll(typeof(MenuPatches));
+            }
+            catch (Exception error)
+            {
+                Logger.LogError("could not hook the sim's menu: " + error.Message);
+            }
+            Logger.LogInfo("open-optcg model bridge loaded; \"Solo vs AI\" is on the main menu");
         }
 
         bool InSoloGame()
         {
-            // The menus have no GameplayLogicScript, so look for one at most
-            // once a second rather than searching the scene every frame.
-            if (gls == null && Time.unscaledTime >= nextLookAt)
+            if (!inSoloGame) return false;
+            // Leaving a game reloads the scene, which destroys the table the
+            // game started on.
+            if (gls == null)
             {
-                nextLookAt = Time.unscaledTime + 1f;
-                gls = FindAnyObjectByType<GameplayLogicScript>();
+                OnMainMenu();
+                return false;
             }
-            return gls != null && gls.e_GameStyle == GameStyle.SoloVSelf;
+            return gls.e_GameStyle == GameStyle.SoloVSelf;
+        }
+
+        void OnSoloGameStarted()
+        {
+            gls = FindAnyObjectByType<GameplayLogicScript>();
+            inSoloGame = gls != null;
+            active = inSoloGame && aiRequested;
+            aiRequested = false;
+            steps.Clear();
+            request = null;
+            lastAnsweredKey = null;
+            status = active ? "waiting for its turn" : "off";
+        }
+
+        void OnMainMenu()
+        {
+            inSoloGame = false;
+            active = false;
+            steps.Clear();
+            request = null;
+        }
+
+        // The sim's menu methods: "Start" on the Solo V Self deck screen and a
+        // loaded save state begin a game; going back to the main menu ends one.
+        [HarmonyPatch]
+        static class MenuPatches
+        {
+            [HarmonyPostfix, HarmonyPatch(typeof(HostJoinScript), "SoloSelf")]
+            static void SoloStarted() => instance?.OnSoloGameStarted();
+
+            [HarmonyPostfix, HarmonyPatch(typeof(HostJoinScript), "LoadSaveState")]
+            static void SaveStateLoaded() => instance?.OnSoloGameStarted();
+
+            [HarmonyPrefix, HarmonyPatch(typeof(HostJoinScript), "LoadMain")]
+            static void MainMenuLoading() => instance?.OnMainMenu();
+
+            [HarmonyPostfix, HarmonyPatch(typeof(HostJoinScript), "BackToMain")]
+            static void BackedOut() => instance?.OnMainMenu();
+        }
+
+        // ---- The "Solo vs AI" menu button -------------------------------------
+
+        // A copy of the sim's own Solo V Self button, beside it: it opens the
+        // same deck screen, and marks the game it starts as one the model plays.
+        void AddMenuButton()
+        {
+            if (aiMenuButton != null || Time.unscaledTime < nextLookAt) return;
+            nextLookAt = Time.unscaledTime + 1f;
+            var menu = FindAnyObjectByType<HostJoinScript>();
+            if (menu == null) return;
+            var solo = (GameObject)AccessTools.Field(typeof(HostJoinScript), "go_SoloVSelf").GetValue(menu);
+            var soloButton = solo == null ? null : solo.GetComponent<Button>();
+            if (soloButton == null) return;
+
+            soloMenuButton = solo;
+            aiMenuButton = Instantiate(solo, solo.transform.parent);
+            aiMenuButton.name = "SoloVsAI";
+            aiMenuButton.transform.SetSiblingIndex(solo.transform.GetSiblingIndex() + 1);
+            if (solo.transform.parent.GetComponent<LayoutGroup>() == null)
+            {
+                var rect = (RectTransform)aiMenuButton.transform;
+                rect.anchoredPosition -= new Vector2(0, rect.rect.height * 1.15f);
+            }
+            foreach (var text in aiMenuButton.GetComponentsInChildren<TMP_Text>(true)) text.text = "Solo vs AI";
+            foreach (var text in aiMenuButton.GetComponentsInChildren<Text>(true)) text.text = "Solo vs AI";
+
+            // A fresh event rather than the copied one, so the copy runs the
+            // original's handlers (inspector-wired or added in code) first and
+            // the request survives them.
+            var button = aiMenuButton.GetComponent<Button>();
+            button.onClick = new Button.ButtonClickedEvent();
+            button.onClick.AddListener(() =>
+            {
+                soloButton.onClick.Invoke();
+                aiRequested = true;
+            });
+            soloButton.onClick.AddListener(() => aiRequested = false);
+            aiMenuButton.SetActive(solo.activeSelf);
         }
 
         void Update()
         {
+            AddMenuButton();
+            // The sim hides and shows its menu buttons by screen; the copy
+            // follows the original.
+            if (aiMenuButton != null && soloMenuButton != null && aiMenuButton.activeSelf != soloMenuButton.activeSelf)
+                aiMenuButton.SetActive(soloMenuButton.activeSelf);
             if (!active || !InSoloGame()) return;
             if (Time.time < nextAt) return;
 
