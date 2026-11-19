@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  autoBuildSealedDeckBest,
+  validateSealedDeck,
   DEFAULT_SEALED_EXPANSION,
+  SEALED_CARD_VALUES,
   playablePoolCards,
   SEALED_EXPANSIONS,
   requireSealedExpansion,
@@ -8,6 +11,7 @@ import {
 import { escapeHtml } from "../packages/web/src/card-text.js";
 import { openSealedPool } from "../packages/web/src/sealed-mode.js";
 import {
+  autoBuildDeck,
   beginRun,
   emptyState,
   normalizeOpponentController,
@@ -124,6 +128,44 @@ describe("the sealed builder's pool", () => {
     );
     expect(deck).toContain(`data-sealed-increase="${cardNumber}"`);
     expect(pool).toContain(`data-sealed-increase="${cardNumber}"`);
+  });
+});
+
+describe("the sealed builder's auto-build", () => {
+  it("is offered in the builder", () => {
+    const html = renderBuilder(runningState("OP18"), stubContext());
+    expect(html).toContain('id="sealed-auto-build"');
+  });
+
+  it("replaces the deck with the AI's build: OP-18's forty highest-valued copies", () => {
+    const state = runningState("OP18");
+    const [cardNumber] = [...playablePoolCards(state.run!.pool).keys()];
+    state.run!.deck = { [cardNumber!]: 1 };
+    autoBuildDeck(state);
+    const deck = state.run!.deck;
+    expect(deck).toEqual(autoBuildSealedDeckBest(state.run!.pool).cards);
+    expect(validateSealedDeck({ cards: deck }, state.run!.pool).errors).toEqual(
+      [],
+    );
+    // Every copy left in the sideboard is worth no more than the weakest kept.
+    const value = (card: string) => SEALED_CARD_VALUES.OP18![card] ?? 0;
+    const kept = Object.keys(deck).map(value);
+    const left = [...playablePoolCards(state.run!.pool)]
+      .filter(([card, count]) => (deck[card] ?? 0) < count)
+      .map(([card]) => value(card));
+    expect(Math.max(...left)).toBeLessThanOrEqual(Math.min(...kept));
+    expect(state.message).toContain("rates highest");
+  });
+
+  it("builds by GRAPE on a set with no value table, as the AI does", () => {
+    const state = runningState("OP15");
+    autoBuildDeck(state);
+    expect(state.run!.deck).toEqual(
+      autoBuildSealedDeckBest(state.run!.pool).cards,
+    );
+    expect(
+      validateSealedDeck({ cards: state.run!.deck }, state.run!.pool).errors,
+    ).toEqual([]);
   });
 });
 

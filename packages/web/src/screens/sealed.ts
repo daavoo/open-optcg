@@ -2,6 +2,7 @@ import type { CardDefinition } from "@one-piece-sim/cards";
 import { requireKnownCard } from "@one-piece-sim/cards";
 import {
   autoBuildSealedDeckBest,
+  hasSealedCardValues,
   playablePoolCards,
   poolCounts,
   requireSealedExpansion,
@@ -512,6 +513,20 @@ export function normalizeOpponentController(
     state.run.opponentController = "rules";
 }
 
+/**
+ * Replaces the deck with the one the AI builds from this pool: the same
+ * `autoBuildSealedDeckBest` that builds the opponent's, so on a set with a
+ * measured card-value table (OP-18) it keeps the forty copies the learned
+ * model's self-play rates highest, and elsewhere it is GRAPE.
+ */
+export function autoBuildDeck(state: SealedState): void {
+  if (!state.run) return;
+  state.run.deck = { ...autoBuildSealedDeckBest(state.run.pool).cards };
+  state.message = hasSealedCardValues(state.run.pool.expansion)
+    ? "Built the forty cards the AI rates highest in this pool."
+    : "Built the deck the AI would build from this pool.";
+}
+
 export function renderBuilder(state: SealedState, ctx: SealedContext): string {
   if (!state.run) return "";
   const run = state.run;
@@ -553,6 +568,7 @@ export function renderBuilder(state: SealedState, ctx: SealedContext): string {
     <aside class="deck-editor-tools">
       <div class="editor-leader-card">${renderCatalogCard(sealedLeader, 0, false)}<div class="leader-summary"><span>All colours</span><strong>${escapeHtml(sealedLeader.name)}</strong></div></div>
       ${packNote("Your pool", run.packsOpened)}
+      <button class="secondary wide" id="sealed-auto-build" title="Replace the deck with the one the AI would build from this pool">${icon("sparkles", "Auto-build")}Auto-build</button>
       <button class="secondary wide" id="sealed-export">${icon("download", "Export deck list")}Export deck list</button>
       <div class="deck-rule-status ${validation.errors.length ? "invalid" : "valid"}"><strong>${validation.errors.length ? "Deck needs attention" : "Ready to play"}</strong>${validation.errors.length ? `<ul>${validation.errors.map((error) => `<li>${escapeHtml(error)}</li>`).join("")}</ul>` : `<p>${SEALED_DECK_SIZE} cards, all from your opened pool.</p>`}</div>
       ${packNote("Opponent's pool", run.opponentPacksOpened)}
@@ -577,6 +593,12 @@ export function bindBuilder(state: SealedState, ctx: SealedContext): void {
     ?.addEventListener("click", () => {
       state.run = null;
       ctx.goHome();
+    });
+  document
+    .querySelector("#sealed-auto-build")
+    ?.addEventListener("click", () => {
+      autoBuildDeck(state);
+      ctx.rerender();
     });
   document.querySelector("#sealed-export")?.addEventListener("click", () => {
     if (state.run) {
