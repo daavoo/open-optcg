@@ -376,6 +376,26 @@ function simCardNumbers(snapshot: TableSnapshot): Map<string, string> {
 }
 
 /**
+ * The "choose one" button with the largest or smallest number on it, as
+ * `V3Choice#n`, where every such button of the prompt carries a number.
+ */
+function amountButton(
+  snapshot: TableSnapshot,
+  which: "most" | "least",
+): string | undefined {
+  const amounts = (snapshot.buttons ?? []).flatMap((name, index) => {
+    if (name !== "V3Choice") return [];
+    const number = /\d+/.exec(snapshot.labels?.[index] ?? "");
+    return [number ? Number(number[0]) : Number.NaN];
+  });
+  if (amounts.length === 0 || amounts.some((amount) => Number.isNaN(amount))) {
+    return undefined;
+  }
+  const wanted = which === "most" ? Math.max(...amounts) : Math.min(...amounts);
+  return `V3Choice#${amounts.indexOf(wanted) + 1}`;
+}
+
+/**
  * An action by what it does, without the instance ids its `actionId` holds or
  * the numbers its summary goes on to quote: the name a move keeps when the
  * engine's game is rebuilt around it.
@@ -1150,7 +1170,14 @@ export class ShadowGame {
         case "confirm": {
           take(action);
           if (option.choice === "done") {
-            return result({ kind: "choose", cards: [] });
+            // "Up to N", asked with a button per number: taking no more is
+            // the smallest.
+            const none = amountButton(snapshot, "least");
+            return result({
+              kind: "choose",
+              cards: [],
+              ...(none ? { button: none } : {}),
+            });
           }
           // "Activate" or "apply" is a question of its own when the sim asks
           // it with a button; otherwise it opens the effect the sim is
@@ -1178,8 +1205,19 @@ export class ShadowGame {
             take(action);
             return result({ kind: "choose", cards: [], button });
           }
+          // A card off the top where the sim asks "how many": the most.
+          const most = amountButton(snapshot, "most");
+          if (most) {
+            take(action);
+            return result({ kind: "choose", cards: [], button: most });
+          }
+          // The sim is asking something else first -- the DON!! a cost
+          // returns -- and that is answered where this side can.
           this.#leftToTheSim = true;
-          return result({ kind: "choose", cards: [] });
+          return result({
+            kind: "choose",
+            ...(this.#ownPrompt(snapshot, step) ?? { cards: [] }),
+          });
         }
         default:
           // An order to put cards back in, a position, which resource pays:
