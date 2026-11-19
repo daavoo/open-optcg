@@ -101,7 +101,11 @@ export function resolveKatakuriLeader({
   // +2000 is printed "during this turn" and is correctly turn-scoped.
   if (state.activeAttack.attackerPlayerId === effect.playerId) {
     state.activeAttack.battleAttackBonus += 1000;
-  } else {
+  } else if (
+    state.activeAttack.targetInstanceId === leaderInstanceId(effect.playerId)
+  ) {
+    // The power is this Leader's: an attack on one of its Characters is
+    // answered for the look alone, and the Character defends as it stood.
     state.activeAttack.counterPower += 1000;
   }
   state.oncePerTurn.push(`${state.turn}:${effect.playerId}:OP11-062`);

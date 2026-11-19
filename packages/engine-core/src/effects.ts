@@ -2059,6 +2059,15 @@ function computeEffectOptions(
         optionId,
         summary: `Return 1 DON!! and K.O. ${describeCardOption(state, optionId, db)}`,
       })),
+      // With a Character to K.O., paying for none is the same cost for less.
+      ...(effect.eligibleInstanceIds.length === 0
+        ? [
+            {
+              optionId: "apply",
+              summary: "Return 1 DON!! and K.O. no Character",
+            },
+          ]
+        : []),
       { optionId: "skip", summary: "Skip card effect" },
     ];
   }

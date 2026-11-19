@@ -343,6 +343,26 @@ export function chooseDamageReplacement(
 }
 
 /**
+ * Decline ST34-005 Baron Tamago & Pekoms' `DON!! −1` when it would K.O.
+ * nothing.
+ *
+ * The engine offers the cost with no Character in range, because "up to 1"
+ * allows it and the DON!! going back is an event other cards read. The
+ * fallback below takes the first option that is not a skip, which here is a
+ * DON!! off the field for no card off the opponent's.
+ */
+export function chooseCostWithNoTarget(
+  effects: readonly EffectAction[],
+): PolicyDecision | undefined {
+  if (effects[0]?.effectKind !== "st34-don-minus-ko") return undefined;
+  if (effects.some((action) => action.option.kind === "card")) return undefined;
+  const skip = effects.find((action) => action.option.kind === "skip");
+  return skip
+    ? decision(skip, "Keep the DON!!: there is no Character to K.O.")
+    : undefined;
+}
+
+/**
  * A keyword granted for this turn goes on a card that can use it this turn.
  *
  * OP17-084 Chopper's `[On Play]` offers `[Unblockable]` to any of your
@@ -1062,6 +1082,8 @@ export function chooseGenericRules(
     if (donReturn) return donReturn;
     const damage = chooseDamageReplacement(observation, effects);
     if (damage) return damage;
+    const unpaid = chooseCostWithNoTarget(effects);
+    if (unpaid) return unpaid;
     // Before the strongest-opponent rule too: a debuff paid during a battle
     // goes on the card in the battle, whatever else is on the board.
     const debuffed = chooseBattleDebuffTarget(observation, effects);

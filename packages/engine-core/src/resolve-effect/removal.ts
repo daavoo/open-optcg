@@ -432,6 +432,13 @@ export function resolveSt34DonMinusKo({
     state.activePlayer = effect.resumePlayerId;
     return [];
   }
+  if (optionId === "apply" && effect.eligibleInstanceIds.length === 0) {
+    const events: PublicEvent[] = [];
+    returnDonToDeck(state, effect.playerId, 1, effectSource(effect), events);
+    state.phase = effect.resumePhase;
+    state.activePlayer = effect.resumePlayerId;
+    return events;
+  }
   if (!effect.eligibleInstanceIds.includes(optionId)) {
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
   }

@@ -1118,6 +1118,8 @@ export type PendingEffect =
       revealed: CardInstance[];
       eligibleInstanceIds: string[];
       remaining: number;
+      /** Cards a clause set off by this effect's cost draws once it is done. */
+      drawAfter?: number;
     }
   | {
       kind: "reduce-power";

@@ -394,12 +394,12 @@ describe("ST33 rules", () => {
       card("cost", "OP12-052"),
     ];
     state.players.p1.deck = [
-      card("leader-draw", "OP12-045"),
       card("navy-a", "ST33-001"),
       card("navy-b", "ST33-003"),
       card("not-navy", "FIX-001"),
       card("self", "OP12-047"),
-      card("bottom", "FIX-002"),
+      card("fifth", "OP12-045"),
+      card("leader-draw", "FIX-002"),
     ];
     state = submit(
       state,
@@ -433,15 +433,18 @@ describe("ST33 rules", () => {
           action.type === "resolve-effect" && action.optionId === "navy-b",
       ),
     );
+    // The Kuzan Leader's draw for the trashed card waits for Sengoku's own
+    // effect: the look takes the five cards that were on top, and the draw
+    // is the sixth.
     expect(state.players.p1.hand.map((item) => item.instanceId)).toEqual([
-      "leader-draw",
       "navy-a",
       "navy-b",
+      "leader-draw",
     ]);
     expect(state.players.p1.deck.map((item) => item.instanceId)).toEqual([
       "not-navy",
       "self",
-      "bottom",
+      "fifth",
     ]);
   });
 

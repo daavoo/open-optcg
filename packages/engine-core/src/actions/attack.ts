@@ -322,20 +322,21 @@ export function applyAttack({
     const eligibleInstanceIds = state.players[defenderPlayerId].board
       .filter((card) => (db.require(card.cardNumber).power ?? 99_999) <= 2000)
       .map((card) => card.instanceId);
-    if (eligibleInstanceIds.length > 0) {
-      state.pendingEffect = {
-        kind: "st34-don-minus-ko",
-        playerId: activePlayer,
-        targetPlayerId: defenderPlayerId,
-        sourceCardNumber: attackerCard.cardNumber,
-        sourceInstanceId: attackerCard.instanceId,
-        eligibleInstanceIds,
-        resumePhase: "block",
-        resumePlayerId: defenderPlayerId,
-      };
-      state.phase = "block";
-      state.activePlayer = activePlayer;
-    }
+    // Offered with nothing to K.O. as well: "up to 1" lets the cost be paid
+    // for no Character, and a returned DON!! is itself an event other cards
+    // answer (ST34-001 Katakuri adds two).
+    state.pendingEffect = {
+      kind: "st34-don-minus-ko",
+      playerId: activePlayer,
+      targetPlayerId: defenderPlayerId,
+      sourceCardNumber: attackerCard.cardNumber,
+      sourceInstanceId: attackerCard.instanceId,
+      eligibleInstanceIds,
+      resumePhase: "block",
+      resumePlayerId: defenderPlayerId,
+    };
+    state.phase = "block";
+    state.activePlayer = activePlayer;
   } else if (
     attackerCard?.cardNumber === "ST32-003" ||
     attackerCard?.cardNumber === "EB04-026"

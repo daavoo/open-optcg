@@ -680,6 +680,36 @@ describe("implemented ST34 rules", () => {
     });
   });
 
+  it("keeps defending Katakuri's +1000 on the Leader when a Character is attacked", () => {
+    let state = scenario();
+    setTurnPlayer(state, "p2");
+    state.players.p1.board = [character("mine", "FIX-001", true)];
+
+    state = submit(
+      state,
+      requireAction(
+        state,
+        (action) =>
+          action.type === "attack" &&
+          action.attackerInstanceId === "p2-leader" &&
+          action.targetInstanceId === "mine",
+      ),
+    );
+    expect(state.pendingEffect?.kind).toBe("katakuri-leader");
+    state = submit(
+      state,
+      requireAction(
+        state,
+        (action) =>
+          action.type === "resolve-effect" && action.optionId === "apply",
+      ),
+    );
+
+    // The look is had and the DON!! paid, but the Character being attacked
+    // is not the card the power was given to.
+    expect(state.activeAttack?.counterPower).toBe(0);
+  });
+
   it("skips the Leader DON cost without Character Katakuri", async () => {
     let state = scenario();
     state.players.p1.activeDon = [];
@@ -692,6 +722,30 @@ describe("implemented ST34 rules", () => {
           action.type === "attack" && action.attackerInstanceId === "p1-leader",
       ),
     );
+
+    const action = await new St34RulesAgent().chooseAction(
+      observe(state, "p1"),
+    );
+
+    expect(action).toMatchObject({
+      type: "resolve-effect",
+      optionId: "skip",
+    });
+  });
+
+  it("does not pay Baron Tamago & Pekoms' DON cost for no K.O. and no DON back", async () => {
+    let state = scenario();
+    state.players.p1.board = [character("tamago", "ST34-005")];
+    state.players.p2.board = [];
+    state = submit(
+      state,
+      requireAction(
+        state,
+        (action) =>
+          action.type === "attack" && action.attackerInstanceId === "tamago",
+      ),
+    );
+    expect(state.pendingEffect?.kind).toBe("st34-don-minus-ko");
 
     const action = await new St34RulesAgent().chooseAction(
       observe(state, "p1"),

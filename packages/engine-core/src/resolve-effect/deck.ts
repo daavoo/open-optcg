@@ -19,9 +19,16 @@ export function resolveNavySearch({
   db,
 }: EffectContext<"navy-search">): PublicEvent[] {
   const player = state.players[effect.playerId];
+  const drawAfter = (): PublicEvent[] =>
+    drawCards(
+      state,
+      effect.playerId,
+      effect.drawAfter ?? 0,
+      effect.sourceCardNumber,
+    );
   if (optionId === "skip") {
     player.deck.push(...effect.revealed);
-    return [];
+    return drawAfter();
   }
   if (!effect.eligibleInstanceIds.includes(optionId)) {
     throw new Error(`INVALID_EFFECT_OPTION: ${optionId}`);
@@ -35,6 +42,7 @@ export function resolveNavySearch({
   const eligibleInstanceIds = effect.eligibleInstanceIds.filter(
     (candidate) => candidate !== optionId,
   );
+  let drawn: PublicEvent[] = [];
   if (effect.remaining > 1 && eligibleInstanceIds.length > 0) {
     state.pendingEffect = {
       ...effect,
@@ -44,6 +52,7 @@ export function resolveNavySearch({
     };
   } else {
     player.deck.push(...revealed);
+    drawn = drawAfter();
   }
   return [
     {
@@ -58,6 +67,7 @@ export function resolveNavySearch({
         ? {}
         : { visibleTo: effect.playerId }),
     },
+    ...drawn,
   ];
 }
 

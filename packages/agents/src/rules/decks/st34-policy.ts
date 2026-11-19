@@ -2,6 +2,7 @@ import type { GameObservation, LegalAction } from "@one-piece-sim/protocol";
 import {
   attackerPower,
   bestSearchResult,
+  chooseCostWithNoTarget,
   chooseGenericBlock,
   chooseGenericCounter,
   chooseGenericTrigger,
@@ -93,6 +94,8 @@ function chooseEffect(
 ): PolicyDecision {
   const nonSkip = nonSkipEffects(effects);
   const kind = effects[0]?.effectKind;
+  const unpaid = chooseCostWithNoTarget(effects);
+  if (unpaid) return unpaid;
 
   if (kind === "katakuri-leader") {
     const apply = nonSkip.find((action) => action.optionId === "apply");

@@ -9,6 +9,7 @@ import {
 import {
   character,
   copies,
+  covers,
   instance,
   scenario,
   type Game,
@@ -444,6 +445,31 @@ describe("FAQ ST34-001 Charlotte Katakuri", () => {
     expect(boardCard(game, "p2", "small")).toBeUndefined();
     expect(fieldDonCount(game.state, "p1")).toBe(9);
     expect(game.state.players.p1.donDeck).toHaveLength(1);
+  });
+
+  covers("ST34-005", "[When Attacking]");
+  it("ST34-005: the DON!! −1 can be paid with no Character to K.O., and Katakuri answers the return", () => {
+    // Not a ruling: "K.O. up to 1" is no condition on paying the cost, and
+    // the DON!! that goes back is what ST34-001's clause waits for.
+    const game = table("faq-st34-005-no-target", "p1", [ST34, ST31])
+      .withLeader("p1", "OP11-062")
+      .withBoard("p1", [
+        character("katakuri", "ST34-001"),
+        character("baron", "ST34-005"),
+      ])
+      .withLife("p2", copies(3, "FIX-001", "p2-life"))
+      .build();
+    expect(fieldDonCount(game.state, "p1")).toBe(10);
+
+    attack(game, "baron", "p2-leader");
+    expect(effectOptions(game)).toEqual(["apply", "skip"]);
+    game.play({ type: "resolve-effect", optionId: "apply" });
+    settle(game, "return-don:active");
+
+    // One back to the DON!! deck, and the only one there back out, rested.
+    expect(fieldDonCount(game.state, "p1")).toBe(10);
+    expect(game.state.players.p1.donDeck).toHaveLength(0);
+    expect(game.state.phase).toBe("block");
   });
 
   it("ST34-001 (Leader type): behind a Leader without {Big Mom Pirates} a return brings nothing back", () => {
