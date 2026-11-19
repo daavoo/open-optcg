@@ -93,6 +93,8 @@ export type SimStep =
       kind: "effect";
       /** The card whose effect it is. */
       source: string;
+      /** Its printed number, when the sim says which card it is. */
+      sourceCard?: string;
       /** Every card the sim would accept as the next target. */
       candidates: string[];
       /**
@@ -125,6 +127,8 @@ export interface TableSnapshot {
    * (`UseOnPlay`, `MoveToTop`, ...): how a prompt that takes no card is asked.
    */
   buttons?: string[];
+  /** The text on each of `buttons`, in the same order. */
+  labels?: string[];
   /**
    * The game is recorded (`shadow.ts`): every snapshot of it carries both
    * hands, both decks and both Life piles, and `seat` is whichever seat this

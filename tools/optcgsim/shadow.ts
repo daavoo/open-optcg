@@ -385,6 +385,47 @@ function moveName(action: LegalAction): string {
   return cut > 0 ? action.summary.slice(0, cut) : action.summary;
 }
 
+/** Where each card the snapshot names is, by the sim's id. */
+function simCardPlaces(
+  snapshot: TableSnapshot,
+): Map<string, { cardNumber: string; owner: PlayerId; zone: string }> {
+  const result = new Map<
+    string,
+    { cardNumber: string; owner: PlayerId; zone: string }
+  >();
+  for (const owner of SEATS) {
+    const side = snapshot.players[owner];
+    const add = (
+      zone: string,
+      cards: readonly ({ id: string; cardNumber: string } | null)[],
+    ): void => {
+      for (const card of cards) {
+        if (card)
+          result.set(card.id, { cardNumber: card.cardNumber, owner, zone });
+      }
+    };
+    add("leader", [side.leader]);
+    add("stage", [side.stage]);
+    add("hand", Array.isArray(side.hand) ? side.hand : []);
+    add("board", side.characters);
+    add("trash", side.trash);
+    add("deck", side.deck ?? []);
+    add("life", side.lifeCards ?? []);
+  }
+  if (snapshot.step.kind === "effect") {
+    for (const card of snapshot.step.revealed) {
+      if (!result.has(card.id)) {
+        result.set(card.id, {
+          cardNumber: card.cardNumber,
+          owner: snapshot.seat,
+          zone: "revealed",
+        });
+      }
+    }
+  }
+  return result;
+}
+
 /** Every order of `items`. */
 function permutations<T>(items: readonly T[]): T[][] {
   if (items.length <= 1) return [[...items]];
@@ -729,17 +770,30 @@ export class ShadowGame {
         const repeat = snapshot.repeat ?? 0;
         if (repeat > 0) {
           const offered = step.candidates;
+          // A question asked with buttons can be asked in stages that look
+          // the same from here, so each button is pressed twice before the
+          // next is tried.
+          const asked = (snapshot.buttons ?? []).filter(
+            (name) => name !== "Cancel",
+          );
+          const press = Math.floor((repeat - 1) / 2);
           const move: SimMove =
             repeat <= offered.length
               ? { kind: "choose", cards: [offered[repeat - 1]!] }
-              : { kind: "choose", cards: [], button: "Cancel" };
+              : offered.length === 0 && press < asked.length
+                ? {
+                    kind: "choose",
+                    cards: [],
+                    button: `${asked[press]!}#${asked.slice(0, press + 1).filter((name) => name === asked[press]).length}`,
+                  }
+                : { kind: "choose", cards: [], button: "Cancel" };
           return play(
             { move, summary: "the sim's own prompt, again", offered: [] },
             [],
           );
         }
-        const cards = this.#ownPrompt(snapshot, step);
-        if (!cards) {
+        const answer = this.#ownPrompt(snapshot, step);
+        if (!answer) {
           return part(
             `the sim asks ${snapshot.seat} to choose among ${step.candidates.length} cards for an effect, and the engine is waiting on ${waiting.seat}'s ${waiting.kind}`,
           );
@@ -747,7 +801,7 @@ export class ShadowGame {
         this.#namedTargets = [];
         return play(
           {
-            move: { kind: "choose", cards },
+            move: { kind: "choose", ...answer },
             summary: "the sim's own prompt",
             offered: [],
           },
@@ -788,7 +842,6 @@ export class ShadowGame {
       orders: this.#orders,
     };
     const ids = pairCards(this.#state, snapshot);
-    const numberOfSimCard = simCardNumbers(snapshot);
     const applied: string[] = [];
     const take = (action: LegalAction): void => {
       if (this.#before) this.#before.took ??= moveName(action);
@@ -805,6 +858,22 @@ export class ShadowGame {
     /** The first of these sim buttons the prompt is showing. */
     const shown = (...names: string[]): string | undefined =>
       names.find((name) => snapshot.buttons?.includes(name));
+    /** The "choose one" button whose text says `word`, as `V3Choice#n`. */
+    const labelled = (word: string): string | undefined => {
+      let nth = 0;
+      for (const [index, name] of (snapshot.buttons ?? []).entries()) {
+        if (name !== "V3Choice") continue;
+        nth += 1;
+        if (
+          (snapshot.labels?.[index] ?? "")
+            .toLowerCase()
+            .includes(word.toLowerCase())
+        ) {
+          return `V3Choice#${nth}`;
+        }
+      }
+      return undefined;
+    };
     const simId = (instanceId: string | undefined): string | undefined =>
       instanceId === undefined ? undefined : ids.get(instanceId);
 
@@ -812,19 +881,54 @@ export class ShadowGame {
      * The sim's card for one an effect option names, among those the sim
      * offers. Two copies of a card are one card to both games, and a card the
      * effect is holding is in no zone to be paired from, so a card the
-     * pairing did not land on is named by number.
+     * pairing did not land on is named by number -- in the same player's
+     * same zone, since a hand and a board can hold the same card.
      */
-    const simCard = (card: {
-      instanceId: string;
-      cardNumber: string;
+    const places = simCardPlaces(snapshot);
+    const simCard = (option: {
+      owner: "self" | "opponent";
+      zone: string;
+      card: { instanceId: string; cardNumber: string };
     }): string | undefined => {
       if (step.kind !== "effect") return undefined;
-      const paired = simId(card.instanceId);
-      return paired !== undefined && step.candidates.includes(paired)
-        ? paired
-        : step.candidates.find(
-            (candidate) => numberOfSimCard.get(candidate) === card.cardNumber,
-          );
+      const paired = simId(option.card.instanceId);
+      if (paired !== undefined && step.candidates.includes(paired)) {
+        return paired;
+      }
+      const owner =
+        option.owner === "self" ? snapshot.seat : other(snapshot.seat);
+      const fromDeck = (zone: string): boolean =>
+        zone === "deck" || zone === "revealed";
+      return step.candidates.find((candidate) => {
+        const place = places.get(candidate);
+        return (
+          place !== undefined &&
+          place.cardNumber === option.card.cardNumber &&
+          place.owner === owner &&
+          (place.zone === option.zone ||
+            (fromDeck(place.zone) && fromDeck(option.zone)))
+        );
+      });
+    };
+
+    const lifeButton = (option: {
+      owner: "self" | "opponent";
+      zone: string;
+      card: { instanceId: string };
+    }): string | undefined => {
+      if (option.zone !== "life") return undefined;
+      const owner =
+        option.owner === "self" ? snapshot.seat : other(snapshot.seat);
+      const life = this.#state.players[owner].life;
+      const at = life.findIndex(
+        (card) => card.instanceId === option.card.instanceId,
+      );
+      if (at < 0) return undefined;
+      return at === 0
+        ? labelled("top")
+        : at === life.length - 1
+          ? labelled("bottom")
+          : undefined;
     };
 
     // A table decision is one engine action; a choice inside an effect can be
@@ -843,7 +947,7 @@ export class ShadowGame {
           {
             move: {
               kind: "choose",
-              cards: this.#ownPrompt(snapshot, step) ?? [],
+              ...(this.#ownPrompt(snapshot, step) ?? { cards: [] }),
             },
             summary: applied[applied.length - 1] ?? "",
             offered: [],
@@ -867,7 +971,8 @@ export class ShadowGame {
               (action) =>
                 action.type === "resolve-effect" &&
                 action.option.kind === "card" &&
-                simCard(action.option.card) === undefined,
+                simCard(action.option) === undefined &&
+                lifeButton(action.option) === undefined,
             )
           : [];
       const offered =
@@ -879,6 +984,39 @@ export class ShadowGame {
           ...notes,
           `the sim does not offer ${onlyHere.map((action) => action.summary).join(", ")}`,
         ];
+      }
+      // None of the cards the engine is choosing among is one the sim offers:
+      // the sim is asking something else first -- which card a Counter is
+      // for, before the cost the engine has moved on to. That prompt is
+      // answered, and the engine's choice waits for the sim to reach it.
+      // Likewise when the sim's prompt belongs to another card than the
+      // effect the engine is in: two effects answering one attack, taken in
+      // a different order.
+      const engineSource = performableNow.find(
+        (action) => action.type === "resolve-effect",
+      );
+      const otherCard =
+        step.kind === "effect" &&
+        step.sourceCard !== undefined &&
+        engineSource?.type === "resolve-effect" &&
+        engineSource.sourceCardNumber !== step.sourceCard;
+      if (
+        step.kind === "effect" &&
+        (otherCard ||
+          (onlyHere.length > 0 && onlyHere.length === performableNow.length))
+      ) {
+        const answer = this.#ownPrompt(snapshot, step);
+        if (answer) {
+          return play(
+            {
+              move: { kind: "choose", ...answer },
+              summary: "the sim's own prompt",
+              offered: [],
+            },
+            applied,
+            notes,
+          );
+        }
       }
       if (offered.length === 0) {
         return part(
@@ -935,7 +1073,14 @@ export class ShadowGame {
       const option = action.option;
       switch (option.kind) {
         case "card": {
-          const id = simCard(option.card);
+          // A Life card taken from the top or the bottom is asked for with
+          // a button for each end.
+          const end = lifeButton(option);
+          if (end && simCard(option) === undefined) {
+            take(action);
+            return result({ kind: "choose", cards: [], button: end });
+          }
+          const id = simCard(option);
           if (!id) {
             return part(
               `the engine chose ${option.card.cardNumber} for ${action.sourceCardNumber}, which the sim does not offer`,
@@ -977,9 +1122,14 @@ export class ShadowGame {
         }
         case "position": {
           const button =
-            option.position === "top"
-              ? shown("MoveToTop", "TopDeckToTop", "AddTopLife")
-              : shown("MoveToBottom", "TopDeckToBottom", "AddBottomLife");
+            (option.position === "top"
+              ? shown("MoveToTop", "TopDeckToTop", "AddTopLife", "TakeTopLife")
+              : shown(
+                  "MoveToBottom",
+                  "TopDeckToBottom",
+                  "AddBottomLife",
+                  "TakeBottomLife",
+                )) ?? labelled(option.position);
           if (button) {
             take(action);
             return result({ kind: "choose", cards: [], button });
@@ -999,7 +1149,7 @@ export class ShadowGame {
           this.#leftToTheSim = true;
           return result({
             kind: "choose",
-            cards: this.#ownPrompt(snapshot, step) ?? [],
+            ...(this.#ownPrompt(snapshot, step) ?? { cards: [] }),
           });
       }
     }
@@ -1016,18 +1166,39 @@ export class ShadowGame {
   #ownPrompt(
     snapshot: TableSnapshot,
     step: Extract<SimStep, { kind: "effect" }>,
-  ): string[] | undefined {
-    const shows = (name: string): boolean =>
-      snapshot.buttons?.includes(name) ?? false;
-    if (shows("FinalizeTopDeck")) return [];
+  ): { cards: string[]; button?: string } | undefined {
+    const buttons = snapshot.buttons ?? [];
+    const shows = (name: string): boolean => buttons.includes(name);
+    const cards = (...ids: string[]): { cards: string[] } => ({ cards: ids });
+    if (shows("FinalizeTopDeck")) return cards();
+    // "Choose one", asked with a button per answer. The engine does not stop
+    // for an "up to N" it can take in full, so the answer it has already
+    // given is the largest number on offer; where the buttons are not
+    // numbers, the last is the one that is not "none".
+    const choices = buttons.flatMap((name, index) =>
+      name === "V3Choice" ? [snapshot.labels?.[index] ?? ""] : [],
+    );
+    if (choices.length > 0) {
+      const amounts = choices.map((label) => {
+        const number = /\d+/.exec(label);
+        return number ? Number(number[0]) : Number.NaN;
+      });
+      const pick = amounts.every((amount) => Number.isFinite(amount))
+        ? amounts.indexOf(Math.max(...amounts))
+        : choices.length - 1;
+      return { cards: [], button: `V3Choice#${pick + 1}` };
+    }
+    // An effect the engine applied without asking is one it has to apply.
+    const use = ["UseV3OnPlay", "UseOnPlay"].find(shows);
+    if (use && step.candidates.length === 0) return { cards: [], button: use };
     const named = this.#namedTargets.find((id) => step.candidates.includes(id));
-    if (named) return [named];
+    if (named) return cards(named);
     const attack = this.#state.activeAttack;
     if (attack) {
       const target = pairCards(this.#state, snapshot).get(
         attack.targetInstanceId,
       );
-      if (target && step.candidates.includes(target)) return [target];
+      if (target && step.candidates.includes(target)) return cards(target);
     }
     // DON!! cards are not cards of either deck, so the snapshot does not
     // name them; the sim offers them rested first.
@@ -1036,14 +1207,10 @@ export class ShadowGame {
       step.candidates.length > 0 &&
       step.candidates.every((id) => !numberOfSimCard.has(id))
     ) {
-      return step.candidates.slice(0, Math.max(1, step.remaining));
+      return cards(...step.candidates.slice(0, Math.max(1, step.remaining)));
     }
-    if (step.candidates.length <= 1) return [...step.candidates];
-    if (
-      (snapshot.buttons ?? []).some((name) => /^Select|^Confirm/.test(name))
-    ) {
-      return [];
-    }
+    if (step.candidates.length <= 1) return cards(...step.candidates);
+    if (buttons.some((name) => /^Select|^Confirm/.test(name))) return cards();
     return undefined;
   }
 

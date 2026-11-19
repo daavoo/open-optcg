@@ -215,7 +215,13 @@ export function normalized(snapshot: TableSnapshot): TableSnapshot {
     ...snapshot,
     step:
       step.kind === "effect"
-        ? { ...step, revealed: step.revealed.map(card) }
+        ? {
+            ...step,
+            revealed: step.revealed.map(card),
+            ...(step.sourceCard
+              ? { sourceCard: step.sourceCard.toUpperCase().split("_")[0]! }
+              : {}),
+          }
         : step.kind === "trigger"
           ? { ...step, ...(step.card ? { card: card(step.card) } : {}) }
           : step,
@@ -366,7 +372,15 @@ function placeSide(
   target.deck = side.deck
     ? side.deck.map(named)
     : pool.rest().slice(0, side.deckCount);
-  target.activeDon = takeDon(side.don.active);
+  // The engine deals each player one DON!! at setup and counts it as the
+  // first of their first DON!! Phase, which a table does not show until that
+  // phase has happened (`differences` in `shadow.ts` reads it the same way).
+  const preplaced =
+    state.phase === "mulligan" ||
+    (state.turn === 1 && player !== state.turnPlayerId)
+      ? 1
+      : 0;
+  target.activeDon = takeDon(side.don.active + preplaced);
   target.restedDon = takeDon(side.don.rested);
   target.donDeck = don;
 }

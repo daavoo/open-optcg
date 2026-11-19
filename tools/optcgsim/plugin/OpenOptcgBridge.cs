@@ -93,6 +93,7 @@ namespace OpenOptcg.OptcgSimBridge
         ConfigEntry<bool> stopWhenNotRecorded;
         ConfigEntry<float> autoSpeed;
         ConfigEntry<bool> ourDecks;
+        ConfigEntry<int> firstGame;
         // The catalog's decks, by the names they are saved under in the sim.
         List<string> deckNames;
         int gamesStarted;
@@ -168,6 +169,7 @@ namespace OpenOptcg.OptcgSimBridge
             stepDelay = Config.Bind("Bridge", "StepDelay", 0.7f, "Seconds between the model's clicks, so a person can follow them.");
             autoGames = Config.Bind("AiVsAi", "Games", 0, "Play this many AI vs AI games by themselves when the sim starts, one after another, with the decks the Solo V Self screen remembers. 0 leaves the menu alone.");
             bothSeatsDelay = Config.Bind("AiVsAi", "StepDelay", 0.15f, "Seconds between clicks in an AI vs AI game.");
+            firstGame = Config.Bind("AiVsAi", "FirstGame", 0, "Where in the rotation of open-optcg's decks the games started by Games begin, to play one pairing again.");
             ourDecks = Config.Bind("AiVsAi", "OurDecks", true, "Play the games started by Games with open-optcg's own deck lists, a different pair each game, instead of the decks the Solo V Self screen remembers. The lists are written beside your decks as \"open-optcg ...\".");
             autoSpeed = Config.Bind("AiVsAi", "Speed", 4f, "How many times faster the sim runs during the games started by Games.");
             stopWhenNotRecorded = Config.Bind("AiVsAi", "StopWhenNotRecorded", false, "In the games started by Games, give a game up at the first ruling the bridge's engine and the sim make differently, where its record ends, instead of playing it out to find the rest.");
@@ -470,8 +472,9 @@ namespace OpenOptcg.OptcgSimBridge
             if (deckNames == null) deckNames = SaveOurDecks();
             var logic = FindAnyObjectByType<GameplayLogicScript>();
             if (deckNames.Count == 0 || logic == null) return;
-            var first = deckNames[gamesStarted % deckNames.Count];
-            var second = deckNames[(gamesStarted * 7 + 3) % deckNames.Count];
+            var game = firstGame.Value + gamesStarted;
+            var first = deckNames[game % deckNames.Count];
+            var second = deckNames[(game * 7 + 3) % deckNames.Count];
             gamesStarted++;
             AccessTools.Field(typeof(GameplayLogicScript), "s_SelectedDeck").SetValue(logic, first);
             AccessTools.Field(typeof(GameplayLogicScript), "s_EnemySelectedDeck").SetValue(logic, second);
@@ -540,6 +543,21 @@ namespace OpenOptcg.OptcgSimBridge
                         if (zone.Contains(aca.goActor)) return seat;
                 }
             return aca.iPlayerID;
+        }
+
+        // The card whose effect it is: named outright by the older effects,
+        // and by its id in the deck by the rest.
+        GameObject EffectActor(ActivatedCardAction aca)
+        {
+            if (aca.goActor != null) return aca.goActor;
+            try
+            {
+                return (GameObject)AccessTools.Method(typeof(GameplayLogicScript), "FindCardByUniqueDeckID").Invoke(gls, new object[] { aca.iActorID });
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         // With both seats the model's, its seat is whichever seat the sim is
@@ -923,6 +941,7 @@ namespace OpenOptcg.OptcgSimBridge
                 if (unchangedSince < 0) unchangedSince = Time.unscaledTime;
                 if (Time.unscaledTime - unchangedSince < 1f) return;
                 unchangedSince = -1;
+                if (sameTable == 2) DescribeStuckPrompt();
                 if (++sameTable > 5)
                 {
                     status = "its moves are changing nothing; over to you";
@@ -1004,6 +1023,41 @@ namespace OpenOptcg.OptcgSimBridge
                 .ContinueWith(t => t.Result.Content.ReadAsStringAsync().Result);
         }
 
+        // What the sim is showing at a prompt no answer has moved, for the
+        // log: every button on screen, and where the cards an effect could
+        // want are.
+        void DescribeStuckPrompt()
+        {
+            try
+            {
+                var buttons = FindObjectsByType<Button>(FindObjectsSortMode.None)
+                    .Where(b => b.isActiveAndEnabled && b.interactable)
+                    .Select(b => b.name + " \"" + (b.GetComponentInChildren<TMP_Text>()?.text ?? b.GetComponentInChildren<Text>()?.text ?? "") + "\"");
+                Logger.LogWarning("stuck prompt: buttons on screen: " + string.Join(" | ", buttons));
+                var aca = gls.acaActive;
+                if (aca == null) return;
+                var viable = AccessTools.Method(typeof(GameplayLogicScript), "CheckCardIsViableTargetV3");
+                var objects = FindObjectsByType<CardLogicScript>(FindObjectsSortMode.None)
+                    .Where(c => c.gameObject.activeInHierarchy)
+                    .Where(c => { try { return (bool)viable.Invoke(gls, new object[] { aca, c.gameObject, -1 }); } catch (Exception) { return false; } })
+                    .Select(c => c.myCard.cardDef?.cardID + " in " + (c.transform.parent != null ? c.transform.parent.name : "?"));
+                Logger.LogWarning("stuck prompt: cards the effect would take: " + string.Join(" | ", objects));
+                var text = AccessTools.Field(typeof(GameplayLogicScript), "text_Mismatch");
+                foreach (var field in new[] { "go_ActionText", "text_ActionPrompt", "go_PromptText", "text_Prompt" })
+                {
+                    var info = AccessTools.Field(typeof(GameplayLogicScript), field);
+                    if (info == null) continue;
+                    var value = info.GetValue(gls);
+                    var shown = value is GameObject go ? go.GetComponentInChildren<TMP_Text>()?.text : (value as TMP_Text)?.text;
+                    Logger.LogWarning($"stuck prompt: {field}: {shown}");
+                }
+            }
+            catch (Exception error)
+            {
+                Logger.LogWarning("stuck prompt: could not describe it: " + error.Message);
+            }
+        }
+
         void ReceiveDecision()
         {
             var finished = request;
@@ -1083,7 +1137,11 @@ namespace OpenOptcg.OptcgSimBridge
             else if (step == "effect")
             {
                 var aca = gls.acaActive;
-                stepJson["source"] = aca.goActor != null ? Id(aca.goActor) : "";
+                var actor = EffectActor(aca);
+                stepJson["source"] = actor != null ? Id(actor) : "";
+                // The card's number too: an Event being resolved is in no
+                // zone the snapshot lists.
+                if (actor != null) stepJson["sourceCard"] = CardNumber(actor);
                 var candidates = new JArray();
                 var seen = new HashSet<GameObject>();
                 var viable = AccessTools.Method(typeof(GameplayLogicScript), "CheckCardIsViableTargetV3");
@@ -1138,6 +1196,9 @@ namespace OpenOptcg.OptcgSimBridge
                 ["step"] = stepJson,
                 ["players"] = players,
                 ["buttons"] = new JArray(VisibleChoiceButtons().Select(b => b.GetComponent<ChoiceButtonScript>()?.myType.ToString() ?? "")),
+                // What each says: several buttons of one kind ("choose one")
+                // are told apart only by their text.
+                ["labels"] = new JArray(VisibleChoiceButtons().Select(b => b.GetComponentInChildren<TMP_Text>()?.text ?? b.GetComponentInChildren<Text>()?.text ?? "")),
             };
             if (Recorded)
             {
@@ -1332,12 +1393,16 @@ namespace OpenOptcg.OptcgSimBridge
                         if (target == null) return false;
                         steps.Enqueue(() => Click(target));
                     }
-                    var named = Enum.TryParse<ButtonChoiceType>((string)move["button"] ?? "", out var button) ? button : (ButtonChoiceType?)null;
+                    // "V3Choice#2" names the second button of that kind: the
+                    // sim asks "choose one" with several of the same type.
+                    var buttonName = ((string)move["button"] ?? "").Split('#');
+                    var nth = buttonName.Length > 1 && int.TryParse(buttonName[1], out var parsed) ? parsed : 1;
+                    var named = Enum.TryParse<ButtonChoiceType>(buttonName[0], out var button) ? button : (ButtonChoiceType?)null;
                     var chose = (move["cards"] ?? new JArray()).Any();
                     steps.Enqueue(() =>
                     {
                         // The button the bridge named answers the prompt.
-                        if (named != null) return Press(named.Value);
+                        if (named != null) return Press(named.Value, nth);
                         // A card picked at a prompt with no effect object (the
                         // Character a sixth replaces) is the whole answer; a
                         // confirm button showing by now belongs to whatever
@@ -1427,19 +1492,19 @@ namespace OpenOptcg.OptcgSimBridge
             }
         }
 
-        ChoiceButtonScript FindButton(ButtonChoiceType type)
+        ChoiceButtonScript FindButton(ButtonChoiceType type, int nth = 1)
         {
             foreach (var button in VisibleChoiceButtons())
             {
                 var script = button.GetComponent<ChoiceButtonScript>();
-                if (script != null && script.myType == type) return script;
+                if (script != null && script.myType == type && --nth == 0) return script;
             }
             return null;
         }
 
-        bool Press(ButtonChoiceType type)
+        bool Press(ButtonChoiceType type, int nth = 1)
         {
-            var script = FindButton(type);
+            var script = FindButton(type, nth);
             if (script == null) return false;
             ownClick = true;
             try
