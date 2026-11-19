@@ -40,6 +40,8 @@ namespace OpenOptcg.OptcgSimBridge
         const int DrawCardWait = 10;
         const int DrawDonWait = 12;
         const int LifeTrigger = 21;
+        // The second Life card of a [Double Attack], asked the same way.
+        const int LifeDoubleTrigger = 22;
         const int GameOver = 26;
         const int ConfirmRevealedCard = 30;
         const int ConfirmRevealedCardOnOpponentsTurn = 31;
@@ -210,6 +212,7 @@ namespace OpenOptcg.OptcgSimBridge
             if (active) modelSeat.Value = 1;
             bothSeats = active && bothRequested;
             gameId = Guid.NewGuid().ToString("N");
+            decisionsThisGame = 0;
             if (gls != null) Logger.LogInfo($"decks: \"{Get<string>("s_SelectedDeck")}\" against \"{Get<string>("s_EnemySelectedDeck")}\"");
             gameEnded = false;
             endedWinner = -1;
@@ -598,6 +601,9 @@ namespace OpenOptcg.OptcgSimBridge
             // has stopped is given up rather than left waiting.
             if (bothSeats && gamesLeft > 0 && !gameEnded)
             {
+                // No game needs this many decisions; one that has made them
+                // is going round in a circle the other checks did not see.
+                if (decisionsThisGame > 900) GiveUpGame($"the game has taken {decisionsThisGame} decisions without ending: " + lastTrace);
                 if (handedBack) GiveUpGame("the sim is waiting on a decision the plugin could not make: " + lastTrace);
                 else if (Time.unscaledTime - quietSince > 30f) GiveUpGame("the sim did not move for 30 seconds: " + lastTrace);
             }
@@ -765,7 +771,7 @@ namespace OpenOptcg.OptcgSimBridge
             // offers one -- a Trigger is printed to be worth taking, and the
             // engine is not asked about a hit taken on the person's turn. A
             // card without one offers "No Trigger Effect" instead.
-            if (state == LifeTrigger && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
+            if ((state == LifeTrigger || state == LifeDoubleTrigger) && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
             {
                 // In a recorded game the engine is asked instead (`AskableStep`).
                 if (Recorded && OfferedTrigger() != null) yield break;
@@ -794,6 +800,19 @@ namespace OpenOptcg.OptcgSimBridge
             if (FindButton(ButtonChoiceType.Trigger) != null) return ButtonChoiceType.Trigger;
             if (FindButton(ButtonChoiceType.TriggerOutOfOrder) != null) return ButtonChoiceType.TriggerOutOfOrder;
             return null;
+        }
+
+        // "Name a cost": the sim asks for a number with its own three buttons,
+        // minus, plus, and one showing the number that confirms it.
+        Button GuessButton(string name) =>
+            FindObjectsByType<Button>(FindObjectsSortMode.None).FirstOrDefault(b => b.name == name && b.isActiveAndEnabled && b.interactable);
+
+        int? GuessShown()
+        {
+            var confirm = GuessButton("GuessButton");
+            if (confirm == null) return null;
+            var text = confirm.GetComponentInChildren<TMP_Text>()?.text ?? confirm.GetComponentInChildren<Text>()?.text ?? "";
+            return int.TryParse(text.Trim(), out var value) ? value : (int?)null;
         }
 
         IEnumerable<ButtonChoiceType> PromptButtons() =>
@@ -850,7 +869,8 @@ namespace OpenOptcg.OptcgSimBridge
             if ((int)gls.e_CurrentState == SelectingDeploySwap || PromptButtons().Any()) return "effect";
             switch ((int)gls.e_CurrentState)
             {
-                case LifeTrigger: return Recorded && OfferedTrigger() != null ? "trigger" : null;
+                case LifeTrigger:
+                case LifeDoubleTrigger: return Recorded && OfferedTrigger() != null ? "trigger" : null;
                 case MulliganChoice: return "mulligan";
                 case MainAction: return "main";
                 case WaitOnBlocker: return "block";
@@ -894,6 +914,7 @@ namespace OpenOptcg.OptcgSimBridge
         // The tables the model has decided from this turn.
         readonly HashSet<string> seenThisTurn = new HashSet<string>();
         int seenOnTurn = -1;
+        int decisionsThisGame;
         float unchangedSince = -1;
         // How the bridge's record of an AI vs AI game stands, for the panel.
         string recordStatus;
@@ -980,7 +1001,7 @@ namespace OpenOptcg.OptcgSimBridge
                     seenOnTurn = game.iPlayerTurnNumber;
                     seenThisTurn.Clear();
                 }
-                if (step == "main" && !seenThisTurn.Add(key))
+                if (step != "effect" && step != "trigger" && !seenThisTurn.Add(key))
                 {
                     Logger.LogWarning("the table is back where it was before " + lastMove + "; asking for another move");
                     snapshot["refused"] = true;
@@ -1063,6 +1084,7 @@ namespace OpenOptcg.OptcgSimBridge
             var finished = request;
             request = null;
             lastAnsweredKey = requestKey;
+            decisionsThisGame++;
             if (finished.IsFaulted)
             {
                 status = "no bridge at " + bridgeUrl.Value + " (run `pnpm optcgsim:bridge`)";
@@ -1165,6 +1187,25 @@ namespace OpenOptcg.OptcgSimBridge
                 if (candidates.Count == 0)
                     foreach (var card in TopDeck(gls))
                         if (card != null) candidates.Add(Id(card));
+                // An older effect with nothing turned over is asking for a
+                // card on the table -- one to trash from hand as its cost, or
+                // the card it is for -- and the sim says which only by what
+                // it does with the click. Its player's hand comes first, then
+                // their Leader and Characters, then the other player's.
+                if (candidates.Count == 0 && aca.goActor != null)
+                {
+                    var owner = EffectOwner(aca);
+                    foreach (var seat in new[] { owner, 1 - owner })
+                    {
+                        var player = gls.Lps_Players[seat];
+                        var zones = seat == owner
+                            ? new[] { player.Lgo_MyHand, player.Lgo_MyLeader, player.Lgo_MyDeploy }
+                            : new[] { player.Lgo_MyLeader, player.Lgo_MyDeploy };
+                        foreach (var zone in zones)
+                            foreach (var card in zone)
+                                if (card != null && card != aca.goActor) candidates.Add(Id(card));
+                    }
+                }
                 stepJson["candidates"] = candidates;
                 // Likewise an effect whose cards are still being laid out
                 // offers nothing yet; one that really has no target (a prompt
@@ -1198,6 +1239,7 @@ namespace OpenOptcg.OptcgSimBridge
                 ["buttons"] = new JArray(VisibleChoiceButtons().Select(b => b.GetComponent<ChoiceButtonScript>()?.myType.ToString() ?? "")),
                 // What each says: several buttons of one kind ("choose one")
                 // are told apart only by their text.
+                ["guess"] = GuessShown() is int guess ? (JToken)guess : JValue.CreateNull(),
                 ["labels"] = new JArray(VisibleChoiceButtons().Select(b => b.GetComponentInChildren<TMP_Text>()?.text ?? b.GetComponentInChildren<Text>()?.text ?? "")),
             };
             if (Recorded)
@@ -1399,6 +1441,28 @@ namespace OpenOptcg.OptcgSimBridge
                     var nth = buttonName.Length > 1 && int.TryParse(buttonName[1], out var parsed) ? parsed : 1;
                     var named = Enum.TryParse<ButtonChoiceType>(buttonName[0], out var button) ? button : (ButtonChoiceType?)null;
                     var chose = (move["cards"] ?? new JArray()).Any();
+                    if (move["guess"] != null && move["guess"].Type == JTokenType.Integer)
+                    {
+                        var wanted = (int)move["guess"];
+                        steps.Enqueue(() =>
+                        {
+                            // Step the number to the one wanted, then confirm
+                            // whatever the sim let it reach.
+                            for (var presses = 0; presses < 12 && GuessShown() is int shown && shown != wanted; presses++)
+                            {
+                                var step = GuessButton(shown < wanted ? "GuessButtonRight" : "GuessButtonLeft");
+                                if (step == null) break;
+                                ownClick = true;
+                                try { step.onClick.Invoke(); } finally { ownClick = false; }
+                            }
+                            var confirm = GuessButton("GuessButton");
+                            if (confirm == null) return false;
+                            ownClick = true;
+                            try { confirm.onClick.Invoke(); } finally { ownClick = false; }
+                            return true;
+                        });
+                        return true;
+                    }
                     steps.Enqueue(() =>
                     {
                         // The button the bridge named answers the prompt.
@@ -1408,6 +1472,8 @@ namespace OpenOptcg.OptcgSimBridge
                         // confirm button showing by now belongs to whatever
                         // effect the play went on to start.
                         if (aca == null && chose) return true;
+                        // A prompt for several cards stays open for the next.
+                        if (chose && ((bool?)move["more"] ?? false)) return true;
                         // The sim moves on by itself once the last target it
                         // needs is chosen; otherwise its confirm button closes
                         // the selection with the targets so far, or with none.

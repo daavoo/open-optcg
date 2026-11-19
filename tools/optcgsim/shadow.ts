@@ -768,7 +768,7 @@ export class ShadowGame {
         // A prompt the last answer did not move is given the next one: each
         // card it offers in turn, then its Cancel.
         const repeat = snapshot.repeat ?? 0;
-        if (repeat > 0) {
+        if (repeat > 0 && typeof snapshot.guess !== "number") {
           const offered = step.candidates;
           // A question asked with buttons can be asked in stages that look
           // the same from here, so each button is pressed twice before the
@@ -1000,10 +1000,17 @@ export class ShadowGame {
         step.sourceCard !== undefined &&
         engineSource?.type === "resolve-effect" &&
         engineSource.sourceCardNumber !== step.sourceCard;
+      // An option to take nothing is always there, so it is the cards that
+      // say whether the two prompts are the same one.
+      const cardOptions = performableNow.filter(
+        (action) =>
+          action.type === "resolve-effect" && action.option.kind === "card",
+      );
       if (
         step.kind === "effect" &&
         (otherCard ||
-          (onlyHere.length > 0 && onlyHere.length === performableNow.length))
+          (cardOptions.length > 0 &&
+            cardOptions.every((action) => onlyHere.includes(action))))
       ) {
         const answer = this.#ownPrompt(snapshot, step);
         if (answer) {
@@ -1088,7 +1095,13 @@ export class ShadowGame {
             );
           }
           take(action);
-          return result({ kind: "choose", cards: [id] });
+          // A prompt that takes several cards is left open after one, for
+          // the engine's next choice to add to or to close.
+          return result({
+            kind: "choose",
+            cards: [id],
+            ...(step.remaining > 1 ? { more: true } : {}),
+          });
         }
         case "skip": {
           take(action);
@@ -1120,6 +1133,10 @@ export class ShadowGame {
           if (!button || step.candidates.length > 0) continue;
           return result({ kind: "choose", cards: [], button });
         }
+        case "cost":
+          // Naming a cost: the sim's number prompt takes the engine's.
+          take(action);
+          return result({ kind: "choose", cards: [], guess: option.cost });
         case "position": {
           const button =
             (option.position === "top"
@@ -1166,7 +1183,11 @@ export class ShadowGame {
   #ownPrompt(
     snapshot: TableSnapshot,
     step: Extract<SimStep, { kind: "effect" }>,
-  ): { cards: string[]; button?: string } | undefined {
+  ): { cards: string[]; button?: string; guess?: number } | undefined {
+    // A number the engine is not asking for is confirmed as the sim shows it.
+    if (typeof snapshot.guess === "number") {
+      return { cards: [], guess: snapshot.guess };
+    }
     const buttons = snapshot.buttons ?? [];
     const shows = (name: string): boolean => buttons.includes(name);
     const cards = (...ids: string[]): { cards: string[] } => ({ cards: ids });

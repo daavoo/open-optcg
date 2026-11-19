@@ -130,6 +130,11 @@ export interface TableSnapshot {
   /** The text on each of `buttons`, in the same order. */
   labels?: string[];
   /**
+   * The number the sim's "name a cost" prompt is showing, when that is what
+   * it is asking for.
+   */
+  guess?: number | null;
+  /**
    * The game is recorded (`shadow.ts`): every snapshot of it carries both
    * hands, both decks and both Life piles, and `seat` is whichever seat this
    * decision belongs to -- the model's, or `person`'s.
@@ -173,6 +178,13 @@ export type SimMove =
       decline?: boolean;
       /** The sim button that answers the prompt, when one of them does. */
       button?: string;
+      /** The number to name at a "name a cost" prompt. */
+      guess?: number;
+      /**
+       * The prompt takes more cards than these and is to stay open: its
+       * confirm is not pressed.
+       */
+      more?: boolean;
     }
   | { kind: "trigger"; activate: boolean }
   | { kind: "defer"; reason: string };
