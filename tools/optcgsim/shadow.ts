@@ -679,14 +679,23 @@ export class ShadowGame {
 
   /** The record as the diagnostics JSONL the app and the trace tools read. */
   trace(exportedAt: string): string {
+    const actions = this.#recorded?.actions ?? this.#actions;
     const controller = BrowserGameController.load({
       version: 1,
       config: this.match(),
-      actions: this.#recorded?.actions ?? this.#actions,
+      actions,
       rules: rulesStamp(),
     });
+    const trace = controller.trace();
+    // A load that stops short is a record the engine cannot replay, which is
+    // the one thing a record is for.
+    if (trace.checkpoints.length !== actions.length) {
+      throw new Error(
+        `the engine replays ${trace.checkpoints.length} of its ${actions.length} actions`,
+      );
+    }
     return buildDiagnosticsJsonl({
-      trace: controller.trace(),
+      trace,
       llmRecords: [],
       exportedAt,
     });
