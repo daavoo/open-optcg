@@ -798,7 +798,11 @@ export class ShadowGame {
             `the sim asks ${snapshot.seat} to choose among ${step.candidates.length} cards for an effect, and the engine is waiting on ${waiting.seat}'s ${waiting.kind}`,
           );
         }
-        this.#namedTargets = [];
+        // A named target is kept through the prompts the sim asks before it
+        // wants one, and spent when it is given.
+        this.#namedTargets = this.#namedTargets.filter(
+          (id) => !answer.cards.includes(id),
+        );
         return play(
           {
             move: { kind: "choose", ...answer },
@@ -962,11 +966,34 @@ export class ShadowGame {
           performable(action, ids, this.#state) &&
           !this.#refused.has(moveName(action)),
       );
+      // Several effects waiting at once, and the engine asks which resolves
+      // first. The sim has put one first already, so the engine takes the
+      // one whose prompt the sim is showing.
+      if (
+        step.kind === "effect" &&
+        step.sourceCard !== undefined &&
+        observation.legalActions.length > 0 &&
+        observation.legalActions.every(
+          (action) =>
+            action.type === "resolve-effect" &&
+            action.optionId.startsWith("reaction:"),
+        )
+      ) {
+        const first = observation.legalActions.find(
+          (action) =>
+            action.type === "resolve-effect" &&
+            action.optionCardNumber === step.sourceCard,
+        );
+        if (first) {
+          take(first);
+          continue;
+        }
+      }
       // The two engines can disagree on which cards an effect may take. The
       // model is offered the cards both allow, so the game goes on, and the
       // ones only this engine allows are noted beside the play.
       const onlyHere =
-        step.kind === "effect" && step.candidates.length > 0
+        step.kind === "effect"
           ? performableNow.filter(
               (action) =>
                 action.type === "resolve-effect" &&

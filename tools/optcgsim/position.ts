@@ -258,7 +258,14 @@ export function importPosition(simSnapshot: TableSnapshot): ImportedPosition {
 
   const simIds = new Map<string, string>();
   for (const player of SEATS) {
-    placeSide(state, player, snapshot.players[player], lists[player], simIds);
+    placeSide(
+      state,
+      player,
+      snapshot.players[player],
+      lists[player],
+      simIds,
+      snapshot.step.kind === "mulligan",
+    );
   }
   // Power last: a [Your Turn] or Leader-wide static reads the whole table.
   for (const player of SEATS) {
@@ -325,6 +332,7 @@ function placeSide(
   side: SimSide,
   list: readonly string[],
   simIds: Map<string, string>,
+  mulligan: boolean,
 ): void {
   const target = state.players[player];
   const pool = new CardPool(player, list);
@@ -376,10 +384,7 @@ function placeSide(
   // first of their first DON!! Phase, which a table does not show until that
   // phase has happened (`differences` in `shadow.ts` reads it the same way).
   const preplaced =
-    state.phase === "mulligan" ||
-    (state.turn === 1 && player !== state.turnPlayerId)
-      ? 1
-      : 0;
+    mulligan || (state.turn === 1 && player !== state.turnPlayerId) ? 1 : 0;
   target.activeDon = takeDon(side.don.active + preplaced);
   target.restedDon = takeDon(side.don.rested);
   target.donDeck = don;

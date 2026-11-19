@@ -803,17 +803,16 @@ namespace OpenOptcg.OptcgSimBridge
         }
 
         // "Name a cost": the sim asks for a number with its own three buttons,
-        // minus, plus, and one showing the number that confirms it.
-        Button GuessButton(string name) =>
-            FindObjectsByType<Button>(FindObjectsSortMode.None).FirstOrDefault(b => b.name == name && b.isActiveAndEnabled && b.interactable);
+        // minus, plus, and one showing the number that confirms it. The
+        // number lives on the effect, and the buttons are the sim's own
+        // fields: their object names are not theirs alone.
+        bool GuessOpen() =>
+            gls.acaActive != null
+            && Traverse.Create(gls).Field("go_GuessButton").GetValue<GameObject>() is GameObject confirm
+            && confirm.activeInHierarchy;
 
-        int? GuessShown()
-        {
-            var confirm = GuessButton("GuessButton");
-            if (confirm == null) return null;
-            var text = confirm.GetComponentInChildren<TMP_Text>()?.text ?? confirm.GetComponentInChildren<Text>()?.text ?? "";
-            return int.TryParse(text.Trim(), out var value) ? value : (int?)null;
-        }
+        int? GuessShown() =>
+            GuessOpen() ? Traverse.Create(gls.acaActive).Field("sSavedInt").GetValue<int>() : (int?)null;
 
         IEnumerable<ButtonChoiceType> PromptButtons() =>
             VisibleChoiceButtons()
@@ -1267,6 +1266,17 @@ namespace OpenOptcg.OptcgSimBridge
             foreach (var player in gls.Lps_Players)
                 foreach (var don in player.Lgo_MyDonCostArea.Where(d => d != null).OrderBy(d => Live(d).bTapped ? 0 : 1))
                     yield return don;
+            // And the DON!! given to cards, which is all there is to pay with
+            // once the cost area is empty.
+            foreach (var player in gls.Lps_Players)
+                foreach (var zone in new[] { player.Lgo_MyLeader, player.Lgo_MyDeploy })
+                    foreach (var card in zone)
+                    {
+                        var given = card == null ? null : card.GetComponent<CardLogicScript>()?.lgo_AttachedDon;
+                        if (given == null) continue;
+                        foreach (var don in given)
+                            if (don != null) yield return don;
+                    }
         }
 
         JObject Side(PlayerState player, bool mine)
@@ -1446,19 +1456,14 @@ namespace OpenOptcg.OptcgSimBridge
                         var wanted = (int)move["guess"];
                         steps.Enqueue(() =>
                         {
-                            // Step the number to the one wanted, then confirm
-                            // whatever the sim let it reach.
-                            for (var presses = 0; presses < 12 && GuessShown() is int shown && shown != wanted; presses++)
-                            {
-                                var step = GuessButton(shown < wanted ? "GuessButtonRight" : "GuessButtonLeft");
-                                if (step == null) break;
-                                ownClick = true;
-                                try { step.onClick.Invoke(); } finally { ownClick = false; }
-                            }
-                            var confirm = GuessButton("GuessButton");
-                            if (confirm == null) return false;
+                            // The number is set on the effect and confirmed the
+                            // way the sim's own button confirms it.
+                            if (!GuessOpen()) return false;
+                            var effect = gls.acaActive;
+                            Traverse.Create(effect).Field("sSavedInt").SetValue(Math.Max(0, Math.Min(99, wanted)));
                             ownClick = true;
-                            try { confirm.onClick.Invoke(); } finally { ownClick = false; }
+                            try { AccessTools.Method(typeof(GameplayLogicScript), "V3Guess").Invoke(gls, new object[] { effect }); }
+                            finally { ownClick = false; }
                             return true;
                         });
                         return true;
