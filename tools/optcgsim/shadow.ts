@@ -1081,15 +1081,24 @@ export class ShadowGame {
         (snapshot.buttons ?? []).every((name) => /^Select/.test(name)) &&
         cardOptions.length === 0 &&
         engineSource !== undefined;
+      // The target the engine's own action named is what the sim asks for
+      // first, before any choice the effect goes on to.
+      const namedFirst =
+        step.kind === "effect" &&
+        this.#namedTargets.some((id) => step.candidates.includes(id));
       if (
         step.kind === "effect" &&
         (otherCard ||
+          namedFirst ||
           emptySelection ||
           (cardOptions.length > 0 &&
             cardOptions.every((action) => onlyHere.includes(action))))
       ) {
         const answer = this.#ownPrompt(snapshot, step);
         if (answer) {
+          this.#namedTargets = this.#namedTargets.filter(
+            (id) => !answer.cards.includes(id),
+          );
           return play(
             {
               move: { kind: "choose", ...answer },

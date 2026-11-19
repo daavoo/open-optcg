@@ -910,6 +910,11 @@ namespace OpenOptcg.OptcgSimBridge
         int sameTable;
         // A click of the last move could not be made.
         bool planFailed;
+        // Whether a prompt was cancelled since the last move made at the
+        // table: what tells an ability the sim backed out of from one that
+        // resolved and changed nothing a snapshot shows (an effect negated, a
+        // Character that cannot attack).
+        bool backedOut;
         // The tables the model has decided from this turn.
         readonly HashSet<string> seenThisTurn = new HashSet<string>();
         int seenOnTurn = -1;
@@ -1000,7 +1005,8 @@ namespace OpenOptcg.OptcgSimBridge
                     seenOnTurn = game.iPlayerTurnNumber;
                     seenThisTurn.Clear();
                 }
-                if (step != "effect" && step != "trigger" && !seenThisTurn.Add(key))
+                var seenBefore = step != "effect" && step != "trigger" && !seenThisTurn.Add(key);
+                if (seenBefore && backedOut)
                 {
                     Logger.LogWarning("the table is back where it was before " + lastMove + "; asking for another move");
                     snapshot["refused"] = true;
@@ -1094,6 +1100,8 @@ namespace OpenOptcg.OptcgSimBridge
             var move = (JObject)decision["move"];
             var summary = (string)decision["summary"] ?? "";
             lastMove = move.ToString(Formatting.None);
+            var moveKind = (string)move["kind"];
+            if (moveKind != "choose" && moveKind != "trigger") backedOut = false;
             Logger.LogInfo($"model: {Short(summary)} -> {lastMove}");
             if (decision["record"] is JObject record)
             {
@@ -1577,6 +1585,7 @@ namespace OpenOptcg.OptcgSimBridge
         {
             var script = FindButton(type, nth);
             if (script == null) return false;
+            if (type == ButtonChoiceType.Cancel) backedOut = true;
             ownClick = true;
             try
             {
