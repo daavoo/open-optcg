@@ -2095,11 +2095,11 @@ export function continueExecution(
         if (player.board.length >= 5) {
           const located = findCardZone(state, instanceId);
           // A Trigger's own card is held outside every zone while its program
-          // runs, so suspending on it would leave the card unaccounted for by
-          // the zone invariants. That corner keeps the old behaviour; every
-          // other play -- the trash recursion this matters for -- suspends on
-          // the replacement choice instead of being silently dropped.
-          if (!located) break;
+          // runs; `resolve-trigger` trashes a Trigger card that is in no zone
+          // once the program stops, which is where this one waits.
+          const ownTrigger =
+            !located && instanceId === execution.context.source.instanceId;
+          if (!located && !ownTrigger) break;
           return {
             pending: {
               kind: "area-replacement",
@@ -2107,13 +2107,14 @@ export function continueExecution(
               playerId,
               card: {
                 instanceId,
-                cardNumber: zoneCards(
-                  state,
-                  located.playerId,
-                  located.zone,
-                ).find((card) => card.instanceId === instanceId)!.cardNumber,
+                cardNumber: located
+                  ? zoneCards(state, located.playerId, located.zone).find(
+                      (card) => card.instanceId === instanceId,
+                    )!.cardNumber
+                  : execution.context.source.cardNumber,
               },
               rested: effect.rested ?? false,
+              ...(ownTrigger ? { ownTrigger: true as const } : {}),
             },
             events,
             signals,

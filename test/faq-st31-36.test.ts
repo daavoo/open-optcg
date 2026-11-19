@@ -572,6 +572,26 @@ describe("FAQ ST34-004 Charlotte Linlin", () => {
     ).toBe(7_000);
   });
 
+  it("ST34-004 (DON!! −4 beside OP17-062 Kaido): the DON!! Kaido sets active is not offered as one that went back", () => {
+    // Not a ruling: all ten DON!! are rested by Linlin's cost, so the four
+    // that go back are rested ones. Kaido then adds one active and sets one
+    // active, and neither was an active DON!! when the −4 was paid.
+    const game = linlin("faq-st34-004-kaido")
+      .withBoard("p2", [character("kaido", "OP17-062")])
+      .withLife("p2", copies(2, "FIX-001", "p2-life"))
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "ST34-004" });
+    game.play({ type: "resolve-effect", optionId: "discard" });
+    expect(effectOptions(game).some((id) => id.startsWith("return-don"))).toBe(
+      false,
+    );
+    settle(game);
+
+    expect(game.state.players.p2.activeDon).toHaveLength(2);
+    expect(game.state.players.p2.restedDon).toHaveLength(5);
+  });
+
   it("ST34-004#2: as the only card in hand there is no DON!! −4, no Life card and no base power 0", () => {
     const game = linlin("faq-st34-004-2")
       .withHand("p2", [instance("linlin", "ST34-004")])

@@ -178,6 +178,20 @@ describe("OP12-021 Ipponmatsu", () => {
   });
 });
 
+describe("OP12-031 Tashigi", () => {
+  covers("OP12-031", "[On Play]");
+
+  it("reaches a Character whose printed cost is 6 or less, whatever it costs now", () => {
+    // OP17-089 Jaguar.D.Saul prints a cost under 6 and gives itself +12.
+    const game = table("op12-031-base-cost")
+      .withHand("p1", [instance("tashigi", "OP12-031")])
+      .withBoard("p2", [character("saul", "OP17-089")])
+      .build();
+    game.play({ type: "play-card", cardNumber: "OP12-031" });
+    expect(effectOptions(game.state)).toContain("saul");
+  });
+});
+
 describe("OP12-022 Inuarashi", () => {
   covers("OP12-022", "[Activate: Main]");
 

@@ -402,7 +402,26 @@ export function resolveKoCharacter({
     db,
   );
   if (onKo.pending) {
-    state.activeAttack = null;
+    // A program's choice carries no way back of its own, unlike the
+    // hand-written [On K.O.] effects, so where play goes after it is set
+    // here: on with the battle a [When Attacking] K.O. was part of, unless
+    // the card it removed was one of the two in it, and otherwise to the
+    // turn player's Main Phase. Without it the opponent answering OP16-110
+    // Vasco Shot's rest was left holding that Main Phase themselves.
+    const battle = state.activeAttack;
+    const battleGoesOn =
+      onKo.pending.kind === "mechanic-choice" &&
+      battle !== null &&
+      battle.targetInstanceId !== card.instanceId &&
+      battle.attackerInstanceId !== card.instanceId &&
+      effect.resumePhase !== undefined &&
+      effect.resumePlayerId !== undefined;
+    if (onKo.pending.kind === "mechanic-choice") {
+      state.pendingEffectResume ??= battleGoesOn
+        ? { phase: effect.resumePhase!, playerId: effect.resumePlayerId! }
+        : { phase: "main", playerId: state.turnPlayerId };
+    }
+    if (!battleGoesOn) state.activeAttack = null;
     state.pendingEffect = onKo.pending;
     state.phase = "main";
     // Usually `effect.targetPlayerId` (a self-chooser [On K.O.]), but

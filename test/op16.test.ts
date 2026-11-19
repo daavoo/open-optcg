@@ -539,6 +539,57 @@ describe("OP16 Blackbeard recursion", () => {
     ).toBe(true);
   });
 
+  it("OP16-110 K.O.'d by the turn player's [On Play] hands the Main Phase back to them", () => {
+    // ST34-002 Charlotte Cracker's [On Play] K.O.s it; the rest is its
+    // owner's to choose, and the turn is still the other player's.
+    const game = table("op16-110-on-play-ko")
+      .withLeader("p1", "OP11-062")
+      .withHand("p1", [instance("cracker", "ST34-002")])
+      .withBoard("p1", [character("idle", "ST32-004")])
+      .withBoard("p2", [character("vasco", "OP16-110")])
+      .withDeckTop("p2", copies(1, "ST32-005", "drawn"))
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "ST34-002" });
+    game.play({ type: "resolve-effect", optionId: "vasco" });
+    expect(game.state.activePlayer).toBe("p2");
+    game.play({ type: "resolve-effect", optionId: "idle" });
+
+    expect(game.state.activePlayer).toBe("p1");
+    expect(game.state.phase).toBe("main");
+    expect(
+      game.state.players.p1.board.find((card) => card.instanceId === "idle")
+        ?.rested,
+    ).toBe(true);
+  });
+
+  it("OP16-110 K.O.'d by a [When Attacking] leaves the attack to go on", () => {
+    // ST34-005 Baron Tamago & Pekoms K.O.s it while attacking the Leader.
+    const game = table("op16-110-when-attacking-ko")
+      .withLeader("p1", "OP11-062")
+      .withBoard("p1", [
+        character("tamago", "ST34-005"),
+        character("idle", "ST32-004"),
+      ])
+      .withBoard("p2", [character("vasco", "OP16-110")])
+      .withDeckTop("p2", copies(1, "ST32-005", "drawn"))
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "tamago",
+      targetInstanceId: "p2-leader",
+    });
+    // Once to pay the DON!! −1 for it, once for the K.O. itself.
+    game.play({ type: "resolve-effect", optionId: "vasco" });
+    game.play({ type: "resolve-effect", optionId: "vasco" });
+    game.play({ type: "resolve-effect", optionId: "idle" });
+
+    expect(game.state.activeAttack?.targetInstanceId).toBe("p2-leader");
+    expect(game.state.phase).toBe("block");
+    expect(game.state.activePlayer).toBe("p2");
+  });
+
   it("OP16-114 K.O.s a cost-4 Character when it dies", () => {
     const game = table("op16-114")
       .withBoard("p1", [character("laffitte", "OP16-114", { rested: true })])

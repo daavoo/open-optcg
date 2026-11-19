@@ -447,6 +447,14 @@ export function resolveMechanicChoice(
       instanceId: trashed.instanceId,
       cardNumber: trashed.cardNumber,
     });
+    if (pending.ownTrigger) {
+      // Out of the trash it waited in, so it is played as the Trigger's own
+      // card and not as a card recurred from the trash.
+      const waiting = player.trash.findIndex(
+        (card) => card.instanceId === pending.card.instanceId,
+      );
+      if (waiting >= 0) player.trash.splice(waiting, 1);
+    }
     const placement = playOntoBoard(
       state,
       pending.playerId,
