@@ -534,6 +534,8 @@ export class ShadowGame {
   #state: GameState;
   /** A target the last action named, which the sim asks for as its own prompt. */
   #namedTargets: string[] = [];
+  /** The card last given to a prompt of the effect in progress, and whose. */
+  #lastChosen: { source: string | undefined; id: string } | undefined;
   /**
    * The engine is at a choice the sim was left to make its own way (see
    * `decide`), so which answer it gave is still to be read off the table.
@@ -736,7 +738,18 @@ export class ShadowGame {
       this.#refused.clear();
       this.#refusedOnTurn = snapshot.turn;
     }
-    if (snapshot.refused) {
+    // The same table again after a move that should have changed it -- a
+    // Counter the sim does not allow -- is a refusal the plugin has not
+    // named yet: the table is the one from before the move, not after it.
+    const unchanged =
+      !snapshot.refused &&
+      (snapshot.repeat ?? 0) > 0 &&
+      step.kind !== "effect" &&
+      step.kind !== "trigger" &&
+      this.#before?.took !== undefined &&
+      differences(this.#state, snapshot).table.length > 0 &&
+      differences(this.#before.state, snapshot).table.length === 0;
+    if (snapshot.refused || unchanged) {
       if (this.#before?.took !== undefined) {
         // The move this decision was last answered with.
         this.#state = this.#before.state;
@@ -829,7 +842,13 @@ export class ShadowGame {
             [],
           );
         }
-        const answer = this.#ownPrompt(snapshot, step);
+        let answer = this.#ownPrompt(snapshot, step);
+        if (!answer && snapshot.buttons?.includes("Cancel")) {
+          // An optional effect only the sim offers here -- a cost it lets be
+          // started and the engine knows cannot be paid in full -- is
+          // passed on, which leaves the two games where they both were.
+          answer = { cards: [], button: "Cancel" };
+        }
         if (!answer) {
           return part(
             `the sim asks ${snapshot.seat} to choose among ${step.candidates.length} cards for an effect, and the engine is waiting on ${waiting.seat}'s ${waiting.kind}`,
@@ -874,6 +893,7 @@ export class ShadowGame {
       }
       notes = reconciled.notes;
     }
+    if (step.kind !== "effect") this.#lastChosen = undefined;
     this.#namedTargets = [];
     this.#leftToTheSim = false;
 
@@ -1180,6 +1200,7 @@ export class ShadowGame {
             );
           }
           take(action);
+          this.#lastChosen = { source: step.sourceCard, id };
           // A prompt that takes several cards is left open after one, for
           // the engine's next choice to add to or to close.
           return result({
@@ -1300,6 +1321,22 @@ export class ShadowGame {
     const choices = buttons.flatMap((name, index) =>
       name === "V3Choice" ? [snapshot.labels?.[index] ?? ""] : [],
     );
+    // Which of the opponent's DON!! an effect moves, one button per pile:
+    // the pile the engine took from, which is the one it now has fewer in.
+    const restedPile = choices.findIndex((label) => /Rested Don/i.test(label));
+    const activePile = choices.findIndex((label) => /Active Don/i.test(label));
+    if (choices.length === 2 && restedPile >= 0 && activePile >= 0) {
+      const other = snapshot.seat === "p1" ? "p2" : "p1";
+      const theirs = snapshot.players[other].don;
+      const engine = this.#state.players[other];
+      const fromRested =
+        theirs.rested > 0 &&
+        (engine.restedDon.length < theirs.rested || theirs.active === 0);
+      return {
+        cards: [],
+        button: `V3Choice#${(fromRested ? restedPile : activePile) + 1}`,
+      };
+    }
     if (choices.length > 0) {
       const amounts = choices.map((label) => {
         const number = /\d+/.exec(label);
@@ -1321,6 +1358,24 @@ export class ShadowGame {
         attack.targetInstanceId,
       );
       if (target && step.candidates.includes(target)) return cards(target);
+      // An effect answering an attack that the engine aimed without asking
+      // is aimed at the attacker.
+      const attacker = pairCards(this.#state, snapshot).get(
+        attack.attackerInstanceId,
+      );
+      if (attacker && step.candidates.includes(attacker)) {
+        return cards(attacker);
+      }
+    }
+    // The card the engine chose for this effect, asked for again: the sim
+    // takes "up to 2 DON!! to 1 Character" one DON!! at a time.
+    const again = this.#lastChosen;
+    if (
+      again &&
+      again.source === step.sourceCard &&
+      step.candidates.includes(again.id)
+    ) {
+      return cards(again.id);
     }
     // DON!! cards are not cards of either deck, so the snapshot does not
     // name them; the sim offers them rested first.
@@ -1542,8 +1597,8 @@ export class ShadowGame {
     // A person can have made several moves since the last snapshot, each one
     // of many, so their game is searched wider and deeper than the answers
     // the sim gives by itself.
-    const budget = snapshot.person ? 6000 : 600;
-    const depth = snapshot.person ? 7 : 5;
+    const budget = snapshot.person ? 6000 : 2000;
+    const depth = 7;
     while (queue.length > 0 && visited < budget) {
       const node = queue.shift()!;
       visited += 1;
