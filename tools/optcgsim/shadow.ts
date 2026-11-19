@@ -553,6 +553,14 @@ export class ShadowGame {
         took?: string;
       }
     | undefined;
+  /** The game as it stood before the last move made at the table. */
+  #beforeTableMove:
+    | {
+        state: GameState;
+        actions: number;
+        orders: Record<PlayerId, string[][]>;
+      }
+    | undefined;
   /** Actions the sim has refused at the decision it is on. */
   readonly #refused = new Set<string>();
   #refusedOnTurn = 0;
@@ -761,7 +769,25 @@ export class ShadowGame {
         // where it was before the move: the engine's game goes back there
         // too.
         this.#refused.add(this.#lastTableMove);
-        this.#reanchor(simSnapshot);
+        const back = this.#beforeTableMove;
+        if (back && differences(back.state, snapshot).table.length === 0) {
+          // Its own game from before the move, so the record stays one the
+          // engine can replay.
+          this.#state = back.state;
+          this.#actions.length = back.actions;
+          this.#orders = back.orders;
+          this.#before = undefined;
+          this.#leftToTheSim = false;
+          this.#namedTargets = [];
+        } else {
+          // Rebuilt from the table, which is no longer where the recorded
+          // actions lead: the record ends here.
+          this.#recorded ??= {
+            actions: [...this.#actions],
+            orders: this.#orders,
+          };
+          this.#reanchor(simSnapshot);
+        }
       }
       const last = this.plays[this.plays.length - 1];
       if (last) {
@@ -911,6 +937,11 @@ export class ShadowGame {
         action.type !== "resolve-trigger"
       ) {
         this.#lastTableMove = moveName(action);
+        this.#beforeTableMove = {
+          state: this.#state,
+          actions: this.#actions.length,
+          orders: this.#orders,
+        };
       }
       this.#state = apply(this.#state, action);
       this.#actions.push(action.actionId);
@@ -1367,6 +1398,36 @@ export class ShadowGame {
         return cards(attacker);
       }
     }
+    // "Give your cards a DON!! each", which the engine does without asking
+    // and the sim asks card by card: the cards that have one more in the
+    // engine's game than on the sim's table.
+    const engineIdOf = new Map(
+      [...pairCards(this.#state, snapshot)].map(([engineId, simId]) => [
+        simId,
+        engineId,
+      ]),
+    );
+    const seat = snapshot.players[snapshot.seat];
+    const engineSeat = this.#state.players[snapshot.seat];
+    const given = step.candidates.filter((id) => {
+      const engineId = engineIdOf.get(id);
+      if (engineId === undefined) return false;
+      if (id === seat.leader.id) {
+        return engineSeat.leaderAttachedDon.length > seat.leader.don;
+      }
+      const shown = seat.characters.find((card) => card.id === id);
+      const ours = engineSeat.board.find(
+        (card) => card.instanceId === engineId,
+      );
+      return (
+        shown !== undefined &&
+        ours !== undefined &&
+        (ours.attachedDon?.length ?? 0) > shown.don
+      );
+    });
+    if (given.length > 0) {
+      return cards(...given.slice(0, Math.max(1, step.remaining)));
+    }
     // The card the engine chose for this effect, asked for again: the sim
     // takes "up to 2 DON!! to 1 Character" one DON!! at a time.
     const again = this.#lastChosen;
@@ -1439,7 +1500,20 @@ export class ShadowGame {
           ? [offer.option.card.cardNumber]
           : [],
       );
-      return sameList(sorted(offered), wanted);
+      if (sameList(sorted(offered), wanted)) return true;
+      // The sim can offer a card the engine does not -- the card already
+      // being attacked, for an effect that moves the attack -- so cards of
+      // the engine's that are all among the sim's are the same prompt too.
+      const left = [...wanted];
+      return (
+        offered.length > 0 &&
+        offered.every((number) => {
+          const at = left.indexOf(number);
+          if (at < 0) return false;
+          left.splice(at, 1);
+          return true;
+        })
+      );
     };
     if (offersThem(this.#state)) return;
     interface Node {
