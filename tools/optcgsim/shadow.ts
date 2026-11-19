@@ -31,6 +31,7 @@ import {
   toGameAction,
   type CardInstance,
   type GameState,
+  fieldDonCount,
 } from "@one-piece-sim/engine-core";
 import {
   deckManifests,
@@ -373,6 +374,22 @@ function simCardNumbers(snapshot: TableSnapshot): Map<string, string> {
   if (snapshot.step.kind === "effect") snapshot.step.revealed.forEach(add);
   if (snapshot.step.kind === "trigger") add(snapshot.step.card ?? null);
   return result;
+}
+
+/**
+ * A yes-or-no the sim asks with two "choose one" buttons, the refusal first
+ * ("Don't Take Life", "Take Top Life"), as `V3Choice#n` each.
+ */
+function yesNoButtons(
+  snapshot: TableSnapshot,
+): { no: string; yes: string } | undefined {
+  const labels = (snapshot.buttons ?? []).flatMap((name, index) =>
+    name === "V3Choice" ? [snapshot.labels?.[index] ?? ""] : [],
+  );
+  if (labels.length !== 2 || !/^Don't\b|\b0\b/.test(labels[0]!)) {
+    return undefined;
+  }
+  return { no: "V3Choice#1", yes: "V3Choice#2" };
 }
 
 /**
@@ -1053,9 +1070,21 @@ export class ShadowGame {
         (action) =>
           action.type === "resolve-effect" && action.option.kind === "card",
       );
+      // The sim also opens a selection that has nothing in it -- "up to 1"
+      // with no card to take -- where the engine has gone on to its next
+      // yes-or-no. It is closed empty, and the engine's question keeps.
+      const emptySelection =
+        step.kind === "effect" &&
+        step.candidates.length === 0 &&
+        typeof snapshot.guess !== "number" &&
+        (snapshot.buttons ?? []).length > 0 &&
+        (snapshot.buttons ?? []).every((name) => /^Select/.test(name)) &&
+        cardOptions.length === 0 &&
+        engineSource !== undefined;
       if (
         step.kind === "effect" &&
         (otherCard ||
+          emptySelection ||
           (cardOptions.length > 0 &&
             cardOptions.every((action) => onlyHere.includes(action))))
       ) {
@@ -1154,12 +1183,9 @@ export class ShadowGame {
           take(action);
           // "Cancel" is how the sim passes on an optional effect it has
           // already opened.
-          const button = shown(
-            "PlayWithNoEffect",
-            "DrawNone",
-            "NoMill",
-            "Cancel",
-          );
+          const button =
+            shown("PlayWithNoEffect", "DrawNone", "NoMill", "Cancel") ??
+            yesNoButtons(snapshot)?.no;
           return result({
             kind: "choose",
             cards: [],
@@ -1183,7 +1209,8 @@ export class ShadowGame {
           // it with a button; otherwise it opens the effect the sim is
           // already showing the targets of, and the next engine choice
           // answers that.
-          const button = shown("UseOnPlay", "UseV3OnPlay");
+          const button =
+            shown("UseOnPlay", "UseV3OnPlay") ?? yesNoButtons(snapshot)?.yes;
           if (!button || step.candidates.length > 0) continue;
           return result({ kind: "choose", cards: [], button });
         }
@@ -1293,6 +1320,30 @@ export class ShadowGame {
       step.candidates.length > 0 &&
       step.candidates.every((id) => !numberOfSimCard.has(id))
     ) {
+      // A DON!! prompt the engine has nothing to show for -- its DON!! is
+      // where the sim's still is, and it is in no effect -- belongs to an
+      // effect the engine did not take here. The sim's is declined too, so
+      // the two games stay one. (Turn 1 is left out: the engine counts a
+      // DON!! there the table does not show yet.)
+      const side = snapshot.players[snapshot.seat];
+      const engine = this.#state.players[snapshot.seat];
+      const waiting = awaits(this.#state);
+      const untouched =
+        engine.activeDon.length === side.don.active &&
+        engine.restedDon.length === side.don.rested &&
+        fieldDonCount(this.#state, snapshot.seat) ===
+          side.don.active +
+            side.don.rested +
+            side.leader.don +
+            side.characters.reduce((sum, card) => sum + card.don, 0);
+      if (
+        untouched &&
+        snapshot.turn > 1 &&
+        shows("Cancel") &&
+        !(waiting.kind === "effect" && waiting.seat === snapshot.seat)
+      ) {
+        return { cards: [], button: "Cancel" };
+      }
       return cards(...step.candidates.slice(0, Math.max(1, step.remaining)));
     }
     if (step.candidates.length <= 1) return cards(...step.candidates);
@@ -1333,16 +1384,23 @@ export class ShadowGame {
     }
     const queue: Node[] = [{ state: this.#state, path: [] }];
     let fallback: Node | undefined;
+    let sameTable: Node | undefined;
     for (let visited = 0; queue.length > 0 && visited < 600; visited++) {
       const node = queue.shift()!;
       if (node.path.length > 0 && offersThem(node.state)) {
-        if (differences(node.state, snapshot).table.length === 0) {
-          this.#adopt(node);
-          return;
+        const found = differences(node.state, snapshot);
+        if (found.table.length === 0) {
+          // Cards put back on the deck are in the sim's order in only one
+          // of the answers that leave the table the same.
+          if (found.hidden.p1.length + found.hidden.p2.length === 0) {
+            this.#adopt(node);
+            return;
+          }
+          sameTable ??= node;
         }
         fallback ??= node;
       }
-      if (node.path.length >= 3 || !node.state.pendingEffect) continue;
+      if (node.path.length >= 4 || !node.state.pendingEffect) continue;
       const offered = getLegalActions(node.state, node.state.activePlayer);
       for (const offer of offered) {
         for (const action of waysToTake(offer, offered)) {
@@ -1357,7 +1415,8 @@ export class ShadowGame {
         }
       }
     }
-    if (fallback) this.#adopt(fallback);
+    const best = sameTable ?? fallback;
+    if (best) this.#adopt(best);
   }
 
   #adopt(node: { state: GameState; path: LegalAction[] }): void {
