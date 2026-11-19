@@ -873,6 +873,9 @@ namespace OpenOptcg.OptcgSimBridge
         int sameTable;
         // A click of the last move could not be made.
         bool planFailed;
+        // The tables the model has decided from this turn.
+        readonly HashSet<string> seenThisTurn = new HashSet<string>();
+        int seenOnTurn = -1;
         float unchangedSince = -1;
         // How the bridge's record of an AI vs AI game stands, for the panel.
         string recordStatus;
@@ -949,6 +952,21 @@ namespace OpenOptcg.OptcgSimBridge
             {
                 sameTable = 0;
                 unchangedSince = -1;
+                // A move the sim backed out of -- an ability cancelled inside
+                // its own prompt -- leaves the table as it was before the
+                // move, at the same decision. The bridge is told that move is
+                // not one the sim takes.
+                if (game.iPlayerTurnNumber != seenOnTurn)
+                {
+                    seenOnTurn = game.iPlayerTurnNumber;
+                    seenThisTurn.Clear();
+                }
+                if (step == "main" && !seenThisTurn.Add(key))
+                {
+                    Logger.LogWarning("the table is back where it was before " + lastMove + "; asking for another move");
+                    snapshot["refused"] = true;
+                    sent = snapshot.ToString(Formatting.None);
+                }
             }
             planFailed = false;
             handedBack = false;

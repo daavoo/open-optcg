@@ -375,6 +375,16 @@ function simCardNumbers(snapshot: TableSnapshot): Map<string, string> {
   return result;
 }
 
+/**
+ * An action by what it does, without the instance ids its `actionId` holds or
+ * the numbers its summary goes on to quote: the name a move keeps when the
+ * engine's game is rebuilt around it.
+ */
+function moveName(action: LegalAction): string {
+  const cut = action.summary.indexOf(" (");
+  return cut > 0 ? action.summary.slice(0, cut) : action.summary;
+}
+
 /** Every order of `items`. */
 function permutations<T>(items: readonly T[]): T[][] {
   if (items.length <= 1) return [[...items]];
@@ -465,6 +475,9 @@ export class ShadowGame {
     | undefined;
   /** Actions the sim has refused at the decision it is on. */
   readonly #refused = new Set<string>();
+  #refusedOnTurn = 0;
+  /** The last action taken at a table decision, as `moveName` names it. */
+  #lastTableMove: string | undefined;
   readonly plays: Play[] = [];
   /**
    * The person's decision the engine's game could not be brought up to, while
@@ -639,17 +652,30 @@ export class ShadowGame {
     // A move the sim did not take is taken back here too, and the decision
     // made again without it: the two engines disagree on whether it was
     // legal, which the play-by-play notes, and the game goes on.
-    if (snapshot.refused && this.#before?.took !== undefined) {
-      this.#state = this.#before.state;
-      this.#actions.length = this.#before.actions;
-      this.#orders = this.#before.orders;
-      this.#refused.add(this.#before.took);
+    // What the sim refuses it refuses for the turn: the list is kept until
+    // the turn changes, so two refused moves cannot be offered in rotation.
+    if (snapshot.turn !== this.#refusedOnTurn) {
+      this.#refused.clear();
+      this.#refusedOnTurn = snapshot.turn;
+    }
+    if (snapshot.refused) {
+      if (this.#before?.took !== undefined) {
+        // The move this decision was last answered with.
+        this.#state = this.#before.state;
+        this.#actions.length = this.#before.actions;
+        this.#orders = this.#before.orders;
+        this.#refused.add(this.#before.took);
+      } else if (this.#lastTableMove !== undefined) {
+        // A move whose effect the sim then backed out of, leaving the table
+        // where it was before the move: the engine's game goes back there
+        // too.
+        this.#refused.add(this.#lastTableMove);
+        this.#reanchor(simSnapshot);
+      }
       const last = this.plays[this.plays.length - 1];
       if (last) {
         last.notes = [...(last.notes ?? []), "the sim refused this move"];
       }
-    } else if (!snapshot.refused) {
-      this.#refused.clear();
     }
     const at = this.#actions.length;
     const part = (
@@ -765,7 +791,13 @@ export class ShadowGame {
     const numberOfSimCard = simCardNumbers(snapshot);
     const applied: string[] = [];
     const take = (action: LegalAction): void => {
-      if (this.#before) this.#before.took ??= action.actionId;
+      if (this.#before) this.#before.took ??= moveName(action);
+      if (
+        action.type !== "resolve-effect" &&
+        action.type !== "resolve-trigger"
+      ) {
+        this.#lastTableMove = moveName(action);
+      }
       this.#state = apply(this.#state, action);
       this.#actions.push(action.actionId);
       applied.push(action.summary);
@@ -824,7 +856,7 @@ export class ShadowGame {
       const performableNow = observation.legalActions.filter(
         (action) =>
           performable(action, ids, this.#state) &&
-          !this.#refused.has(action.actionId),
+          !this.#refused.has(moveName(action)),
       );
       // The two engines can disagree on which cards an effect may take. The
       // model is offered the cards both allow, so the game goes on, and the
@@ -962,8 +994,13 @@ export class ShadowGame {
           // left open and read off the table at a later snapshot
           // (`#reconcile`), which is also what keeps the record the sim's
           // game rather than the model's preference.
+          // Where the sim's prompt is one this side can answer anyway --
+          // DON!! to pay with, a look at the deck to close -- it is.
           this.#leftToTheSim = true;
-          return result({ kind: "choose", cards: [] });
+          return result({
+            kind: "choose",
+            cards: this.#ownPrompt(snapshot, step) ?? [],
+          });
       }
     }
     return part("one prompt of the sim took more than six engine choices");
