@@ -206,29 +206,19 @@ export const op12RosinanteMechanics: SetMechanics = {
     [
       // OP10-065 Sugar: "[printed text omitted -- pnpm card:text OP10-065]"
       //
-      // Not once per turn -- nothing printed says so -- but every activation rests
-      // an active DON!! card, which is the real limit and is what `requires`
-      // enforces so a repeatable activation always changes something. Resting
-      // Sugar herself is the printed "may" and stays optional, which is why the
-      // guide calls her a pseudo-Blocker: leaving her active invites the attack
-      // that a rested searcher would not draw.
+      // The DON!! and Sugar herself are one cost under one "you may", so
+      // activating is the whole of the choice and she must be active to pay
+      // it. That is also what limits it: nothing printed says once per turn.
       "OP10-065",
       {
         oncePerTurn: false,
-        requires: { activeDon: 1 },
+        requires: { activeDon: 1, sourceActive: true },
         program: {
           effect: {
             kind: "sequence",
             effects: [
               { kind: "rest-don", player: "self", count: 1 },
-              {
-                kind: "optional",
-                effect: {
-                  kind: "update",
-                  binding: SOURCE_BINDING,
-                  rested: true,
-                },
-              },
+              { kind: "rest", binding: SOURCE_BINDING },
               lookAndAdd(5, "sugar-looked", { type: "Donquixote Pirates" })
                 .effect,
             ],

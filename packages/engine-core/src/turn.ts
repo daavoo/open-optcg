@@ -500,6 +500,14 @@ function payDonEqualize(
   return true;
 }
 
+/** The use OP10-099 Eustass"Captain"Kid's end-of-turn offer spends. */
+export function kidLeaderEndOfTurnKey(
+  state: GameState,
+  playerId: PlayerId,
+): string {
+  return `${state.turn}:${playerId}:OP10-099:end-of-turn`;
+}
+
 export function endTurn(
   state: GameState,
   events: PublicEvent[],
@@ -516,6 +524,9 @@ export function endTurn(
   if (
     player.leaderCardNumber === "OP10-099" &&
     !leaderEffectsNegated(state, playerId) &&
+    // Asked once: answering it re-enters here for the other end-of-turn
+    // clauses, as each of theirs does.
+    !state.oncePerTurn.includes(kidLeaderEndOfTurnKey(state, playerId)) &&
     player.life.length > 0 &&
     player.life[0]?.faceUp !== true
   ) {

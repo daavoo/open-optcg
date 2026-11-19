@@ -7,7 +7,7 @@
 import { resolveEffect } from "../effects.js";
 import { offerAttackReactions, resolveBattle } from "../battle.js";
 import { handOverPendingEffect } from "../pending.js";
-import { completeEndTurn, endTurn } from "../turn.js";
+import { endTurn, kidLeaderEndOfTurnKey } from "../turn.js";
 import { type ActionContext } from "./context.js";
 
 export function applyResolveEffect({
@@ -23,11 +23,18 @@ export function applyResolveEffect({
   const onOpponentAttackOffer = state.activeAttack?.onOpponentAttackPending;
   // Same rule, for the leader-watcher ladder's own pending offer.
   const leaderWatcherOffer = state.activeAttack?.leaderWatcherPending;
-  const completesEndTurn = resolvedEffect?.kind === "kid-leader-end-turn";
-  // Borsalino, and any `[End of Your Turn]` mechanic-program answer (e.g.
-  // OP17-047 Shiki), re-enter `endTurn` instead of completing it, so a second
-  // eligible card gets its own prompt before the turn actually ends.
+  // The Kid Leader, Borsalino, and any `[End of Your Turn]` mechanic-program
+  // answer (e.g. OP17-047 Shiki) re-enter `endTurn` instead of completing it,
+  // so every other card with an end-of-turn clause gets its own before the
+  // turn actually ends -- OP10-112 Eustass"Captain"Kid's draw sits behind his
+  // own Leader's offer.
+  if (resolvedEffect?.kind === "kid-leader-end-turn") {
+    state.oncePerTurn.push(
+      kidLeaderEndOfTurnKey(state, resolvedEffect.playerId),
+    );
+  }
   const continuesEndTurn =
+    resolvedEffect?.kind === "kid-leader-end-turn" ||
     resolvedEffect?.kind === "borsalino-end-turn" ||
     (resolvedEffect?.kind === "mechanic-choice" &&
       resolvedEffect.endOfTurn === true);
@@ -58,8 +65,7 @@ export function applyResolveEffect({
   ) {
     resolveBattle(state, events);
   }
-  if (completesEndTurn) completeEndTurn(state, events);
-  else if (continuesEndTurn && !state.pendingEffect) endTurn(state, events);
+  if (continuesEndTurn && !state.pendingEffect) endTurn(state, events);
   else if (
     continuesEndTurn &&
     state.pendingEffect?.kind === "mechanic-choice" &&

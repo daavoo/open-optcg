@@ -966,14 +966,14 @@ export function getMechanicSignalInvocations(
         } else {
           continue;
         }
+        // `[Once Per Turn]` is each card's own: two copies of EB02-035 Sanji
+        // & Pudding on the field each answer the same return of DON!!.
+        const perCopy =
+          rule.oncePerCopy === true || rule.controller === "board";
         const key = `${state.turn}:${playerId}:${rule.cardNumber}:reaction`;
         const copyKey = (instanceId: string): string =>
           `${state.turn}:${playerId}:${instanceId}:reaction`;
-        if (
-          rule.oncePerTurn &&
-          !rule.oncePerCopy &&
-          state.oncePerTurn.includes(key)
-        ) {
+        if (rule.oncePerTurn && !perCopy && state.oncePerTurn.includes(key)) {
           continue;
         }
         if (
@@ -991,7 +991,7 @@ export function getMechanicSignalInvocations(
         const armed = sources.filter((source) => {
           if (
             rule.oncePerTurn &&
-            rule.oncePerCopy &&
+            perCopy &&
             state.oncePerTurn.includes(copyKey(source.instanceId))
           ) {
             return false;
@@ -1005,7 +1005,7 @@ export function getMechanicSignalInvocations(
         for (const source of armed) {
           // One use, one offer: a clause printed with two triggers (OP12-081
           // Koala's) that both fire on one play is asked about once.
-          const useKey = rule.oncePerCopy ? copyKey(source.instanceId) : key;
+          const useKey = perCopy ? copyKey(source.instanceId) : key;
           if (rule.oncePerTurn && offeredKeys.has(useKey)) continue;
           if (rule.oncePerTurn) offeredKeys.add(useKey);
           invocations.push({

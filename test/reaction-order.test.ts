@@ -130,7 +130,7 @@ describe("ordering simultaneous automatic clauses", () => {
     // Mandatory, so it fired all the same and its use is spent (Bandai's
     // ST34-001#1 for the same shape).
     expect(
-      game.state.oncePerTurn.some((key) => key.includes(":OP08-067:")),
+      game.state.oncePerTurn.some((key) => key.includes(":pudding:")),
     ).toBe(true);
   });
 

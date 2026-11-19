@@ -179,9 +179,6 @@ describe("OP10-065 Sugar Activate: Main", () => {
     const activeBefore = game.state.players.p1.activeDon.length;
 
     game.play({ type: "activate-main", summary: "Sugar" });
-    // Resting Sugar itself is the optional half of the cost; taking it is what
-    // the deck does, and the search follows either way.
-    game.play({ type: "resolve-effect", optionId: "apply" });
     game.play({ type: "resolve-effect", optionId: "hit" });
 
     expect(game.state.players.p1.hand.map((card) => card.instanceId)).toEqual([
@@ -189,6 +186,20 @@ describe("OP10-065 Sugar Activate: Main", () => {
     ]);
     expect(game.state.players.p1.activeDon.length).toBe(activeBefore - 1);
     expect(game.state.players.p1.deck[0]?.instanceId).toBe("untouched");
+    // Sugar is part of the cost, so a second DON!! does not buy a second look.
+    expect(
+      game.state.players.p1.board.find((card) => card.instanceId === "sugar")
+        ?.rested,
+    ).toBe(true);
+    expect(
+      game
+        .legalActions()
+        .some(
+          (action) =>
+            action.type === "activate-main" &&
+            action.sourceInstanceId === "sugar",
+        ),
+    ).toBe(false);
   });
 });
 
