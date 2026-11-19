@@ -23,7 +23,8 @@ export interface SimFieldCard extends SimCard {
   /** DON!! given to it. */
   don: number;
   /**
-   * Its power as the sim shows it, DON!! included. The engine works power out
+   * Its power as the sim shows it, with the DON!! given to it counted on its
+   * owner's turn and not on the other player's. The engine works power out
    * from the printed number, given DON!! and its own modifiers, so a buff the
    * sim applied and the imported position cannot see would otherwise vanish;
    * the difference is carried over as a modifier that lasts the turn.
@@ -47,9 +48,17 @@ export interface SimSide {
   characters: SimFieldCard[];
   stage: (SimCard & { rested: boolean }) | null;
   trash: SimCard[];
-  /** Life cards, top first, or a count when all are face down. */
+  /** How many Life cards. */
   life: number;
   deckCount: number;
+  /**
+   * The deck and the Life cards themselves, top first: what a recorded game
+   * (`TableSnapshot.record`) adds, so the engine's copy of the game can be
+   * dealt the cards the sim dealt. Nobody at the table may see them, and
+   * nothing chooses a move from them.
+   */
+  deck?: SimCard[];
+  lifeCards?: SimCard[];
   /** Active and rested DON!! in the cost area; given DON!! sits on the cards. */
   don: { active: number; rested: number };
 }
@@ -65,6 +74,16 @@ export type SimStep =
       attackPower: number;
       /** Counter power already added to the target this battle. */
       counterPower?: number;
+    }
+  | {
+      /**
+       * A Life card with a [Trigger] has been hit: activate it, or add the
+       * card to hand. Only a recorded game asks; elsewhere the plugin takes
+       * every Trigger itself.
+       */
+      kind: "trigger";
+      /** The Life card, when the sim says which it is. */
+      card?: SimCard;
     }
   | {
       /**
@@ -94,12 +113,33 @@ export interface TableSnapshot {
   seat: PlayerId;
   step: SimStep;
   players: Record<PlayerId, SimSide>;
+  /**
+   * The table is as it was when the last move was sent: the sim did not take
+   * it. The same decision is asked again, for a different answer.
+   */
+  refused?: boolean;
+  /**
+   * The choice buttons the sim is showing, by its own names for them
+   * (`UseOnPlay`, `MoveToTop`, ...): how a prompt that takes no card is asked.
+   */
+  buttons?: string[];
+  /**
+   * The model plays both seats and the game is recorded (`shadow.ts`): every
+   * snapshot of it carries both hands, both decks and both Life piles, and
+   * `seat` is whichever seat this decision belongs to.
+   */
+  record?: boolean;
+  /** Names one game of the sim, so its snapshots are told from the last game's. */
+  game?: string;
+  /** Who took the first turn. */
+  first?: PlayerId;
 }
 
 /**
  * What the model chose, in the sim's terms. `choose` answers an `effect`
- * step: the cards to select, in order, then the sim's confirm -- an empty
- * list confirms choosing nothing, and `decline` passes on an optional effect.
+ * step: the cards to select, in order, then the sim's confirm or the button
+ * named -- an empty list confirms choosing nothing, and `decline` passes on
+ * an optional effect.
  * `defer` hands the decision back to the person at the table: the decision
  * the engine put to the model has no counterpart the plugin can perform.
  */
@@ -115,5 +155,12 @@ export type SimMove =
   | { kind: "end-turn" }
   | { kind: "no-block" }
   | { kind: "no-counter" }
-  | { kind: "choose"; cards: string[]; decline?: boolean }
+  | {
+      kind: "choose";
+      cards: string[];
+      decline?: boolean;
+      /** The sim button that answers the prompt, when one of them does. */
+      button?: string;
+    }
+  | { kind: "trigger"; activate: boolean }
   | { kind: "defer"; reason: string };

@@ -9,7 +9,12 @@ import {
   observe,
   type GameState,
 } from "@one-piece-sim/engine-core";
-import type { LegalAction, Phase, PlayerId } from "@one-piece-sim/protocol";
+import type {
+  GameObservation,
+  LegalAction,
+  Phase,
+  PlayerId,
+} from "@one-piece-sim/protocol";
 import {
   adapterFor,
   CompactScorerAgent,
@@ -61,6 +66,8 @@ export class Decider {
   readonly #models = new Map<string, CompactScorerAgent>();
   #replay: Replay | undefined;
   #inEffect: InEffect | undefined;
+  /** Moves the sim has refused at the decision it is on, by summary. */
+  readonly #refused = new Set<string>();
 
   constructor(modelPath: string, adapterDir?: string) {
     const pack = JSON.parse(readFileSync(modelPath, "utf8")) as
@@ -88,12 +95,46 @@ export class Decider {
     return this.#pack.source;
   }
 
+  /** The model's pick among an observation's legal actions, for `deck`'s pilot. */
+  async choose(
+    observation: GameObservation,
+    deck: { leader: string; cards: Record<string, number> },
+  ): Promise<{ action: LegalAction; value?: number }> {
+    const seat = this.#seat(deck);
+    const action = await seat.chooseAction(observation);
+    return {
+      action,
+      ...(seat.lastValue === undefined ? {} : { value: seat.lastValue }),
+    };
+  }
+
   async decide(snapshot: TableSnapshot): Promise<Decision> {
     if (snapshot.step.kind === "effect") {
       return this.#decideEffect(snapshot, snapshot.step);
     }
+    if (snapshot.step.kind === "trigger") {
+      // A Trigger is printed to be worth taking, and the rebuilt position has
+      // no hit in progress to ask the engine about.
+      return {
+        move: { kind: "trigger", activate: true },
+        summary: "took the [Trigger]",
+        offered: [],
+      };
+    }
     const { state, simIds, ownDeck } = importPosition(snapshot);
-    const observation = observe(state, snapshot.seat);
+    // A move the sim did not take is not offered again at this decision.
+    if (snapshot.refused && this.#replay) {
+      this.#refused.add(this.#replay.action.summary);
+    } else {
+      this.#refused.clear();
+    }
+    const seen = observe(state, snapshot.seat);
+    const observation = {
+      ...seen,
+      legalActions: seen.legalActions.filter(
+        (action) => !this.#refused.has(action.summary),
+      ),
+    };
     if (observation.legalActions.length === 0) {
       return {
         move: { kind: "defer", reason: "the engine offers no action here" },

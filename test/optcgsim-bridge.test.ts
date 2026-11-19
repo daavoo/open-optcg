@@ -112,7 +112,10 @@ describe("OPTCGSim bridge position import", () => {
     const { state } = importPosition(luffyMain());
     const zoroCharacter = state.players.p2.board[0]!;
     expect(zoroCharacter.attachedDon).toHaveLength(1);
-    expect(currentPower(state, "p2", zoroCharacter.instanceId)).toBe(7000);
+    // It is P1's turn, so the 7000 the sim shows leaves the given DON!! out.
+    expect(currentPower(state, "p2", zoroCharacter.instanceId, false)).toBe(
+      7000,
+    );
   });
 
   it("offers the Character from an earlier turn an attack, and the hand to play", () => {

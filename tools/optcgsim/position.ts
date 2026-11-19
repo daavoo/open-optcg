@@ -17,6 +17,7 @@ import {
   assertGameStateInvariants,
   createGame,
   currentPower,
+  donPowerApplies,
   getLegalActions,
   type BoardCard,
   type CardInstance,
@@ -58,7 +59,7 @@ function deckListFor(side: SimSide): string[] {
   );
 }
 
-function countCards(cards: readonly string[]): Record<string, number> {
+export function countCards(cards: readonly string[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const card of cards) counts[card] = (counts[card] ?? 0) + 1;
   return counts;
@@ -189,7 +190,8 @@ function assertKnownCards(snapshot: TableSnapshot): void {
   );
 }
 
-function normalized(snapshot: TableSnapshot): TableSnapshot {
+/** The snapshot with every card number the engine's own. */
+export function normalized(snapshot: TableSnapshot): TableSnapshot {
   assertKnownCards(snapshot);
   const card = <T extends { cardNumber: string }>(entry: T): T => ({
     ...entry,
@@ -205,9 +207,18 @@ function normalized(snapshot: TableSnapshot): TableSnapshot {
     characters: entry.characters.map(card),
     stage: entry.stage ? card(entry.stage) : null,
     trash: entry.trash.map(card),
+    ...(entry.deck ? { deck: entry.deck.map(card) } : {}),
+    ...(entry.lifeCards ? { lifeCards: entry.lifeCards.map(card) } : {}),
   });
+  const step = snapshot.step;
   return {
     ...snapshot,
+    step:
+      step.kind === "effect"
+        ? { ...step, revealed: step.revealed.map(card) }
+        : step.kind === "trigger"
+          ? { ...step, ...(step.card ? { card: card(step.card) } : {}) }
+          : step,
     players: { p1: side(snapshot.players.p1), p2: side(snapshot.players.p2) },
   };
 }
@@ -224,7 +235,10 @@ export function importPosition(simSnapshot: TableSnapshot): ImportedPosition {
   });
   // Turn 1 is the first player's, so the seat to act on an odd turn went first.
   const startingPlayer =
-    snapshot.turn % 2 === 1 ? snapshot.turnPlayer : other(snapshot.turnPlayer);
+    snapshot.first ??
+    (snapshot.turn % 2 === 1
+      ? snapshot.turnPlayer
+      : other(snapshot.turnPlayer));
   let state = createGame({
     gameId: "optcgsim",
     p1: deck("p1"),
@@ -259,9 +273,14 @@ export function importPosition(simSnapshot: TableSnapshot): ImportedPosition {
         state = applyAction(state, { ...keep, revision: state.revision }).state;
       }
     }
-  } else if (step.kind === "main" || step.kind === "effect") {
+  } else if (
+    step.kind === "main" ||
+    step.kind === "effect" ||
+    step.kind === "trigger"
+  ) {
     // An effect step is answered from the engine's own replay of the move
-    // that started it (`decide.ts`); as a position it is the main phase.
+    // that started it (`decide.ts`), and a Trigger is always taken; as a
+    // position each is the main phase.
     state.phase = "main";
     state.activePlayer = snapshot.turnPlayer;
   } else {
@@ -362,7 +381,9 @@ function carryPower(
     if (card.power === undefined) continue;
     const instanceId = engineIdOf.get(card.id);
     if (!instanceId) continue;
-    const difference = card.power - currentPower(state, player, instanceId);
+    const difference =
+      card.power -
+      currentPower(state, player, instanceId, donPowerApplies(state, player));
     if (difference === 0) continue;
     const modifier = { amount: difference, expiresAtTurn: state.turn };
     if (instanceId === `${player}-leader`) {

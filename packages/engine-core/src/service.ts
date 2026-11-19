@@ -1,6 +1,7 @@
 import type {
   LegalAction,
   PlayerId,
+  RecordedShuffles,
   ResolvedDeck,
   TimeLimit,
 } from "@one-piece-sim/protocol";
@@ -70,6 +71,7 @@ export class GameService {
     seedMode?: "seat" | "matchup";
     startingPlayer?: PlayerId | "random";
     timeLimit?: TimeLimit;
+    recordedShuffles?: RecordedShuffles;
   }) {
     const gameId = `g-${++this.#sequence}`;
     const state = createGame({ gameId, ...params });

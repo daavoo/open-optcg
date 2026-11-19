@@ -35,6 +35,19 @@ export interface ResolvedDeck {
 }
 
 /**
+ * The order each of a player's shuffles left the cards in, for a game that
+ * was dealt somewhere other than this engine (see `recorded-shuffle.ts` in
+ * the engine).
+ *
+ * One entry per shuffle of that player's cards, in the order they happen: the
+ * opening shuffle first -- the five cards of the opening hand, then the deck
+ * from the top -- then a mulligan's, then any an effect calls for. An entry is
+ * the card numbers of the cards shuffled, in the order they came out. A
+ * shuffle past the end of the list is drawn from the seed like any other.
+ */
+export type RecordedShuffles = Record<PlayerId, readonly (readonly string[])[]>;
+
+/**
  * A tournament time limit, counted in turns.
  *
  * Bandai's "Sanctioned Tournaments Floor Rules" (Ver. 1.6.0, §8.2): when a

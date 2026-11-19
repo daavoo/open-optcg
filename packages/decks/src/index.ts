@@ -1,5 +1,5 @@
 import { requireKnownCard, type DeckFormat } from "@one-piece-sim/cards";
-import type { ResolvedDeck } from "@one-piece-sim/protocol";
+import type { RecordedShuffles, ResolvedDeck } from "@one-piece-sim/protocol";
 import { formatDeckManifests } from "./generated.js";
 import { op16EnelManifest } from "./op16-enel-manifest.js";
 import { op16SengokuManifest } from "./op16-sengoku-manifest.js";
@@ -854,16 +854,29 @@ export function resolveDeck(
 /**
  * Both seats of a match at once, for the `{ p1Deck, p2Deck, p1CustomDeck? }`
  * shape that saved matches and trace configs are stored in.
+ *
+ * A match recorded from a game dealt somewhere else carries its shuffles
+ * beside its decks (`RecordedShuffles`), and they are handed on with them:
+ * every caller spreads this into `createGame`, so none of them can deal such
+ * a match from its seed by leaving a field out.
  */
 export function resolveMatchDecks(config: {
   p1Deck: string;
   p2Deck: string;
   p1CustomDeck?: DeckManifest;
   p2CustomDeck?: DeckManifest;
-}): { p1: ResolvedDeck; p2: ResolvedDeck } {
+  recordedShuffles?: RecordedShuffles;
+}): {
+  p1: ResolvedDeck;
+  p2: ResolvedDeck;
+  recordedShuffles?: RecordedShuffles;
+} {
   return {
     p1: resolveDeck(config.p1Deck, config.p1CustomDeck),
     p2: resolveDeck(config.p2Deck, config.p2CustomDeck),
+    ...(config.recordedShuffles
+      ? { recordedShuffles: config.recordedShuffles }
+      : {}),
   };
 }
 

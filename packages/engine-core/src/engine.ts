@@ -36,6 +36,7 @@ import {
   type PlayerId,
   type PublicEvent,
   type ResolvedDeck,
+  type RecordedShuffles,
   type TimeLimit,
 } from "@one-piece-sim/protocol";
 import {
@@ -86,7 +87,11 @@ import type {
   PlayerState,
   TransitionResult,
 } from "./model.js";
-import { nextInt, seedRng, shuffle } from "./rng.js";
+import { nextInt, seedRng } from "./rng.js";
+import {
+  initialRecordedShuffles,
+  shuffleRecorded,
+} from "./recorded-shuffle.js";
 import { endBattleIfTargetLeftField } from "./battle.js";
 import {
   opponentOf,
@@ -199,17 +204,24 @@ function makePlayer(
   seed: string,
   seedSlot: PlayerId,
   db: CardDatabase,
-): { player: PlayerState; rngValue: number } {
+  recorded: readonly string[] | undefined,
+): {
+  player: PlayerState;
+  rngValue: number;
+  opening: { instanceId: string }[];
+} {
   const instances = deck.cards.map((cardNumber, index) => ({
     instanceId: `${playerId}-card-${index + 1}`,
     cardNumber,
   }));
   const openingStage = openingStageOf(deck.leader, instances, db);
-  const shuffled = shuffle(
+  const shuffled = shuffleRecorded(
     instances.filter((card) => card !== openingStage),
     seedRng(`${seed}:${seedSlot}`),
+    recorded,
   );
   return {
+    opening: shuffled.items,
     player: {
       leaderCardNumber: deck.leader,
       deck: shuffled.items.slice(5),
@@ -305,6 +317,12 @@ export function createGame(input: {
    * the state, so it is part of what a replay must pass to reproduce the game.
    */
   timeLimit?: TimeLimit;
+  /**
+   * The shuffles of a game that was dealt somewhere else, to be dealt the
+   * same way here; see `recorded-shuffle.ts`. Kept on the state, like the
+   * time limit, because a replay must pass them again.
+   */
+  recordedShuffles?: RecordedShuffles;
 }): GameState {
   const db = input.cards ?? defaultCardDatabase;
   const timeLimit = initialTimeLimit(input.timeLimit);
@@ -312,8 +330,26 @@ export function createGame(input: {
     input.seedMode === "matchup" && seedKeyOf(input.p1) > seedKeyOf(input.p2);
   const p1SeedSlot: PlayerId = swapSeedSlots ? "p2" : "p1";
   const p2SeedSlot: PlayerId = swapSeedSlots ? "p1" : "p2";
-  const p1 = makePlayer(input.p1, "p1", input.seed, p1SeedSlot, db);
-  const p2 = makePlayer(input.p2, "p2", input.seed, p2SeedSlot, db);
+  const p1 = makePlayer(
+    input.p1,
+    "p1",
+    input.seed,
+    p1SeedSlot,
+    db,
+    input.recordedShuffles?.p1[0],
+  );
+  const p2 = makePlayer(
+    input.p2,
+    "p2",
+    input.seed,
+    p2SeedSlot,
+    db,
+    input.recordedShuffles?.p2[0],
+  );
+  const recordedShuffles = initialRecordedShuffles(input.recordedShuffles, {
+    p1: p1.opening,
+    p2: p2.opening,
+  });
   const randomStartingSlot =
     nextInt(seedRng(`${input.seed}:starting-player`), 2).value === 0
       ? "p1"
@@ -350,6 +386,7 @@ export function createGame(input: {
     winner: null,
     resultReason: null,
     ...(timeLimit ? { timeLimit } : {}),
+    ...(recordedShuffles ? { recordedShuffles } : {}),
     pendingEffect: null,
     pendingEffectResume: null,
     donReturn: null,

@@ -5,7 +5,7 @@
  * `actions/index.ts` for the table and the contract they share.
  */
 import { opponentOf } from "../board.js";
-import { shuffle } from "../rng.js";
+import { shuffleCards } from "../recorded-shuffle.js";
 import { type ActionContext } from "./context.js";
 
 export function applyMulliganDecision({
@@ -18,13 +18,12 @@ export function applyMulliganDecision({
   const player = state.players[activePlayer];
   player.mulliganDecision = offered.decision;
   if (offered.decision === "mulligan") {
-    const reshuffled = shuffle(
-      [...player.hand, ...player.deck],
-      state.rngState,
-    );
-    player.hand = reshuffled.items.slice(0, 5);
-    player.deck = reshuffled.items.slice(5);
-    state.rngState = reshuffled.state;
+    const reshuffled = shuffleCards(state, activePlayer, [
+      ...player.hand,
+      ...player.deck,
+    ]);
+    player.hand = reshuffled.slice(0, 5);
+    player.deck = reshuffled.slice(5);
   }
   events.push({
     type: "mulligan-decided",

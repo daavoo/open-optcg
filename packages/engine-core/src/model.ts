@@ -1495,6 +1495,21 @@ export interface GameState {
     /** The procedure that decided the game, once time has decided it. */
     decidedBy?: TimeLimitProcedure;
   };
+  /**
+   * The shuffles of a game dealt somewhere else, and how each was dealt here.
+   * See `recorded-shuffle.ts`.
+   *
+   * Absent from a game created without them, so a seeded game serializes and
+   * hashes as it always has. `orders` is what `createGame` was given. `dealt`
+   * is every shuffle so far as it came out, by instance id -- one entry per
+   * shuffle, so its length is also which recorded order the next shuffle
+   * takes. A recorder that learns a shuffle's outcome only after the fact
+   * reads the cards' places from it.
+   */
+  recordedShuffles?: {
+    orders: Record<PlayerId, string[][]>;
+    dealt: Record<PlayerId, string[][]>;
+  };
   pendingEffect: PendingEffect | null;
   /**
    * Reactions waiting for the current pending effect to finish.

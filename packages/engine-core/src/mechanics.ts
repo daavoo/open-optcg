@@ -44,6 +44,7 @@ import {
 } from "./static-abilities.js";
 import { activeDonOwner, fieldDonCount, returnDonToDeck } from "./don.js";
 import { nextInt, shuffle } from "./rng.js";
+import { shuffleCards } from "./recorded-shuffle.js";
 import {
   type PlayerRef,
   type CardZone,
@@ -1460,9 +1461,7 @@ export function continueExecution(
     if (effect.kind === "shuffle-deck") {
       const playerId = resolvePlayer(execution.context, effect.player);
       const player = state.players[playerId];
-      const shuffled = shuffle(player.deck, state.rngState);
-      player.deck = shuffled.items;
-      state.rngState = shuffled.state;
+      player.deck = shuffleCards(state, playerId, player.deck);
       delete player.knownOwnDeckTop;
       delete state.players[opponentOf(playerId)].knownOpponentDeckTop;
       continue;
