@@ -68,8 +68,12 @@ export interface Play {
   step: SimStep["kind"];
   /** The engine actions this decision applied, by summary. */
   actions: string[];
-  /** What the sim was told to do. */
-  move: SimMove;
+  /**
+   * What the sim was told to do. Absent for a person's move, which the sim
+   * was not told: it is read off the table afterwards.
+   */
+  move?: SimMove;
+  by?: "person";
   value?: number;
   /** Where the engine and the sim differ without the games parting. */
   notes?: string[];
@@ -432,6 +436,8 @@ function catalogDeck(deck: {
 
 export class ShadowGame {
   readonly #choose: Chooser;
+  /** The seat a person plays, when one does. */
+  readonly #person: PlayerId | undefined;
   readonly #config: Config;
   #orders: Record<PlayerId, string[][]> = { p1: [], p2: [] };
   #actions: string[] = [];
@@ -458,6 +464,18 @@ export class ShadowGame {
   /** Actions the sim has refused at the decision it is on. */
   readonly #refused = new Set<string>();
   readonly plays: Play[] = [];
+  /**
+   * The person's decision the engine's game could not be brought up to, while
+   * it is still behind: where to look when the record ends soon after.
+   */
+  unfollowed:
+    | {
+        turn: number;
+        step: SimStep["kind"];
+        why: string;
+        differences: readonly string[];
+      }
+    | undefined;
   divergence: Divergence | undefined;
   /** How the sim's game ended, once it has. */
   ended:
@@ -466,6 +484,7 @@ export class ShadowGame {
   constructor(first: TableSnapshot, choose: Chooser, seed: string) {
     const snapshot = normalized(first);
     this.#choose = choose;
+    this.#person = snapshot.person;
     const decks = {
       p1: deckOf(snapshot.players.p1),
       p2: deckOf(snapshot.players.p2),
@@ -605,6 +624,16 @@ export class ShadowGame {
     };
 
     let notes: string[] = [];
+    // A person's moves can lead straight into a prompt of the model's -- an
+    // attack that K.O.s its Character, a hit on its Life -- with no table
+    // decision of the model's in between to catch the engine's game up at.
+    if (
+      snapshot.person &&
+      (step.kind === "effect" || step.kind === "trigger") &&
+      awaits(this.#state).seat !== snapshot.seat
+    ) {
+      this.#reconcile(snapshot, "decision");
+    }
     if (step.kind === "effect") {
       if (this.#leftToTheSim) this.#catchUpInsideEffect(snapshot, step);
       const waiting = awaits(this.#state);
@@ -886,56 +915,151 @@ export class ShadowGame {
    */
   #reconcile(
     snapshot: TableSnapshot,
+    /**
+     * `decision` accepts the first game that is waiting on the snapshot's
+     * decision, without comparing tables: for a prompt inside an effect,
+     * where a card is in neither game's zones.
+     */
+    accept: "table" | "decision" = "table",
   ): { notes: string[]; answer?: SimMove } | { why: string; found: string[] } {
     interface Node {
       state: GameState;
       path: LegalAction[];
+      /** Who took each action of `path`. */
+      by: PlayerId[];
     }
+    const numberOfSimCard = simCardNumbers(snapshot);
     const fits = (state: GameState): boolean => {
       const waiting = awaits(state);
+      if (
+        waiting.seat !== snapshot.seat ||
+        waiting.kind !== snapshot.step.kind
+      ) {
+        return false;
+      }
+      // An attack is the same attack only with the same cards in it.
+      const step = snapshot.step;
+      const attack = state.activeAttack;
+      if ((step.kind !== "block" && step.kind !== "counter") || !attack) {
+        return true;
+      }
+      const numberOf = (player: PlayerId, instanceId: string): string =>
+        instanceId === `${player}-leader`
+          ? state.players[player].leaderCardNumber
+          : (state.players[player].board.find(
+              (card) => card.instanceId === instanceId,
+            )?.cardNumber ?? "");
       return (
-        waiting.seat === snapshot.seat && waiting.kind === snapshot.step.kind
+        numberOf(attack.attackerPlayerId, attack.attackerInstanceId) ===
+          numberOfSimCard.get(step.attacker) &&
+        numberOf(attack.defenderPlayerId, attack.targetInstanceId) ===
+          numberOfSimCard.get(step.target)
       );
     };
-    const queue: Node[] = [{ state: this.#state, path: [] }];
+    const adopt = (
+      node: Node,
+      notes: readonly string[],
+    ): { notes: string[] } => {
+      // A person's moves are plays of the game like the model's.
+      const theirs = node.path.filter(
+        (_, index) => node.by[index] === snapshot.person,
+      );
+      if (theirs.length > 0 && snapshot.person) {
+        this.plays.push({
+          at: this.#actions.length - node.path.length,
+          turn: snapshot.turn,
+          seat: snapshot.person,
+          step: snapshot.step.kind,
+          actions: theirs.map((action) => action.summary),
+          by: "person",
+        });
+      }
+      return {
+        notes: [
+          ...node.path
+            .filter((_, index) => node.by[index] !== snapshot.person)
+            .map(
+              (action) =>
+                `the engine stopped for "${action.summary}" and the sim did not`,
+            ),
+          ...notes,
+        ],
+      };
+    };
+    /** How the battle in progress differs, the way a power does. */
+    const battleNotes = (state: GameState): string[] => {
+      const step = snapshot.step;
+      const attack = state.activeAttack;
+      if (
+        (step.kind !== "block" && step.kind !== "counter") ||
+        !attack ||
+        step.counterPower === undefined ||
+        attack.counterPower === step.counterPower
+      ) {
+        return [];
+      }
+      return [
+        `Counter power in this battle: engine ${attack.counterPower}, sim ${step.counterPower}`,
+      ];
+    };
+    const queue: Node[] = [{ state: this.#state, path: [], by: [] }];
     let visited = 0;
     let sameTable: Node | undefined;
-    while (queue.length > 0 && visited < 600) {
+    let close:
+      | {
+          node: Node;
+          dealt: { orders: Record<PlayerId, string[][]>; state: GameState };
+          notes: string[];
+        }
+      | undefined;
+    // A person can have made several moves since the last snapshot, each one
+    // of many, so their game is searched wider and deeper than the answers
+    // the sim gives by itself.
+    const budget = snapshot.person ? 6000 : 600;
+    const depth = snapshot.person ? 7 : 5;
+    while (queue.length > 0 && visited < budget) {
       const node = queue.shift()!;
       visited += 1;
-      const found = differences(node.state, snapshot);
-      if (found.table.length === 0) {
-        sameTable ??= node;
+      if (accept === "decision") {
         if (fits(node.state)) {
-          const dealt = this.#dealAs(node, snapshot, found);
-          if (dealt) {
-            this.#orders = dealt.orders;
-            this.#actions = [
-              ...this.#actions,
-              ...node.path.map((action) => action.actionId),
-            ];
-            this.#state = dealt.state;
-            return {
-              notes: [
-                ...node.path.map(
-                  (action) =>
-                    `the engine stopped for "${action.summary}" and the sim did not`,
-                ),
-                ...found.notes,
-              ],
-            };
+          this.#state = node.state;
+          this.#actions.push(...node.path.map((action) => action.actionId));
+          return adopt(node, []);
+        }
+      } else {
+        // Two moves can leave the same cards in the same places -- a Counter
+        // onto the Leader or onto the card being attacked -- and differ only
+        // in the powers that result. So a game whose table matches but whose
+        // powers do not is held while the other games as near are looked at,
+        // and taken only when none of them matches those too.
+        if (close && node.path.length > close.node.path.length) break;
+        const found = differences(node.state, snapshot);
+        if (found.table.length === 0) {
+          sameTable ??= node;
+          if (fits(node.state)) {
+            const dealt = this.#dealAs(node, snapshot, found);
+            if (dealt) {
+              const notes = [...found.notes, ...battleNotes(node.state)];
+              if (notes.length === 0) {
+                close = { node, dealt, notes };
+                break;
+              }
+              close ??= { node, dealt, notes };
+            }
           }
         }
       }
-      if (node.path.length >= 5) continue;
-      const offered = getLegalActions(node.state, node.state.activePlayer);
-      // Only the answers the sim could have given without asking: the one
-      // legal action, the choices inside an effect, or a [Trigger] it did not
-      // offer.
+      if (node.path.length >= depth) continue;
+      const actor = node.state.activePlayer;
+      const offered = getLegalActions(node.state, actor);
+      // Only the answers the sim could have given without asking -- the one
+      // legal action, the choices inside an effect, a [Trigger] it did not
+      // offer -- and whatever a person at the table was free to do.
       if (
         offered.length !== 1 &&
         !node.state.pendingEffect &&
-        node.state.phase !== "trigger"
+        node.state.phase !== "trigger" &&
+        actor !== snapshot.person
       ) {
         continue;
       }
@@ -945,12 +1069,29 @@ export class ShadowGame {
             queue.push({
               state: apply(node.state, action),
               path: [...node.path, action],
+              by: [...node.by, actor],
             });
           } catch {
             // An order the engine refuses is not one the sim took.
           }
         }
       }
+    }
+    if (close) {
+      this.#orders = close.dealt.orders;
+      this.#actions = [
+        ...this.#actions,
+        ...close.node.path.map((action) => action.actionId),
+      ];
+      this.#state = close.dealt.state;
+      return adopt(close.node, close.notes);
+    }
+    if (accept === "decision") {
+      const there = awaits(this.#state);
+      return {
+        why: `the sim is at ${snapshot.seat}'s ${snapshot.step.kind} and the engine at ${there.seat}'s ${there.kind}`,
+        found: [],
+      };
     }
 
     // The sim stops for a block when the engine, with no [Blocker] to offer,
@@ -1067,6 +1208,32 @@ export class ShadowGame {
   }
 
   /**
+   * A snapshot taken at a decision of the person's: the engine's game is
+   * brought up to it, so each of their moves is found one at a time. A table
+   * the search does not reach is left for a later snapshot -- two of their
+   * clicks can land between snapshots -- and only a decision the model has to
+   * make from a game that is not the sim's ends the record (`decide`).
+   */
+  follow(simSnapshot: TableSnapshot): boolean {
+    if (this.divergence) return false;
+    const snapshot = normalized(simSnapshot);
+    if (snapshot.step.kind === "effect" || snapshot.step.kind === "trigger") {
+      return false;
+    }
+    const reconciled = this.#reconcile(snapshot);
+    this.unfollowed =
+      "why" in reconciled
+        ? {
+            turn: snapshot.turn,
+            step: snapshot.step.kind,
+            why: reconciled.why,
+            differences: reconciled.found,
+          }
+        : undefined;
+    return !this.unfollowed;
+  }
+
+  /**
    * The sim's game was given up before it ended -- it stopped moving -- which
    * ends the record where it stands.
    */
@@ -1083,16 +1250,43 @@ export class ShadowGame {
 
   /** The sim's game is over; `winner` is who it says won. */
   finish(winner: PlayerId | null): void {
-    // The last hit can leave the engine at an action with one answer.
-    for (
-      let guard = 0;
-      guard < 6 && this.#state.phase !== "finished";
-      guard++
-    ) {
-      const offered = getLegalActions(this.#state, this.#state.activePlayer);
-      if (offered.length !== 1) break;
-      this.#state = apply(this.#state, offered[0]!);
-      this.#actions.push(offered[0]!.actionId);
+    // The last hit can leave the engine at an action with one answer, and a
+    // person's last moves were never shown at a decision of theirs: the
+    // engine's game is played on to the end the sim reached, when it is
+    // within reach.
+    if (!this.divergence && this.#state.phase !== "finished") {
+      const queue: { state: GameState; path: LegalAction[] }[] = [
+        { state: this.#state, path: [] },
+      ];
+      for (let visited = 0; queue.length > 0 && visited < 6000; visited++) {
+        const node = queue.shift()!;
+        if (node.state.phase === "finished") {
+          if (node.state.winner !== winner) continue;
+          this.#adopt(node);
+          break;
+        }
+        if (node.path.length >= 7) continue;
+        const actor = node.state.activePlayer;
+        const offered = getLegalActions(node.state, actor);
+        if (
+          offered.length !== 1 &&
+          !node.state.pendingEffect &&
+          node.state.phase !== "trigger" &&
+          actor !== this.#person
+        ) {
+          continue;
+        }
+        for (const action of offered) {
+          try {
+            queue.push({
+              state: apply(node.state, action),
+              path: [...node.path, action],
+            });
+          } catch {
+            // Not a way the game ended.
+          }
+        }
+      }
     }
     const ours =
       this.#state.phase === "finished" ? this.#state.winner : undefined;

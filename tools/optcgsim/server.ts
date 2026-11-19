@@ -3,11 +3,17 @@
  * because every Unity build can speak it without a library.
  *
  *   pnpm optcgsim:bridge [--port 7788] [--model path] [--adapters dir] [--record dir]
+ *                        [--blind p1|p2]   (see `Recorder.blind`)
  *
  *   GET  /health  -> {"ok":true,"model":"<checkpoint>"}
+ *   GET  /decks   -> {"decks":[{"name","lines"}]}: the catalog's decks as
+ *                    the sim's deck files, for the plugin to write out
  *   POST /decide  <- TableSnapshot   -> Decision (`decide.ts`); a snapshot of
  *                    a recorded game (`record`) also gets `record`, how its
  *                    record stands (`recorder.ts`)
+ *   POST /observe <- TableSnapshot of a recorded game, at a decision of the
+ *                    person's: the engine's game follows their move, and no
+ *                    move is sent back
  *   POST /finish  <- {"game":"<id>","winner":"p1"|"p2"|null}, when a recorded
  *                    game ends in the sim, or {"game","abandoned":"<why>"}
  *                    when the plugin gives it up -> its record's final standing
@@ -20,6 +26,7 @@
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { deckManifests, SELECTABLE_DECK_IDS } from "@one-piece-sim/decks";
 import { Decider, type Decision } from "./decide.js";
 import { unknownCards } from "./position.js";
 import { Recorder, type RecordStatus } from "./recorder.js";
@@ -49,10 +56,35 @@ const decider = new Decider(
 );
 
 // Recorded games are written under `analysis/`, which the repository ignores.
+const blind = flag("blind", "");
 const recorder = new Recorder(
   flag("record", join(process.cwd(), "analysis/optcgsim")),
   decider,
+  undefined,
+  blind === "p1" || blind === "p2" ? blind : undefined,
 );
+
+/**
+ * The catalog's decks as the sim's deck files: a name the sim can use as a
+ * file name, and its lines, the Leader first.
+ */
+function simDecks(): { name: string; lines: string[] }[] {
+  return SELECTABLE_DECK_IDS.flatMap((id) => {
+    const manifest = deckManifests[id];
+    if (!manifest) return [];
+    return [
+      {
+        name: `open-optcg ${id}`.replace(/[^A-Za-z0-9 ().&'-]/g, "-"),
+        lines: [
+          `1x${manifest.leader}`,
+          ...Object.entries(manifest.cards).map(
+            ([card, copies]) => `${copies}x${card}`,
+          ),
+        ],
+      },
+    ];
+  });
+}
 
 const server = createServer((request, response) => {
   const reply = (status: number, body: unknown): void => {
@@ -63,14 +95,19 @@ const server = createServer((request, response) => {
     reply(200, { ok: true, model: decider.source });
     return;
   }
+  if (request.method === "GET" && request.url === "/decks") {
+    reply(200, { decks: simDecks() });
+    return;
+  }
   if (
     request.method !== "POST" ||
     (request.url !== "/decide" &&
+      request.url !== "/observe" &&
       request.url !== "/check" &&
       request.url !== "/finish")
   ) {
     reply(404, {
-      error: "POST /decide, POST /check, POST /finish or GET /health",
+      error: "POST /decide, /observe, /check or /finish, or GET /health",
     });
     return;
   }
@@ -121,6 +158,10 @@ const server = createServer((request, response) => {
       return;
     }
     const snapshot = body as TableSnapshot;
+    if (request.url === "/observe") {
+      reply(200, snapshot.record ? recorder.observe(snapshot) : {});
+      return;
+    }
     const deciding: Promise<Decision & { record?: RecordStatus }> =
       snapshot.record ? recorder.decide(snapshot) : decider.decide(snapshot);
     deciding.then(

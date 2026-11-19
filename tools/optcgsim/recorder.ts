@@ -46,16 +46,33 @@ export class Recorder {
     readonly decider: Decider,
     /** Stamps file names and seeds; injected so a test can fix it. */
     readonly now: () => Date = () => new Date(),
+    /**
+     * A seat whose moves are kept from the record, as a person's are: the
+     * model still plays it, from the position rebuilt at each decision, and
+     * the record has to find what it did from the table. It is how following
+     * a person is checked in games nobody has to sit through.
+     */
+    readonly blind?: PlayerId,
   ) {}
 
   async decide(
-    snapshot: TableSnapshot,
+    asked: TableSnapshot,
   ): Promise<Decision & { record: RecordStatus }> {
+    const snapshot = this.blind ? { ...asked, person: this.blind } : asked;
     const recording = this.#recording(snapshot);
     const { shadow } = recording;
     let decision: Decision | undefined;
     let failure: string | undefined;
-    if (!shadow.divergence) {
+    if (snapshot.seat === this.blind) {
+      try {
+        shadow.follow(snapshot);
+      } catch {
+        // Left for the other seat's next decision to settle.
+      }
+      if (shadow.unfollowed) {
+        recording.sim.push(JSON.stringify({ unfollowed: shadow.unfollowed }));
+      }
+    } else if (!shadow.divergence) {
       try {
         decision = await shadow.decide(snapshot);
       } catch (error) {
@@ -78,6 +95,28 @@ export class Recorder {
         ...(failure ? { why: failure } : {}),
       },
     };
+  }
+
+  /** A snapshot at a decision of the person's, which asks for no move. */
+  observe(snapshot: TableSnapshot): { followed: boolean } {
+    const recording = this.#recording(snapshot);
+    let followed = false;
+    try {
+      followed = recording.shadow.follow(snapshot);
+    } catch {
+      // A table the engine's game cannot be read against is left for the
+      // model's next decision to settle.
+    }
+    recording.sim.push(
+      JSON.stringify({
+        snapshot,
+        ...(recording.shadow.unfollowed
+          ? { unfollowed: recording.shadow.unfollowed }
+          : {}),
+      }),
+    );
+    if (followed) this.#write(recording, undefined);
+    return { followed };
   }
 
   /** The sim's game ended; `winner` is who it says won. */

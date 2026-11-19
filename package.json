@@ -20,6 +20,7 @@
     "get-cards:build": "tsx tools/build-get-cards.ts",
     "model:fetch": "tsx tools/fetch-model.ts",
     "optcgsim:bridge": "tsx tools/optcgsim/server.ts",
+    "optcgsim:report": "tsx tools/optcgsim/report.ts",
     "jsonl": "tsx packages/cli/src/jsonl.ts",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "verify:browser": "pnpm browser:check && pnpm browser:parity && pnpm fixtures:check && pnpm web:e2e",

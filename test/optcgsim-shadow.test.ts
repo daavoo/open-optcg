@@ -205,8 +205,15 @@ class StandIn {
     return { kind: "main" };
   }
 
-  snapshot(): TableSnapshot {
+  /** A move of the person's: a click the bridge is never told about. */
+  click(pick: (offers: number) => number): void {
+    const offers = this.#offers();
+    this.#take(offers[pick(offers.length)]!);
+  }
+
+  snapshot(person?: PlayerId): TableSnapshot {
     return {
+      ...(person ? { person } : {}),
       version: 1,
       turn: this.state.turn,
       turnPlayer: this.state.turnPlayerId,
@@ -358,6 +365,71 @@ export async function follow(
   }
   return { sim, shadow, last: snapshot };
 }
+
+/** A game with a person in `person`'s seat, clicking for themselves. */
+export async function followWithPerson(
+  seed: string,
+  person: PlayerId,
+  decisions: number,
+): Promise<{ sim: StandIn; shadow: ShadowGame }> {
+  const sim = new StandIn(`stand-in-${seed}`);
+  const shadow = new ShadowGame(
+    sim.snapshot(person),
+    wanderer(seed),
+    `record-${seed}`,
+  );
+  let rng = seedRng(`person-${seed}`);
+  for (let count = 0; count < decisions && !sim.over; count++) {
+    if (sim.state.activePlayer === person) {
+      sim.click((offers) => {
+        const drawn = nextInt(rng, offers);
+        rng = drawn.state;
+        return drawn.value;
+      });
+      // The plugin shows the table at each decision of the person's.
+      if (sim.state.activePlayer === person) {
+        shadow.follow(sim.snapshot(person));
+      }
+      continue;
+    }
+    const decision = await shadow.decide(sim.snapshot(person));
+    if (!decision) break;
+    sim.perform(decision.move);
+  }
+  return { sim, shadow };
+}
+
+describe("OPTCGSim recorded game with a person", () => {
+  it.each([
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+  ])(
+    "follows the person's clicks from the table alone (seed %s)",
+    async (seed) => {
+      const { sim, shadow } = await followWithPerson(seed, "p1", 400);
+      expect(shadow.divergence).toBeUndefined();
+      expect(
+        shadow.plays.filter((play) => play.by === "person").length,
+      ).toBeGreaterThan(5);
+      if (sim.over) {
+        shadow.finish(sim.state.winner);
+        expect(shadow.ended).toMatchObject({ agrees: true });
+      }
+    },
+  );
+});
 
 describe("OPTCGSim recorded game", () => {
   it.each([

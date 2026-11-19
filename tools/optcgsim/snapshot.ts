@@ -124,11 +124,17 @@ export interface TableSnapshot {
    */
   buttons?: string[];
   /**
-   * The model plays both seats and the game is recorded (`shadow.ts`): every
-   * snapshot of it carries both hands, both decks and both Life piles, and
-   * `seat` is whichever seat this decision belongs to.
+   * The game is recorded (`shadow.ts`): every snapshot of it carries both
+   * hands, both decks and both Life piles, and `seat` is whichever seat this
+   * decision belongs to -- the model's, or `person`'s.
    */
   record?: boolean;
+  /**
+   * The seat a person plays, in a recorded game that has one. Their moves are
+   * clicks in the sim, so the engine's game follows them by finding the
+   * actions that turn its table into each snapshot's.
+   */
+  person?: PlayerId;
   /** Names one game of the sim, so its snapshots are told from the last game's. */
   game?: string;
   /** Who took the first turn. */

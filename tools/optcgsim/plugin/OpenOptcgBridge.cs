@@ -92,6 +92,10 @@ namespace OpenOptcg.OptcgSimBridge
         ConfigEntry<float> bothSeatsDelay;
         ConfigEntry<bool> stopWhenNotRecorded;
         ConfigEntry<float> autoSpeed;
+        ConfigEntry<bool> ourDecks;
+        // The catalog's decks, by the names they are saved under in the sim.
+        List<string> deckNames;
+        int gamesStarted;
         // AI vs AI games still to start by themselves this launch.
         int gamesLeft;
         bool autoStarted;
@@ -99,6 +103,15 @@ namespace OpenOptcg.OptcgSimBridge
         // The model plays both seats of this game, and the bridge records it.
         bool bothSeats;
         bool bothRequested;
+        // Every game the model plays is recorded by the bridge: its snapshots
+        // carry the cards nobody at the table sees, so the bridge's engine can
+        // play the same game, and with a person in one seat the table is also
+        // shown to the bridge at their decisions, so it can follow their moves.
+        bool Recorded => aiGame;
+        string lastObservedKey;
+        // The table being shown to the bridge, which is finished with before
+        // anything else is sent so the bridge sees the game in order.
+        Task<string> showing;
         // Names this game to the bridge, so its record is not the last game's.
         string gameId;
         // The sim has ended this game, and the bridge has been told.
@@ -155,6 +168,7 @@ namespace OpenOptcg.OptcgSimBridge
             stepDelay = Config.Bind("Bridge", "StepDelay", 0.7f, "Seconds between the model's clicks, so a person can follow them.");
             autoGames = Config.Bind("AiVsAi", "Games", 0, "Play this many AI vs AI games by themselves when the sim starts, one after another, with the decks the Solo V Self screen remembers. 0 leaves the menu alone.");
             bothSeatsDelay = Config.Bind("AiVsAi", "StepDelay", 0.15f, "Seconds between clicks in an AI vs AI game.");
+            ourDecks = Config.Bind("AiVsAi", "OurDecks", true, "Play the games started by Games with open-optcg's own deck lists, a different pair each game, instead of the decks the Solo V Self screen remembers. The lists are written beside your decks as \"open-optcg ...\".");
             autoSpeed = Config.Bind("AiVsAi", "Speed", 4f, "How many times faster the sim runs during the games started by Games.");
             stopWhenNotRecorded = Config.Bind("AiVsAi", "StopWhenNotRecorded", true, "In the games started by Games, give a game up once the bridge can no longer record it (its engine and the sim have ruled differently) and start the next.");
             gamesLeft = autoGames.Value;
@@ -194,6 +208,7 @@ namespace OpenOptcg.OptcgSimBridge
             if (active) modelSeat.Value = 1;
             bothSeats = active && bothRequested;
             gameId = Guid.NewGuid().ToString("N");
+            if (gls != null) Logger.LogInfo($"decks: \"{Get<string>("s_SelectedDeck")}\" against \"{Get<string>("s_EnemySelectedDeck")}\"");
             gameEnded = false;
             endedWinner = -1;
             nextGameAt = -1;
@@ -207,6 +222,8 @@ namespace OpenOptcg.OptcgSimBridge
             steps.Clear();
             request = null;
             lastAnsweredKey = null;
+            lastObservedKey = null;
+            showing = null;
             handedBack = false;
             status = active ? "waiting for its turn" : "off";
         }
@@ -414,15 +431,57 @@ namespace OpenOptcg.OptcgSimBridge
             }
             if (Time.unscaledTime < autoStartAt) return;
             autoStarted = true;
+            ChooseOurDecks();
             Logger.LogInfo("AI vs AI: starting the game");
             AccessTools.Method(typeof(HostJoinScript), "SoloSelf").Invoke(menu, null);
+        }
+
+        // Saves the bridge's deck lists as decks of the sim, once, and returns
+        // their names.
+        List<string> SaveOurDecks()
+        {
+            var names = new List<string>();
+            try
+            {
+                var call = Http.GetStringAsync(bridgeUrl.Value.TrimEnd('/') + "/decks");
+                if (!call.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
+                foreach (var deck in (JArray)JObject.Parse(call.Result)["decks"])
+                {
+                    var name = (string)deck["name"];
+                    var lines = ((JArray)deck["lines"]).Select(line => (string)line);
+                    System.IO.File.WriteAllLines(System.IO.Path.Combine(Application.persistentDataPath, name + ".txt"), lines);
+                    names.Add(name);
+                }
+                Logger.LogInfo($"AI vs AI: saved {names.Count} open-optcg decks to {Application.persistentDataPath}");
+            }
+            catch (Exception error)
+            {
+                Logger.LogWarning("could not fetch open-optcg's decks from the bridge: " + error.Message);
+            }
+            return names;
+        }
+
+        // A different pair of the catalog's decks for each game: every deck
+        // takes Player 1's seat in turn, against a deck that moves through
+        // the list at another pace.
+        void ChooseOurDecks()
+        {
+            if (!ourDecks.Value) return;
+            if (deckNames == null) deckNames = SaveOurDecks();
+            var logic = FindAnyObjectByType<GameplayLogicScript>();
+            if (deckNames.Count == 0 || logic == null) return;
+            var first = deckNames[gamesStarted % deckNames.Count];
+            var second = deckNames[(gamesStarted * 7 + 3) % deckNames.Count];
+            gamesStarted++;
+            AccessTools.Field(typeof(GameplayLogicScript), "s_SelectedDeck").SetValue(logic, first);
+            AccessTools.Field(typeof(GameplayLogicScript), "s_EnemySelectedDeck").SetValue(logic, second);
         }
 
         // ---- The end of an AI vs AI game ---------------------------------------
 
         void OnGameEnded(bool playerOneWon)
         {
-            if (!bothSeats || gameEnded) return;
+            if (!Recorded || gameEnded) return;
             // The replay log's winner when the sim wrote one; otherwise the
             // result as the sim told its own Player 1.
             var winner = endedWinner == 0 || endedWinner == 1 ? endedWinner : (playerOneWon ? 0 : 1);
@@ -519,11 +578,19 @@ namespace OpenOptcg.OptcgSimBridge
             Trace();
             // Nobody is at the table of a game `Games` started, so one that
             // has stopped is given up rather than left waiting.
-            if (bothSeats && gamesLeft > 0 && !gameEnded && Time.unscaledTime - quietSince > 30f)
-                GiveUpGame("the sim did not move for 30 seconds: " + lastTrace);
+            if (bothSeats && gamesLeft > 0 && !gameEnded)
+            {
+                if (handedBack) GiveUpGame("the sim is waiting on a decision the plugin could not make: " + lastTrace);
+                else if (Time.unscaledTime - quietSince > 30f) GiveUpGame("the sim did not move for 30 seconds: " + lastTrace);
+            }
             if (!active) return;
             if (Time.unscaledTime < nextAt) return;
 
+            if (showing != null)
+            {
+                if (!showing.IsCompleted) return;
+                showing = null;
+            }
             if (steps.Count > 0)
             {
                 // The sim drops a click made while its cards are in the air.
@@ -683,7 +750,7 @@ namespace OpenOptcg.OptcgSimBridge
             if (state == LifeTrigger && game.iPlayerAction == modelSeat.Value && gls.acaActive == null)
             {
                 // In a recorded game the engine is asked instead (`AskableStep`).
-                if (bothSeats && OfferedTrigger() != null) yield break;
+                if (Recorded && OfferedTrigger() != null) yield break;
                 yield return ButtonChoiceType.Trigger;
                 yield return ButtonChoiceType.TriggerOutOfOrder;
                 yield return ButtonChoiceType.NoTrigger;
@@ -744,15 +811,19 @@ namespace OpenOptcg.OptcgSimBridge
 
         // The step the model is asked about at this moment, or null when it is
         // not the model's decision or not one it plays.
-        string AskableStep()
+        string AskableStep() => StepFor(modelSeat.Value);
+
+        // The same for either seat: the decision the sim is waiting on `seat`
+        // for, if it is.
+        string StepFor(int seat)
         {
             var game = gls.gsv_CurrentGame;
             if (game == null || gls.bCardIsMoving) return null;
             // An effect belongs to the seat whose card it is, whichever
             // player's turn it is.
             var aca = gls.acaActive;
-            if (aca != null) return EffectOwner(aca) == modelSeat.Value ? "effect" : null;
-            if (game.iPlayerAction != modelSeat.Value) return null;
+            if (aca != null) return EffectOwner(aca) == seat ? "effect" : null;
+            if (game.iPlayerAction != seat) return null;
             if (gls.bOpponentResolving || gls.bForcingOpponentAction) return null;
             var pendingAbilities = Get<List<GameObject>>("lgo_ActionChoices");
             if (pendingAbilities != null && pendingAbilities.Count > 0) return null;
@@ -761,7 +832,7 @@ namespace OpenOptcg.OptcgSimBridge
             if ((int)gls.e_CurrentState == SelectingDeploySwap || PromptButtons().Any()) return "effect";
             switch ((int)gls.e_CurrentState)
             {
-                case LifeTrigger: return bothSeats && OfferedTrigger() != null ? "trigger" : null;
+                case LifeTrigger: return Recorded && OfferedTrigger() != null ? "trigger" : null;
                 case MulliganChoice: return "mulligan";
                 case MainAction: return "main";
                 case WaitOnBlocker: return "block";
@@ -818,6 +889,7 @@ namespace OpenOptcg.OptcgSimBridge
                     handedBack = false;
                     if (status != "off") status = "waiting for its turn";
                 }
+                ShowPersonsDecision();
                 return;
             }
             JObject snapshot;
@@ -862,7 +934,7 @@ namespace OpenOptcg.OptcgSimBridge
                 // game the engine has made it too. Without a record, the
                 // rebuilt position cannot know the move is spent, so it is
                 // not offered again either way.
-                if (planFailed || !bothSeats)
+                if (planFailed || !Recorded)
                 {
                     Logger.LogWarning("the sim did not take " + lastMove + "; asking for another move");
                     snapshot["refused"] = true;
@@ -880,6 +952,33 @@ namespace OpenOptcg.OptcgSimBridge
             status = "thinking";
             var body = new StringContent(sent, Encoding.UTF8, "application/json");
             request = Http.PostAsync(bridgeUrl.Value.TrimEnd('/') + "/decide", body)
+                .ContinueWith(t => t.Result.Content.ReadAsStringAsync().Result);
+        }
+
+        // With a person in the other seat, the table is shown to the bridge
+        // each time it changes at a decision of theirs. No move comes back:
+        // it is how the bridge's engine keeps up with what they clicked.
+        void ShowPersonsDecision()
+        {
+            if (!Recorded || bothSeats || gameEnded) return;
+            var person = 1 - modelSeat.Value;
+            var step = StepFor(person);
+            if (step == null || step == "effect" || step == "trigger") return;
+            JObject snapshot;
+            try
+            {
+                snapshot = Snapshot(step, person);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            if (snapshot == null) return;
+            var key = snapshot.ToString(Formatting.None);
+            if (key == lastObservedKey) return;
+            lastObservedKey = key;
+            var body = new StringContent(key, Encoding.UTF8, "application/json");
+            showing = Http.PostAsync(bridgeUrl.Value.TrimEnd('/') + "/observe", body)
                 .ContinueWith(t => t.Result.Content.ReadAsStringAsync().Result);
         }
 
@@ -927,13 +1026,15 @@ namespace OpenOptcg.OptcgSimBridge
 
         // The table as the bridge is sent it, or null when the sim is between
         // two states and should be read again.
-        JObject Snapshot(string step)
+        JObject Snapshot(string step) => Snapshot(step, modelSeat.Value);
+
+        JObject Snapshot(string step, int decider)
         {
             cardsById.Clear();
             var game = gls.gsv_CurrentGame;
             var players = new JObject();
             for (var seat = 0; seat < 2; seat++)
-                players[seat == 0 ? "p1" : "p2"] = Side(gls.Lps_Players[seat], bothSeats || seat == modelSeat.Value);
+                players[seat == 0 ? "p1" : "p2"] = Side(gls.Lps_Players[seat], Recorded || seat == modelSeat.Value);
 
             var stepJson = new JObject { ["kind"] = step };
             if (step == "block" || step == "counter")
@@ -952,7 +1053,7 @@ namespace OpenOptcg.OptcgSimBridge
                 // and none when it is a question asked with buttons.
                 stepJson["source"] = "";
                 stepJson["candidates"] = (int)gls.e_CurrentState == SelectingDeploySwap
-                    ? new JArray(gls.Lps_Players[modelSeat.Value].Lgo_MyDeploy.Where(c => c != null).Select(Id))
+                    ? new JArray(gls.Lps_Players[decider].Lgo_MyDeploy.Where(c => c != null).Select(Id))
                     : new JArray();
                 stepJson["revealed"] = new JArray();
                 stepJson["remaining"] = 1;
@@ -1011,16 +1112,17 @@ namespace OpenOptcg.OptcgSimBridge
                 ["version"] = 1,
                 ["turn"] = Math.Max(1, game.iPlayerTurnNumber),
                 ["turnPlayer"] = game.iPlayerTurn == 0 ? "p1" : "p2",
-                ["seat"] = modelSeat.Value == 0 ? "p1" : "p2",
+                ["seat"] = decider == 0 ? "p1" : "p2",
                 ["step"] = stepJson,
                 ["players"] = players,
                 ["buttons"] = new JArray(VisibleChoiceButtons().Select(b => b.GetComponent<ChoiceButtonScript>()?.myType.ToString() ?? "")),
             };
-            if (bothSeats)
+            if (Recorded)
             {
                 snapshot["record"] = true;
                 snapshot["game"] = gameId;
                 snapshot["first"] = game.iPlayerGoesFirst == 0 ? "p1" : "p2";
+                if (!bothSeats) snapshot["person"] = modelSeat.Value == 0 ? "p2" : "p1";
             }
             return snapshot;
         }
@@ -1070,7 +1172,7 @@ namespace OpenOptcg.OptcgSimBridge
             // A recorded game is dealt again in the engine, which needs the
             // cards nobody sees. The sim keeps the top of a pile at the end of
             // its list; the snapshot names piles top first.
-            if (bothSeats)
+            if (Recorded)
             {
                 side["deck"] = new JArray(player.Lgo_MyDeck.Where(c => c != null).Reverse().Select(Card));
                 side["lifeCards"] = new JArray(player.Lgo_MyLifeDeck.Where(c => c != null).Reverse().Select(Card));
@@ -1209,17 +1311,29 @@ namespace OpenOptcg.OptcgSimBridge
                     {
                         // The button the bridge named answers the prompt.
                         if (named != null) return Press(named.Value);
+                        // A card picked at a prompt with no effect object (the
+                        // Character a sixth replaces) is the whole answer; a
+                        // confirm button showing by now belongs to whatever
+                        // effect the play went on to start.
+                        if (aca == null && chose) return true;
                         // The sim moves on by itself once the last target it
                         // needs is chosen; otherwise its confirm button closes
                         // the selection with the targets so far, or with none.
                         if (aca != null && (gls.acaActive != aca || aca.iActionStep != stepAt)) return true;
+                        // "Draw none" closes a look at the deck with nothing
+                        // taken, so it never follows a card that was.
                         foreach (var type in ConfirmButtons)
-                            if (Press(type)) return true;
+                            if (!(chose && type == ButtonChoiceType.DrawNone) && Press(type)) return true;
                         // A question the bridge had no answer for is given the
                         // sim's first one, so the game goes on.
                         if (!chose)
+                        {
                             foreach (var type in PromptButtons().ToList())
                                 if (Press(type)) return true;
+                            // With nothing else to press, an optional effect
+                            // is passed on.
+                            if (aca != null && gls.acaActive == aca) Press(ButtonChoiceType.Cancel);
+                        }
                         return true;
                     });
                     return true;
