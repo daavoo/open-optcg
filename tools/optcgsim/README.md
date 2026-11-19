@@ -35,25 +35,28 @@ the engine's copy follows:
 - **A move the sim refuses** is taken back in the engine's game and the
   decision is made again without it.
 
-When the two rules engines rule differently the tables stop matching. That is
-the end of the record, and the model plays the rest of the game from the
-position rebuilt at each decision (`position.ts`), which cannot see what a
-snapshot cannot say: a once-per-turn already spent, a keyword gained.
+When the two rules engines rule differently the tables stop matching. The
+difference is noted, the engine's game is set to the sim's table
+(`position.ts`) and followed again from there, so the game goes on and one
+game can find several differences. The record -- the game this engine loads --
+ends at the first: it cannot hold a ruling the engine would not make. What a
+snapshot cannot say (a once-per-turn already spent, a keyword gained) is lost
+at each such point and kept from then on.
 
 ## Recorded games
 
 Every game the model plays is written under `analysis/optcgsim/` (ignored by
 git; `--record <dir>` moves it), rewritten at each decision:
 
-| file                 | what it is                                                                                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `<game>.jsonl`       | the game in this engine's own format: loads in the app and in every `pnpm trace:*` tool, and replays from its recorded shuffles                                    |
-| `<game>.plays.jsonl` | play by play: each decision's engine actions beside the move the sim was given, with the powers the two disagree on, then where the games parted or how both ended |
-| `<game>.sim.jsonl`   | every snapshot the sim sent and the move it got back                                                                                                               |
-| `index.jsonl`        | one line per game: decks, how far the record got, the difference that ended it                                                                                     |
+| file                 | what it is                                                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<game>.jsonl`       | the game in this engine's own format: loads in the app and in every `pnpm trace:*` tool, and replays from its recorded shuffles                                      |
+| `<game>.plays.jsonl` | play by play: each decision's engine actions beside the move the sim was given, with the powers the two disagree on, each place the games parted, and how both ended |
+| `<game>.sim.jsonl`   | every snapshot the sim sent and the move it got back                                                                                                                 |
+| `index.jsonl`        | one line per game: decks, how far the record got, the difference that ended it                                                                                       |
 
-`pnpm optcgsim:report [dir]` lists the games and groups the ones that ended
-early by the last card played before they did.
+`pnpm optcgsim:report [dir]` lists the games and groups the places they
+parted by the last card played before each.
 
 ### Collecting games unattended
 
@@ -65,9 +68,9 @@ In `BepInEx/config/dev.open-optcg.optcgsim-bridge.cfg`, under `[AiVsAi]`:
   each game. The lists are saved beside your own decks as `open-optcg ...`,
   so you can also pick them for a game of your own.
 - `Speed = 4` runs the sim that many times faster during those games.
-- `StopWhenNotRecorded = true` gives a game up once its record has ended and
-  starts the next. A game the sim stops moving in is given up after 30
-  seconds either way.
+- `StopWhenNotRecorded = true` gives a game up at the first difference,
+  where its record ends, instead of playing it out to find the rest. A game
+  the sim stops moving in is given up either way.
 
 `pnpm optcgsim:bridge --blind p1` keeps one seat's moves from the record, as
 a person's are, in games the model still plays both seats of: it is how

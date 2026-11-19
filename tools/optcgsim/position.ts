@@ -359,8 +359,13 @@ function placeSide(
   target.hand = Array.isArray(side.hand)
     ? side.hand.map(named)
     : pool.hidden(side.hand);
-  target.life = pool.hidden(side.life);
-  target.deck = pool.rest().slice(0, side.deckCount);
+  // A recorded game's snapshot names the hidden piles too, top first.
+  target.life = side.lifeCards
+    ? side.lifeCards.map(named)
+    : pool.hidden(side.life);
+  target.deck = side.deck
+    ? side.deck.map(named)
+    : pool.rest().slice(0, side.deckCount);
   target.activeDon = takeDon(side.don.active);
   target.restedDon = takeDon(side.don.rested);
   target.donDeck = don;

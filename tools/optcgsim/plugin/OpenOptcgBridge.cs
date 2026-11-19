@@ -170,7 +170,7 @@ namespace OpenOptcg.OptcgSimBridge
             bothSeatsDelay = Config.Bind("AiVsAi", "StepDelay", 0.15f, "Seconds between clicks in an AI vs AI game.");
             ourDecks = Config.Bind("AiVsAi", "OurDecks", true, "Play the games started by Games with open-optcg's own deck lists, a different pair each game, instead of the decks the Solo V Self screen remembers. The lists are written beside your decks as \"open-optcg ...\".");
             autoSpeed = Config.Bind("AiVsAi", "Speed", 4f, "How many times faster the sim runs during the games started by Games.");
-            stopWhenNotRecorded = Config.Bind("AiVsAi", "StopWhenNotRecorded", true, "In the games started by Games, give a game up once the bridge can no longer record it (its engine and the sim have ruled differently) and start the next.");
+            stopWhenNotRecorded = Config.Bind("AiVsAi", "StopWhenNotRecorded", false, "In the games started by Games, give a game up at the first ruling the bridge's engine and the sim make differently, where its record ends, instead of playing it out to find the rest.");
             gamesLeft = autoGames.Value;
             instance = this;
             try
@@ -934,7 +934,11 @@ namespace OpenOptcg.OptcgSimBridge
                 // game the engine has made it too. Without a record, the
                 // rebuilt position cannot know the move is spent, so it is
                 // not offered again either way.
-                if (planFailed || !Recorded)
+                // The bridge is told how many answers in a row changed
+                // nothing, so it can try another.
+                snapshot["repeat"] = sameTable;
+                sent = snapshot.ToString(Formatting.None);
+                if (planFailed || !Recorded || sameTable >= 2)
                 {
                     Logger.LogWarning("the sim did not take " + lastMove + "; asking for another move");
                     snapshot["refused"] = true;
@@ -1137,6 +1141,11 @@ namespace OpenOptcg.OptcgSimBridge
                         yield return card;
             foreach (var card in TopDeck(gls))
                 yield return card;
+            // DON!! an effect is paid with or moves: rested first, since that
+            // is the DON!! a payment is taken from when there is a choice.
+            foreach (var player in gls.Lps_Players)
+                foreach (var don in player.Lgo_MyDonCostArea.Where(d => d != null).OrderBy(d => Live(d).bTapped ? 0 : 1))
+                    yield return don;
         }
 
         JObject Side(PlayerState player, bool mine)

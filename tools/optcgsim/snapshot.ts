@@ -118,6 +118,8 @@ export interface TableSnapshot {
    * it. The same decision is asked again, for a different answer.
    */
   refused?: boolean;
+  /** How many answers in a row have left the table as it was. */
+  repeat?: number;
   /**
    * The choice buttons the sim is showing, by its own names for them
    * (`UseOnPlay`, `MoveToTop`, ...): how a prompt that takes no card is asked.

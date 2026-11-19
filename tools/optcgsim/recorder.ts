@@ -5,11 +5,11 @@
  *   <name>.jsonl        the game in this engine's format -- loads in the app
  *                       and in every `pnpm trace:*` tool
  *   <name>.plays.jsonl  play by play: each decision's engine actions beside
- *                       the move the sim was given, then where the two games
- *                       parted, or how both ended
+ *                       the move the sim was given, each place the two games
+ *                       parted, and how both ended
  *   <name>.sim.jsonl    every snapshot the sim sent and the move it got back
- *   index.jsonl         one line per game: its decks, how far the record got,
- *                       and the difference that ended it
+ *   index.jsonl         one line per finished game: its decks, how far the
+ *                       record got, and every place the two games parted
  *
  * The files are rewritten at every decision, so a sim that is closed
  * mid-game leaves the record up to its last move.
@@ -72,16 +72,16 @@ export class Recorder {
       if (shadow.unfollowed) {
         recording.sim.push(JSON.stringify({ unfollowed: shadow.unfollowed }));
       }
-    } else if (!shadow.divergence) {
+    } else {
       try {
         decision = await shadow.decide(snapshot);
       } catch (error) {
         failure = error instanceof Error ? error.message : String(error);
       }
     }
-    // Past the point the games parted, or at a decision the engine's game
-    // could not take, the sim's game still needs its move: the position is
-    // rebuilt from the snapshot, as in a game that is not recorded.
+    // At a decision the engine's game could not be made to take, the sim's
+    // game still needs its move: the position is rebuilt from the snapshot,
+    // as in a game that is not recorded.
     decision ??= await this.decider.decide(snapshot);
     recording.sim.push(JSON.stringify({ snapshot, move: decision.move }));
     this.#write(recording, failure);
@@ -130,7 +130,7 @@ export class Recorder {
     if (!recording) return undefined;
     if (abandoned) recording.shadow.abandon(abandoned);
     else recording.shadow.finish(winner);
-    this.#write(recording, undefined);
+    this.#write(recording, undefined, true);
     this.#games.delete(game);
     const { shadow } = recording;
     return {
@@ -163,7 +163,12 @@ export class Recorder {
     return recording;
   }
 
-  #write(recording: Recording, failure: string | undefined): void {
+  #write(
+    recording: Recording,
+    failure: string | undefined,
+    /** The game is over, so its line of the index can be written. */
+    final = false,
+  ): void {
     const { shadow, name } = recording;
     mkdirSync(this.directory, { recursive: true });
     const path = (suffix: string): string =>
@@ -173,24 +178,30 @@ export class Recorder {
     } catch (error) {
       failure ??= `the record does not export: ${error instanceof Error ? error.message : String(error)}`;
     }
-    const outcome = shadow.divergence
-      ? { kind: "divergence", ...shadow.divergence }
+    const outcome = shadow.ended
+      ? { kind: "end", ...shadow.ended }
       : failure
-        ? { kind: "divergence", at: shadow.actionCount, why: failure }
-        : shadow.ended
-          ? { kind: "end", ...shadow.ended }
-          : undefined;
-    writeFileSync(
-      path(".plays.jsonl"),
-      [
-        ...shadow.plays.map((play) =>
-          JSON.stringify({ kind: "play", ...play }),
-        ),
-        ...(outcome ? [JSON.stringify(outcome)] : []),
-      ].join("\n") + "\n",
-    );
+        ? { kind: "failure", why: failure }
+        : undefined;
+    // Each divergence where it happened, among the plays.
+    const story: string[] = [];
+    shadow.plays.forEach((play, index) => {
+      for (const parted of shadow.divergences) {
+        if (parted.afterPlay === index) {
+          story.push(JSON.stringify({ kind: "divergence", ...parted }));
+        }
+      }
+      story.push(JSON.stringify({ kind: "play", ...play }));
+    });
+    for (const parted of shadow.divergences) {
+      if (parted.afterPlay >= shadow.plays.length) {
+        story.push(JSON.stringify({ kind: "divergence", ...parted }));
+      }
+    }
+    if (outcome) story.push(JSON.stringify(outcome));
+    writeFileSync(path(".plays.jsonl"), story.join("\n") + "\n");
     writeFileSync(path(".sim.jsonl"), recording.sim.join("\n") + "\n");
-    if (outcome && !recording.indexed) {
+    if (final && !recording.indexed) {
       recording.indexed = true;
       const match = shadow.match();
       appendFileSync(
@@ -199,9 +210,12 @@ export class Recorder {
           game: name,
           p1Deck: match.p1Deck,
           p2Deck: match.p2Deck,
+          // How far the record -- the game this engine loads -- got.
           actions: shadow.actionCount,
           decisions: shadow.plays.length,
-          ...outcome,
+          complete: shadow.divergences.length === 0 && !!shadow.ended?.agrees,
+          ended: shadow.ended,
+          divergences: shadow.divergences,
         }) + "\n",
       );
     }

@@ -48,7 +48,7 @@ import {
 } from "../../packages/web/src/controller.js";
 import { buildDiagnosticsJsonl } from "../../packages/web/src/diagnostics.js";
 import { simMove } from "./decide.js";
-import { countCards, normalized } from "./position.js";
+import { countCards, importPosition, normalized } from "./position.js";
 import type { SimMove, SimSide, SimStep, TableSnapshot } from "./snapshot.js";
 
 const SEATS = ["p1", "p2"] as const;
@@ -81,6 +81,8 @@ export interface Play {
 
 /** Where the engine's game stopped being the sim's. */
 export interface Divergence {
+  /** How many plays the game held when it happened. */
+  afterPlay: number;
   at: number;
   turn: number;
   seat: PlayerId;
@@ -476,7 +478,17 @@ export class ShadowGame {
         differences: readonly string[];
       }
     | undefined;
-  divergence: Divergence | undefined;
+  /**
+   * Every place the engine's game has parted from the sim's. The first ends
+   * the record: a game this engine loads cannot contain a ruling it would
+   * not make. The game itself goes on -- the engine's copy is set to the
+   * sim's table (`#reanchor`) and followed from there -- so one game can
+   * find several.
+   */
+  readonly divergences: Divergence[] = [];
+  /** The record as it stood at the first divergence, which is where it ends. */
+  #recorded:
+    { actions: string[]; orders: Record<PlayerId, string[][]> } | undefined;
   /** How the sim's game ended, once it has. */
   ended:
     { winner: PlayerId | null; agrees: boolean; detail: string } | undefined;
@@ -519,13 +531,49 @@ export class ShadowGame {
     this.#state = this.#replay(this.#orders, []);
   }
 
+  /** The first place the games parted, where the record ends. */
+  get divergence(): Divergence | undefined {
+    return this.divergences[0];
+  }
+
+  /** Engine actions in the record. */
   get actionCount(): number {
-    return this.#actions.length;
+    return (this.#recorded?.actions ?? this.#actions).length;
   }
 
   /** The record so far, as a match this engine loads. */
   match(): MatchConfig & { recordedShuffles: Record<PlayerId, string[][]> } {
-    return { ...this.#config.match, recordedShuffles: this.#orders };
+    return {
+      ...this.#config.match,
+      recordedShuffles: this.#recorded?.orders ?? this.#orders,
+    };
+  }
+
+  #part(divergence: Omit<Divergence, "afterPlay" | "at">): void {
+    this.#recorded ??= { actions: [...this.#actions], orders: this.#orders };
+    this.divergences.push({
+      afterPlay: this.plays.length,
+      at: this.#actions.length,
+      ...divergence,
+    });
+  }
+
+  /**
+   * Sets the engine's game to the sim's table, as `position.ts` rebuilds it:
+   * what lets a game go on past a ruling the two engines make differently.
+   * What a snapshot cannot say -- a once-per-turn already spent, a keyword
+   * gained -- is lost at that point and kept from then on.
+   */
+  #reanchor(simSnapshot: TableSnapshot): boolean {
+    try {
+      this.#state = importPosition(simSnapshot).state;
+    } catch {
+      return false;
+    }
+    this.#before = undefined;
+    this.#leftToTheSim = false;
+    this.#namedTargets = [];
+    return true;
   }
 
   /** The record as the diagnostics JSONL the app and the trace tools read. */
@@ -533,7 +581,7 @@ export class ShadowGame {
     const controller = BrowserGameController.load({
       version: 1,
       config: this.match(),
-      actions: this.#actions,
+      actions: this.#recorded?.actions ?? this.#actions,
       rules: rulesStamp(),
     });
     return buildDiagnosticsJsonl({
@@ -568,11 +616,24 @@ export class ShadowGame {
   }
 
   /**
-   * One decision of the sim's game. Returns undefined once the engine's game
-   * has parted from the sim's; `divergence` says where and why.
+   * One decision of the sim's game. Where the engine's game turns out not to
+   * be the sim's, that is noted (`divergences`), the engine's game is set to
+   * the sim's table, and the decision is made from there. Undefined only
+   * when even that position cannot be decided from.
    */
   async decide(simSnapshot: TableSnapshot): Promise<ShadowResult | undefined> {
-    if (this.divergence) return undefined;
+    const parted = this.divergences.length;
+    const decided = await this.#decide(simSnapshot);
+    if (decided || this.divergences.length === parted) return decided;
+    if (!this.#reanchor(simSnapshot)) return undefined;
+    const again = this.divergences.length;
+    const second = await this.#decide(simSnapshot);
+    // The same decision parting twice says nothing new the second time.
+    this.divergences.length = again;
+    return second;
+  }
+
+  async #decide(simSnapshot: TableSnapshot): Promise<ShadowResult | undefined> {
     const snapshot = normalized(simSnapshot);
     const step = snapshot.step;
     // A move the sim did not take is taken back here too, and the decision
@@ -595,14 +656,13 @@ export class ShadowGame {
       why: string,
       found: readonly string[] = [],
     ): ShadowResult | undefined => {
-      this.divergence = {
-        at: this.#actions.length,
+      this.#part({
         turn: snapshot.turn,
         seat: snapshot.seat,
         step: step.kind,
         why,
         differences: [...found],
-      };
+      });
       return undefined;
     };
     const play = (
@@ -638,14 +698,22 @@ export class ShadowGame {
       if (this.#leftToTheSim) this.#catchUpInsideEffect(snapshot, step);
       const waiting = awaits(this.#state);
       if (waiting.kind !== "effect" || waiting.seat !== snapshot.seat) {
-        // A prompt the engine does not stop for: the target its own action
-        // already named, or a choice of one.
-        const named = this.#namedTargets.filter((id) =>
-          step.candidates.includes(id),
-        );
-        const only = step.candidates.length === 1 ? step.candidates : [];
-        const cards = named.length > 0 ? named.slice(0, 1) : only;
-        if (cards.length === 0 && step.candidates.length > 0) {
+        // A prompt the last answer did not move is given the next one: each
+        // card it offers in turn, then its Cancel.
+        const repeat = snapshot.repeat ?? 0;
+        if (repeat > 0) {
+          const offered = step.candidates;
+          const move: SimMove =
+            repeat <= offered.length
+              ? { kind: "choose", cards: [offered[repeat - 1]!] }
+              : { kind: "choose", cards: [], button: "Cancel" };
+          return play(
+            { move, summary: "the sim's own prompt, again", offered: [] },
+            [],
+          );
+        }
+        const cards = this.#ownPrompt(snapshot, step);
+        if (!cards) {
           return part(
             `the sim asks ${snapshot.seat} to choose among ${step.candidates.length} cards for an effect, and the engine is waiting on ${waiting.seat}'s ${waiting.kind}`,
           );
@@ -708,15 +776,78 @@ export class ShadowGame {
     const simId = (instanceId: string | undefined): string | undefined =>
       instanceId === undefined ? undefined : ids.get(instanceId);
 
+    /**
+     * The sim's card for one an effect option names, among those the sim
+     * offers. Two copies of a card are one card to both games, and a card the
+     * effect is holding is in no zone to be paired from, so a card the
+     * pairing did not land on is named by number.
+     */
+    const simCard = (card: {
+      instanceId: string;
+      cardNumber: string;
+    }): string | undefined => {
+      if (step.kind !== "effect") return undefined;
+      const paired = simId(card.instanceId);
+      return paired !== undefined && step.candidates.includes(paired)
+        ? paired
+        : step.candidates.find(
+            (candidate) => numberOfSimCard.get(candidate) === card.cardNumber,
+          );
+    };
+
     // A table decision is one engine action; a choice inside an effect can be
     // several, when the engine asks first whether and then which.
     for (let depth = 0; depth < 6; depth++) {
+      // The engine's effect can finish on an answer -- "activate", with
+      // nothing further to choose -- while the sim's prompt is still open
+      // for something the engine settled by itself.
+      if (
+        depth > 0 &&
+        step.kind === "effect" &&
+        (awaits(this.#state).kind !== "effect" ||
+          awaits(this.#state).seat !== snapshot.seat)
+      ) {
+        return play(
+          {
+            move: {
+              kind: "choose",
+              cards: this.#ownPrompt(snapshot, step) ?? [],
+            },
+            summary: applied[applied.length - 1] ?? "",
+            offered: [],
+          },
+          applied,
+          notes,
+        );
+      }
       const observation = observe(this.#state, snapshot.seat);
-      const offered = observation.legalActions.filter(
+      const performableNow = observation.legalActions.filter(
         (action) =>
           performable(action, ids, this.#state) &&
           !this.#refused.has(action.actionId),
       );
+      // The two engines can disagree on which cards an effect may take. The
+      // model is offered the cards both allow, so the game goes on, and the
+      // ones only this engine allows are noted beside the play.
+      const onlyHere =
+        step.kind === "effect" && step.candidates.length > 0
+          ? performableNow.filter(
+              (action) =>
+                action.type === "resolve-effect" &&
+                action.option.kind === "card" &&
+                simCard(action.option.card) === undefined,
+            )
+          : [];
+      const offered =
+        onlyHere.length > 0 && onlyHere.length < performableNow.length
+          ? performableNow.filter((action) => !onlyHere.includes(action))
+          : performableNow;
+      if (offered !== performableNow) {
+        notes = [
+          ...notes,
+          `the sim does not offer ${onlyHere.map((action) => action.summary).join(", ")}`,
+        ];
+      }
       if (offered.length === 0) {
         return part(
           `the engine offers ${snapshot.seat} nothing the sim can be told to do`,
@@ -772,17 +903,7 @@ export class ShadowGame {
       const option = action.option;
       switch (option.kind) {
         case "card": {
-          // Two copies of a card are one card to both games, and a card the
-          // effect is holding is in no zone to be paired from, so a card the
-          // pairing did not land on is named by number among those offered.
-          const paired = simId(option.card.instanceId);
-          const id =
-            paired !== undefined && step.candidates.includes(paired)
-              ? paired
-              : step.candidates.find(
-                  (candidate) =>
-                    numberOfSimCard.get(candidate) === option.card.cardNumber,
-                );
+          const id = simCard(option.card);
           if (!id) {
             return part(
               `the engine chose ${option.card.cardNumber} for ${action.sourceCardNumber}, which the sim does not offer`,
@@ -794,7 +915,14 @@ export class ShadowGame {
         }
         case "skip": {
           take(action);
-          const button = shown("PlayWithNoEffect", "DrawNone", "NoMill");
+          // "Cancel" is how the sim passes on an optional effect it has
+          // already opened.
+          const button = shown(
+            "PlayWithNoEffect",
+            "DrawNone",
+            "NoMill",
+            "Cancel",
+          );
           return result({
             kind: "choose",
             cards: [],
@@ -839,6 +967,47 @@ export class ShadowGame {
       }
     }
     return part("one prompt of the sim took more than six engine choices");
+  }
+
+  /**
+   * The answer to a prompt of the sim's the engine does not stop for, or
+   * undefined when it is a choice among cards the engine has no say in:
+   * closing a look at the deck, the target the engine's own action named,
+   * the card being attacked for a Counter, DON!! to pay with, the only card
+   * offered, or nothing where the sim lets a selection be confirmed empty.
+   */
+  #ownPrompt(
+    snapshot: TableSnapshot,
+    step: Extract<SimStep, { kind: "effect" }>,
+  ): string[] | undefined {
+    const shows = (name: string): boolean =>
+      snapshot.buttons?.includes(name) ?? false;
+    if (shows("FinalizeTopDeck")) return [];
+    const named = this.#namedTargets.find((id) => step.candidates.includes(id));
+    if (named) return [named];
+    const attack = this.#state.activeAttack;
+    if (attack) {
+      const target = pairCards(this.#state, snapshot).get(
+        attack.targetInstanceId,
+      );
+      if (target && step.candidates.includes(target)) return [target];
+    }
+    // DON!! cards are not cards of either deck, so the snapshot does not
+    // name them; the sim offers them rested first.
+    const numberOfSimCard = simCardNumbers(snapshot);
+    if (
+      step.candidates.length > 0 &&
+      step.candidates.every((id) => !numberOfSimCard.has(id))
+    ) {
+      return step.candidates.slice(0, Math.max(1, step.remaining));
+    }
+    if (step.candidates.length <= 1) return [...step.candidates];
+    if (
+      (snapshot.buttons ?? []).some((name) => /^Select|^Confirm/.test(name))
+    ) {
+      return [];
+    }
+    return undefined;
   }
 
   /**
@@ -1138,7 +1307,10 @@ export class ShadowGame {
     const orders = { p1: [...this.#orders.p1], p2: [...this.#orders.p2] };
     for (const player of SEATS) {
       if (found.hidden[player].length === 0) continue;
-      const dealt = node.state.recordedShuffles!.dealt[player];
+      // A game set to the sim's table mid-way has no shuffles of its own to
+      // redeal.
+      const dealt = node.state.recordedShuffles?.dealt[player];
+      if (!dealt) return undefined;
       if (dealt.length <= orders[player].length) return undefined;
       const engine = node.state.players[player];
       const sim = snapshot.players[player];
@@ -1215,7 +1387,6 @@ export class ShadowGame {
    * make from a game that is not the sim's ends the record (`decide`).
    */
   follow(simSnapshot: TableSnapshot): boolean {
-    if (this.divergence) return false;
     const snapshot = normalized(simSnapshot);
     if (snapshot.step.kind === "effect" || snapshot.step.kind === "trigger") {
       return false;
@@ -1238,14 +1409,13 @@ export class ShadowGame {
    * ends the record where it stands.
    */
   abandon(why: string, snapshot?: TableSnapshot): void {
-    this.divergence ??= {
-      at: this.#actions.length,
+    this.#part({
       turn: snapshot?.turn ?? this.#state.turn,
       seat: snapshot?.seat ?? this.#state.activePlayer,
       step: snapshot?.step.kind ?? "main",
       why,
       differences: [],
-    };
+    });
   }
 
   /** The sim's game is over; `winner` is who it says won. */

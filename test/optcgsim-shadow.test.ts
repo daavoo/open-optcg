@@ -489,19 +489,27 @@ describe("OPTCGSim recorded game", () => {
     }
   });
 
-  it("stops, and says where, when the sim's table is not the engine's", async () => {
+  it("notes where the sim's table is not the engine's, ends the record there, and plays on", async () => {
     const { sim, shadow } = await follow("a", 30);
+    const recorded = shadow.actionCount;
     const snapshot = sim.snapshot();
     // The sim rules a card into the trash that the engine left in hand.
     const side = snapshot.players[snapshot.seat];
     const moved = (side.hand as { id: string; cardNumber: string }[]).pop()!;
     side.trash.push(moved);
-    expect(await shadow.decide(snapshot)).toBeUndefined();
+    // The decision is still made, from the sim's table.
+    expect(await shadow.decide(snapshot)).toBeDefined();
+    expect(shadow.divergences).toHaveLength(1);
     expect(shadow.divergence).toMatchObject({
       why: "the engine's table is not the sim's",
       seat: snapshot.seat,
     });
     expect(shadow.divergence!.differences.join("\n")).toContain("trash");
+    // The record is the game up to there, and still loads.
+    expect(shadow.actionCount).toBe(recorded);
+    expect(
+      parseExportedMatch(shadow.trace("2026-01-01T00:00:00.000Z")).actions,
+    ).toHaveLength(recorded);
   });
 
   it("reads no difference between a game and its own snapshot", () => {
