@@ -840,6 +840,17 @@ const sealedDeps: SealedContext = {
   bindGetCards: () => {
     assetGateScreen.bindControls(assetGateDeps);
   },
+  // The pre-release page lands on this lobby and nowhere else, so the match a
+  // reload interrupted is offered back here; the ordinary app's 1v1 landing
+  // page is where the same offer is made (see homeDeps). Only the offer, not
+  // the landing's asset-pack setting: `bindGetCards` already wires the panel
+  // this lobby prints.
+  resumeOffer: {
+    render: () => homeScreen.renderResumeOffer(homeDeps),
+    bind: () => {
+      homeScreen.bindResumeOffer(homeDeps);
+    },
+  },
   playTables: playHeadlessTables,
 };
 

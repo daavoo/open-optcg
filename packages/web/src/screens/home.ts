@@ -180,6 +180,17 @@ export function renderLanding(ctx: HomeContext): {
   };
 }
 
+/**
+ * The resume offer on its own, for a screen that prints only that piece.
+ *
+ * The pre-release lobby is one: it already carries the Get-cards panel that
+ * binds the asset controls, so taking the whole landing there would put the
+ * file inputs under two `change` listeners.
+ */
+export function renderResumeOffer(ctx: HomeContext): string {
+  return renderResume(ctx);
+}
+
 export function render(ctx: HomeContext): string {
   return `
     <main class="setup-shell home-shell">
@@ -234,6 +245,18 @@ function paintCards(ctx: HomeContext): void {
 /** Wire the two landing pieces, wherever a screen printed them. */
 export function bindLanding(ctx: HomeContext): void {
   assetGate.bindControls(ctx.assetGate);
+  bindResumeOffer(ctx);
+}
+
+/**
+ * Wire the resume offer where a screen printed only it.
+ *
+ * Split from {@link bindLanding} because the two pieces do not always travel
+ * together: the pre-release lobby prints the offer but binds its own asset
+ * controls (`bindGetCards`), and binding the landing there would wire the same
+ * file inputs a second time.
+ */
+export function bindResumeOffer(ctx: HomeContext): void {
   document
     .querySelector<HTMLElement>("[data-home-resume]")
     ?.addEventListener("click", () => {
