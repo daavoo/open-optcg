@@ -86,6 +86,35 @@ describe("the pre-release page's lobby", () => {
     expect(html).not.toContain('id="sealed-import"');
     expect(html).not.toContain("sealed-format");
   });
+
+  it("prints the match a reload interrupted, since the lobby is the only screen it has", () => {
+    const html = renderLobby(
+      emptyState(),
+      stubContext({
+        lockedExpansion: "OP18",
+        resumeOffer: {
+          render: () =>
+            '<div class="app-dialog-backdrop" id="resume-dialog"></div>',
+          bind: () => {},
+        },
+      }),
+    );
+    expect(html).toContain('id="resume-dialog"');
+  });
+
+  it("leaves the ordinary sealed lobby to the 1v1 lobby's own offer", () => {
+    const html = renderLobby(
+      emptyState(),
+      stubContext({
+        resumeOffer: {
+          render: () =>
+            '<div class="app-dialog-backdrop" id="resume-dialog"></div>',
+          bind: () => {},
+        },
+      }),
+    );
+    expect(html).not.toContain('id="resume-dialog"');
+  });
 });
 
 describe("the pre-release lobby before the cards are in", () => {

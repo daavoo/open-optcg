@@ -71,8 +71,12 @@ test — not the whole engine.
   email to match an identity on the key. Nothing needs overriding; check with
   `git log --format='%h %G? %ae %s'` and expect `G` beside the configured
   address.
-- **`pnpm verify` before you call anything done** — format, lint, typecheck,
-  tests. Web-facing changes also need `pnpm verify:browser`.
+- **CI runs the full gate.** `pnpm verify` — format, lint, typecheck, tests —
+  and `pnpm verify:browser` for web-facing changes are the pipeline's job
+  (`.github/workflows/ci.yml`), so there is no need to run the whole suite
+  locally before calling a change done: push the branch and read the run. Keep
+  the local loop to the narrow commands under Fast feedback, and reach for the
+  full suite only when a change is broad enough to need it.
 - **No `Math.random`.** Randomness comes from the serialized engine RNG; lint
   enforces it. Same reason: no wall-clock reads inside engine code.
 - **Card art and printed card text are never committed or published.** The
@@ -102,8 +106,9 @@ pnpm coverage:clauses      # which printed clause has no test, per card
 The whole suite is ~80s -- most of it the whole-format sweeps, which play every
 deck pairing. The effect-option sweep is split over twelve
 `effect-options-NN.test.ts` files so the workers share it; Vitest runs one
-file's tests serially. Prefer running it over reasoning about whether a change
-is safe; use the narrower commands above for a tight loop.
+file's tests serially. Reach for the whole suite when a change is broad enough
+that you cannot name the one file that covers it; the narrower commands above
+are the tight loop.
 
 ## Playbooks
 

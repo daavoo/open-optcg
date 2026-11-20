@@ -145,6 +145,17 @@ export interface SealedContext {
       ./asset-gate.ts. */
   renderGetCards?(): string;
   bindGetCards?(): void;
+  /**
+   * The resume offer (see `renderResumeOffer` in home.ts): a match this page's
+   * last load interrupted, as the modal to print and the call that binds it.
+   * The pre-release lobby is a page's *only* screen, so the offer has to be
+   * made here; the ordinary app reaches this lobby from the 1v1 lobby, which
+   * already prints its own. Optional because a caller may have none to make.
+   */
+  resumeOffer?: {
+    render(): string;
+    bind(): void;
+  };
   playTables(
     tables: readonly HeadlessTable[],
     seedPrefix: string,
@@ -325,6 +336,7 @@ function renderPrereleaseLobby(
       <div class="prerelease-round-buttons" role="group" aria-label="AI opponents">${buttons}</div>
       ${ctx.renderGetCards?.() ?? ""}
     </section>
+    ${ctx.resumeOffer?.render() ?? ""}
     ${footer.render()}
   </main>`;
 }
@@ -381,6 +393,9 @@ export function bindLobby(state: SealedState, ctx: SealedContext): void {
       });
     });
   ctx.bindGetCards?.();
+  // Only the pre-release lobby printed the offer; the ordinary one sits behind
+  // the 1v1 lobby, which binds its own copy.
+  if (ctx.lockedExpansion) ctx.resumeOffer?.bind();
   document.querySelectorAll("[data-open-booster-picker]").forEach((button) => {
     button.addEventListener("click", () => {
       toggleAppDialog("booster-picker", true);
