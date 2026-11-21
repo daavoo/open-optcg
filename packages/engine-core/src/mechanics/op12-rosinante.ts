@@ -366,25 +366,25 @@ export const op12RosinanteMechanics: SetMechanics = {
     [
       // EB04-038 Rosinante & Law: "[printed text omitted -- pnpm card:text EB04-038]"
       //
-      // Two sentences, two scopes: only the draw is behind the catch-up clause.
-      // The DON!! always arrives, which is what makes this a 6-cost Blocker that
-      // pays for part of itself.
+      // "Then" continues the sentence the catch-up clause opens, so the DON!!
+      // arrives only when the field is not ahead: Bandai's OP14-078 and
+      // OP14-112 rulings both gate a "Then," clause on the "If" before it.
       "EB04-038",
       {
         effect: {
-          kind: "sequence",
-          effects: [
-            {
-              kind: "if",
-              condition: {
-                kind: "field-don-versus",
-                player: "self",
-                operator: "lte",
-              },
-              then: { kind: "draw", player: "self", count: 1 },
-            },
-            { kind: "add-don", player: "self", count: 1, rested: false },
-          ],
+          kind: "if",
+          condition: {
+            kind: "field-don-versus",
+            player: "self",
+            operator: "lte",
+          },
+          then: {
+            kind: "sequence",
+            effects: [
+              { kind: "draw", player: "self", count: 1 },
+              { kind: "add-don", player: "self", count: 1, rested: false },
+            ],
+          },
         },
       },
     ],

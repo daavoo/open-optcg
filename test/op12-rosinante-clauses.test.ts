@@ -6,7 +6,7 @@ import {
   type GameState,
 } from "@one-piece-sim/engine-core";
 
-import { character, covers, instance, scenario } from "./support/index.js";
+import { character, covers, instance, scenario, type Game } from "./support/index.js";
 
 /**
  * The OP-12 Rosinante clauses `test/op12-rosinante.test.ts` leaves out.
@@ -27,6 +27,10 @@ function effectOptions(state: GameState): string[] {
   return getLegalActions(state, state.activePlayer)
     .filter((action) => action.type === "resolve-effect")
     .map((action) => action.optionId);
+}
+
+function settle(game: Game) {
+  while (game.state.pendingEffect) game.play({ type: "resolve-effect" });
 }
 
 function law() {
@@ -66,6 +70,48 @@ describe("OP-12 Rosinante printed Blockers", () => {
       expect(game.state.players.p2.board[0]?.rested).toBe(true);
     },
   );
+});
+
+describe("EB04-038 Rosinante & Law", () => {
+  covers("EB04-038", "[On Play]");
+
+  const rosinante = (seed: string) =>
+    scenario()
+      .decks(DECK, "(Red) Monkey.D.Luffy - Starter Deck 31")
+      .withLeader("p1", LEADER)
+      .seed(seed)
+      .atTurn(9, { active: "p1" })
+      .bareTable()
+      .withHand("p1", [instance("rosi-law", "EB04-038")])
+      .withDeckTop("p1", [instance("drawn", "OP12-073")]);
+
+  it("draws and ramps while the field is not ahead on DON!!", () => {
+    // One DON!! stays in the deck, so the "add 1 DON!!" has something to take.
+    const game = rosinante("eb04-038-on-play").withDonDeck("p1", 1).build();
+
+    game.play({ type: "play-card", cardNumber: "EB04-038" });
+    settle(game);
+
+    expect(game.state.players.p1.hand.map((card) => card.instanceId)).toEqual([
+      "drawn",
+    ]);
+    expect(game.state.players.p1.activeDon).toHaveLength(4);
+  });
+
+  it("does neither while the field is ahead", () => {
+    const game = rosinante("eb04-038-on-play-ahead")
+      .withDonDeck("p1", 1)
+      .withDonDeck("p2", 2)
+      .build();
+
+    game.play({ type: "play-card", cardNumber: "EB04-038" });
+    settle(game);
+
+    // The "Then" DON!! is behind the same catch-up clause as the draw: the
+    // six cost is all the card pays for.
+    expect(game.state.players.p1.hand).toHaveLength(0);
+    expect(game.state.players.p1.activeDon).toHaveLength(3);
+  });
 });
 
 describe("EB03-062 Trafalgar Law", () => {

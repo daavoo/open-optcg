@@ -198,20 +198,36 @@ describe("EB04-038 answers to three names", () => {
 
 describe("the catch-up ramp reads both fields", () => {
   covers("EB04-038", "[On Play]");
-  it("splits EB04-038 into a conditional draw and an unconditional ramp", () => {
-    const state = scenario(8);
-    state.players.p2.activeDon = ["p2-don-0", "p2-don-1"];
-    state.players.p1.hand = [inHand("p1-eb04", "EB04-038")];
-    const hand = state.players.p1.hand.length;
-    const donDeck = state.players.p1.donDeck.length;
-    const played = submit(
-      state,
+  it("gates EB04-038's draw and ramp on the same catch-up clause", () => {
+    // p2's field is short, so p1 is ahead: neither half happens.
+    const aheadState = scenario(8);
+    aheadState.players.p2.activeDon = ["p2-don-0", "p2-don-1"];
+    aheadState.players.p1.hand = [inHand("p1-eb04", "EB04-038")];
+    const hand = aheadState.players.p1.hand.length;
+    const donDeck = aheadState.players.p1.donDeck.length;
+    const ahead = submit(
+      aheadState,
       (action) =>
         action.type === "play-card" && action.cardInstanceId === "p1-eb04",
     );
-    // Ahead on DON!!, so no draw -- but the DON!! still arrives, active.
-    expect(played.players.p1.hand.length).toBe(hand - 1);
-    expect(played.players.p1.donDeck.length).toBe(donDeck - 1);
+    expect(ahead.players.p1.hand.length).toBe(hand - 1);
+    expect(ahead.players.p1.donDeck.length).toBe(donDeck);
+
+    // Level, so the catch-up clause is met and both halves happen.
+    const levelState = scenario(8);
+    levelState.players.p2.activeDon = Array.from(
+      { length: 8 },
+      (_, index) => `p2-don-${index}`,
+    );
+    levelState.players.p1.hand = [inHand("p1-eb04", "EB04-038")];
+    const levelDeck = levelState.players.p1.donDeck.length;
+    const catching = submit(
+      levelState,
+      (action) =>
+        action.type === "play-card" && action.cardInstanceId === "p1-eb04",
+    );
+    expect(catching.players.p1.hand.length).toBe(hand);
+    expect(catching.players.p1.donDeck.length).toBe(levelDeck - 1);
   });
 });
 
@@ -295,8 +311,9 @@ describe("the Leader's cost reduction", () => {
       ...play!,
       revision: activated.revision,
     }).state;
-    // 7 active, 4 spent, and EB04-038's own [On Play] then adds one back active.
-    expect(played.players.p1.activeDon.length).toBe(4);
+    // 7 active, 4 spent; p2's field is empty, so the catch-up clause is not
+    // met and EB04-038's own [On Play] adds nothing back.
+    expect(played.players.p1.activeDon.length).toBe(3);
   });
 
   it("is spent by the first qualifying play and not the second", () => {
