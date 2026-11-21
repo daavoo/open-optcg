@@ -1,0 +1,85 @@
+name: Bridge
+
+# The OPTCGSim bridge: the launcher a player double-clicks, the BepInEx plugin
+# it installs, and the release page the launcher reads the model from.
+#
+# On a pull request this only builds the launcher bundle, which is the part
+# that can break without anyone touching the sim: the plugin is compiled
+# against the player's own OPTCGSim and BepInEx assemblies, which are not in
+# this repository and cannot be built here.
+#
+# A `bridge-v*` tag publishes the launcher and the manifest. The plugin DLLs
+# are added by the maintainer from a machine with the sim:
+#
+#   pnpm bridge:release --tag bridge-v1 \
+#     --plugin macos=tools/optcgsim/plugin/bin/Release/netstandard2.1/OpenOptcgBridge.dll
+#
+# `bridge-release.ts` tops up a release that already exists, so the order does
+# not matter; `pnpm bridge:verify` is what says whether a release is complete.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/optcgsim/**"
+      - "tools/bridge-release.ts"
+      - ".github/workflows/bridge.yml"
+    tags: ["bridge-v*"]
+  pull_request:
+    paths:
+      - "tools/optcgsim/**"
+      - "tools/bridge-release.ts"
+      - ".github/workflows/bridge.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  bundle:
+    name: launcher bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # A tag name that is not `bridge-vN` fails the script's own check.
+      - name: Bundle
+        run: pnpm bridge:release --tag bridge-ci --no-publish
+      # The bundle is what a player runs; a missing Node built-in or a
+      # workspace import esbuild could not inline shows up here, not in the sim.
+      - name: Smoke-test the bundle
+        run: node dist/bridge/launcher.mjs status
+      - uses: actions/upload-artifact@v5
+        with:
+          name: bridge-launcher
+          path: dist/bridge/
+          if-no-files-found: error
+
+  publish:
+    name: publish release
+    needs: bundle
+    if: startsWith(github.ref, 'refs/tags/bridge-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Publish the launcher
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm bridge:release --tag "${{ github.ref_name }}"
