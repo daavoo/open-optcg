@@ -12,10 +12,12 @@
  * The replay stops at the first table the bridge now answers differently:
  * the sim's later tables followed from the old answer, not the new one.
  */
-import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Decider } from "./decide.js";
+import { modelCacheDir } from "./paths.js";
+import { resolveModel } from "./model-source.js";
 import { Recorder } from "./recorder.js";
 import type { SimMove, TableSnapshot } from "./snapshot.js";
 
@@ -30,11 +32,14 @@ if (!file) {
   process.exit(1);
 }
 const until = Number(flag("until") ?? Number.POSITIVE_INFINITY);
-const adapters = join(process.cwd(), "packages/web/src/scorer-adapters");
-const decider = new Decider(
-  flag("model") ?? join(process.cwd(), "packages/web/src/scorer-model.json"),
-  existsSync(adapters) ? adapters : undefined,
-);
+const model = await resolveModel({
+  ...(flag("model") ? { modelPath: flag("model")! } : {}),
+  cacheDir: modelCacheDir(),
+  log: (line) => {
+    console.log(`model: ${line}`);
+  },
+});
+const decider = new Decider(model);
 const directory = mkdtempSync(join(tmpdir(), "optcgsim-replay-"));
 const recorder = new Recorder(directory, decider);
 

@@ -2,8 +2,6 @@
  * One decision for the sim: import the snapshot, ask the learned model, and
  * translate its pick back into a move the plugin can perform.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
 import {
   applyAction,
   observe,
@@ -18,12 +16,11 @@ import type {
 import {
   adapterFor,
   CompactScorerAgent,
-  isCompactPack,
   loadCompact,
   type CompactAdapter,
   type CompactPack,
-  type ScorerPack,
 } from "@one-piece-sim/agents/scorer";
+import { readModelFiles, type ModelLocation } from "./model-source.js";
 import { engineCardNumber, importPosition } from "./position.js";
 import type { SimMove, SimStep, TableSnapshot } from "./snapshot.js";
 
@@ -63,36 +60,34 @@ export interface Decision {
 export class Decider {
   readonly #pack: CompactPack;
   readonly #adapters: CompactAdapter[];
+  readonly #release: string;
   readonly #models = new Map<string, CompactScorerAgent>();
   #replay: Replay | undefined;
   #inEffect: InEffect | undefined;
   /** Moves the sim has refused at the decision it is on, by summary. */
   readonly #refused = new Set<string>();
 
-  constructor(modelPath: string, adapterDir?: string) {
-    const pack = JSON.parse(readFileSync(modelPath, "utf8")) as
-      CompactPack | ScorerPack;
-    if (!isCompactPack(pack)) {
-      throw new Error(
-        `${modelPath} is a text-scorer pack; the bridge plays the compact one`,
-      );
-    }
-    this.#pack = pack;
-    this.#adapters = adapterDir
-      ? readdirSync(adapterDir)
-          .filter((file) => file.endsWith(".json"))
-          .map(
-            (file) =>
-              JSON.parse(
-                readFileSync(join(adapterDir, file), "utf8"),
-              ) as CompactAdapter,
-          )
-          .filter((adapter) => adapter.base === pack.source)
-      : [];
+  /** A pack file and the folder of adapters beside it. */
+  constructor(modelPath: string, adapterDir?: string);
+  /** Packs already in hand, as `resolveModel` returns them. */
+  constructor(model: ModelLocation);
+  constructor(first: string | ModelLocation, adapterDir?: string) {
+    const model =
+      typeof first === "string"
+        ? { ...readModelFiles(first, adapterDir), release: "local" }
+        : first;
+    this.#pack = model.pack;
+    this.#adapters = model.adapters;
+    this.#release = model.release;
   }
 
   get source(): string {
     return this.#pack.source;
+  }
+
+  /** The `model-*` release the pack came from, or `"local"`. */
+  get release(): string {
+    return this.#release;
   }
 
   /** The model's pick among an observation's legal actions, for `deck`'s pilot. */

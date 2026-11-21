@@ -76,7 +76,60 @@ In `BepInEx/config/dev.open-optcg.optcgsim-bridge.cfg`, under `[AiVsAi]`:
 a person's are, in games the model still plays both seats of: it is how
 following a person is checked without anyone sitting through the games.
 
+## Installing it for a player
+
+The launcher does the whole of the setup below, in one window:
+
+```sh
+pnpm bridge:launch      # a local page at http://127.0.0.1:7787
+```
+
+It finds (or is given) the sim folder, installs BepInEx 5.4.23.6 and the
+plugin from the newest `bridge-*` release, fetches the newest `model-*`
+release's weights into the user's application-support folder, and starts the
+bridge in-process when you press **Play**. `pnpm bridge:install` and
+`pnpm bridge:status` are the same thing without the page, and
+`pnpm bridge:install --dry-run` says what it would do without writing.
+
+### The releases
+
+Two kinds, both on the release page:
+
+| tag        | what it carries                                                          | who builds it |
+| ---------- | ------------------------------------------------------------------------ | ------------- |
+| `model-*`  | `scorer-model.json`, `scorer-adapter-<deck>.json`, `deck-standings.json` | training      |
+| `bridge-*` | `launcher.mjs`, `OpenOptcgBridge-<platform>.dll`, `bridge-manifest.json` | see below     |
+
+The model is never in the launcher bundle: the bridge resolves the newest
+`model-*` release at run time (`model-source.ts`), caches it by tag under
+`~/Library/Application Support/open-optcg/models/`, and falls back to the
+newest cached tag, then to a checkout's pack, when GitHub cannot be reached.
+`GET /health` reports which release is in play, and the page shows it.
+
+```sh
+pnpm bridge:release --tag bridge-v1    # bundle + manifest + the host's DLL
+pnpm bridge:verify  --tag bridge-v1    # is it installable?
+```
+
+The plugin DLL cannot be built in CI: it compiles against the player's own
+OPTCGSim and BepInEx assemblies (`OpenOptcgBridge.csproj`), which are not in
+this repository. CI publishes the launcher and the manifest on a `bridge-v*`
+tag, and the maintainer tops the release up from a machine with the sim:
+
+```sh
+pnpm bridge:release --tag bridge-v1 \
+  --plugin macos=tools/optcgsim/plugin/bin/Release/netstandard2.1/OpenOptcgBridge.dll \
+  --plugin windows=<built on a Windows machine>
+```
+
+The script is idempotent (`gh release upload --clobber` once the release
+exists), so the order does not matter; `bridge:verify` is what says whether
+the result is complete.
+
 ## Setup (macOS; Windows and Linux are the same with their paths)
+
+This is what the launcher automates; follow it by hand to work on the bridge
+itself.
 
 1. **The model.** `pnpm model:fetch` writes `packages/web/src/scorer-model.json`.
 2. **BepInEx 5** (the Mono build) into the folder holding `OPTCGSim.app`, from
