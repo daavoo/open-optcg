@@ -1771,6 +1771,20 @@ export class ShadowGame {
     ) {
       return { notes: found.notes, answer: { kind: "no-block" } };
     }
+    if (process.env.OPTCGSIM_DEBUG) {
+      const now = awaits(this.#state);
+      console.log(
+        "DEBUG reconcile failed; engine waits on",
+        now,
+        getLegalActions(this.#state, this.#state.activePlayer).map((action) =>
+          action.summary.slice(0, 70),
+        ),
+        "visited",
+        visited,
+        "sameTable",
+        sameTable !== undefined,
+      );
+    }
     const where = sameTable ?? { state: this.#state };
     const there = awaits(where.state);
     const all = differences(where.state, snapshot);
