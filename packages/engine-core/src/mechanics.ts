@@ -3117,7 +3117,47 @@ export function continueExecution(
           }
         }
         if (effect.rested !== undefined && "rested" in target) {
+          // Resting a Character that was active is the same event whichever
+          // node spells it, so this one answers to what `rest` answers to:
+          // a "cannot be rested" effect holds (Bandai's EB02-011#4), and the
+          // rest is reported and signalled -- what PRB02-009 Mr.3's "rested
+          // by your opponent's effect" and OP10-036 Perona's refund wait for.
+          const boardOwner = (["p1", "p2"] as const).find((candidate) =>
+            state.players[candidate].board.some(
+              (card) => card.instanceId === instanceId,
+            ),
+          );
+          const restsCharacter =
+            effect.rested && boardOwner !== undefined && !target.rested;
+          if (
+            restsCharacter &&
+            ((target as Partial<BoardCard>).cannotRestUntilTurn ?? -1) >=
+              state.turn
+          ) {
+            continue;
+          }
           target.rested = effect.rested;
+          if (restsCharacter) {
+            events.push({
+              type: "character-rested",
+              playerId: boardOwner,
+              cardInstanceId: target.instanceId,
+              cardNumber: target.cardNumber,
+              sourceCardNumber: execution.context.source.cardNumber,
+            });
+            signals.push({
+              kind: "card-rested",
+              card: {
+                instanceId: target.instanceId,
+                cardNumber: target.cardNumber,
+              },
+              ownerId: boardOwner,
+              sourcePlayerId: execution.context.sourcePlayerId,
+              sourceIsCharacter:
+                db.get(execution.context.source.cardNumber)?.category ===
+                "character",
+            });
+          }
         }
       }
       continue;

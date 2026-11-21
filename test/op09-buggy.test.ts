@@ -387,6 +387,23 @@ describe("PRB02-009 Mr.3(Galdino)", () => {
     expect(ids(game.state.players.p1.hand)).toEqual(["drawn-1", "drawn-2"]);
   });
 
+  it("is offered when an Event with a DON!! −N cost rests it", () => {
+    // OP15-078 Mamaragan's [Main] pays DON!! −2 before it rests a Character.
+    const game = defending("prb02-009-mamaragan")
+      .withBoard("p1", [character("mr3", "PRB02-009")])
+      .withHand("p1", [])
+      .withDeckTop("p1", copies(2, "OP09-057", "drawn"))
+      .withHand("p2", [instance("thunder", "OP15-078")])
+      .build();
+
+    game.play({ type: "activate-main", cardNumber: "OP15-078" });
+    game.play({ type: "resolve-effect", optionId: "mr3" });
+    answer(game, "apply", "return-don:rested", "return-don:active");
+
+    expect(boardCard(game.state, "p1", "mr3")).toBeUndefined();
+    expect(ids(game.state.players.p1.hand)).toEqual(["drawn-1", "drawn-2"]);
+  });
+
   it("answers an opposing Character's effect too, and may stay", () => {
     const game = defending("prb02-009-character")
       .withBoard("p1", [character("mr3", "PRB02-009")])
