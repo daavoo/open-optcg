@@ -71,12 +71,10 @@ test — not the whole engine.
   email to match an identity on the key. Nothing needs overriding; check with
   `git log --format='%h %G? %ae %s'` and expect `G` beside the configured
   address.
-- **CI runs the full gate.** `pnpm verify` — format, lint, typecheck, tests —
-  and `pnpm verify:browser` for web-facing changes are the pipeline's job
-  (`.github/workflows/ci.yml`), so there is no need to run the whole suite
-  locally before calling a change done: push the branch and read the run. Keep
-  the local loop to the narrow commands under Fast feedback, and reach for the
-  full suite only when a change is broad enough to need it.
+- **CI owns the full gate; don't run `pnpm verify` locally.** Formatting, lint,
+  typecheck and the whole suite are what CI runs -- use the narrow commands
+  below for feedback while you work and let CI catch the rest. Same for
+  `pnpm verify:browser` on web-facing changes.
 - **No `Math.random`.** Randomness comes from the serialized engine RNG; lint
   enforces it. Same reason: no wall-clock reads inside engine code.
 - **Card art and printed card text are never committed or published.** The
@@ -95,7 +93,7 @@ pnpm test:card ST35        # one deck's card tests
 pnpm test:engine           # the rules-kernel tests only
 pnpm lint:changed          # eslint on files changed vs the merge base
 pnpm test -- engine.test   # any vitest filename filter
-pnpm verify                # the full gate CI runs
+pnpm verify                # the full gate CI runs; you don't need it locally
 pnpm decks:provenance      # where each deck's printed text came from
 pnpm decks:legality        # each deck's format, and its cards' block icons
 pnpm rotation:report       # has Bandai's block data or the Standard floor moved
@@ -106,9 +104,8 @@ pnpm coverage:clauses      # which printed clause has no test, per card
 The whole suite is ~80s -- most of it the whole-format sweeps, which play every
 deck pairing. The effect-option sweep is split over twelve
 `effect-options-NN.test.ts` files so the workers share it; Vitest runs one
-file's tests serially. Reach for the whole suite when a change is broad enough
-that you cannot name the one file that covers it; the narrower commands above
-are the tight loop.
+file's tests serially. That whole run is CI's job: keep your own loop to the
+narrow commands above.
 
 ## Playbooks
 

@@ -231,8 +231,8 @@ pnpm decks:provenance:check
 pnpm coverage:clauses:check
 ```
 
-Then run `pnpm verify`. If the change affects browser exports or user-visible actions, also run
-`pnpm verify:browser`.
+CI runs the full gate (`pnpm verify`, plus `pnpm verify:browser` for browser exports or
+user-visible actions); you don't need it locally -- run the narrow commands above.
 
 For deck integration, run a deterministic trace before a benchmark:
 

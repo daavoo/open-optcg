@@ -185,7 +185,7 @@ release's `scorer-model.json` is what the page inlines (see
 
 - Keep changes scoped; a bug fix doesn't need a refactor riding along.
 - Add or update tests for any rules-engine behaviour change.
-- Run `pnpm verify` before opening a PR.
+- CI runs `pnpm verify`; you don't have to run it locally before opening a PR.
 - If the change affects how a deck plays, say so with numbers.
   [Theorycrafting](docs/theorycrafting.md) has the paired-comparison tools.
 

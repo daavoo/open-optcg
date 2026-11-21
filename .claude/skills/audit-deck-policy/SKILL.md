@@ -552,7 +552,7 @@ for exactly this reason, and one of its tests pins it.
 pnpm exec prettier --check packages/agents/src test
 pnpm vitest run test/<deck>-policy.test.ts test/policy-registry.test.ts
 pnpm typecheck && pnpm lint
-pnpm verify
+# pnpm verify -- CI's job, not yours
 ```
 
 Then confirm the field, because improving one deck moves everyone's numbers:

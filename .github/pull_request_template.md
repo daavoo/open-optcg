@@ -13,7 +13,7 @@ plus the question a reviewer always has to ask: what does it do to the games.
 - [ ] Scoped: a bug fix does not carry a refactor along with it.
 - [ ] Tests added or updated for any rules-engine behaviour change, built with
       [`test/support`](../test/support/README.md).
-- [ ] `pnpm verify` passes. (`pnpm verify:browser` too, for web changes.)
+- [ ] CI's `pnpm verify` passes (it runs on the PR; no need to run it yourself).
 - [ ] No hand-edits to `generated.ts` / `generated-op17.ts` /
       `generated-community.ts` — those come out of `pnpm reference:fetch` +
       `pnpm reference:audit`.
