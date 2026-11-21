@@ -13,6 +13,7 @@ import {
   lookAndAdd,
   lookAndAddOrTrash,
   ownCostTenBody,
+  payFromHand,
 } from "./shared.js";
 
 export const op17OnPlayMechanics: SetMechanics = {
@@ -1692,28 +1693,19 @@ export const op17OnPlayMechanics: SetMechanics = {
     ],
     [
       // OP17-109 Charlotte Pudding: "[printed text omitted -- pnpm card:text OP17-109]"
+      // The draw is nested inside the cost rather than sequenced after it, so
+      // a hand with no [Trigger] pays nothing and draws nothing -- a `choose`
+      // short of its `min` is skipped and the queue would otherwise run on.
       "OP17-109",
       {
         effect: {
           kind: "optional",
-          effect: {
-            kind: "sequence",
-            effects: [
-              {
-                kind: "choose",
-                selector: { player: "self", zone: "hand", hasTrigger: true },
-                bind: "op17-pudding-cost",
-                min: 1,
-                max: 1,
-                effect: {
-                  kind: "move",
-                  binding: "op17-pudding-cost",
-                  to: { player: "self", zone: "trash" },
-                },
-              },
-              { kind: "draw", player: "self", count: 3 },
-            ],
-          },
+          effect: payFromHand(
+            { player: "self", zone: "hand", hasTrigger: true },
+            "op17-pudding-cost",
+            1,
+            { kind: "draw", player: "self", count: 3 },
+          ),
         },
       },
     ],
