@@ -94,12 +94,18 @@ async function refresh() {
     const status = await call("/api/status");
     $("sim").textContent = status.simDir || "not found";
     $("bridge").textContent = status.installed
-      ? status.bridge + (status.bridgeRunning ? " (running on " + status.bridgeUrl + ")" : "")
+      ? status.bridge +
+        (status.bridgeRunning ? " (running on " + status.bridgeUrl + ")" : "") +
+        (status.updateAvailable ? " — " + status.latestBridge + " is available" : "")
       : "not installed";
     $("bridge").className = status.installed ? "ok" : "bad";
     $("model").textContent = status.model
-      ? status.model.release + " (" + status.model.model + ")"
+      ? status.model.release + " (" + status.model.model + ")" +
+        (status.published && status.published !== status.model.release
+          ? " — " + status.published + " will be fetched on Play"
+          : "")
       : "not fetched yet";
+    $("install").textContent = status.updateAvailable ? "Update" : "Install / update";
     if (document.activeElement !== $("dir")) $("dir").value = status.simDir || "";
     $("play").disabled = !status.installed || status.bridgeRunning;
     $("stop").disabled = !status.bridgeRunning;

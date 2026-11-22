@@ -15,7 +15,12 @@ import { startBridge, type Bridge } from "../bridge.js";
 import { Github, type ReleaseClient } from "../github.js";
 import { modelStatus, releaseSourceOf } from "../model-source.js";
 import { modelCacheDir } from "../paths.js";
-import { installSim, installedState, type InstallResult } from "./install.js";
+import {
+  BRIDGE_TAG_PREFIX,
+  installSim,
+  installedState,
+  type InstallResult,
+} from "./install.js";
 import {
   findSimDir,
   isSimDir,
@@ -76,11 +81,20 @@ export async function startLauncher(
       source: releaseSourceOf(github),
       offline: false,
     });
+    // One release listing per run (the client caches it), so polling the
+    // status does not spend the anonymous rate limit.
+    const latestBridge = await latestBridgeTag(github);
     return {
       simDir,
       platform,
       installed: recorded !== undefined,
       bridge: recorded?.bridge ?? null,
+      /** The newest `bridge-*` release, so the page can offer an update. */
+      latestBridge,
+      updateAvailable:
+        recorded !== undefined &&
+        latestBridge !== null &&
+        recorded.bridge !== latestBridge,
       bridgeRunning: bridge !== undefined,
       bridgeUrl: bridge?.info.url ?? null,
       model: bridge
@@ -213,6 +227,13 @@ export async function startLauncher(
       );
     },
   };
+}
+
+function latestBridgeTag(github: ReleaseClient): Promise<string | null> {
+  return github
+    .newest(BRIDGE_TAG_PREFIX)
+    .then((release) => release?.tag ?? null)
+    .catch(() => null);
 }
 
 function resolveSimDir(
