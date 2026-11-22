@@ -13,7 +13,12 @@
  */
 import { createHash } from "node:crypto";
 import type { GithubRelease, ReleaseClient } from "../github.js";
-import { binaryAsset, pluginAsset, type Platform } from "./platform.js";
+import {
+  appAsset,
+  binaryAsset,
+  pluginAsset,
+  type Platform,
+} from "./platform.js";
 
 export interface BridgeManifest {
   tag: string;
@@ -22,6 +27,8 @@ export interface BridgeManifest {
   launcher: { asset: string; sha256: string };
   plugin: Partial<Record<Platform, { asset: string; sha256: string }>>;
   binary: Partial<Record<Platform, { asset: string; sha256: string }>>;
+  /** The zipped macOS applications; absent on releases built without one. */
+  app?: Partial<Record<Platform, { asset: string; sha256: string }>>;
 }
 
 export interface VerifyResult {
@@ -90,6 +97,16 @@ export async function verifyRelease(
     problems.push(
       "the manifest names no launcher binary: was it built without --binary?",
     );
+  }
+  for (const [platform, entry] of Object.entries(manifest.app ?? {})) {
+    const expected = appAsset(platform as Platform);
+    if (!expected) continue;
+    if (entry.asset !== expected) {
+      problems.push(
+        `${platform}: manifest names ${entry.asset}, expected ${expected}`,
+      );
+    }
+    await check(expected, entry.sha256);
   }
   return { ok: problems.length === 0, problems, manifest };
 }

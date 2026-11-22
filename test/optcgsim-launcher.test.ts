@@ -14,6 +14,7 @@ import {
   installSim,
 } from "../tools/optcgsim/launcher/install.js";
 import {
+  appAsset,
   bepinexAsset,
   binaryAsset,
   findSimDir,
@@ -249,11 +250,13 @@ describe("verifyRelease", () => {
     binary: {
       macos: { asset: binaryAsset("macos"), sha256: sha("BINARY") },
     },
+    app: { macos: { asset: appAsset("macos")!, sha256: sha("APPZIP") } },
   });
   const files = {
     "launcher.mjs": "LAUNCHER",
     "OpenOptcgBridge-macos.dll": "PLUGIN",
     "open-optcg-bridge-macos": "BINARY",
+    "open-optcg-bridge-macos.app.zip": "APPZIP",
   };
   const without = (
     record: Record<string, string>,
@@ -298,6 +301,20 @@ describe("verifyRelease", () => {
     expect(result.ok).toBe(false);
     expect(result.problems.join(" ")).toContain(
       "missing asset open-optcg-bridge-macos",
+    );
+  });
+
+  it("catches a macOS app that was never uploaded", async () => {
+    const { github, release } = releaseWith(
+      manifest(pluginAsset("macos"), sha("PLUGIN")),
+      without(files, "open-optcg-bridge-macos.app.zip"),
+    );
+
+    const result = await verifyRelease(github, release);
+
+    expect(result.ok).toBe(false);
+    expect(result.problems.join(" ")).toContain(
+      "missing asset open-optcg-bridge-macos.app.zip",
     );
   });
 

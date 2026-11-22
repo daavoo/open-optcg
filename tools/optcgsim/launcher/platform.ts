@@ -118,6 +118,14 @@ export function binaryAsset(platform: Platform): string {
     : `open-optcg-bridge-${platform}`;
 }
 
+/**
+ * The zipped macOS application, which is what a macOS player downloads: a
+ * bare executable arrives quarantined and iconless, and a `.app` is a folder.
+ */
+export function appAsset(platform: Platform): string | null {
+  return platform === "macos" ? "open-optcg-bridge-macos.app.zip" : null;
+}
+
 /** Where the plugin goes once extracted. */
 export function pluginPath(simDir: string): string {
   return join(simDir, "BepInEx", "plugins", "OpenOptcgBridge.dll");

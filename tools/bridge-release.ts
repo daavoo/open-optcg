@@ -27,6 +27,7 @@ import { basename, join, resolve } from "node:path";
 import { build } from "esbuild";
 import { Github } from "./optcgsim/github.js";
 import {
+  appAsset,
   binaryAsset,
   pluginAsset,
   platformOf,
@@ -115,6 +116,27 @@ if (binaries.size === 0) {
   if (existsSync(built)) binaries.set(platformOf(), built);
 }
 
+// The macOS application bundles: `--app macos=<path to .app.zip>`, or the
+// host's own `pnpm bridge:app` output. The zip is what the release carries,
+// because a `.app` is a folder.
+const apps = new Map<Platform, string>();
+for (const entry of all("app")) {
+  const [platform, path] = entry.split("=");
+  if (!platform || !path) {
+    console.error(`--app wants <platform>=<path>, got ${entry}`);
+    process.exit(1);
+  }
+  if (!appAsset(platform as Platform)) {
+    console.error(`--app is macOS only; ${platform} has no .app`);
+    process.exit(1);
+  }
+  apps.set(platform as Platform, resolve(path));
+}
+if (apps.size === 0 && process.platform === "darwin") {
+  const built = resolve("dist/bridge/open-optcg-bridge-macos.app.zip");
+  if (existsSync(built)) apps.set("macos", built);
+}
+
 const model = flag("model") ?? (await newestModelTag());
 const manifest = {
   tag,
@@ -132,6 +154,12 @@ const manifest = {
     [...binaries].map(([platform, path]) => [
       platform,
       { asset: binaryAsset(platform), sha256: sha256(path) },
+    ]),
+  ),
+  app: Object.fromEntries(
+    [...apps].map(([platform, zip]) => [
+      platform,
+      { asset: appAsset(platform)!, sha256: sha256(zip) },
     ]),
   ),
 };
@@ -154,6 +182,11 @@ for (const [platform, path] of plugins) {
 }
 for (const [platform, path] of binaries) {
   const target = join(outDir, binaryAsset(platform));
+  writeFileSync(target, readFileSync(path));
+  assets.push(target);
+}
+for (const [platform, path] of apps) {
+  const target = join(outDir, appAsset(platform)!);
   writeFileSync(target, readFileSync(path));
   assets.push(target);
 }

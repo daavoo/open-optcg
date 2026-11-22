@@ -87,14 +87,26 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm bridge:binary
+      - name: Build the macOS app
+        if: matrix.platform == 'macos'
+        run: pnpm bridge:app
       # A SEA binary that lost its blob still starts; one whose runtime is the
       # wrong architecture does not, and that is what this catches.
       - name: Smoke-test the binary
         run: ./dist/bridge/${{ matrix.file }} status
+      - name: Smoke-test the app
+        if: matrix.platform == 'macos'
+        run: ./dist/bridge/open-optcg-bridge.app/Contents/MacOS/open-optcg-bridge status
       - uses: actions/upload-artifact@v5
         with:
           name: binary-${{ matrix.platform }}
           path: dist/bridge/${{ matrix.file }}
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v5
+        if: matrix.platform == 'macos'
+        with:
+          name: app-macos
+          path: dist/bridge/open-optcg-bridge-macos.app.zip
           if-no-files-found: error
 
   publish:
@@ -118,6 +130,10 @@ jobs:
         with:
           pattern: binary-*
           path: dist/binaries
+      - uses: actions/download-artifact@v5
+        with:
+          name: app-macos
+          path: dist/binaries/app-macos
       - name: Publish the launcher
         env:
           GH_TOKEN: ${{ github.token }}
@@ -125,4 +141,5 @@ jobs:
           pnpm bridge:release --tag "${{ github.ref_name }}" \
             --binary macos=dist/binaries/binary-macos/open-optcg-bridge \
             --binary windows=dist/binaries/binary-windows/open-optcg-bridge.exe \
-            --binary linux=dist/binaries/binary-linux/open-optcg-bridge
+            --binary linux=dist/binaries/binary-linux/open-optcg-bridge \
+            --app macos=dist/binaries/app-macos/open-optcg-bridge-macos.app.zip

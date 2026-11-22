@@ -25,7 +25,10 @@ function log(line: string): void {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const command = args[0] ?? "launch";
+  // A bare flag means the default command, so `open --args --no-open` and a
+  // double-click both land on `launch` rather than on an unknown command.
+  const command =
+    args[0] === undefined || args[0].startsWith("-") ? "launch" : args[0];
   const flag = (name: string): string | undefined => {
     const at = args.indexOf(`--${name}`);
     return at >= 0 ? args[at + 1] : undefined;
@@ -79,10 +82,13 @@ async function main(): Promise<void> {
     });
     console.log(`open ${launcher.url}`);
     if (!has("no-open")) open(launcher.url);
-    // The launcher owns the bridge; keep this process alive until it is killed.
-    process.on("SIGINT", () => {
+    // The launcher owns the bridge; keep this process alive until it is
+    // killed. A `.app` gets SIGTERM when it is quit, a terminal Ctrl-C SIGINT.
+    const stop = (): void => {
       void launcher.close().then(() => process.exit(0));
-    });
+    };
+    process.on("SIGINT", stop);
+    process.on("SIGTERM", stop);
     await new Promise(() => {});
     return;
   }

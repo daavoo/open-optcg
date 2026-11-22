@@ -65,6 +65,7 @@ export function launcherPage(): string {
       <button id="install">Install / update</button>
       <button id="play" class="secondary">Play</button>
       <button id="stop" class="secondary">Stop</button>
+      <button id="quit" class="secondary">Quit</button>
     </div>
     <pre id="log"></pre>
   </section>
@@ -129,6 +130,11 @@ $("play").onclick = async () => {
 $("stop").onclick = async () => {
   try { await call("/api/stop"); } catch (error) { log("stop: " + error.message); }
   refresh();
+};
+$("quit").onclick = async () => {
+  try { await call("/api/quit"); } catch (error) { log("quit: " + error.message); }
+  document.body.innerHTML = '<main><h1>Bridge stopped</h1>' +
+    '<p class="lede">You can close this tab.</p></main>';
 };
 // The launcher streams its own progress into the page's log.
 const events = new EventSource("/api/events");

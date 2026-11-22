@@ -206,6 +206,15 @@ export async function startLauncher(
         log("bridge stopped");
         return { stopped: true };
       }
+      if (path === "/api/quit") {
+        // The page is the only window a `.app` has, so it needs a way out:
+        // closing the bridge and the server leaves nothing to quit from.
+        await bridge?.close();
+        bridge = undefined;
+        log("quitting");
+        setTimeout(() => process.exit(0), 50);
+        return { quit: true };
+      }
       throw new Error(`unknown endpoint ${path}`);
     }
   });
