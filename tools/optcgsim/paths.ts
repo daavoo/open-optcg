@@ -37,3 +37,14 @@ export function modelCacheDir(): string {
 export function launcherStatePath(): string {
   return join(appSupportDir(), "bridge.json");
 }
+
+/**
+ * Where the bridge writes recorded games.
+ *
+ * Not beside the checkout: a `.app` opened from Finder runs with `/` as its
+ * working directory, and `mkdir /analysis` fails, which used to defer the first
+ * decision of every game and read as "the AI does nothing".
+ */
+export function gamesDir(): string {
+  return join(appSupportDir(), "games");
+}

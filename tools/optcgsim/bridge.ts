@@ -28,7 +28,7 @@ import { join } from "node:path";
 import { deckManifests, SELECTABLE_DECK_IDS } from "@one-piece-sim/decks";
 import { Decider, type Decision } from "./decide.js";
 import { resolveModel } from "./model-source.js";
-import { modelCacheDir } from "./paths.js";
+import { modelCacheDir, gamesDir } from "./paths.js";
 import { unknownCards } from "./position.js";
 import { Recorder, type RecordStatus } from "./recorder.js";
 import { SNAPSHOT_VERSION, type TableSnapshot } from "./snapshot.js";
@@ -87,7 +87,7 @@ export async function startBridge(
   });
   const decider = new Decider(model);
   const recorder = new Recorder(
-    options.recordDir ?? join(process.cwd(), "analysis/optcgsim"),
+    options.recordDir ?? gamesDir(),
     decider,
     undefined,
     options.blind,

@@ -14,6 +14,7 @@ import {
 import {
   installedState,
   installSim,
+  silenceAutoBatch,
 } from "../tools/optcgsim/launcher/install.js";
 import { startLauncher } from "../tools/optcgsim/launcher/launcher.js";
 import {
@@ -470,6 +471,32 @@ async function json(url: string, method: "GET" | "POST" = "GET") {
   const response = await fetch(url, method === "POST" ? { method } : undefined);
   return (await response.json()) as unknown;
 }
+
+describe("silenceAutoBatch", () => {
+  it("turns the batch off without touching the rest of the config", () => {
+    const simDir = simFolder();
+    const config = join(simDir, "BepInEx", "config");
+    mkdirSync(config, { recursive: true });
+    const path = join(config, "dev.open-optcg.optcgsim-bridge.cfg");
+    writeFileSync(
+      path,
+      "[AiVsAi]\nGames = 24\nStepDelay = 0.15\n\n[Bridge]\nSeat = 1\n",
+    );
+
+    expect(silenceAutoBatch(simDir, () => {})).toBe(true);
+
+    const text = readFileSync(path, "utf8");
+    expect(text).toContain("Games = 0");
+    expect(text).toContain("StepDelay = 0.15");
+    expect(text).toContain("Seat = 1");
+    // A second run has nothing to do, which is what keeps it off the menu.
+    expect(silenceAutoBatch(simDir, () => {})).toBe(false);
+  });
+
+  it("does nothing before the plugin has created its config", () => {
+    expect(silenceAutoBatch(simFolder(), () => {})).toBe(false);
+  });
+});
 
 describe("platform", () => {
   it("names the BepInEx asset the README pins", () => {

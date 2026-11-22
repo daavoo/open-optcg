@@ -133,6 +133,24 @@ export function pluginPath(simDir: string): string {
 }
 
 /**
+ * The sim's process name, for asking the OS whether it is running.
+ *
+ * Matched exactly, not as a command-line substring: `pgrep -f OPTCGSim.app`
+ * also matches any shell whose command line happens to mention the path, which
+ * made the launcher think a sim was up when none was.
+ */
+export function simProcessName(platform: Platform = platformOf()): string {
+  switch (platform) {
+    case "macos":
+      return "OPTCGSim";
+    case "windows":
+      return "OPTCGSim.exe";
+    default:
+      return "OPTCGSim.x86_64";
+  }
+}
+
+/**
  * Whether the sim is already running.
  *
  * A launcher that starts a second copy on top of a running one is worse than
@@ -144,12 +162,14 @@ export function simIsRunning(platform: Platform = platformOf()): boolean {
     if (platform === "windows") {
       const out = execFileSync(
         "tasklist",
-        ["/FI", "IMAGENAME eq OPTCGSim.exe", "/NH"],
+        ["/FI", `IMAGENAME eq ${simProcessName(platform)}`, "/NH"],
         { encoding: "utf8" },
       );
-      return out.includes("OPTCGSim.exe");
+      return out.includes(simProcessName(platform));
     }
-    execFileSync("pgrep", ["-f", simMarker(platform)], { stdio: "ignore" });
+    execFileSync("pgrep", ["-x", simProcessName(platform)], {
+      stdio: "ignore",
+    });
     return true;
   } catch {
     return false;

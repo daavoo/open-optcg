@@ -17,6 +17,7 @@ import {
   BRIDGE_TAG_PREFIX,
   installSim,
   installedState,
+  silenceAutoBatch,
   type InstallResult,
 } from "./install.js";
 import {
@@ -214,6 +215,7 @@ export async function startLauncher(
       if (path === "/api/play") {
         if (!simDir) throw new Error("no sim folder; install first");
         bridge = await bridgeForPlay();
+        silenceAutoBatch(simDir, log);
         (options.launchSim ?? launchSim)(simDir, platform);
         log(`started ${simMarker(platform)}`);
         return { bridge: bridge.info };

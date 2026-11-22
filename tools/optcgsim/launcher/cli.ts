@@ -20,7 +20,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { ensureBridge } from "../bridge.js";
 import { modelCacheDir } from "../paths.js";
-import { installedState, installSim } from "./install.js";
+import { installedState, installSim, silenceAutoBatch } from "./install.js";
 import {
   bundledPluginPath,
   findSimDir,
@@ -135,6 +135,8 @@ async function main(): Promise<void> {
         log,
       });
     }
+    // A batch setting left over from a research run would take the menu over.
+    silenceAutoBatch(simDir, log);
     const ensured = await ensureBridge({
       port: bridgePort,
       cacheDir: modelCacheDir(),

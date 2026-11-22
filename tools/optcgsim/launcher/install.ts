@@ -35,6 +35,9 @@ import {
 /** The tag prefix the bridge's own releases carry. */
 export const BRIDGE_TAG_PREFIX = "bridge-";
 
+/** The plugin's own config, which it creates on first load. */
+export const CONFIG_NAME = "dev.open-optcg.optcgsim-bridge.cfg";
+
 export interface InstallOptions {
   /** The folder holding the sim executable. */
   simDir: string;
@@ -127,6 +130,7 @@ export async function installSim(
     log,
     dryRun: options.dryRun ?? false,
   });
+  if (!options.dryRun) silenceAutoBatch(simDir, log);
   if (!options.dryRun) {
     const statePath = options.statePath ?? launcherStatePath();
     await mkdir(dirname(statePath), { recursive: true });
@@ -245,6 +249,33 @@ async function installPlugin(options: {
   if (dryRun) return false;
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, plugin);
+  return true;
+}
+
+/**
+ * Turns the unattended batch off in the plugin's own config.
+ *
+ * `Games` under `[AiVsAi]` makes the plugin take the sim's menu over on every
+ * launch and start that many AI vs AI games. It is a research switch for
+ * collecting games, not a way to play, and a machine that once ran a batch
+ * would otherwise never show the menu again -- which reads as the plugin being
+ * broken. BepInEx rewrites the file when the sim exits, so this has to run with
+ * the sim closed, which is when the launcher runs it.
+ */
+export function silenceAutoBatch(
+  simDir: string,
+  log: (line: string) => void,
+): boolean {
+  const path = join(simDir, "BepInEx", "config", CONFIG_NAME);
+  if (!existsSync(path)) return false;
+  const text = readFileSync(path, "utf8");
+  const fixed = text.replace(
+    /^(Games\s*=\s*)\d+\s*$/m,
+    (_match, prefix: string) => `${prefix}0`,
+  );
+  if (fixed === text) return false;
+  writeFileSync(path, fixed);
+  log(`turned the AI vs AI batch off in ${path}`);
   return true;
 }
 
