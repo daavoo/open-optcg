@@ -16,7 +16,13 @@
  */
 import { spawn } from "node:child_process";
 import { installedState, installSim } from "./install.js";
-import { findSimDir, isSimDir, platformOf, simMarker } from "./platform.js";
+import {
+  bundledPluginPath,
+  findSimDir,
+  isSimDir,
+  platformOf,
+  simMarker,
+} from "./platform.js";
 import { startLauncher, LAUNCHER_PORT } from "./launcher.js";
 
 function log(line: string): void {
@@ -47,10 +53,13 @@ async function main(): Promise<void> {
     }
     const plugin = flag("plugin");
     const release = flag("release");
+    // A macOS `.app` carries its plugin, so this works with no release at all.
+    const bundled = bundledPluginPath();
     const result = await installSim({
       simDir,
       platform,
       ...(plugin ? { pluginDll: plugin } : {}),
+      ...(bundled ? { bundledPlugin: bundled } : {}),
       ...(release ? { release } : {}),
       dryRun: has("dry-run"),
       log,

@@ -22,6 +22,7 @@ import {
   type InstallResult,
 } from "./install.js";
 import {
+  bundledPluginPath,
   findSimDir,
   isSimDir,
   platformOf,
@@ -177,11 +178,15 @@ export async function startLauncher(
         const wanted = text(body.simDir) || simDir;
         if (!wanted) throw new Error("no sim folder to install into");
         simDir = wanted;
+        // A macOS `.app` carries its plugin, so a download installs with no
+        // release and no network.
+        const bundled = bundledPluginPath();
         const result: InstallResult = await installSim({
           simDir: wanted,
           platform,
           github,
           ...(options.statePath ? { statePath: options.statePath } : {}),
+          ...(bundled ? { bundledPlugin: bundled } : {}),
           log,
         });
         log(

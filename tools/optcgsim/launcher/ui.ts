@@ -61,6 +61,7 @@ export function launcherPage(): string {
       <dt>Bridge</dt><dd id="bridge">—</dd>
       <dt>Model</dt><dd id="model">—</dd>
     </dl>
+    <p id="hint" class="lede" style="display:none;margin:.9rem 0 0"></p>
     <div class="row">
       <button id="install">Install / update</button>
       <button id="play" class="secondary">Play</button>
@@ -106,7 +107,21 @@ async function refresh() {
           ? " — " + status.published + " will be fetched on Play"
           : "")
       : "not fetched yet";
-    $("install").textContent = status.updateAvailable ? "Update" : "Install / update";
+    $("install").textContent = status.updateAvailable ? "Update" : "Install";
+    if (!status.simDir) {
+      const marker = status.platform === "windows" ? "OPTCGSim.exe" : "OPTCGSim.app";
+      $("hint").style.display = "block";
+      $("hint").textContent =
+        "OPTCGSim was not found. Paste the folder that holds " + marker +
+        " above and press Use this folder.";
+    } else if (!status.installed) {
+      $("hint").style.display = "block";
+      $("hint").textContent =
+        "Press Install to put the bridge beside your sim, then Play.";
+    } else {
+      $("hint").style.display = "none";
+    }
+    $("install").disabled = !status.simDir;
     if (document.activeElement !== $("dir")) $("dir").value = status.simDir || "";
     $("play").disabled = !status.installed || status.bridgeRunning;
     $("stop").disabled = !status.bridgeRunning;

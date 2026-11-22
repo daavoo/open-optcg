@@ -135,3 +135,29 @@ export function pluginPath(simDir: string): string {
 export function hasBepInEx(folder: string): boolean {
   return existsSync(join(folder, "BepInEx", "core", "BepInEx.dll"));
 }
+
+/**
+ * The plugin DLL shipped inside the launcher's own macOS `.app`, when it is
+ * running from one.
+ *
+ * Bundling it is what makes a download self-sufficient: the installer can put
+ * the plugin in place with no `bridge-*` release and no network, and the
+ * release page is left to updates rather than to first run. The DLL sits in
+ * `Contents/Resources`, one level up from the executable in `Contents/MacOS`.
+ * A raw SEA binary has no `Resources`, and under `tsx` the executable is Node,
+ * so both return undefined.
+ */
+export function bundledPluginPath(): string | undefined {
+  if (process.platform !== "darwin") return undefined;
+  if (!process.execPath.endsWith("/Contents/MacOS/open-optcg-bridge")) {
+    return undefined;
+  }
+  const path = join(
+    process.execPath,
+    "..",
+    "..",
+    "Resources",
+    "OpenOptcgBridge.dll",
+  );
+  return existsSync(path) ? path : undefined;
+}

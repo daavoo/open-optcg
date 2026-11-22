@@ -17,7 +17,7 @@ import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { unzipSync } from "fflate";
-import { Github, type ReleaseClient } from "../github.js";
+import { Github, type GithubRelease, type ReleaseClient } from "../github.js";
 import { launcherStatePath } from "../paths.js";
 import {
   bepinexAsset,
@@ -43,6 +43,8 @@ export interface InstallOptions {
   release?: string;
   /** A local DLL, for a checkout that has not cut a release yet. */
   pluginDll?: string;
+  /** A DLL shipped inside the launcher's own bundle, used when a release has none. */
+  bundledPlugin?: string;
   github?: ReleaseClient;
   /** Where the install record is written; defaults to the app-support folder. */
   statePath?: string;
@@ -79,24 +81,27 @@ export async function installSim(
   if (options.pluginDll) {
     plugin = new Uint8Array(readFileSync(options.pluginDll));
   } else {
-    const release = options.release
-      ? await github.release(options.release)
-      : await github.newest(BRIDGE_TAG_PREFIX);
-    if (!release) {
+    // The release page is where updates come from, but it is not required to
+    // install: a launcher that shipped with a plugin DLL in its own bundle uses
+    // that, so a player's first run needs no release and no network.
+    const release = await findRelease(github, options.release);
+    if (release) {
+      bridge = release.tag;
+      const asset = release.assets.find(
+        (candidate) => candidate.name === pluginAsset(platform),
+      );
+      if (asset) plugin = await github.download(asset.url);
+    }
+    if (!plugin && options.bundledPlugin && existsSync(options.bundledPlugin)) {
+      plugin = new Uint8Array(readFileSync(options.bundledPlugin));
+      bridge = release ? `${release.tag} (bundled)` : "bundled";
+    }
+    if (!plugin) {
       throw new Error(
-        `BRIDGE_NOT_FOUND: no ${BRIDGE_TAG_PREFIX}* release on GitHub`,
+        `BRIDGE_NOT_FOUND: no ${BRIDGE_TAG_PREFIX}* release carries ` +
+          `${pluginAsset(platform)}, and this launcher bundles none`,
       );
     }
-    bridge = release.tag;
-    const asset = release.assets.find(
-      (candidate) => candidate.name === pluginAsset(platform),
-    );
-    if (!asset) {
-      throw new Error(
-        `BRIDGE_NOT_FOUND: ${release.tag} has no ${pluginAsset(platform)}`,
-      );
-    }
-    plugin = await github.download(asset.url);
   }
 
   const bepinexInstalled = await installBepInEx({
@@ -148,6 +153,21 @@ export async function installSim(
     pluginInstalled,
     runScript: script,
   };
+}
+
+/** The release to install from, or undefined when GitHub cannot be reached. */
+async function findRelease(
+  github: ReleaseClient,
+  tag: string | undefined,
+): Promise<GithubRelease | undefined> {
+  try {
+    return tag
+      ? await github.release(tag)
+      : await github.newest(BRIDGE_TAG_PREFIX);
+  } catch {
+    // Offline, rate-limited or a bad tag: the bundled plugin still installs.
+    return undefined;
+  }
 }
 
 async function installBepInEx(options: {

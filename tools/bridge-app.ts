@@ -17,6 +17,7 @@ import { execFileSync } from "node:child_process";
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
@@ -61,6 +62,21 @@ chmodSync(executable, 0o755);
 
 writeFileSync(join(contents, "Info.plist"), plist(version));
 await makeIcon(resources);
+
+// The plugin travels inside the app, so a download installs with no release
+// and no network; the release page is then only about updates.
+const plugin = resolve(
+  flag("plugin") ??
+    "tools/optcgsim/plugin/bin/Release/netstandard2.1/OpenOptcgBridge.dll",
+);
+if (existsSync(plugin)) {
+  copyFileSync(plugin, join(resources, "OpenOptcgBridge.dll"));
+  console.log(`plugin: ${plugin}`);
+} else {
+  console.warn(
+    `no plugin DLL at ${plugin}: pass --plugin <path>, or the app will need a bridge-* release to install one`,
+  );
+}
 
 // The inner binary is already signed ad hoc; signing the bundle last covers
 // the plist and the icon too, which is what LaunchServices checks.

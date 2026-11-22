@@ -41,8 +41,8 @@ interface Fake extends ReleaseClient {
   downloads: string[];
 }
 
-function fakeClient(): Fake {
-  const releases: GithubRelease[] = [
+function fakeClient(releases?: GithubRelease[]): Fake {
+  const published: GithubRelease[] = releases ?? [
     {
       tag: "bridge-v1",
       name: "Bridge v1",
@@ -58,13 +58,13 @@ function fakeClient(): Fake {
   const client: Fake = {
     downloads: [],
     async releases() {
-      return releases;
+      return published;
     },
     async newest(prefix) {
-      return releases.find((release) => release.tag.startsWith(prefix));
+      return published.find((release) => release.tag.startsWith(prefix));
     },
     async release(tag) {
-      return releases.find((release) => release.tag === tag);
+      return published.find((release) => release.tag === tag);
     },
     async download(url) {
       client.downloads.push(url);
@@ -186,6 +186,57 @@ describe("installSim", () => {
     expect(result.bridge).toBe("local");
     const plugin = join(simDir, "BepInEx", "plugins", "OpenOptcgBridge.dll");
     expect(readFileSync(plugin, "utf8")).toBe("LOCAL");
+  });
+
+  it("installs the plugin it ships with when there is no release", async () => {
+    const simDir = simFolder();
+    const statePath = join(
+      mkdtempSync(join(tmpdir(), "optcgsim-state-")),
+      "bridge.json",
+    );
+    const bundled = join(
+      mkdtempSync(join(tmpdir(), "optcgsim-bundled-")),
+      "OpenOptcgBridge.dll",
+    );
+    writeFileSync(bundled, "BUNDLED");
+
+    const result = await installSim({
+      simDir,
+      platform: "macos",
+      bundledPlugin: bundled,
+      statePath,
+      // A client with no releases at all, which is a fresh project.
+      github: fakeClient([]),
+    });
+
+    expect(result.bridge).toBe("bundled");
+    const plugin = join(simDir, "BepInEx", "plugins", "OpenOptcgBridge.dll");
+    expect(readFileSync(plugin, "utf8")).toBe("BUNDLED");
+  });
+
+  it("prefers the release's plugin over the bundled one", async () => {
+    const simDir = simFolder();
+    const statePath = join(
+      mkdtempSync(join(tmpdir(), "optcgsim-state-")),
+      "bridge.json",
+    );
+    const bundled = join(
+      mkdtempSync(join(tmpdir(), "optcgsim-bundled-")),
+      "OpenOptcgBridge.dll",
+    );
+    writeFileSync(bundled, "BUNDLED");
+
+    const result = await installSim({
+      simDir,
+      platform: "macos",
+      bundledPlugin: bundled,
+      statePath,
+      github: fakeClient(),
+    });
+
+    expect(result.bridge).toBe("bridge-v1");
+    const plugin = join(simDir, "BepInEx", "plugins", "OpenOptcgBridge.dll");
+    expect(new Uint8Array(readFileSync(plugin))).toEqual(PLUGIN);
   });
 
   it("refuses a folder that is not a sim install", async () => {
