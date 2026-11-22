@@ -27,6 +27,7 @@ import { basename, join, resolve } from "node:path";
 import { build } from "esbuild";
 import { Github } from "./optcgsim/github.js";
 import {
+  binaryAsset,
   pluginAsset,
   platformOf,
   type Platform,
@@ -46,7 +47,7 @@ const all = (name: string): string[] =>
 const tag = flag("tag");
 if (!tag || !tag.startsWith("bridge-")) {
   console.error(
-    "usage: pnpm bridge:release --tag bridge-v1 [--plugin macos=<dll>] [--model model-vN] [--no-publish]",
+    "usage: pnpm bridge:release --tag bridge-v1 [--plugin macos=<dll>] [--binary macos=<exe>] [--model model-vN] [--no-publish]",
   );
   process.exit(1);
 }
@@ -93,6 +94,27 @@ if (plugins.size === 0) {
   );
 }
 
+// The single-file launchers, by platform: `--binary <platform>=<path>`, or the
+// host's own build output when nothing is named.
+const binaries = new Map<Platform, string>();
+for (const entry of all("binary")) {
+  const [platform, path] = entry.split("=");
+  if (!platform || !path) {
+    console.error(`--binary wants <platform>=<path>, got ${entry}`);
+    process.exit(1);
+  }
+  binaries.set(platform as Platform, resolve(path));
+}
+if (binaries.size === 0) {
+  const built = resolve(
+    "dist/bridge",
+    process.platform === "win32"
+      ? "open-optcg-bridge.exe"
+      : "open-optcg-bridge",
+  );
+  if (existsSync(built)) binaries.set(platformOf(), built);
+}
+
 const model = flag("model") ?? (await newestModelTag());
 const manifest = {
   tag,
@@ -104,6 +126,12 @@ const manifest = {
     [...plugins].map(([platform, path]) => [
       platform,
       { asset: pluginAsset(platform), sha256: sha256(path) },
+    ]),
+  ),
+  binary: Object.fromEntries(
+    [...binaries].map(([platform, path]) => [
+      platform,
+      { asset: binaryAsset(platform), sha256: sha256(path) },
     ]),
   ),
 };
@@ -121,6 +149,11 @@ if (!publish) {
 const assets = [launcherPath, manifestPath];
 for (const [platform, path] of plugins) {
   const target = join(outDir, pluginAsset(platform));
+  writeFileSync(target, readFileSync(path));
+  assets.push(target);
+}
+for (const [platform, path] of binaries) {
+  const target = join(outDir, binaryAsset(platform));
   writeFileSync(target, readFileSync(path));
   assets.push(target);
 }

@@ -82,6 +82,7 @@ The launcher does the whole of the setup below, in one window:
 
 ```sh
 pnpm bridge:launch      # a local page at http://127.0.0.1:7787
+pnpm bridge:binary      # or one executable with no Node and no checkout
 ```
 
 It finds (or is given) the sim folder, installs BepInEx 5.4.23.6 and the
@@ -91,14 +92,19 @@ bridge in-process when you press **Play**. `pnpm bridge:install` and
 `pnpm bridge:status` are the same thing without the page, and
 `pnpm bridge:install --dry-run` says what it would do without writing.
 
+`pnpm bridge:binary` embeds the launcher in a copy of the running Node with
+Node's single-executable-application support, so a player runs one file. It is
+for the machine that builds it (a SEA binary carries its own Node runtime), so
+CI builds one per platform.
+
 ### The releases
 
 Two kinds, both on the release page:
 
-| tag        | what it carries                                                          | who builds it |
-| ---------- | ------------------------------------------------------------------------ | ------------- |
-| `model-*`  | `scorer-model.json`, `scorer-adapter-<deck>.json`, `deck-standings.json` | training      |
-| `bridge-*` | `launcher.mjs`, `OpenOptcgBridge-<platform>.dll`, `bridge-manifest.json` | see below     |
+| tag        | what it carries                                                                                                | who builds it                   |
+| ---------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `model-*`  | `scorer-model.json`, `scorer-adapter-<deck>.json`, `deck-standings.json`                                       | training                        |
+| `bridge-*` | `launcher.mjs`, `open-optcg-bridge-<platform>[.exe]`, `OpenOptcgBridge-<platform>.dll`, `bridge-manifest.json` | CI, plus a machine with the sim |
 
 The model is never in the launcher bundle: the bridge resolves the newest
 `model-*` release at run time (`model-source.ts`), caches it by tag under
@@ -107,14 +113,15 @@ newest cached tag, then to a checkout's pack, when GitHub cannot be reached.
 `GET /health` reports which release is in play, and the page shows it.
 
 ```sh
-pnpm bridge:release --tag bridge-v1    # bundle + manifest + the host's DLL
+pnpm bridge:release --tag bridge-v1    # bundle + manifest + the host's DLL and binary
 pnpm bridge:verify  --tag bridge-v1    # is it installable?
 ```
 
 The plugin DLL cannot be built in CI: it compiles against the player's own
 OPTCGSim and BepInEx assemblies (`OpenOptcgBridge.csproj`), which are not in
-this repository. CI publishes the launcher and the manifest on a `bridge-v*`
-tag, and the maintainer tops the release up from a machine with the sim:
+this repository. The single-file launcher can, so the workflow builds it on
+macOS, Windows and Linux and publishes it with the manifest on a `bridge-v*`
+tag; the maintainer tops the release up with the plugin DLLs:
 
 ```sh
 pnpm bridge:release --tag bridge-v1 \

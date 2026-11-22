@@ -9,71 +9,85 @@
  * The page and the commands share one implementation: `install` is
  * `installSim`, `launch` is `startLauncher`, and the page's buttons call the
  * same functions over HTTP.
+ *
+ * The body is one async function rather than top-level awaits, because the
+ * single-file binary (`tools/bridge-binary.ts`) embeds this in Node's
+ * CommonJS-only SEA runtime, where a top-level await is a syntax error.
  */
 import { spawn } from "node:child_process";
 import { installedState, installSim } from "./install.js";
 import { findSimDir, isSimDir, platformOf, simMarker } from "./platform.js";
 import { startLauncher, LAUNCHER_PORT } from "./launcher.js";
 
-const args = process.argv.slice(2);
-const command = args[0] ?? "launch";
-const flag = (name: string): string | undefined => {
-  const at = args.indexOf(`--${name}`);
-  return at >= 0 ? args[at + 1] : undefined;
-};
-const has = (name: string): boolean => args.includes(`--${name}`);
-
 function log(line: string): void {
   console.log(line);
 }
 
-if (command === "install") {
-  const platform = platformOf();
-  const simDir =
-    flag("sim-dir") ?? findSimDir(platform) ?? installedState()?.simDir;
-  if (!simDir) {
-    console.error(
-      `no sim folder found; pass --sim-dir (looked for ${simMarker(platform)})`,
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const command = args[0] ?? "launch";
+  const flag = (name: string): string | undefined => {
+    const at = args.indexOf(`--${name}`);
+    return at >= 0 ? args[at + 1] : undefined;
+  };
+  const has = (name: string): boolean => args.includes(`--${name}`);
+
+  if (command === "install") {
+    const platform = platformOf();
+    const simDir =
+      flag("sim-dir") ?? findSimDir(platform) ?? installedState()?.simDir;
+    if (!simDir) {
+      console.error(
+        `no sim folder found; pass --sim-dir (looked for ${simMarker(platform)})`,
+      );
+      process.exit(1);
+    }
+    const plugin = flag("plugin");
+    const release = flag("release");
+    const result = await installSim({
+      simDir,
+      platform,
+      ...(plugin ? { pluginDll: plugin } : {}),
+      ...(release ? { release } : {}),
+      dryRun: has("dry-run"),
+      log,
+    });
+    console.log(
+      `${has("dry-run") ? "would install" : "installed"} ${result.bridge} into ${result.simDir}`,
     );
-    process.exit(1);
+    return;
   }
-  const plugin = flag("plugin");
-  const result = await installSim({
-    simDir,
-    platform,
-    ...(plugin ? { pluginDll: plugin } : {}),
-    ...(flag("release") ? { release: flag("release")! } : {}),
-    dryRun: has("dry-run"),
-    log,
-  });
-  console.log(
-    `${has("dry-run") ? "would install" : "installed"} ${result.bridge} into ${result.simDir}`,
-  );
-} else if (command === "status") {
-  const state = installedState();
-  if (!state) {
-    console.log("not installed");
-    process.exit(0);
+
+  if (command === "status") {
+    const state = installedState();
+    if (!state) {
+      console.log("not installed");
+      return;
+    }
+    console.log(`installed: ${state.bridge}`);
+    console.log(`sim folder: ${state.simDir}`);
+    console.log(`sim folder exists: ${isSimDir(state.simDir, state.platform)}`);
+    return;
   }
-  console.log(`installed: ${state.bridge}`);
-  console.log(`sim folder: ${state.simDir}`);
-  console.log(`sim folder exists: ${isSimDir(state.simDir, state.platform)}`);
-} else if (command === "launch") {
-  const launcher = await startLauncher({
-    ...(flag("sim-dir") ? { simDir: flag("sim-dir")! } : {}),
-    port: Number(flag("port") ?? LAUNCHER_PORT),
-    bridgePort: Number(flag("bridge-port") ?? 7788),
-    log,
-  });
-  console.log(`open ${launcher.url}`);
-  if (!has("no-open")) open(launcher.url);
-  // The launcher owns the bridge; keep this process alive until it is killed.
-  process.on("SIGINT", () => {
-    void launcher.close().then(() => process.exit(0));
-  });
-  await new Promise(() => {});
-} else {
-  console.error("usage: pnpm bridge:launch | bridge:install | bridge:status");
+
+  if (command === "launch") {
+    const launcher = await startLauncher({
+      ...(flag("sim-dir") ? { simDir: flag("sim-dir")! } : {}),
+      port: Number(flag("port") ?? LAUNCHER_PORT),
+      bridgePort: Number(flag("bridge-port") ?? 7788),
+      log,
+    });
+    console.log(`open ${launcher.url}`);
+    if (!has("no-open")) open(launcher.url);
+    // The launcher owns the bridge; keep this process alive until it is killed.
+    process.on("SIGINT", () => {
+      void launcher.close().then(() => process.exit(0));
+    });
+    await new Promise(() => {});
+    return;
+  }
+
+  console.error("usage: bridge launch | install | status");
   process.exit(1);
 }
 
@@ -91,3 +105,8 @@ function open(url: string): void {
     // A machine with no browser still has the URL on stdout.
   }
 }
+
+void main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});

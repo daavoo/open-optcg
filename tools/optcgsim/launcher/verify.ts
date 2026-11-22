@@ -13,7 +13,7 @@
  */
 import { createHash } from "node:crypto";
 import type { GithubRelease, ReleaseClient } from "../github.js";
-import { pluginAsset, type Platform } from "./platform.js";
+import { binaryAsset, pluginAsset, type Platform } from "./platform.js";
 
 export interface BridgeManifest {
   tag: string;
@@ -21,6 +21,7 @@ export interface BridgeManifest {
   model: string | null;
   launcher: { asset: string; sha256: string };
   plugin: Partial<Record<Platform, { asset: string; sha256: string }>>;
+  binary: Partial<Record<Platform, { asset: string; sha256: string }>>;
 }
 
 export interface VerifyResult {
@@ -74,6 +75,20 @@ export async function verifyRelease(
   if (Object.keys(manifest.plugin).length === 0) {
     problems.push(
       "the manifest names no plugin DLL: was it built without --plugin?",
+    );
+  }
+  for (const [platform, entry] of Object.entries(manifest.binary)) {
+    const expected = binaryAsset(platform as Platform);
+    if (entry.asset !== expected) {
+      problems.push(
+        `${platform}: manifest names ${entry.asset}, expected ${expected}`,
+      );
+    }
+    await check(expected, entry.sha256);
+  }
+  if (Object.keys(manifest.binary).length === 0) {
+    problems.push(
+      "the manifest names no launcher binary: was it built without --binary?",
     );
   }
   return { ok: problems.length === 0, problems, manifest };

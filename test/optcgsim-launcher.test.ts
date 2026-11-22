@@ -15,6 +15,7 @@ import {
 } from "../tools/optcgsim/launcher/install.js";
 import {
   bepinexAsset,
+  binaryAsset,
   findSimDir,
   isSimDir,
   pluginAsset,
@@ -245,12 +246,25 @@ describe("verifyRelease", () => {
     model: "model-v12",
     launcher: { asset: "launcher.mjs", sha256: sha("LAUNCHER") },
     plugin: { macos: { asset: plugin, sha256: pluginSha } },
+    binary: {
+      macos: { asset: binaryAsset("macos"), sha256: sha("BINARY") },
+    },
   });
+  const files = {
+    "launcher.mjs": "LAUNCHER",
+    "OpenOptcgBridge-macos.dll": "PLUGIN",
+    "open-optcg-bridge-macos": "BINARY",
+  };
+  const without = (
+    record: Record<string, string>,
+    key: string,
+  ): Record<string, string> =>
+    Object.fromEntries(Object.entries(record).filter(([name]) => name !== key));
 
   it("accepts a release whose assets match its manifest", async () => {
     const { github, release } = releaseWith(
       manifest(pluginAsset("macos"), sha("PLUGIN")),
-      { "launcher.mjs": "LAUNCHER", "OpenOptcgBridge-macos.dll": "PLUGIN" },
+      files,
     );
 
     const result = await verifyRelease(github, release);
@@ -262,7 +276,7 @@ describe("verifyRelease", () => {
   it("catches a plugin that was never uploaded", async () => {
     const { github, release } = releaseWith(
       manifest(pluginAsset("macos"), sha("PLUGIN")),
-      { "launcher.mjs": "LAUNCHER" },
+      without(files, "OpenOptcgBridge-macos.dll"),
     );
 
     const result = await verifyRelease(github, release);
@@ -273,10 +287,24 @@ describe("verifyRelease", () => {
     );
   });
 
+  it("catches a launcher binary that was never uploaded", async () => {
+    const { github, release } = releaseWith(
+      manifest(pluginAsset("macos"), sha("PLUGIN")),
+      without(files, "open-optcg-bridge-macos"),
+    );
+
+    const result = await verifyRelease(github, release);
+
+    expect(result.ok).toBe(false);
+    expect(result.problems.join(" ")).toContain(
+      "missing asset open-optcg-bridge-macos",
+    );
+  });
+
   it("catches an asset that does not hash to the manifest", async () => {
     const { github, release } = releaseWith(
       manifest(pluginAsset("macos"), sha("OTHER")),
-      { "launcher.mjs": "LAUNCHER", "OpenOptcgBridge-macos.dll": "PLUGIN" },
+      files,
     );
 
     const result = await verifyRelease(github, release);

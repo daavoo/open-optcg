@@ -1,15 +1,15 @@
 name: Bridge
 
-# The OPTCGSim bridge: the launcher a player double-clicks, the BepInEx plugin
-# it installs, and the release page the launcher reads the model from.
+# The OPTCGSim bridge: the launcher a player runs, the BepInEx plugin it
+# installs, and the release page the launcher reads the model from.
 #
-# On a pull request this only builds the launcher bundle, which is the part
-# that can break without anyone touching the sim: the plugin is compiled
-# against the player's own OPTCGSim and BepInEx assemblies, which are not in
-# this repository and cannot be built here.
+# A pull request builds the launcher bundle and runs the bridge tests (in CI).
+# A `bridge-v*` tag builds the single-file launcher on each platform and
+# publishes the release.
 #
-# A `bridge-v*` tag publishes the launcher and the manifest. The plugin DLLs
-# are added by the maintainer from a machine with the sim:
+# The plugin DLL is not built here: it compiles against the player's own
+# OPTCGSim and BepInEx assemblies, which are not in this repository. The
+# maintainer adds it from a machine with the sim:
 #
 #   pnpm bridge:release --tag bridge-v1 \
 #     --plugin macos=tools/optcgsim/plugin/bin/Release/netstandard2.1/OpenOptcgBridge.dll
@@ -21,13 +21,13 @@ on:
     branches: [main]
     paths:
       - "tools/optcgsim/**"
-      - "tools/bridge-release.ts"
+      - "tools/bridge-*.ts"
       - ".github/workflows/bridge.yml"
     tags: ["bridge-v*"]
   pull_request:
     paths:
       - "tools/optcgsim/**"
-      - "tools/bridge-release.ts"
+      - "tools/bridge-*.ts"
       - ".github/workflows/bridge.yml"
   workflow_dispatch:
 
@@ -56,15 +56,50 @@ jobs:
       # workspace import esbuild could not inline shows up here, not in the sim.
       - name: Smoke-test the bundle
         run: node dist/bridge/launcher.mjs status
+
+  binaries:
+    name: launcher binary (${{ matrix.platform }})
+    if: startsWith(github.ref, 'refs/tags/bridge-v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            os: macos-latest
+            file: open-optcg-bridge
+          - platform: windows
+            os: windows-latest
+            file: open-optcg-bridge.exe
+          - platform: linux
+            os: ubuntu-latest
+            file: open-optcg-bridge
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm bridge:binary
+      # A SEA binary that lost its blob still starts; one whose runtime is the
+      # wrong architecture does not, and that is what this catches.
+      - name: Smoke-test the binary
+        run: ./dist/bridge/${{ matrix.file }} status
       - uses: actions/upload-artifact@v5
         with:
-          name: bridge-launcher
-          path: dist/bridge/
+          name: binary-${{ matrix.platform }}
+          path: dist/bridge/${{ matrix.file }}
           if-no-files-found: error
 
   publish:
     name: publish release
-    needs: bundle
+    needs: [bundle, binaries]
     if: startsWith(github.ref, 'refs/tags/bridge-v')
     runs-on: ubuntu-latest
     permissions:
@@ -79,7 +114,15 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: binary-*
+          path: dist/binaries
       - name: Publish the launcher
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm bridge:release --tag "${{ github.ref_name }}"
+        run: |
+          pnpm bridge:release --tag "${{ github.ref_name }}" \
+            --binary macos=dist/binaries/binary-macos/open-optcg-bridge \
+            --binary windows=dist/binaries/binary-windows/open-optcg-bridge.exe \
+            --binary linux=dist/binaries/binary-linux/open-optcg-bridge

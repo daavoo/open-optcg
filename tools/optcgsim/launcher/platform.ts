@@ -111,6 +111,13 @@ export function pluginAsset(platform: Platform): string {
   return `OpenOptcgBridge-${platform}.dll`;
 }
 
+/** The single-file launcher the release carries for the platform. */
+export function binaryAsset(platform: Platform): string {
+  return platform === "windows"
+    ? "open-optcg-bridge-windows.exe"
+    : `open-optcg-bridge-${platform}`;
+}
+
 /** Where the plugin goes once extracted. */
 export function pluginPath(simDir: string): string {
   return join(simDir, "BepInEx", "plugins", "OpenOptcgBridge.dll");
