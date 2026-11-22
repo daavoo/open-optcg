@@ -7,11 +7,9 @@
  * Keeping the bridge in the same process means the model it resolved and the
  * port it bound are what the page shows, and stopping the launcher stops both.
  */
-import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createServer, type ServerResponse } from "node:http";
-import { join } from "node:path";
-import { startBridge, type Bridge } from "../bridge.js";
+import { ensureBridge, type Bridge } from "../bridge.js";
 import { Github, type ReleaseClient } from "../github.js";
 import { modelStatus, releaseSourceOf } from "../model-source.js";
 import { modelCacheDir } from "../paths.js";
@@ -25,8 +23,8 @@ import {
   bundledPluginPath,
   findSimDir,
   isSimDir,
+  launchSim,
   platformOf,
-  runScript,
   simMarker,
   type Platform,
 } from "./platform.js";
@@ -46,6 +44,10 @@ export interface LauncherOptions {
   github?: ReleaseClient;
   /** Where the install record lives; defaults to the app-support folder. */
   statePath?: string;
+  /** How the sim is started; injectable so a test does not open one. */
+  launchSim?: (simDir: string, platform: Platform) => void;
+  /** Where downloaded models live; defaults to the app-support folder. */
+  cacheDir?: string;
   /** Called for every line the page's log shows. */
   log?: (line: string) => void;
 }
@@ -62,6 +64,7 @@ export async function startLauncher(
   const platform = options.platform ?? platformOf();
   const port = options.port ?? LAUNCHER_PORT;
   const bridgePort = options.bridgePort ?? 7788;
+  const cacheDir = options.cacheDir ?? modelCacheDir();
   const github = options.github ?? new Github("daavoo/open-optcg");
   const lines: string[] = [];
   const listeners = new Set<ServerResponse>();
@@ -74,11 +77,23 @@ export async function startLauncher(
 
   let simDir = resolveSimDir(options.simDir, platform, options.statePath);
   let bridge: Bridge | undefined;
+  // False when the bridge on the port was started by something else -- a
+  // leftover from a terminal, say -- and this launcher is only borrowing it.
+  let bridgeOwned = true;
+
+  /** The bridge to play through, adopting one already on the port. */
+  async function bridgeForPlay(): Promise<Bridge> {
+    if (bridge) return bridge;
+    const ensured = await ensureBridge({ port: bridgePort, cacheDir, log });
+    bridge = ensured.bridge;
+    bridgeOwned = ensured.owned;
+    return bridge;
+  }
 
   const status = async (): Promise<unknown> => {
     const recorded = installedState(options.statePath);
     const model = await modelStatus({
-      cacheDir: modelCacheDir(),
+      cacheDir,
       source: releaseSourceOf(github),
       offline: false,
     });
@@ -98,6 +113,8 @@ export async function startLauncher(
         recorded.bridge !== latestBridge,
       bridgeRunning: bridge !== undefined,
       bridgeUrl: bridge?.info.url ?? null,
+      /** False when the bridge was already running and this launcher borrows it. */
+      bridgeOwned,
       model: bridge
         ? { release: bridge.info.release, model: bridge.info.model }
         : model.cached
@@ -196,16 +213,18 @@ export async function startLauncher(
       }
       if (path === "/api/play") {
         if (!simDir) throw new Error("no sim folder; install first");
-        bridge ??= await startBridge({
-          port: bridgePort,
-          cacheDir: modelCacheDir(),
-          log,
-        });
-        launchSim(simDir, platform);
+        bridge = await bridgeForPlay();
+        (options.launchSim ?? launchSim)(simDir, platform);
         log(`started ${simMarker(platform)}`);
         return { bridge: bridge.info };
       }
       if (path === "/api/stop") {
+        if (bridge && !bridgeOwned) {
+          log(
+            `the bridge on ${bridgePort} was started elsewhere; stop it there`,
+          );
+          return { stopped: false, external: true };
+        }
         await bridge?.close();
         bridge = undefined;
         log("bridge stopped");
@@ -227,7 +246,12 @@ export async function startLauncher(
   await new Promise<void>((resolve) =>
     server.listen(port, "127.0.0.1", resolve),
   );
-  const url = `http://127.0.0.1:${port}`;
+  // `port: 0` asks the OS for one, which is what a test does; the URL has to
+  // carry the port that was actually bound, not the one that was asked for.
+  const address = server.address();
+  const bound =
+    typeof address === "object" && address !== null ? address.port : port;
+  const url = `http://127.0.0.1:${bound}`;
   log(`launcher on ${url}`);
   return {
     url,
@@ -259,22 +283,6 @@ function resolveSimDir(
   const recorded = installedState(statePath)?.simDir;
   if (recorded && existsSync(recorded)) return recorded;
   return findSimDir(platform);
-}
-
-/** Starts the sim the way BepInEx expects: through its own script. */
-function launchSim(simDir: string, platform: Platform): void {
-  const script = runScript(platform);
-  const command = script
-    ? join(simDir, script)
-    : join(simDir, simMarker(platform));
-  const child = script
-    ? spawn("/bin/sh", [command], {
-        cwd: simDir,
-        detached: true,
-        stdio: "ignore",
-      })
-    : spawn(command, [], { cwd: simDir, detached: true, stdio: "ignore" });
-  child.unref();
 }
 
 function parse(chunks: Buffer[]): Record<string, unknown> {

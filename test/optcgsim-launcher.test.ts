@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdtempSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { zipSync } from "fflate";
@@ -13,6 +15,7 @@ import {
   installedState,
   installSim,
 } from "../tools/optcgsim/launcher/install.js";
+import { startLauncher } from "../tools/optcgsim/launcher/launcher.js";
 import {
   appAsset,
   bepinexAsset,
@@ -396,6 +399,77 @@ describe("verifyRelease", () => {
     expect(result.problems).toEqual(["no bridge-manifest.json"]);
   });
 });
+
+describe("startLauncher", () => {
+  it("reuses a bridge already listening on the port instead of failing", async () => {
+    // A bridge from an earlier run -- or a terminal -- holding the port.
+    const existing = createServer((request, response) => {
+      if (request.url !== "/health") {
+        response.writeHead(404).end();
+        return;
+      }
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(
+        JSON.stringify({ ok: true, model: "m", release: "model-v1" }),
+      );
+    });
+    await new Promise<void>((resolve) =>
+      existing.listen(0, "127.0.0.1", resolve),
+    );
+    const bridgePort = (existing.address() as AddressInfo).port;
+
+    const simDir = simFolder();
+    const statePath = join(
+      mkdtempSync(join(tmpdir(), "optcgsim-state-")),
+      "bridge.json",
+    );
+    const launched: string[] = [];
+    const launcher = await startLauncher({
+      simDir,
+      platform: "macos",
+      bridgePort,
+      port: 0,
+      statePath,
+      cacheDir: mkdtempSync(join(tmpdir(), "optcgsim-models-")),
+      github: fakeClient([]),
+      launchSim: (directory) => launched.push(directory),
+    });
+
+    try {
+      const played = (await json(`${launcher.url}/api/play`, "POST")) as {
+        bridge: { url: string };
+      };
+      expect(played.bridge.url).toBe(`http://127.0.0.1:${bridgePort}`);
+      expect(launched).toEqual([simDir]);
+
+      const status = (await json(`${launcher.url}/api/status`)) as {
+        bridgeRunning: boolean;
+        bridgeOwned: boolean;
+      };
+      expect(status.bridgeRunning).toBe(true);
+      expect(status.bridgeOwned).toBe(false);
+
+      // Stop cannot close a bridge it does not own, and says so rather than
+      // pretending it did.
+      expect(await json(`${launcher.url}/api/stop`, "POST")).toEqual({
+        stopped: false,
+        external: true,
+      });
+    } finally {
+      await launcher.close();
+      await new Promise<void>((resolve) =>
+        existing.close(() => {
+          resolve();
+        }),
+      );
+    }
+  });
+});
+
+async function json(url: string, method: "GET" | "POST" = "GET") {
+  const response = await fetch(url, method === "POST" ? { method } : undefined);
+  return (await response.json()) as unknown;
+}
 
 describe("platform", () => {
   it("names the BepInEx asset the README pins", () => {

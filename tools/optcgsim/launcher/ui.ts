@@ -97,7 +97,10 @@ async function refresh() {
     $("sim").textContent = status.simDir || "not found";
     $("bridge").textContent = status.installed
       ? status.bridge +
-        (status.bridgeRunning ? " (running on " + status.bridgeUrl + ")" : "") +
+        (status.bridgeRunning
+          ? " (running on " + status.bridgeUrl +
+            (status.bridgeOwned === false ? ", started elsewhere" : "") + ")"
+          : "") +
         (status.updateAvailable ? " — " + status.latestBridge + " is available" : "")
       : "not installed";
     $("bridge").className = status.installed ? "ok" : "bad";

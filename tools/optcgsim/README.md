@@ -78,28 +78,35 @@ following a person is checked without anyone sitting through the games.
 
 ## Installing it for a player
 
-The launcher does the whole of the setup below, in one window:
+A player opens the app and gets the sim. `play` -- the app's default, and
+`pnpm bridge:play` -- installs BepInEx 5.4.23.6 and the plugin if they are not
+there, starts the bridge on 7788, starts OPTCGSim through BepInEx's own script
+if it is not already running, and waits. Closing the sim stops the bridge and
+ends the process, so there is nothing left running afterwards.
 
 ```sh
-pnpm bridge:launch      # a local page at http://127.0.0.1:7787
-pnpm bridge:binary      # or one executable with no Node and no checkout
+pnpm bridge:play        # set up, start the bridge, start the sim
+pnpm bridge:page        # the local control page at http://127.0.0.1:7787
+pnpm bridge:install     # put BepInEx and the plugin in place, and stop
+pnpm bridge:status      # what is installed, where, and whether the sim is up
+pnpm bridge:binary      # one executable with no Node and no checkout
 pnpm bridge:app         # or a macOS application around that executable
 ```
 
-It finds (or is given) the sim folder, installs BepInEx 5.4.23.6 and the
-plugin from the newest `bridge-*` release, fetches the newest `model-*`
-release's weights into the user's application-support folder, and starts the
-bridge in-process when you press **Play**. `pnpm bridge:install` and
-`pnpm bridge:status` are the same thing without the page, and
-`pnpm bridge:install --dry-run` says what it would do without writing.
+The page is not the product: it is what opens when a person has to decide
+something -- no sim folder found, or the sim did not start -- and what
+`bridge page` opens on demand for its Install / Play / Stop / Quit buttons.
+A sim that is already running is attached to rather than started again, and a
+bridge already on the port is adopted rather than fought over.
 
 `pnpm bridge:binary` embeds the launcher in a copy of the running Node with
 Node's single-executable-application support, so a player runs one file. It is
 for the machine that builds it (a SEA binary carries its own Node runtime), so
 CI builds one per platform. `pnpm bridge:app` wraps that executable in a macOS
-`.app` -- `Info.plist`, a drawn icon, and a bundle signature -- and zips it, so
-a macOS player double-clicks an icon instead of running a command. macOS only;
-the app is signed ad hoc, which runs on the machine that built it.
+`.app` -- `Info.plist`, a drawn icon, a bundle signature, and the platform's
+plugin DLL -- and zips it, so a macOS player double-clicks an icon and needs no
+network to install. macOS only; the app is signed ad hoc, which runs on the
+machine that built it.
 
 ### The releases
 

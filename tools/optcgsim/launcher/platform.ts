@@ -7,6 +7,7 @@
  * is built against BepInEx 5.4.23.6 (the version the README pins), so that is
  * the build the launcher installs.
  */
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -129,6 +130,77 @@ export function appAsset(platform: Platform): string | null {
 /** Where the plugin goes once extracted. */
 export function pluginPath(simDir: string): string {
   return join(simDir, "BepInEx", "plugins", "OpenOptcgBridge.dll");
+}
+
+/**
+ * Whether the sim is already running.
+ *
+ * A launcher that starts a second copy on top of a running one is worse than
+ * one that does nothing, and the plugin of a sim that is already up will reach
+ * a bridge started now just as well, so the launcher attaches instead.
+ */
+export function simIsRunning(platform: Platform = platformOf()): boolean {
+  try {
+    if (platform === "windows") {
+      const out = execFileSync(
+        "tasklist",
+        ["/FI", "IMAGENAME eq OPTCGSim.exe", "/NH"],
+        { encoding: "utf8" },
+      );
+      return out.includes("OPTCGSim.exe");
+    }
+    execFileSync("pgrep", ["-f", simMarker(platform)], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Resolves when the sim is no longer running; polls, because nothing signals it. */
+export async function waitForSimExit(
+  platform: Platform = platformOf(),
+): Promise<void> {
+  while (simIsRunning(platform)) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+}
+
+/** Whether the sim has appeared within `timeoutMs` of being started. */
+export async function waitForSimStart(
+  platform: Platform = platformOf(),
+  timeoutMs = 15000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (simIsRunning(platform)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return false;
+}
+
+/**
+ * Starts the sim the way BepInEx expects: through its own run script.
+ *
+ * The script is handed to `sh` rather than executed directly so a missing
+ * executable bit does not matter, and it is detached so the launcher can exit
+ * without taking the sim with it.
+ */
+export function launchSim(
+  simDir: string,
+  platform: Platform = platformOf(),
+): void {
+  const script = runScript(platform);
+  const command = script
+    ? join(simDir, script)
+    : join(simDir, simMarker(platform));
+  const child = script
+    ? spawn("/bin/sh", [command], {
+        cwd: simDir,
+        detached: true,
+        stdio: "ignore",
+      })
+    : spawn(command, [], { cwd: simDir, detached: true, stdio: "ignore" });
+  child.unref();
 }
 
 /** Whether BepInEx is already installed in `folder`. */

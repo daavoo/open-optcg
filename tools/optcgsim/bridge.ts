@@ -239,6 +239,80 @@ function checkoutPack(): string {
 }
 
 /**
+ * What a bridge on `port` says about itself, if one is listening.
+ *
+ * The health response is the bridge's own, so this is how a launcher tells a
+ * bridge it can reuse from an unrelated program that happens to hold the port.
+ */
+export async function bridgeHealth(
+  port: number,
+): Promise<{ model: string; release: string } | undefined> {
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/health`, {
+      signal: AbortSignal.timeout(2000),
+    });
+    if (!response.ok) return undefined;
+    const body = (await response.json()) as {
+      ok?: unknown;
+      model?: unknown;
+      release?: unknown;
+    };
+    if (body.ok !== true) return undefined;
+    return {
+      model: typeof body.model === "string" ? body.model : "?",
+      release: typeof body.release === "string" ? body.release : "?",
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export interface EnsuredBridge {
+  bridge: Bridge;
+  /** False when the bridge was already running and is only being borrowed. */
+  owned: boolean;
+}
+
+/**
+ * The bridge to play through, starting one unless the port already has it.
+ *
+ * The port is asked first, before any model is resolved, so a bridge left over
+ * from an earlier run -- or started in a terminal -- is adopted as it stands
+ * rather than making the launch fail with a port error and no sim.
+ */
+export async function ensureBridge(options: {
+  port: number;
+  cacheDir: string;
+  log?: (line: string) => void;
+}): Promise<EnsuredBridge> {
+  const log = options.log ?? ((): void => {});
+  const existing = await bridgeHealth(options.port);
+  if (existing) {
+    log(
+      `port ${options.port} already serves a bridge (${existing.release}); using it`,
+    );
+    return {
+      owned: false,
+      bridge: {
+        info: {
+          port: options.port,
+          url: `http://127.0.0.1:${options.port}`,
+          model: existing.model,
+          release: existing.release,
+        },
+        close: async () => {},
+      },
+    };
+  }
+  const bridge = await startBridge({
+    port: options.port,
+    cacheDir: options.cacheDir,
+    log,
+  });
+  return { bridge, owned: true };
+}
+
+/**
  * The catalog's decks as the sim's deck files: a name the sim can use as a
  * file name, and its lines, the Leader first.
  */
