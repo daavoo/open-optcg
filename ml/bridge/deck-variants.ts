@@ -1635,6 +1635,29 @@ export const DECK_VARIANTS: readonly DeckVariant[] = [
     },
     source: "supplied by the maintainer, 1 Nov 2026",
   },
+  {
+    base: "daavoo",
+    label: "EB05 Nami + Karoo",
+    cards: {
+      "EB05-061": 1,
+      "OP01-016": 4,
+      "OP04-016": 4,
+      "OP08-018": 2,
+      "OP10-005": 2,
+      "OP10-011": 2,
+      "OP12-015": 4,
+      "OP13-021": 3,
+      "OP18-004": 3,
+      "OP18-019": 1,
+      "ST01-011": 4,
+      "ST21-003": 4,
+      "ST21-014": 4,
+      "ST31-001": 4,
+      "ST31-004": 4,
+      "ST31-005": 4,
+    },
+    source: "supplied by the maintainer, 22 Nov 2026",
+  },
   // The top ten of TCG Match Making's OP17.5 Weekly Power Rankings of 22 Oct
   // 2026 (Patreon), from high-rank online play after the Mihawk ban: the
   // current meta builds of these Leaders, as candidates for each Leader's
