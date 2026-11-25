@@ -42,6 +42,9 @@ namespace OpenOptcg.OptcgSimBridge
         const int LifeTrigger = 21;
         // The second Life card of a [Double Attack], asked the same way.
         const int LifeDoubleTrigger = 22;
+        // The sim's "Back to Main" only switches to this state; it calls
+        // neither of the menu methods the plugin hooks.
+        const int MainMenu = 23;
         const int GameOver = 26;
         const int ConfirmRevealedCard = 30;
         const int ConfirmRevealedCardOnOpponentsTurn = 31;
@@ -202,6 +205,11 @@ namespace OpenOptcg.OptcgSimBridge
                 OnMainMenu();
                 return false;
             }
+            if ((int)gls.e_CurrentState == MainMenu)
+            {
+                OnMainMenu();
+                return false;
+            }
             return gls.e_GameStyle == GameStyle.SoloVSelf;
         }
 
@@ -318,6 +326,23 @@ namespace OpenOptcg.OptcgSimBridge
         static List<GameObject> TopDeck(GameplayLogicScript script) =>
             (List<GameObject>)AccessTools.Field(typeof(GameplayLogicScript), "lgo_TopDeck").GetValue(script) ?? new List<GameObject>();
 
+        // `SetupHandCard` does not see every way a card reaches the hand -- the
+        // opening hand is dealt before the game is known to be the model's --
+        // so any of the model's hand cards still face up is turned down here.
+        void KeepModelHandHidden()
+        {
+            if (!InSoloGame() || !HidesSeat(modelSeat.Value)) return;
+            var state = (int)gls.e_CurrentState;
+            if (state == GameOver || state == ConfirmRevealedCard || state == ConfirmRevealedCardOnOpponentsTurn) return;
+            var players = gls.Lps_Players;
+            if (players == null || modelSeat.Value >= players.Count) return;
+            foreach (var card in players[modelSeat.Value].Lgo_MyHand)
+            {
+                var script = card == null ? null : card.GetComponent<CardLogicScript>();
+                if (script != null && script.myCard.bFaceUp) script.SetFaceUp(false);
+            }
+        }
+
         // With the model in both seats there is nobody to hide a hand from.
         bool HidesSeat(int seat) => aiGame && inSoloGame && !bothSeats && seat == modelSeat.Value;
 
@@ -377,8 +402,12 @@ namespace OpenOptcg.OptcgSimBridge
         // Copies of the sim's own Solo V Self button, beside it: each opens the
         // same deck screen, and marks the game it starts as one the model plays
         // -- one seat of ("Solo vs AI"), or both ("AI vs AI").
+        bool menuButtonPlaced;
+
         void AddMenuButton()
         {
+            if (aiMenuButton != null && !menuButtonPlaced && aiMenuButton.activeInHierarchy)
+                menuButtonPlaced = PlaceInFreeSlot(aiMenuButton, soloMenuButton);
             if (aiMenuButton != null || Time.unscaledTime < nextLookAt) return;
             nextLookAt = Time.unscaledTime + 1f;
             var menu = FindAnyObjectByType<HostJoinScript>();
@@ -389,7 +418,7 @@ namespace OpenOptcg.OptcgSimBridge
 
             soloMenuButton = solo;
             aiMenuButton = CopyMenuButton(solo, soloButton, "Solo vs AI", 1, false);
-            PlaceInFreeSlot(aiMenuButton, solo);
+            menuButtonPlaced = false;
             // AI vs AI is how a batch of games is collected, so it is on the
             // menu only while `Games` is running one; a player has no use for it.
             if (gamesLeft > 0) bothMenuButton = CopyMenuButton(solo, soloButton, "AI vs AI", 2, true);
@@ -398,31 +427,49 @@ namespace OpenOptcg.OptcgSimBridge
 
         // Below Solo V Self the sim keeps its own beta buttons and the account
         // button, so the copy goes in the gap above it instead: in Solo V
-        // Self's column, halfway between it and Multiplayer. Left where it was
-        // when Multiplayer is not found.
-        void PlaceInFreeSlot(GameObject copy, GameObject solo)
+        // Self's column, centred between Multiplayer's bottom edge and Solo V
+        // Self's top edge. Tried every frame until the menu has a layout to
+        // measure: before that, every button reports the same place. Says
+        // whether it is done; the copy stays below Solo V Self when there is
+        // no Multiplayer button to measure from.
+        bool PlaceInFreeSlot(GameObject copy, GameObject solo)
         {
-            if (solo.transform.parent.GetComponent<LayoutGroup>() != null) return;
-            RectTransform multiplayer = null;
-            foreach (Transform child in solo.transform.parent)
+            if (copy == null || solo == null) return true;
+            var parent = solo.transform.parent as RectTransform;
+            if (parent == null || parent.GetComponent<LayoutGroup>() != null) return true;
+            // The Button whose label reads "Multiplayer", not a panel that
+            // merely contains it, so its corners are the button's own.
+            var multiplayer = parent.GetComponentsInChildren<Button>(true)
+                .Where(button => button.gameObject != copy && button.gameObject != solo
+                    && !button.transform.IsChildOf(copy.transform) && !button.transform.IsChildOf(solo.transform))
+                .FirstOrDefault(button =>
+                    button.GetComponentsInChildren<TMP_Text>(true).Select(t => t.text)
+                        .Concat(button.GetComponentsInChildren<Text>(true).Select(t => t.text))
+                        .Any(text => text != null && text.Trim() == "Multiplayer"));
+            if (multiplayer == null)
             {
-                if (child.gameObject == copy || child.gameObject == solo) continue;
-                var texts = child.GetComponentsInChildren<TMP_Text>(true).Select(t => t.text)
-                    .Concat(child.GetComponentsInChildren<Text>(true).Select(t => t.text));
-                if (texts.Any(text => text != null && text.Trim() == "Multiplayer")) multiplayer = child as RectTransform;
+                Logger.LogWarning("Solo vs AI: no Multiplayer button beside Solo V Self; left below it");
+                return true;
             }
-            if (multiplayer == null) return;
-            var rect = (RectTransform)copy.transform;
+            var corners = new Vector3[4];
+            float Edge(RectTransform rect, bool top)
+            {
+                rect.GetWorldCorners(corners);
+                return parent.InverseTransformPoint(top ? corners[1] : corners[0]).y;
+            }
             var below = (RectTransform)solo.transform;
-            // Measured in the parent's space, so the two buttons' own anchors
-            // do not have to match.
-            var parent = (RectTransform)solo.transform.parent;
-            var top = parent.InverseTransformPoint(multiplayer.position);
-            var bottom = parent.InverseTransformPoint(below.position);
+            var gapTop = Edge((RectTransform)multiplayer.transform, false);
+            var gapBottom = Edge(below, true);
+            if (gapTop - gapBottom < below.rect.height * 0.5f) return false;
+            var soloCentre = parent.InverseTransformPoint(below.TransformPoint(below.rect.center)).y;
+            var rect = (RectTransform)copy.transform;
             rect.anchorMin = below.anchorMin;
             rect.anchorMax = below.anchorMax;
             rect.pivot = below.pivot;
-            rect.anchoredPosition = below.anchoredPosition + new Vector2(0, (top.y - bottom.y) / 2f);
+            rect.anchoredPosition = below.anchoredPosition
+                + new Vector2(0, (gapTop + gapBottom) / 2f - soloCentre);
+            Logger.LogInfo($"Solo vs AI: placed between Multiplayer (bottom {gapTop:0}) and Solo V Self (top {gapBottom:0})");
+            return true;
         }
 
         // The deck files this plugin wrote last time, one name a line, kept
@@ -652,6 +699,8 @@ namespace OpenOptcg.OptcgSimBridge
             if (bothMenuButton != null && soloMenuButton != null && bothMenuButton.activeSelf != soloMenuButton.activeSelf)
                 bothMenuButton.SetActive(soloMenuButton.activeSelf);
             AutoStart();
+            RefreshHud();
+            KeepModelHandHidden();
             if (!InSoloGame()) return;
             if (nextGameAt > 0 && Time.unscaledTime >= nextGameAt)
             {
@@ -716,6 +765,7 @@ namespace OpenOptcg.OptcgSimBridge
                 return;
             }
             CoverChoiceButtons();
+            if (hud != null) return;
             // A window, so it can be dragged off whatever part of the sim's UI
             // it covers.
             panel = GUI.Window(0x6f70, panel, DrawPanel, "AI opponent (open-optcg)");
@@ -778,29 +828,211 @@ namespace OpenOptcg.OptcgSimBridge
 
         void DrawPanel(int id)
         {
+            GUILayout.Label(PanelHeadline());
+            GUILayout.Label(PanelStatus(), GUILayout.MinHeight(36));
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(active ? "Stop the AI" : "Start the AI")) ToggleAi();
+            if (GUILayout.Button("Switch side")) SwitchSide();
+            GUILayout.EndHorizontal();
+            GUI.DragWindow();
+        }
+
+        void ToggleAi()
+        {
+            active = !active;
+            steps.Clear();
+            request = null;
+            handedBack = false;
+            status = active ? "waiting for its turn" : "off";
+        }
+
+        void SwitchSide()
+        {
+            modelSeat.Value = 1 - modelSeat.Value;
+            steps.Clear();
+            request = null;
+            handedBack = false;
+        }
+
+        string PanelHeadline()
+        {
             // The sim's own log calls Player 1 "You" (the bottom of the table)
             // and Player 2 "Opponent" (the top), so the panel does too.
             var side = bothSeats ? "both seats" : modelSeat.Value == 1 ? "Opponent (top)" : "You (bottom)";
-            GUILayout.Label(active ? $"The AI plays: {side}" : gameEnded ? "The game is over" : "The AI is off");
-            GUILayout.Label(bothSeats && recordStatus != null ? status + "\n" + recordStatus : status, GUILayout.MinHeight(36));
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(active ? "Stop the AI" : "Start the AI"))
+            return active ? $"The AI plays: {side}" : gameEnded ? "The game is over" : "The AI is off";
+        }
+
+        string PanelStatus() => bothSeats && recordStatus != null ? status + "\n" + recordStatus : status;
+
+        // ---- The in-game panel, built from the sim's own UI ---------------------
+
+        // The panel is made of copies of the sim's choice button -- its sprite
+        // for the frame and the buttons, its text for the labels -- on the
+        // canvas the table is drawn on, so it looks like the rest of the
+        // table. It goes in the sim's right-hand column of table controls,
+        // under its "< Restart this turn >" row and as wide as it, where the
+        // cards shown on the left and the choices below do not reach. The
+        // IMGUI window in `OnGUI` stands in only when there is nothing to copy.
+        GameObject hud;
+        TMP_Text hudHeadline, hudStatus, hudToggleLabel;
+        RectTransform[] restartRow;
+        float nextRowLook;
+
+        // The Restart button and the arrows either side of it, in the root
+        // canvas's space; null until the sim has shown them.
+        Rect? RestartRow(RectTransform root)
+        {
+            if (restartRow == null || restartRow.Any(rect => rect == null))
             {
-                active = !active;
-                steps.Clear();
-                request = null;
-                handedBack = false;
-                status = active ? "waiting for its turn" : "off";
+                restartRow = null;
+                if (Time.unscaledTime < nextRowLook) return null;
+                nextRowLook = Time.unscaledTime + 1f;
+                string Label(Button button) =>
+                    string.Join(" ", button.GetComponentsInChildren<TMP_Text>(true).Select(t => t.text)
+                        .Concat(button.GetComponentsInChildren<Text>(true).Select(t => t.text))).Trim();
+                var buttons = root.GetComponentsInChildren<Button>(false)
+                    .Where(button => hud == null || !button.transform.IsChildOf(hud.transform)).ToList();
+                var restart = buttons.FirstOrDefault(button => Label(button).StartsWith("Restart"));
+                if (restart == null) return null;
+                var restartRect = (RectTransform)restart.transform;
+                var span = Bounds(root, restartRect);
+                restartRow = buttons
+                    .Where(button => button == restart || ((Label(button) == "<" || Label(button) == ">")
+                        && Mathf.Abs(Bounds(root, (RectTransform)button.transform).center.y - span.center.y) < span.height / 2))
+                    .Select(button => (RectTransform)button.transform).ToArray();
             }
-            if (GUILayout.Button("Switch side"))
+            var row = Bounds(root, restartRow[0]);
+            foreach (var rect in restartRow.Skip(1))
             {
-                modelSeat.Value = 1 - modelSeat.Value;
-                steps.Clear();
-                request = null;
-                handedBack = false;
+                var bounds = Bounds(root, rect);
+                row = Rect.MinMaxRect(Mathf.Min(row.xMin, bounds.xMin), Mathf.Min(row.yMin, bounds.yMin),
+                    Mathf.Max(row.xMax, bounds.xMax), Mathf.Max(row.yMax, bounds.yMax));
             }
-            GUILayout.EndHorizontal();
-            GUI.DragWindow();
+            return row.width > 0 && row.height > 0 ? row : (Rect?)null;
+        }
+
+        static Rect Bounds(RectTransform space, RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            var low = space.InverseTransformPoint(corners[0]);
+            var high = space.InverseTransformPoint(corners[2]);
+            return Rect.MinMaxRect(low.x, low.y, high.x, high.y);
+        }
+
+        bool EnsureHud()
+        {
+            if (hud != null) return true;
+            if (gls == null) return false;
+            var template = Get<GameObject>("go_ChoiceButton1");
+            var templateText = template == null ? null : template.GetComponentInChildren<TMP_Text>(true);
+            var templateImage = template == null ? null : template.GetComponent<Image>();
+            var canvas = template == null ? null : template.GetComponentInParent<Canvas>(true);
+            if (templateText == null || templateImage == null || canvas == null) return false;
+            var root = (RectTransform)canvas.rootCanvas.transform;
+            if (!(RestartRow(root) is Rect row)) return false;
+
+            // Sized from the row it hangs under, so it reads as one more of
+            // that column's controls.
+            float pad = row.height * 0.1f;
+            float lineHeight = row.height * 0.4f;
+            var buttonSize = new Vector2((row.width - pad * 3) / 2, row.height * 0.55f);
+            var panelSize = new Vector2(row.width, pad * 3 + lineHeight * 2 + buttonSize.y);
+
+            hud = new GameObject("OpenOptcgPanel", typeof(RectTransform));
+            hud.transform.SetParent(root, false);
+            hud.transform.SetAsLastSibling();
+            var frame = (RectTransform)hud.transform;
+            frame.anchorMin = frame.anchorMax = new Vector2(0.5f, 0.5f);
+            frame.pivot = new Vector2(0.5f, 1);
+            frame.sizeDelta = panelSize;
+            // Its own sorting, so the cards the sim draws later -- a hand
+            // fanned out, a card lifted on hover -- do not cover it.
+            var sorting = hud.AddComponent<Canvas>();
+            sorting.overrideSorting = true;
+            sorting.sortingOrder = 30000;
+            hud.AddComponent<GraphicRaycaster>();
+            var background = hud.AddComponent<Image>();
+            background.sprite = templateImage.sprite;
+            background.type = templateImage.sprite != null && templateImage.sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
+            background.color = templateImage.color;
+
+            TMP_Text Label(float top)
+            {
+                var copy = Instantiate(templateText.gameObject, hud.transform);
+                copy.name = "OpenOptcgLabel";
+                var text = copy.GetComponent<TMP_Text>();
+                text.enableAutoSizing = false;
+                // Small enough that the font's own line spacing fits the
+                // line: a TMP label whose line does not fit draws nothing.
+                text.fontSize = lineHeight * 0.6f;
+                text.margin = Vector4.zero;
+                text.alignment = TextAlignmentOptions.MidlineLeft;
+                text.textWrappingMode = TextWrappingModes.NoWrap;
+                text.overflowMode = TextOverflowModes.Overflow;
+                text.raycastTarget = false;
+                var rect = (RectTransform)copy.transform;
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
+                rect.anchoredPosition = new Vector2(pad, -top);
+                rect.sizeDelta = new Vector2(panelSize.x - pad * 2, lineHeight);
+                rect.localScale = Vector3.one;
+                return text;
+            }
+            hudHeadline = Label(pad);
+            hudStatus = Label(pad + lineHeight);
+
+            TMP_Text Button(float left, string label, UnityEngine.Events.UnityAction onClick)
+            {
+                var copy = Instantiate(template, hud.transform);
+                copy.name = "OpenOptcgButton";
+                // The copy is a plain button: the sim's script would read it
+                // as one of its own choices.
+                foreach (var script in copy.GetComponents<MonoBehaviour>())
+                    if (!(script is Button) && !(script is Graphic)) DestroyImmediate(script);
+                var button = copy.GetComponent<Button>();
+                button.onClick = new Button.ButtonClickedEvent();
+                button.onClick.AddListener(onClick);
+                button.interactable = true;
+                var rect = (RectTransform)copy.transform;
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
+                rect.anchoredPosition = new Vector2(left, -(pad * 2 + lineHeight * 2));
+                rect.sizeDelta = buttonSize;
+                rect.localScale = Vector3.one;
+                var text = copy.GetComponentInChildren<TMP_Text>(true);
+                text.enableAutoSizing = false;
+                text.fontSize = buttonSize.y * 0.45f;
+                text.margin = Vector4.zero;
+                text.text = label;
+                copy.SetActive(true);
+                return text;
+            }
+            hudToggleLabel = Button(pad, "Stop the AI", ToggleAi);
+            Button(pad * 2 + buttonSize.x, "Switch side", SwitchSide);
+            return true;
+        }
+
+        // Followed every frame, since the sim's controls move with the window.
+        void PlaceHud()
+        {
+            var frame = (RectTransform)hud.transform;
+            if (!(RestartRow((RectTransform)frame.parent) is Rect row)) return;
+            frame.localPosition = new Vector3(row.center.x, row.yMin - row.height * 0.15f, 0);
+        }
+
+        void RefreshHud()
+        {
+            var show = InSoloGame();
+            if (!show)
+            {
+                if (hud != null) hud.SetActive(false);
+                return;
+            }
+            if (!EnsureHud()) return;
+            if (!hud.activeSelf) hud.SetActive(true);
+            PlaceHud();
+            hudHeadline.text = PanelHeadline();
+            hudStatus.text = PanelStatus();
+            hudToggleLabel.text = active ? "Stop the AI" : "Start the AI";
         }
 
         // The model is working on a decision: asking the bridge, clicking its
