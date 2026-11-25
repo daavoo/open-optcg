@@ -24,6 +24,8 @@ on:
   workflow_dispatch:
 
 permissions:
+  # actions: read lists this run's artifacts, for the wait before deploying.
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -92,5 +94,19 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
+      # deploy-pages looks the artifact up straight away, and GitHub's
+      # artifact listing can lag the upload: the lookup then finds none and
+      # the deploy fails ("No artifacts named github-pages"), though a rerun
+      # passes. So wait, up to two minutes, until the run lists it; drop this
+      # once deploy-pages retries the lookup itself.
+      - run: |
+          for i in $(seq 60); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+              --jq '.artifacts[].name' | grep -qx github-pages && exit 0
+            sleep 2
+          done
+          echo "github-pages artifact still not listed; deploying anyway"
+        env:
+          GH_TOKEN: ${{ github.token }}
       - id: deployment
         uses: actions/deploy-pages@v5
