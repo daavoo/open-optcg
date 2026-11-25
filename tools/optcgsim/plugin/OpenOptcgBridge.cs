@@ -397,32 +397,32 @@ namespace OpenOptcg.OptcgSimBridge
         }
 
         // Below Solo V Self the sim keeps its own beta buttons and the account
-        // button, so the copy goes in the menu's empty place instead: the
-        // right-hand column, one row below Settings, at the spacing between
-        // Patch Notes and Settings. Left where it was when either is missing.
+        // button, so the copy goes in the gap above it instead: in Solo V
+        // Self's column, halfway between it and Multiplayer. Left where it was
+        // when Multiplayer is not found.
         void PlaceInFreeSlot(GameObject copy, GameObject solo)
         {
             if (solo.transform.parent.GetComponent<LayoutGroup>() != null) return;
-            RectTransform Labelled(string label)
+            RectTransform multiplayer = null;
+            foreach (Transform child in solo.transform.parent)
             {
-                foreach (Transform child in solo.transform.parent)
-                {
-                    if (child.gameObject == copy || child.gameObject == solo) continue;
-                    var texts = child.GetComponentsInChildren<TMP_Text>(true).Select(t => t.text)
-                        .Concat(child.GetComponentsInChildren<Text>(true).Select(t => t.text));
-                    if (texts.Any(text => text != null && text.Trim() == label)) return child as RectTransform;
-                }
-                return null;
+                if (child.gameObject == copy || child.gameObject == solo) continue;
+                var texts = child.GetComponentsInChildren<TMP_Text>(true).Select(t => t.text)
+                    .Concat(child.GetComponentsInChildren<Text>(true).Select(t => t.text));
+                if (texts.Any(text => text != null && text.Trim() == "Multiplayer")) multiplayer = child as RectTransform;
             }
-            var settings = Labelled("Settings");
-            var notes = Labelled("Patch Notes");
-            if (settings == null || notes == null) return;
+            if (multiplayer == null) return;
             var rect = (RectTransform)copy.transform;
-            var step = settings.anchoredPosition.y - notes.anchoredPosition.y;
-            rect.anchorMin = settings.anchorMin;
-            rect.anchorMax = settings.anchorMax;
-            rect.pivot = settings.pivot;
-            rect.anchoredPosition = new Vector2(settings.anchoredPosition.x, settings.anchoredPosition.y + step);
+            var below = (RectTransform)solo.transform;
+            // Measured in the parent's space, so the two buttons' own anchors
+            // do not have to match.
+            var parent = (RectTransform)solo.transform.parent;
+            var top = parent.InverseTransformPoint(multiplayer.position);
+            var bottom = parent.InverseTransformPoint(below.position);
+            rect.anchorMin = below.anchorMin;
+            rect.anchorMax = below.anchorMax;
+            rect.pivot = below.pivot;
+            rect.anchoredPosition = below.anchoredPosition + new Vector2(0, (top.y - bottom.y) / 2f);
         }
 
         // The deck files this plugin wrote last time, one name a line, kept
