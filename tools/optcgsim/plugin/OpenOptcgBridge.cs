@@ -176,6 +176,9 @@ namespace OpenOptcg.OptcgSimBridge
             autoSpeed = Config.Bind("AiVsAi", "Speed", 4f, "How many times faster the sim runs during the games started by Games.");
             stopWhenNotRecorded = Config.Bind("AiVsAi", "StopWhenNotRecorded", false, "In the games started by Games, give a game up at the first ruling the bridge's engine and the sim make differently, where its record ends, instead of playing it out to find the rest.");
             gamesLeft = autoGames.Value;
+            // The deck lists a batch saved are for the batch: left in the
+            // sim's folder they crowd a person's own decks off the deck screen.
+            if (gamesLeft <= 0) RemoveOurDecks();
             instance = this;
             try
             {
@@ -185,7 +188,7 @@ namespace OpenOptcg.OptcgSimBridge
             {
                 Logger.LogError("could not hook the sim's menu: " + error.Message);
             }
-            Logger.LogInfo("open-optcg model bridge loaded; \"Solo vs AI\" and \"AI vs AI\" are on the main menu");
+            Logger.LogInfo("open-optcg model bridge loaded; \"Solo vs AI\" is on the main menu");
         }
 
         bool InSoloGame()
@@ -385,8 +388,59 @@ namespace OpenOptcg.OptcgSimBridge
 
             soloMenuButton = solo;
             aiMenuButton = CopyMenuButton(solo, soloButton, "Solo vs AI", 1, false);
-            bothMenuButton = CopyMenuButton(solo, soloButton, "AI vs AI", 2, true);
+            PlaceInFreeSlot(aiMenuButton, solo);
+            // AI vs AI is how a batch of games is collected, so it is on the
+            // menu only while `Games` is running one; a player has no use for it.
+            if (gamesLeft > 0) bothMenuButton = CopyMenuButton(solo, soloButton, "AI vs AI", 2, true);
             soloButton.onClick.AddListener(() => { aiRequested = false; bothRequested = false; });
+        }
+
+        // Below Solo V Self the sim keeps its own beta buttons and the account
+        // button, so the copy goes in the menu's empty place instead: the
+        // right-hand column, one row below Settings, at the spacing between
+        // Patch Notes and Settings. Left where it was when either is missing.
+        void PlaceInFreeSlot(GameObject copy, GameObject solo)
+        {
+            if (solo.transform.parent.GetComponent<LayoutGroup>() != null) return;
+            RectTransform Labelled(string label)
+            {
+                foreach (Transform child in solo.transform.parent)
+                {
+                    if (child.gameObject == copy || child.gameObject == solo) continue;
+                    var texts = child.GetComponentsInChildren<TMP_Text>(true).Select(t => t.text)
+                        .Concat(child.GetComponentsInChildren<Text>(true).Select(t => t.text));
+                    if (texts.Any(text => text != null && text.Trim() == label)) return child as RectTransform;
+                }
+                return null;
+            }
+            var settings = Labelled("Settings");
+            var notes = Labelled("Patch Notes");
+            if (settings == null || notes == null) return;
+            var rect = (RectTransform)copy.transform;
+            var step = settings.anchoredPosition.y - notes.anchoredPosition.y;
+            rect.anchorMin = settings.anchorMin;
+            rect.anchorMax = settings.anchorMax;
+            rect.pivot = settings.pivot;
+            rect.anchoredPosition = new Vector2(settings.anchoredPosition.x, settings.anchoredPosition.y + step);
+        }
+
+        // Deletes the deck lists `SaveOurDecks` wrote, all named "open-optcg ...".
+        void RemoveOurDecks()
+        {
+            try
+            {
+                var removed = 0;
+                foreach (var file in System.IO.Directory.GetFiles(Application.persistentDataPath, "open-optcg *.txt"))
+                {
+                    System.IO.File.Delete(file);
+                    removed++;
+                }
+                if (removed > 0) Logger.LogInfo($"removed {removed} open-optcg deck lists left by an AI vs AI batch");
+            }
+            catch (Exception error)
+            {
+                Logger.LogWarning("could not remove open-optcg's deck lists: " + error.Message);
+            }
         }
 
         GameObject CopyMenuButton(GameObject solo, Button soloButton, string label, int place, bool both)
