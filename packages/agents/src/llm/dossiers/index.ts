@@ -11,7 +11,7 @@ import {
 import { genericDossier } from "./generic.js";
 import { op13SaboTcgmmDossier } from "./op13-sabo-tcgmm.js";
 import { op16EnelDossier } from "./op16-enel.js";
-import { op17LuffyTournamentDossier } from "./op17-luffy-tournament.js";
+import { op17LuffyOpenDossier } from "./op17-luffy-open.js";
 import { op17XebecTcgmmDossier } from "./op17-xebec-tcgmm.js";
 import { op08PuddingDossier } from "./op08-pudding.js";
 import { op12ZoroPostBanDossier } from "./op12-zoro-post-ban.js";
@@ -69,7 +69,7 @@ import { st33Dossier } from "./st33.js";
 import { st33KuzanTournamentDossier } from "./st33-kuzan-tournament.js";
 import { op14HancockTournamentDossier } from "./op14-hancock-tournament.js";
 import { op09BuggyTcgmmDossier } from "./op09-buggy-tcgmm.js";
-import { op14LawTcgmmDossier } from "./op14-law-tcgmm.js";
+import { op14LawTcgplayerDossier } from "./op14-law-tcgplayer.js";
 import { eb05RobinTcgmmDossier } from "./eb05-robin-tcgmm.js";
 import { op12RosinanteTcgmmDossier } from "./op12-rosinante-tcgmm.js";
 import { st34Dossier } from "./st34.js";
@@ -78,12 +78,12 @@ import { st36Dossier } from "./st36.js";
 import { st29LuffyTournamentDossier } from "./st29-luffy-tournament.js";
 import { op11KatakuriTournamentDossier } from "./op11-katakuri-tournament.js";
 import { op05LuffyStoreBattle2026Dossier } from "./op05-luffy-store-battle-2026.js";
-import { op10KidTournamentDossier } from "./op10-kid-tournament.js";
+import { op10KidChinoizeDossier } from "./op10-kid-chinoize.js";
 import { op11ShirahoshiTournamentDossier } from "./op11-shirahoshi-tournament.js";
 import { op12SanjiTournamentDossier } from "./op12-sanji-tournament.js";
 import { op06YamatoTournamentDossier } from "./op06-yamato-tournament.js";
 import { op07VegapunkStoreBattleDossier } from "./op07-vegapunk-store-battle.js";
-import { op09ShanksTournamentDossier } from "./op09-shanks-tournament.js";
+import { op09ShanksStoreBattleDossier } from "./op09-shanks-store-battle.js";
 import { op13RogerTournamentDossier } from "./op13-roger-tournament.js";
 import { eb03ViviTournamentDossier } from "./eb03-vivi-tournament.js";
 import { op14DoflamingoTournamentDossier } from "./op14-doflamingo-tournament.js";
@@ -107,9 +107,10 @@ import { op11KobyRegionalT16Dossier } from "./op11-koby-regional-t16.js";
 import { op17NewgateChinoizeDossier } from "./op17-newgate-chinoize.js";
 import { op16AceFlameflameDossier } from "./op16-ace-flameflame.js";
 import { st22AceNewgateTournamentDossier } from "./st22-ace-newgate-tournament.js";
+import { op15RebeccaTournamentDossier } from "./op15-rebecca-tournament.js";
 import { op18KarooPreviewDossier } from "./op18-karoo-preview.js";
 import { op18FrankyOpenDossier } from "./op18-franky-open.js";
-import { op18LuffyTournamentDossier } from "./op18-luffy-tournament.js";
+import { op18LuffyChinoizeDossier } from "./op18-luffy-chinoize.js";
 import { op18AllSundayTournamentDossier } from "./op18-all-sunday-tournament.js";
 import { op18GunkoPreviewDossier } from "./op18-gunko-preview.js";
 import { op18SpandamPreviewDossier } from "./op18-spandam-preview.js";
@@ -167,15 +168,15 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Blue/Yellow) Boa Hancock - 25th Place ChinoizeCup #105":
     op14HancockTournamentDossier,
   "(Blue) Buggy - TCG Match Making EB05 2026-11-12 #3": op09BuggyTcgmmDossier,
-  "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8":
-    op14LawTcgmmDossier,
+  "(Red) Trafalgar Law - TCGplayer EB-05 Heroines Vol.2":
+    op14LawTcgplayerDossier,
   "(Green/Yellow) Nico Robin - TCG Match Making EB05 2026-11-12 #4":
     eb05RobinTcgmmDossier,
   "(Purple/Yellow) Donquixote Rosinante - TCG Match Making EB05 2026-11-12 #9":
     op12RosinanteTcgmmDossier,
   "(Blue) Rocks.D.Xebec - Official Feature Deck": op17XebecDossier,
   "(Black) Monkey.D.Luffy - Official Feature Deck": op17LuffyDossier,
-  "(Black) Monkey.D.Luffy - Open OPTCG": op17LuffyTournamentDossier,
+  "(Black) Monkey.D.Luffy - Open OPTCG 2026-11-23": op17LuffyOpenDossier,
   "(Purple) Kaido - Official Feature Deck": op17KaidoDossier,
   "(Purple) Kaido - TCG Match Making EB05 2026-11-12 #5": op17KaidoTcgmmDossier,
   "(Green/Yellow) Yamato - Official Feature Deck": op06YamatoDossier,
@@ -198,7 +199,7 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op11KatakuriTournamentDossier,
   "(Purple) Monkey.D.Luffy - 1st Place Store Battle 2026-09-10":
     op05LuffyStoreBattle2026Dossier,
-  "(Yellow) Eustass Kid - ChinoizeCup #104": op10KidTournamentDossier,
+  "(Yellow) Eustass Kid - 1st Place ChinoizeCup #94": op10KidChinoizeDossier,
   "(Green/Yellow) Shirahoshi - 3rd Place ChinoizeCup #125":
     op11ShirahoshiTournamentDossier,
   "(Blue/Purple) Sanji - ChinoizeCup #116": op12SanjiTournamentDossier,
@@ -206,8 +207,8 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
     op06YamatoTournamentDossier,
   "(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19":
     op07VegapunkStoreBattleDossier,
-  "(Red) Shanks - 1st Place Store Battle 2026-06-29":
-    op09ShanksTournamentDossier,
+  "(Red) Shanks - 1st Place Store Battle 2026-06-13":
+    op09ShanksStoreBattleDossier,
   "(Red/Purple) Gol.D.Roger - 1st Place OPTCGSim 2026-04-22":
     op13RogerTournamentDossier,
   "(Red/Blue) Nefeltari Vivi - 1st Place Store Battle 2026-05-28":
@@ -245,10 +246,12 @@ const dossiers: Readonly<Record<string, DeckStrategyDossier>> = {
   "(Red) Portgas.D.Ace - FlameFlame 2026-10-04": op16AceFlameflameDossier,
   "(Blue) Ace & Newgate - 1st Place Patriot Games 2025-09-07":
     st22AceNewgateTournamentDossier,
+  "(Blue) Rebecca - 1st Place Store Battle 2026-04-04":
+    op15RebeccaTournamentDossier,
   "(Red/Blue) Karoo - VersusTCG OP-18 Pre-release": op18KarooPreviewDossier,
   "(Green/Purple) Franky - Open OPTCG": op18FrankyOpenDossier,
-  "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03":
-    op18LuffyTournamentDossier,
+  "(Green) Monkey.D.Luffy - 31st Place ChinoizeCup #136":
+    op18LuffyChinoizeDossier,
   "(Blue) Ms. All Sunday - 4th Place ChinoizeCup #136":
     op18AllSundayTournamentDossier,
   "(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release":

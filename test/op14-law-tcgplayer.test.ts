@@ -11,8 +11,8 @@ import type { LegalAction } from "@one-piece-sim/protocol";
 import { instance, scenario } from "./support/index.js";
 
 /**
- * The TCG Match Making EB05 Red Trafalgar Law list, the Community list behind
- * OP14-001.
+ * Kuranoo Narumi's TCGplayer EB-05 Red Trafalgar Law list, the Community list
+ * behind OP14-001.
  *
  * Every card it plays is driven in the per-set card tests already; what this
  * file holds is that the list is the one the shelf and the policy expect: a
@@ -21,12 +21,12 @@ import { instance, scenario } from "./support/index.js";
  * feature deck does.
  */
 
-const LIST = "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8";
+const LIST = "(Red) Trafalgar Law - TCGplayer EB-05 Heroines Vol.2";
 /** Katakuri, so no matchup module intercepts ahead of the deck's own rules. */
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 const LEADER = "OP14-001";
 
-describe("the TCG Match Making EB05 Law list", () => {
+describe("the TCGplayer EB-05 Law list", () => {
   it("is a Standard-legal 50 under OP14-001, shelved under Tournaments", () => {
     const manifest = deckManifests[LIST]!;
     expect(loadDeck(LIST)).toHaveLength(50);

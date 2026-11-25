@@ -169,8 +169,11 @@ describe("deck provenance rows", () => {
     // and Spandam 14. The Open OPTCG Franky list replaces Sunny_OPTCG's, 15
     // for 15. The DuelVoyager weekly Green Luffy list replaces Deck
     // Explorer's, 14 for 16, and the ChinoizeCup #136 Ms. All Sunday list
-    // replaces Card Kaizoku's, 17 for 14.
-    expect(communityDeckCardRows).toHaveLength(1498);
+    // replaces Card Kaizoku's, 17 for 14. v33's best-measured lists add Blue
+    // Rebecca 16, and replace five Community lists -- Yellow Kid 16 for 14,
+    // Red Law 16 for 20, Red Shanks 15 for 16, Black Luffy 17 for 16 and Green
+    // Luffy 17 for 14.
+    expect(communityDeckCardRows).toHaveLength(1515);
     expect(new Set(communityDeckCardRows.map((row) => row.deckId))).toEqual(
       new Set(COMMUNITY_DECK_IDS),
     );
@@ -240,7 +243,7 @@ describe("deck provenance rows", () => {
 
   it("declares a format for every shipped deck and holds it to that format", () => {
     const reports = deckFormatReport();
-    expect(reports).toHaveLength(103);
+    expect(reports).toHaveLength(104);
     for (const report of reports) {
       expect(report.illegal, report.deckId).toEqual([]);
       expect(report.blocks.length, report.deckId).toBeGreaterThan(0);
@@ -328,8 +331,8 @@ describe("recommended lists", () => {
   it("falls back to a Leader's only list, and to none when unmarked lists share one", () => {
     // OP12-040 fronts ST-33 and the Hiroshima list, and neither is marked.
     expect(recommendedDeckFor("OP12-040")).toBeUndefined();
-    expect(recommendedDeckFor("OP15-039")).toBe(
-      "(Blue) Rebecca - Official Feature Deck",
+    expect(recommendedDeckFor("OP13-079")).toBe(
+      "(Black) Imu - Official Feature Deck",
     );
   });
 });

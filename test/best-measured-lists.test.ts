@@ -33,7 +33,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Purple) Monkey.D.Luffy - Starter Deck 18",
   ],
   [
-    "(Yellow) Eustass Kid - ChinoizeCup #104",
+    "(Yellow) Eustass Kid - 1st Place ChinoizeCup #94",
     "(Yellow) Eustass Kid - Starter Deck 36",
   ],
   [
@@ -50,7 +50,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
   ],
   ["(Yellow) Vegapunk - 1st Place Store Battle 2026-06-19", null],
   [
-    "(Red) Shanks - 1st Place Store Battle 2026-06-29",
+    "(Red) Shanks - 1st Place Store Battle 2026-06-13",
     "(Red) Shanks - Starter Deck 23",
   ],
   [
@@ -139,7 +139,7 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
     "(Purple) Kaido - Official Feature Deck",
   ],
   [
-    "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8",
+    "(Red) Trafalgar Law - TCGplayer EB-05 Heroines Vol.2",
     "(Red) Trafalgar Law - Official Feature Deck",
   ],
   [
@@ -165,10 +165,18 @@ const LISTS: ReadonlyArray<readonly [list: string, other: string | null]> = [
   ],
   ["(Red/Blue) Karoo - VersusTCG OP-18 Pre-release", null],
   ["(Green/Purple) Franky - Open OPTCG", null],
-  ["(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03", null],
+  ["(Green) Monkey.D.Luffy - 31st Place ChinoizeCup #136", null],
   ["(Blue) Ms. All Sunday - 4th Place ChinoizeCup #136", null],
   ["(Purple/Black) Saint Gunko - heartpiratestcg OP-18 Pre-release", null],
   ["(Black/Yellow) Spandam - tinkerer OP-18 Pre-release", null],
+  [
+    "(Blue) Rebecca - 1st Place Store Battle 2026-04-04",
+    "(Blue) Rebecca - Official Feature Deck",
+  ],
+  [
+    "(Black) Monkey.D.Luffy - Open OPTCG 2026-11-23",
+    "(Black) Monkey.D.Luffy - Official Feature Deck",
+  ],
 ];
 
 describe.each(LISTS)("%s", (list, other) => {
@@ -233,6 +241,14 @@ describe("the Community lists the new builds replace", () => {
       "OP18-022",
     ],
     ["(Blue) Ms. All Sunday - Card Kaizoku OP-18 Pre-release", "OP18-041"],
+    ["(Yellow) Eustass Kid - ChinoizeCup #104", "OP10-099"],
+    ["(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8", "OP14-001"],
+    ["(Red) Shanks - 1st Place Store Battle 2026-06-29", "OP09-001"],
+    ["(Black) Monkey.D.Luffy - Open OPTCG", "OP17-079"],
+    [
+      "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03",
+      "OP18-022",
+    ],
   ])("keeps %s as a training-only list", (id, leader) => {
     expect(SELECTABLE_DECK_IDS).not.toContain(id);
     expect(deckManifests[id]).toBeUndefined();
