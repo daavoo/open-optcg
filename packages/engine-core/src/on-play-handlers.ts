@@ -697,6 +697,7 @@ const ON_PLAY_HANDLERS = new Map<string, OnPlayHandler>([
         6,
         1,
         "give-three-don-to-leader",
+        "base",
       );
       return {
         pending,

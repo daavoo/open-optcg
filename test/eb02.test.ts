@@ -1073,7 +1073,7 @@ describe("EB02-023 Crocodile", () => {
 
     expect(game.state.players.p2.board).toHaveLength(0);
     // The watcher fired: its `[Once Per Turn]` key is spent.
-    expect(game.state.oncePerTurn).toContain("11:p1:EB02-023:reaction");
+    expect(game.state.oncePerTurn).toContain("11:p1:crocodile:reaction");
   });
 
   it("stays quiet when the opponent bounces their own Character", () => {
@@ -1094,7 +1094,7 @@ describe("EB02-023 Crocodile", () => {
 
     // `[Your Turn]` and "by your effect" both fail here, so the key is
     // untouched.
-    expect(game.state.oncePerTurn).not.toContain("12:p1:EB02-023:reaction");
+    expect(game.state.oncePerTurn).not.toContain("12:p1:crocodile:reaction");
   });
 });
 
@@ -1548,7 +1548,33 @@ describe("EB02-035 Sanji & Pudding", () => {
       game.state.players.p1.activeDon.length +
         game.state.players.p1.restedDon.length,
     ).toBe(fieldBefore - 1);
-    expect(game.state.oncePerTurn).toContain("11:p1:EB02-035:reaction");
+    expect(game.state.oncePerTurn).toContain("11:p1:pair:reaction");
+  });
+
+  it("refunds once for each copy on the field", () => {
+    // [Once Per Turn] is each card's own use.
+    const game = table("eb02-035-two-copies")
+      .withLeader("p1", "EB02-010")
+      .withBoard("p1", [
+        character("pair", "EB02-035"),
+        character("pair-2", "EB02-035"),
+      ])
+      .withDon("p1", { active: 4, rested: 3 })
+      .build();
+
+    const fieldBefore =
+      game.state.players.p1.activeDon.length +
+      game.state.players.p1.restedDon.length;
+
+    game.play({ type: "activate-main", cardNumber: "EB02-010" });
+    applyOptional(game);
+    settle(game);
+
+    // Two back to the DON!! deck, and one out of it for each copy.
+    expect(
+      game.state.players.p1.activeDon.length +
+        game.state.players.p1.restedDon.length,
+    ).toBe(fieldBefore);
   });
 
   it("stays quiet for a return of one, which is under the printed floor", () => {
@@ -1572,7 +1598,7 @@ describe("EB02-035 Sanji & Pudding", () => {
       game.state.players.p1.activeDon.length +
         game.state.players.p1.restedDon.length,
     ).toBe(fieldBefore - 1);
-    expect(game.state.oncePerTurn).not.toContain("11:p1:EB02-035:reaction");
+    expect(game.state.oncePerTurn).not.toContain("11:p1:pair:reaction");
   });
 });
 

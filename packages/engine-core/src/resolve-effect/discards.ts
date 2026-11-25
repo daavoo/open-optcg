@@ -155,14 +155,21 @@ export function resolveNavyDiscard({
     };
     return events;
   }
-  events.push(
-    ...drawCards(
-      state,
-      effect.playerId,
-      leaderDrawCount,
-      effect.sourceCardNumber,
-    ),
-  );
+  // OP12-047 Sengoku's trash is the cost of a look at the deck, and a draw
+  // the trash set off waits for the effect that paid it to finish: the five
+  // cards looked at are the five that were on top when it was played.
+  const searchFollows =
+    effect.sourceCardNumber === "OP12-047" && effect.after.kind === "none";
+  if (!searchFollows) {
+    events.push(
+      ...drawCards(
+        state,
+        effect.playerId,
+        leaderDrawCount,
+        effect.sourceCardNumber,
+      ),
+    );
+  }
   if (effect.after.kind === "draw") {
     events.push(
       ...drawCards(
@@ -223,10 +230,11 @@ export function resolveNavyDiscard({
       resumePlayerId: effect.after.targetPlayerId,
     };
     state.activePlayer = effect.after.targetPlayerId;
-  } else if (effect.sourceCardNumber === "OP12-047") {
+  } else if (searchFollows) {
     const revealed = player.deck.splice(0, 5);
     state.pendingEffect = {
       kind: "navy-search",
+      ...(leaderDrawCount > 0 ? { drawAfter: leaderDrawCount } : {}),
       playerId: effect.playerId,
       sourceCardNumber: effect.sourceCardNumber,
       sourceInstanceId: effect.sourceInstanceId,

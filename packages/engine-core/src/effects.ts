@@ -965,6 +965,7 @@ function activeRestTargets(
   state: GameState,
   playerId: PlayerId,
   maxCost: number,
+  costRead: "current" | "base",
 ): string[] {
   return state.players[opponentOf(playerId)].board
     .filter(
@@ -972,7 +973,11 @@ function activeRestTargets(
         !card.rested &&
         (card.cannotRestUntilTurn ?? -1) < state.turn &&
         !isRestImmune(state, opponentOf(playerId), card) &&
-        effectiveCost(state, opponentOf(playerId), card) <= maxCost,
+        // "Base cost" is the printed one: a Character that gives itself
+        // cost (OP17-089 Jaguar.D.Saul's +12) is still in reach of it.
+        (costRead === "base"
+          ? (defaultCardDatabase.require(card.cardNumber).cost ?? 0)
+          : effectiveCost(state, opponentOf(playerId), card)) <= maxCost,
     )
     .map((card) => card.instanceId);
 }
@@ -984,8 +989,14 @@ export function restEffect(
   maxCost: number,
   remaining = 1,
   afterRest?: "give-three-don-to-leader" | "schedule-active-don",
+  costRead: "current" | "base" = "current",
 ): PendingEffect | null {
-  const eligibleInstanceIds = activeRestTargets(state, playerId, maxCost);
+  const eligibleInstanceIds = activeRestTargets(
+    state,
+    playerId,
+    maxCost,
+    costRead,
+  );
   return eligibleInstanceIds.length > 0
     ? {
         kind: "rest-character",
@@ -2059,6 +2070,15 @@ function computeEffectOptions(
         optionId,
         summary: `Return 1 DON!! and K.O. ${describeCardOption(state, optionId, db)}`,
       })),
+      // With a Character to K.O., paying for none is the same cost for less.
+      ...(effect.eligibleInstanceIds.length === 0
+        ? [
+            {
+              optionId: "apply",
+              summary: "Return 1 DON!! and K.O. no Character",
+            },
+          ]
+        : []),
       { optionId: "skip", summary: "Skip card effect" },
     ];
   }

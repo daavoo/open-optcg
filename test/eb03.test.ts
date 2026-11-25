@@ -2527,6 +2527,7 @@ describe("EB03-058 Lilith", () => {
       ])
       .build();
 
+    const handBefore = game.state.players.p2.hand.length;
     game.play({
       type: "attack",
       attackerInstanceId: "attacker",
@@ -2539,6 +2540,10 @@ describe("EB03-058 Lilith", () => {
     expect(
       game.state.players.p2.board.map((card) => card.instanceId),
     ).toContain("life-lilith");
+    // The [Trigger] plays her on the opponent's turn, where `[Your Turn]`
+    // keeps her `[On Play]` draw shut: the Life card goes to hand and is
+    // played, for no net change.
+    expect(game.state.players.p2.hand).toHaveLength(handBefore);
   });
 
   it("goes to hand off a Life card behind any other Leader", () => {

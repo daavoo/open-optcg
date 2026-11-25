@@ -139,6 +139,54 @@ describe("ST36 rules", () => {
     ).toBe(true);
   });
 
+  covers("OP10-112", "[End of Your Turn]");
+  it("goes on to a Character's end-of-turn clause after the Leader's offer", () => {
+    // OP10-112 Eustass"Captain"Kid draws and trashes once the opponent is at
+    // 2 Life or less, whether or not his Leader's offer was taken.
+    let state = scenario();
+    state.players.p1.board = [
+      character("cavendish", "ST36-001", true),
+      character("kid", "OP10-112", true),
+    ];
+    state.players.p1.hand = [card("held", "ST36-001")];
+    state.players.p1.deck = [card("drawn", "ST36-003")];
+    state.players.p2.life = state.players.p2.life.slice(0, 2);
+
+    state = submit(
+      state,
+      action(state, (candidate) => candidate.type === "pass"),
+    );
+    expect(state.pendingEffect?.kind).toBe("kid-leader-end-turn");
+    state = submit(
+      state,
+      action(
+        state,
+        (candidate) =>
+          candidate.type === "resolve-effect" && candidate.optionId === "skip",
+      ),
+    );
+
+    expect(state.turn).toBe(3);
+    expect(state.players.p1.hand.map((item) => item.instanceId)).toEqual([
+      "held",
+      "drawn",
+    ]);
+    state = submit(
+      state,
+      action(
+        state,
+        (candidate) =>
+          candidate.type === "resolve-effect" && candidate.optionId === "held",
+      ),
+    );
+
+    expect(state.players.p1.trash.map((item) => item.instanceId)).toContain(
+      "held",
+    );
+    expect(state.turn).toBe(4);
+    expect(state.activePlayer).toBe("p2");
+  });
+
   it("ends the turn without offering the Leader effect at zero Life", () => {
     let state = scenario();
     state.players.p1.life = [];

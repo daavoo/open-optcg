@@ -594,6 +594,45 @@ describe("OP17-005 Edward.Newgate On Play", () => {
     expect(currentPower(played, "p1", "p1-leader")).toBe(8000);
   });
 
+  it("keeps the 8000 through the opponent's next turn and no longer", () => {
+    const state = scenario();
+    state.players.p1.leaderCardNumber = "OP16-001";
+    state.players.p1.hand = [{ instanceId: "ace", cardNumber: "OP17-005" }];
+    for (const player of ["p1", "p2"] as const) {
+      state.players[player].deck = [0, 1, 2].map((index) => ({
+        instanceId: `${player}-spare-${index}`,
+        cardNumber: "FIX-002",
+      }));
+    }
+    let game = submit(
+      state,
+      requireAction(
+        state,
+        (action) =>
+          action.type === "play-card" && action.cardInstanceId === "ace",
+      ),
+    );
+    const passTurn = (player: "p1" | "p2"): void => {
+      const turn = game.turn;
+      for (let guard = 0; game.turn === turn && guard < 10; guard++) {
+        game = submit(
+          game,
+          requireAction(game, (action) =>
+            game.pendingEffect
+              ? action.type === "resolve-effect"
+              : action.type === "pass",
+          ),
+        );
+      }
+      expect(game.turnPlayerId).not.toBe(player);
+    };
+
+    passTurn("p1");
+    expect(currentPower(game, "p1", "p1-leader")).toBe(8000);
+    passTurn("p2");
+    expect(currentPower(game, "p1", "p1-leader", false)).toBe(5000);
+  });
+
   it("does nothing under a multicolored Leader", () => {
     const state = scenario();
     // OP13-004 Sabo is the format's other `leader-multicolored` gate, so

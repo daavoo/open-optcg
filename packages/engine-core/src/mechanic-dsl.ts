@@ -2493,6 +2493,13 @@ export type MechanicPendingChoice =
       playerId: PlayerId;
       card: CardInstance;
       rested: boolean;
+      /**
+       * The card is the [Trigger] card playing itself (OP07-107 Franky), which
+       * is in no zone while its program runs: it waits in the trash, where a
+       * resolved Trigger goes anyway, and is played as the Trigger's own card
+       * rather than as a card out of the trash.
+       */
+      ownTrigger?: true;
     }
   | {
       kind: "cards";

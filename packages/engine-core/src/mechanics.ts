@@ -44,6 +44,7 @@ import {
 } from "./static-abilities.js";
 import { activeDonOwner, fieldDonCount, returnDonToDeck } from "./don.js";
 import { nextInt, shuffle } from "./rng.js";
+import { shuffleCards } from "./recorded-shuffle.js";
 import {
   type PlayerRef,
   type CardZone,
@@ -1460,9 +1461,7 @@ export function continueExecution(
     if (effect.kind === "shuffle-deck") {
       const playerId = resolvePlayer(execution.context, effect.player);
       const player = state.players[playerId];
-      const shuffled = shuffle(player.deck, state.rngState);
-      player.deck = shuffled.items;
-      state.rngState = shuffled.state;
+      player.deck = shuffleCards(state, playerId, player.deck);
       delete player.knownOwnDeckTop;
       delete state.players[opponentOf(playerId)].knownOpponentDeckTop;
       continue;
@@ -2096,11 +2095,11 @@ export function continueExecution(
         if (player.board.length >= 5) {
           const located = findCardZone(state, instanceId);
           // A Trigger's own card is held outside every zone while its program
-          // runs, so suspending on it would leave the card unaccounted for by
-          // the zone invariants. That corner keeps the old behaviour; every
-          // other play -- the trash recursion this matters for -- suspends on
-          // the replacement choice instead of being silently dropped.
-          if (!located) break;
+          // runs; `resolve-trigger` trashes a Trigger card that is in no zone
+          // once the program stops, which is where this one waits.
+          const ownTrigger =
+            !located && instanceId === execution.context.source.instanceId;
+          if (!located && !ownTrigger) break;
           return {
             pending: {
               kind: "area-replacement",
@@ -2108,13 +2107,14 @@ export function continueExecution(
               playerId,
               card: {
                 instanceId,
-                cardNumber: zoneCards(
-                  state,
-                  located.playerId,
-                  located.zone,
-                ).find((card) => card.instanceId === instanceId)!.cardNumber,
+                cardNumber: located
+                  ? zoneCards(state, located.playerId, located.zone).find(
+                      (card) => card.instanceId === instanceId,
+                    )!.cardNumber
+                  : execution.context.source.cardNumber,
               },
               rested: effect.rested ?? false,
+              ...(ownTrigger ? { ownTrigger: true as const } : {}),
             },
             events,
             signals,
@@ -3117,7 +3117,47 @@ export function continueExecution(
           }
         }
         if (effect.rested !== undefined && "rested" in target) {
+          // Resting a Character that was active is the same event whichever
+          // node spells it, so this one answers to what `rest` answers to:
+          // a "cannot be rested" effect holds (Bandai's EB02-011#4), and the
+          // rest is reported and signalled -- what PRB02-009 Mr.3's "rested
+          // by your opponent's effect" and OP10-036 Perona's refund wait for.
+          const boardOwner = (["p1", "p2"] as const).find((candidate) =>
+            state.players[candidate].board.some(
+              (card) => card.instanceId === instanceId,
+            ),
+          );
+          const restsCharacter =
+            effect.rested && boardOwner !== undefined && !target.rested;
+          if (
+            restsCharacter &&
+            ((target as Partial<BoardCard>).cannotRestUntilTurn ?? -1) >=
+              state.turn
+          ) {
+            continue;
+          }
           target.rested = effect.rested;
+          if (restsCharacter) {
+            events.push({
+              type: "character-rested",
+              playerId: boardOwner,
+              cardInstanceId: target.instanceId,
+              cardNumber: target.cardNumber,
+              sourceCardNumber: execution.context.source.cardNumber,
+            });
+            signals.push({
+              kind: "card-rested",
+              card: {
+                instanceId: target.instanceId,
+                cardNumber: target.cardNumber,
+              },
+              ownerId: boardOwner,
+              sourcePlayerId: execution.context.sourcePlayerId,
+              sourceIsCharacter:
+                db.get(execution.context.source.cardNumber)?.category ===
+                "character",
+            });
+          }
         }
       }
       continue;

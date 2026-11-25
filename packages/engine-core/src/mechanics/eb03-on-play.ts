@@ -1114,19 +1114,25 @@ export const eb03OnPlayMechanics: SetMechanics = {
     [
       // EB03-058 Lilith: "[printed text omitted -- pnpm card:text EB03-058]"
       //
-      // `[Your Turn]` adds nothing to an `[On Play]` -- a Character is played on
-      // its controller's turn -- and the Life gate is the real clause: the draw
-      // arrives while the deck is behind.
+      // The `[Your Turn]` gate is not decoration: the `[Trigger]` below plays
+      // her during the opponent's turn, and her `[On Play]` must not draw
+      // there. The Life gate is the clause the deck is built around.
       "EB03-058",
       {
         effect: {
           kind: "if",
           condition: {
-            kind: "zone-count",
-            player: "self",
-            zone: "life",
-            operator: "lte",
-            value: 2,
+            kind: "all-of",
+            conditions: [
+              { kind: "turn-player", player: "self" },
+              {
+                kind: "zone-count",
+                player: "self",
+                zone: "life",
+                operator: "lte",
+                value: 2,
+              },
+            ],
           },
           then: { kind: "draw", player: "self", count: 1 },
         },

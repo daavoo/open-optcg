@@ -2322,7 +2322,7 @@ describe("OP08-067 Charlotte Pudding", () => {
       ),
     ).toBe(false);
     expect(
-      game.state.oncePerTurn.some((key) => key.includes(":OP08-067:")),
+      game.state.oncePerTurn.some((key) => key.includes(":pudding:")),
     ).toBe(true);
   });
 });

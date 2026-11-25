@@ -631,6 +631,45 @@ describe("OP07-107 Franky", () => {
     ).toContain("life-franky");
   });
 
+  it("replaces a Character when the area is full, and is not played out of the trash", () => {
+    const game = triggering("op07-107-full-area")
+      .withBoard("p1", [character("attacker", "ST31-002", { playedTurn: 1 })])
+      .withBoard("p2", [
+        character("a", "ST29-010"),
+        character("b", "ST29-010"),
+        character("c", "ST29-010"),
+        character("d", "ST29-010"),
+        character("e", "ST29-010"),
+      ])
+      .withLife("p2", [
+        instance("life-franky", "OP07-107"),
+        instance("spare", "ST29-010"),
+      ])
+      .build();
+
+    game.play({
+      type: "attack",
+      attackerInstanceId: "attacker",
+      targetInstanceId: "p2-leader",
+    });
+    declineDefence(game);
+    game.play({ type: "resolve-trigger", summary: "Activate Trigger" });
+    game.play({ type: "resolve-effect", optionId: "c" });
+
+    const p2 = game.state.players.p2;
+    expect(p2.board.map((card) => card.instanceId)).toEqual([
+      "a",
+      "b",
+      "d",
+      "e",
+      "life-franky",
+    ]);
+    expect(p2.trash.map((card) => card.instanceId)).toEqual(["c"]);
+    // Back to the attacker's Main Phase once the choice is made.
+    expect(game.state.activePlayer).toBe("p1");
+    expect(game.state.phase).toBe("main");
+  });
+
   it("only draws while two Life cards are still behind the flipped one", () => {
     const game = triggering("op07-107-high-life")
       .withBoard("p1", [character("attacker", "ST31-002", { playedTurn: 1 })])

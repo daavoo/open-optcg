@@ -10,6 +10,7 @@ import {
   type GameObservation,
   type PlayerId,
   type PublicEvent,
+  type RecordedShuffles,
   type TimeLimit,
 } from "@one-piece-sim/protocol";
 
@@ -52,6 +53,12 @@ export interface MatchConfig {
    * untimed, as it was played; the field decides that, not this build.
    */
   timeLimit?: TimeLimit;
+  /**
+   * The shuffles of a game that was dealt somewhere else -- a recording of a
+   * game played on another simulator -- which the engine deals again instead
+   * of drawing from the seed. See `recorded-shuffle.ts` in the engine.
+   */
+  recordedShuffles?: RecordedShuffles;
 }
 
 /**

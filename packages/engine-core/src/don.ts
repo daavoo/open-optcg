@@ -281,6 +281,14 @@ export function returnDonToDeck(
     };
   }
 
+  // Where each DON!! left on the field stood as the cost was paid, read back
+  // once the clauses below have answered the return.
+  const stoodIn = new Map(
+    fieldDonIds(state, playerId).map((don) => [
+      don,
+      donPoolOf(state, playerId, don),
+    ]),
+  );
   if (returned.length > 0) {
     if (state.turnPlayerId === playerId) {
       // ST34-001 Katakuri: once per turn, returning DON!! gives two back
@@ -324,7 +332,33 @@ export function returnDonToDeck(
       }
     }
   }
+  // A DON!! one of those clauses moved -- OP17-062 Kaido sets a rested one
+  // active -- was not in its new pile when the cost was paid, so it is not
+  // one the payer can now say went back from there instead.
+  if (state.donReturn?.playerId === playerId) {
+    state.donReturn.onFieldAtPayment = state.donReturn.onFieldAtPayment.filter(
+      (don) =>
+        !stoodIn.has(don) ||
+        stoodIn.get(don) === donPoolOf(state, playerId, don),
+    );
+  }
   return returned.length;
+}
+
+/** The pool a DON!! on the player's field is in, if it is on it. */
+function donPoolOf(
+  state: GameState,
+  playerId: PlayerId,
+  don: string,
+): string | undefined {
+  const player = state.players[playerId];
+  if (player.activeDon.includes(don)) return DON_POOL_ACTIVE;
+  if (player.restedDon.includes(don)) return DON_POOL_RESTED;
+  if (player.leaderAttachedDon.includes(don)) {
+    return leaderInstanceId(playerId);
+  }
+  return player.board.find((card) => card.attachedDon?.includes(don))
+    ?.instanceId;
 }
 
 /**

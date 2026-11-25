@@ -520,6 +520,13 @@ describe("OP17-109 Charlotte Pudding", () => {
     const bare = table("op17-109-no-fuel")
       .bareTable()
       .withHand("p1", [instance("pudding", "OP17-109")])
+      // Cards to draw, so a draw the cost never bought shows up: `bareTable()`
+      // leaves the deck empty, which hides exactly that.
+      .withDeckTop("p1", [
+        instance("d-a", "OP17-113"),
+        instance("d-b", "OP17-113"),
+        instance("d-c", "OP17-113"),
+      ])
       .build();
     bare.play({ type: "play-card", cardNumber: "OP17-109" });
     // The "you may" prompt is still raised -- an [On Play] is dispatched
