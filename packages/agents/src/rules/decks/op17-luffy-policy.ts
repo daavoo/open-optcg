@@ -37,10 +37,10 @@ import type { PolicyModule } from "../policy-module.js";
  * Every Character of this seat's at cost 12 or more, because that is the
  * number the team reads: each one is the "+12 cost" the 2-drops' +3000 and the
  * Leader's [Blocker] grant are asking for. Read off the board rather than
- * named, because two cards in the tournament list reach 12 only conditionally
- * -- OP15-088 Pirates Docking Six prints +6 and is a 12 only beside ST14-017
- * Thousand Sunny, and OP15-092 Monkey.D.Luffy gains +10 only from 10 cards in
- * the trash -- and while below it they buff nothing and are ordinary bodies.
+ * named, because some builds' cards reach 12 only conditionally -- OP15-088
+ * Pirates Docking Six prints +6 and is a 12 only beside ST14-017 Thousand
+ * Sunny, and OP15-092 Monkey.D.Luffy gains +10 only from 10 cards in the
+ * trash -- and while below it they buff nothing and are ordinary bodies.
  *
  * Plus OP17-093 Monkey.D.Luffy, the deck's one 8000 [Rush] attacker: it is not
  * an enabler, but it is the card the 2-drops' 5000s are meant to clear a path
@@ -158,10 +158,11 @@ export function createOp17LuffyCounterPolicy(): PolicyModule {
 /**
  * Which card in hand pays a trash cost, in the order this deck spends them.
  *
- * Three clauses in both lists raise the choice -- OP17-082 Sanji's "trash 2
+ * Three clauses in every list raise the choice -- OP17-082 Sanji's "trash 2
  * cards from your hand", OP17-086 Nami's "trash 1 {Elbaph} type card", and
- * OP17-081 Gerd's "trash 1 card" -- and with no rule the answer was hand order,
- * which puts Loki in the trash as readily as a spare Nami.
+ * OP17-081 Gerd's "trash 1 card" -- and the Community list adds EB05-047
+ * Ripley's and EB05-046 Yamato's trash costs. With no rule the answer was hand
+ * order, which puts Loki in the trash as readily as a spare Nami.
  *
  * The order follows from what the trash is for in this deck. OP17-093 plays a
  * cost-2-or-less Character from it and OP15-088 Pirates Docking Six a
@@ -172,14 +173,15 @@ export function createOp17LuffyCounterPolicy(): PolicyModule {
  *
  *  - Spent first: the 1000-Counter Straw Hats both recursion clauses replay.
  *  - Then the 2000-Counter ones and the cards that are only one piece of a
- *    plan -- Sanji, Zoro, Chopper, Thousand Sunny, OP15-092.
+ *    plan -- Sanji, Zoro, Chopper, Thousand Sunny, OP15-092, and EB05-046
+ *    Yamato, a body that is not a giant.
  *  - Then the bodies that are worth a turn by themselves -- OP17-093, Docking
- *    Six -- and the 4000 [Counter] Event.
+ *    Six -- and the Events: the 4000 [Counter] and Gum-Gum Kong Gun's K.O.s.
  *  - Kept: the giants.
  */
 export const OP17_LUFFY_PITCH_ORDER: readonly (readonly string[])[] = [
   ["OP17-086", "OP17-087", "OP17-080"],
-  ["OP17-082", "OP17-095", "OP17-084", "ST14-017", "OP15-092"],
-  ["OP17-093", "OP15-088", "OP17-096", "OP17-085", "OP17-092"],
-  ["OP17-119", "OP17-089", "OP17-094", "OP17-081"],
+  ["OP17-082", "OP17-095", "OP17-084", "ST14-017", "OP15-092", "EB05-046"],
+  ["OP17-093", "OP15-088", "OP17-096", "OP17-098", "OP17-085", "OP17-092"],
+  ["OP17-119", "OP17-089", "EB05-047", "OP17-094", "OP17-081"],
 ];

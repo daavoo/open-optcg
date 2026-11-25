@@ -28,6 +28,6 @@ export function createOp18LuffyMulliganModule(): PolicyModule {
     keepBecause:
       "Keep a Character at 4 or less: the reset pieces, Nami's search and the bodies that rest and K.O. are all on the early curve.",
     mulliganBecause:
-      "Mulligan a hand with no Character at 4 or less: Perona, Zoro & Sogeking and the 9-cost Luffy have no board to build on.",
+      "Mulligan a hand with no Character at 4 or less: Zoro & Sogeking, OP16-035 Zoro and the 9-cost Luffy have no board to build on.",
   });
 }

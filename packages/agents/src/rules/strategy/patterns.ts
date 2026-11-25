@@ -529,11 +529,11 @@ const ARCHETYPE_BY_LEADER: ReadonlyMap<string, Archetype> = new Map([
   // field, and Shanks with OP18-040 clearing the board late: it defends with its
   // hand and wins late.
   ["OP18-021", "control"],
-  // OP18 (Green) Monkey.D.Luffy, a simulator-weekly list. The Leader attacks
+  // OP18 (Green) Monkey.D.Luffy, a ChinoizeCup list. The Leader attacks
   // twice and {Water Seven} Straw Hats set it active again, while green bodies
-  // rest the opponent's Characters, Megalo K.O.s the rested ones and Perona
-  // keeps others from attacking or blocking: it trades on the board rather
-  // than racing Life.
+  // and Events rest the opponent's Characters, Megalo K.O.s the rested ones
+  // and OP13-040 keeps them rested: it trades on the board rather than racing
+  // Life.
   ["OP18-022", "midrange"],
   // OP18 (Blue) Ms. All Sunday, a ChinoizeCup list. A wide board of cheap
   // {Baroque Works} pairs, each of which costs the opponent a card when it is

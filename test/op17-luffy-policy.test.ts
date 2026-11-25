@@ -150,8 +150,8 @@ describe("the Counter window", () => {
   });
 });
 
-describe("the tournament list's conditional giants", () => {
-  const TOURNAMENT = "(Black) Monkey.D.Luffy - Open OPTCG";
+describe("the Community list's conditional giant", () => {
+  const TOURNAMENT = "(Black) Monkey.D.Luffy - Open OPTCG 2026-11-23";
   const DOCKING_SIX = "OP15-088";
   const SUNNY = "ST14-017";
 

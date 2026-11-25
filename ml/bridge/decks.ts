@@ -763,6 +763,140 @@ const LISTS: Record<string, DeckManifest> = {
       "OP18-059": 4,
     },
   },
+  // Yellow OP10-099 Eustass"Captain"Kid, the list pilot "Ssjrose" registered
+  // for [OP17] ChinoizeCup #104 on 1 Sep 2026 (dropped at 0-2, so no placing),
+  // off Limitless TCG's standings for the event. It was the Leader's Community
+  // list until the ChinoizeCup #94 winner replaced it there; it stays here
+  // under its old id because checkpoints name it.
+  "(Yellow) Eustass Kid - ChinoizeCup #104": {
+    id: "(Yellow) Eustass Kid - ChinoizeCup #104",
+    format: "standard",
+    leader: "OP10-099",
+    cards: {
+      "EB04-058": 4,
+      "OP10-112": 4,
+      "OP14-102": 4,
+      "OP14-110": 4,
+      "OP14-111": 4,
+      "OP15-119": 3,
+      "OP16-119": 4,
+      "OP17-109": 4,
+      "OP17-114": 3,
+      "P-088": 4,
+      "ST36-002": 4,
+      "ST36-003": 4,
+      "ST36-005": 4,
+    },
+  },
+  // Red OP14-001 Trafalgar Law, ranked 8th in TCG Match Making's EB05 Weekly
+  // Power Rankings of 12 Nov 2026. It was the Leader's Community list until
+  // Kuranoo Narumi's TCGplayer EB-05 list replaced it there; it stays here
+  // under its old id because the top-ten meta field and checkpoints name it.
+  "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8": {
+    id: "(Red) Trafalgar Law - TCG Match Making EB05 2026-11-12 #8",
+    format: "standard",
+    leader: "OP14-001",
+    cards: {
+      "EB04-005": 2,
+      "EB05-001": 4,
+      "EB05-006": 2,
+      "OP09-118": 1,
+      "OP10-019": 1,
+      "OP14-002": 4,
+      "OP14-004": 2,
+      "OP14-005": 2,
+      "OP14-007": 2,
+      "OP14-009": 4,
+      "OP14-010": 2,
+      "OP14-011": 3,
+      "OP14-013": 4,
+      "OP14-014": 4,
+      "OP14-015": 4,
+      "OP14-019": 2,
+      "OP15-009": 2,
+      "OP17-005": 3,
+      "PRB02-003": 2,
+    },
+  },
+  // Red OP09-001 Shanks, 1st for Gustavo Mejía at a Store Battle in Panama on
+  // 29 Jun 2026, off onepiecetopdecks.com's OP-16 page. It was the Leader's
+  // Community list until the 13 Jun 2026 Store Battle winner replaced it
+  // there; it stays here under its old id because checkpoints name it.
+  "(Red) Shanks - 1st Place Store Battle 2026-06-29": {
+    id: "(Red) Shanks - 1st Place Store Battle 2026-06-29",
+    format: "standard",
+    leader: "OP09-001",
+    cards: {
+      "OP06-007": 3,
+      "OP09-002": 4,
+      "OP09-004": 3,
+      "OP09-009": 4,
+      "OP09-011": 4,
+      "OP09-015": 3,
+      "OP09-020": 3,
+      "OP12-008": 4,
+      "OP13-007": 4,
+      "OP16-012": 4,
+      "PRB02-001": 3,
+      "PRB02-002": 3,
+      "PRB02-003": 2,
+      "ST23-001": 2,
+      "ST23-002": 4,
+    },
+  },
+  // Black OP17-079 Monkey.D.Luffy, the Elbaph giants build supplied as a card
+  // list by the maintainer on 26 Sep 2026 without an event or pilot. It was
+  // the Leader's Community list until the maintainer's build of 23 Nov 2026
+  // replaced it there; it stays here under its old id because the meta field
+  // (`meta-decks.txt`), checkpoints and its variants name it.
+  "(Black) Monkey.D.Luffy - Open OPTCG": {
+    id: "(Black) Monkey.D.Luffy - Open OPTCG",
+    format: "standard",
+    leader: "OP17-079",
+    cards: {
+      "OP15-088": 4,
+      "OP15-092": 1,
+      "OP17-080": 4,
+      "OP17-081": 4,
+      "OP17-082": 4,
+      "OP17-084": 2,
+      "OP17-086": 4,
+      "OP17-087": 4,
+      "OP17-089": 4,
+      "OP17-093": 3,
+      "OP17-094": 4,
+      "OP17-095": 4,
+      "OP17-096": 1,
+      "OP17-119": 4,
+      "ST14-017": 3,
+    },
+  },
+  // Green OP18-022 Monkey.D.Luffy, the reset build BerryTCG shared on
+  // DuelVoyager as the 2nd-place list of a DuelVoyager online weekly on 3 Nov
+  // 2026 (https://www.duelvoyager.com/deck/view/nw5aki09O9IE). It was the
+  // Leader's Community list until the ChinoizeCup #136 list replaced it
+  // there; it stays here under its old id because checkpoints and its
+  // variants name it.
+  "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03": {
+    id: "(Green) Monkey.D.Luffy - 2nd Place DuelVoyager Weekly 2026-11-03",
+    format: "standard",
+    leader: "OP18-022",
+    cards: {
+      "EB02-017": 4,
+      "EB04-018": 4,
+      "OP12-037": 2,
+      "OP14-031": 4,
+      "OP14-033": 4,
+      "OP17-029": 4,
+      "OP18-027": 4,
+      "OP18-030": 4,
+      "OP18-031": 4,
+      "OP18-036": 4,
+      "OP18-037": 4,
+      "OP18-038": 4,
+      "OP18-118": 4,
+    },
+  },
 };
 
 /**

@@ -303,13 +303,12 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP17-094", // Rodo -- a cost-1 giant under an Elbaph Leader
       "OP17-081", // Gerd -- a cost-2 giant under an Elbaph Leader
       "OP17-089", // Jaguar.D.Saul -- a cost-4 giant
+      "EB05-047", // Ripley -- a cost-4 giant with no condition, replays a 2-drop
       "OP17-119", // Loki -- the best giant, at 6 cost: On Play K.O.s, +3000
-      // The tournament list's two {Straw Hat Crew} bodies. No Elbaph reveal
-      // can find them; Gerd's trash return can. Docking Six sits at 11, a
-      // giant once the Stage lifts it to 12, and OP15-092 is one at 17 once
-      // the trash holds 10 -- so both rank under the unconditional giants.
+      // The Community list's {Straw Hat Crew} giant. No Elbaph reveal can find
+      // it; Gerd's trash return can. Docking Six sits at 11, a giant only once
+      // the Stage lifts it to 12, so it ranks under the unconditional giants.
       "OP15-088", // Pirates Docking Six -- mills 3, returns a cost-2 body
-      "OP15-092", // Monkey.D.Luffy -- a 9000 at 17 cost from 10 trash
       "OP17-095", // Roronoa Zoro
       "OP17-082", // Sanji
       "OP17-087", // Nico Robin
@@ -320,11 +319,15 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       "OP17-085", // Dorry -- 5 cost, and ends Character plays for the turn
       "OP17-092", // Brogy -- the same
       "OP17-093", // Monkey.D.Luffy -- 8 cost
+      // {Land of Wano}, so no Elbaph reveal finds it; a 4-cost body that is
+      // not a giant.
+      "EB05-046", // Yamato
       // Last because a search is looking for a body. The deck's plan is "land
-      // any giant", and the only card here that lands nothing is the Event --
-      // whatever it is worth in the Counter step, it is worth nothing to the
-      // turn that went looking.
+      // any giant", and the only cards here that land nothing are the Events --
+      // whatever they are worth in the Counter step, they are worth nothing to
+      // the turn that went looking.
       "OP17-096", // I'm Luffy!! -- a 4000 [Counter], the largest in the format
+      "OP17-098", // Gum-Gum Kong Gun -- a late K.O. for 6 DON!!, else +3000
     ],
   },
   {
@@ -484,6 +487,10 @@ export const SEARCH_TABLES: readonly SearchTable[] = [
       ["OP10-045", "OP10-046"],
       ["OP10-054", "OP15-041", "OP15-052"],
       "OP10-059",
+      // The Community list's own cards, after the feature deck's, which the
+      // order above was written for. Only the Sabo is {Dressrosa}, so the
+      // deck's own searches can find no other.
+      ["OP10-049", "OP14-049", "OP07-051", "OP08-047", "OP08-046"],
     ],
   },
   {

@@ -4,16 +4,17 @@ import { deckManifests, deckShelf, loadDeck } from "@one-piece-sim/decks";
 import { character, covers, instance, scenario } from "./support/index.js";
 
 /**
- * The OP-17 Black Monkey.D.Luffy tournament list.
+ * The OP-17 Black Monkey.D.Luffy Community list, the maintainer's build of
+ * 23 Nov 2026.
  *
- * The feature deck drives every card the two lists share, `test/st14.test.ts`
- * drives ST14-017 Thousand Sunny and `test/op15.test.ts` OP15-092 on their
- * own. What this file holds is the interaction the list is built around: the
- * Stage's +1 cost is what lifts OP15-088 Pirates Docking Six from 11 to 12,
- * and 12 is the line the OP17-079 Leader's [Blocker] aura reads.
+ * The feature deck drives every card the two lists share, and
+ * `test/st14.test.ts` drives ST14-017 Thousand Sunny on its own. What this
+ * file holds is the interaction the list's Stage is there for: its +1 cost
+ * is what lifts OP15-088 Pirates Docking Six from 11 to 12, and 12 is the
+ * line the OP17-079 Leader's [Blocker] aura reads.
  */
 
-const LIST = "(Black) Monkey.D.Luffy - Open OPTCG";
+const LIST = "(Black) Monkey.D.Luffy - Open OPTCG 2026-11-23";
 const OPPONENT = "(Purple) Charlotte Katakuri - Starter Deck 34";
 
 const table = (seed: string) =>
@@ -24,7 +25,7 @@ const table = (seed: string) =>
     .bareTable()
     .withBoard("p1", [character("docking", "OP15-088")]);
 
-describe("the OP17 tournament list", () => {
+describe("the OP17 Community list", () => {
   it("is a legal 50 under the OP17-079 Leader, shelved under Tournaments", () => {
     expect(loadDeck(LIST)).toHaveLength(50);
     expect(deckManifests[LIST]?.leader).toBe("OP17-079");
