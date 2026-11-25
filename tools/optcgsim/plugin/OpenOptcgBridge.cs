@@ -172,13 +172,14 @@ namespace OpenOptcg.OptcgSimBridge
             autoGames = Config.Bind("AiVsAi", "Games", 0, "Play this many AI vs AI games by themselves when the sim starts, one after another, with the decks the Solo V Self screen remembers. 0 leaves the menu alone.");
             bothSeatsDelay = Config.Bind("AiVsAi", "StepDelay", 0.15f, "Seconds between clicks in an AI vs AI game.");
             firstGame = Config.Bind("AiVsAi", "FirstGame", 0, "Where in the rotation of open-optcg's decks the games started by Games begin, to play one pairing again.");
-            ourDecks = Config.Bind("AiVsAi", "OurDecks", true, "Play the games started by Games with open-optcg's own deck lists, a different pair each game, instead of the decks the Solo V Self screen remembers. The lists are written beside your decks as \"open-optcg ...\".");
+            ourDecks = Config.Bind("AiVsAi", "OurDecks", true, "Play the games started by Games with open-optcg's own deck lists, a different pair each game, instead of the decks the Solo V Self screen remembers. The lists are on the deck screen beside your own decks either way.");
             autoSpeed = Config.Bind("AiVsAi", "Speed", 4f, "How many times faster the sim runs during the games started by Games.");
             stopWhenNotRecorded = Config.Bind("AiVsAi", "StopWhenNotRecorded", false, "In the games started by Games, give a game up at the first ruling the bridge's engine and the sim make differently, where its record ends, instead of playing it out to find the rest.");
             gamesLeft = autoGames.Value;
-            // The deck lists a batch saved are for the batch: left in the
-            // sim's folder they crowd a person's own decks off the deck screen.
-            if (gamesLeft <= 0) RemoveOurDecks();
+            // open-optcg's lists, offered on the deck screen beside a person's
+            // own decks -- before the sim reads the folder, which it does once
+            // its menu loads.
+            deckNames = SaveOurDecks();
             instance = this;
             try
             {
@@ -424,18 +425,27 @@ namespace OpenOptcg.OptcgSimBridge
             rect.anchoredPosition = new Vector2(settings.anchoredPosition.x, settings.anchoredPosition.y + step);
         }
 
-        // Deletes the deck lists `SaveOurDecks` wrote, all named "open-optcg ...".
+        // The deck files this plugin wrote last time, one name a line, kept
+        // beside its config so they can be told from a person's own decks.
+        string DeckManifestPath =>
+            System.IO.Path.Combine(Paths.ConfigPath, "dev.open-optcg.optcgsim-bridge.decks.txt");
+
+        // Deletes the deck files this plugin wrote: the ones its manifest
+        // names, and any from before it kept one (named "open-optcg ...").
         void RemoveOurDecks()
         {
             try
             {
-                var removed = 0;
-                foreach (var file in System.IO.Directory.GetFiles(Application.persistentDataPath, "open-optcg *.txt"))
+                var folder = Application.persistentDataPath;
+                var files = System.IO.Directory.GetFiles(folder, "open-optcg *.txt").ToList();
+                if (System.IO.File.Exists(DeckManifestPath))
                 {
-                    System.IO.File.Delete(file);
-                    removed++;
+                    files.AddRange(System.IO.File.ReadAllLines(DeckManifestPath)
+                        .Where(name => name.Trim().Length > 0)
+                        .Select(name => System.IO.Path.Combine(folder, name.Trim() + ".txt")));
                 }
-                if (removed > 0) Logger.LogInfo($"removed {removed} open-optcg deck lists left by an AI vs AI batch");
+                foreach (var file in files.Distinct().Where(System.IO.File.Exists)) System.IO.File.Delete(file);
+                System.IO.File.Delete(DeckManifestPath);
             }
             catch (Exception error)
             {
@@ -495,23 +505,27 @@ namespace OpenOptcg.OptcgSimBridge
             AccessTools.Method(typeof(HostJoinScript), "SoloSelf").Invoke(menu, null);
         }
 
-        // Saves the bridge's deck lists as decks of the sim, once, and returns
-        // their names.
+        // Saves the bridge's deck lists as decks of the sim, in place of the
+        // ones saved last time, and returns their names. With no bridge to
+        // ask, last time's are left as they are.
         List<string> SaveOurDecks()
         {
             var names = new List<string>();
             try
             {
                 var call = Http.GetStringAsync(bridgeUrl.Value.TrimEnd('/') + "/decks");
-                if (!call.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
-                foreach (var deck in (JArray)JObject.Parse(call.Result)["decks"])
+                if (!call.Wait(TimeSpan.FromSeconds(3))) throw new TimeoutException();
+                var decks = (JArray)JObject.Parse(call.Result)["decks"];
+                RemoveOurDecks();
+                foreach (var deck in decks)
                 {
                     var name = (string)deck["name"];
                     var lines = ((JArray)deck["lines"]).Select(line => (string)line);
                     System.IO.File.WriteAllLines(System.IO.Path.Combine(Application.persistentDataPath, name + ".txt"), lines);
                     names.Add(name);
                 }
-                Logger.LogInfo($"AI vs AI: saved {names.Count} open-optcg decks to {Application.persistentDataPath}");
+                System.IO.File.WriteAllLines(DeckManifestPath, names);
+                Logger.LogInfo($"saved {names.Count} open-optcg decks to {Application.persistentDataPath}");
             }
             catch (Exception error)
             {
@@ -526,7 +540,7 @@ namespace OpenOptcg.OptcgSimBridge
         void ChooseOurDecks()
         {
             if (!ourDecks.Value) return;
-            if (deckNames == null) deckNames = SaveOurDecks();
+            if (deckNames == null || deckNames.Count == 0) deckNames = SaveOurDecks();
             var logic = FindAnyObjectByType<GameplayLogicScript>();
             if (deckNames.Count == 0 || logic == null) return;
             var game = firstGame.Value + gamesStarted;

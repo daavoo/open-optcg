@@ -25,7 +25,11 @@
  */
 import { createServer, type Server } from "node:http";
 import { join } from "node:path";
-import { deckManifests, SELECTABLE_DECK_IDS } from "@one-piece-sim/decks";
+import {
+  deckManifests,
+  deckShelf,
+  SELECTABLE_DECK_IDS,
+} from "@one-piece-sim/decks";
 import { Decider, type Decision } from "./decide.js";
 import { resolveModel } from "./model-source.js";
 import { modelCacheDir, gamesDir } from "./paths.js";
@@ -317,19 +321,66 @@ export async function ensureBridge(options: {
  * file name, and its lines, the Leader first.
  */
 function simDecks(): { name: string; lines: string[] }[] {
-  return SELECTABLE_DECK_IDS.flatMap((id) => {
+  const lists = SELECTABLE_DECK_IDS.flatMap((id) => {
     const manifest = deckManifests[id];
-    if (!manifest) return [];
-    return [
-      {
-        name: `open-optcg ${id}`.replace(/[^A-Za-z0-9 ().&'-]/g, "-"),
-        lines: [
-          `1x${manifest.leader}`,
-          ...Object.entries(manifest.cards).map(
-            ([card, copies]) => `${copies}x${card}`,
-          ),
-        ],
-      },
-    ];
+    return manifest ? [{ id, manifest }] : [];
   });
+  const names = simDeckNames(lists.map(({ id }) => id));
+  return lists.map(({ id, manifest }) => ({
+    name: names.get(id)!,
+    lines: [
+      `1x${manifest.leader}`,
+      ...Object.entries(manifest.cards).map(
+        ([card, copies]) => `${copies}x${card}`,
+      ),
+    ],
+  }));
+}
+
+const SHELF_TAG: Record<ReturnType<typeof deckShelf>, string> = {
+  starter: "Starter",
+  official: "Feature",
+  tournament: "Event",
+};
+const COLOUR_TAG: Record<string, string> = {
+  Red: "R",
+  Green: "G",
+  Blue: "B",
+  Purple: "P",
+  Black: "Bk",
+  Yellow: "Y",
+};
+
+/**
+ * The sim's deck screen lists a deck by its file name in a fixed-height row,
+ * and a name longer than about 26 characters wraps onto the next row. So the
+ * lists go in as the Leader's last name, its colours and the app's shelf --
+ * "Luffy G/B Feature" -- with a counter for a second list behind one Leader
+ * on one shelf, in the order the app shows them.
+ */
+export function simDeckNames(ids: readonly string[]): Map<string, string> {
+  const names = new Map<string, string>();
+  const seen = new Map<string, number>();
+  for (const id of ids) {
+    const match = /^\(([^)]+)\) (.+?) - /.exec(id);
+    const leaderName = match?.[2] ?? id;
+    const short = leaderName.includes("&")
+      ? leaderName
+      : (leaderName
+          .split(/[ ."]+/)
+          .filter(Boolean)
+          .pop() ?? leaderName);
+    const colours = (match?.[1] ?? "")
+      .split("/")
+      .map((colour) => COLOUR_TAG[colour] ?? colour)
+      .join("-");
+    const base = `${short} ${colours} ${SHELF_TAG[deckShelf(id)]}`.replace(
+      /[^A-Za-z0-9 &'-]/g,
+      "-",
+    );
+    const count = (seen.get(base) ?? 0) + 1;
+    seen.set(base, count);
+    names.set(id, count === 1 ? base : `${base} ${count}`);
+  }
+  return names;
 }
