@@ -6,7 +6,13 @@ import {
   type GameState,
 } from "@one-piece-sim/engine-core";
 
-import { character, covers, instance, scenario, type Game } from "./support/index.js";
+import {
+  character,
+  covers,
+  instance,
+  scenario,
+  type Game,
+} from "./support/index.js";
 
 /**
  * The OP-12 Rosinante clauses `test/op12-rosinante.test.ts` leaves out.
